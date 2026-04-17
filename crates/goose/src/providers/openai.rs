@@ -156,7 +156,7 @@ impl OpenAiProvider {
                 from_base_url: false,
             }
         } else if let Some(raw_url) = config
-            .get_param::<String>("OPENAI_BASE_URL")
+            .get_openai_base_url()
             .ok()
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
@@ -164,7 +164,7 @@ impl OpenAiProvider {
             Self::parse_base_url(&raw_url)?
         } else {
             let h: String = config
-                .get_param("OPENAI_HOST")
+                .get_openai_host()
                 .unwrap_or_else(|_| "https://api.openai.com".to_string());
             ParsedBaseUrl {
                 host: h,
@@ -191,7 +191,7 @@ impl OpenAiProvider {
             std::env::var("OPENAI_BASE_PATH").unwrap_or_else(|_| default_bp())
         } else {
             config
-                .get_param("OPENAI_BASE_PATH")
+                .get_openai_base_path()
                 .unwrap_or_else(|_| default_bp())
         };
 
@@ -227,9 +227,9 @@ impl OpenAiProvider {
             .cloned()
             .map(parse_custom_headers);
 
-        let organization: Option<String> = config.get_param("OPENAI_ORGANIZATION").ok();
-        let project: Option<String> = config.get_param("OPENAI_PROJECT").ok();
-        let timeout_secs: u64 = config.get_param("OPENAI_TIMEOUT").unwrap_or(600);
+        let organization: Option<String> = config.get_openai_organization().ok();
+        let project: Option<String> = config.get_openai_project().ok();
+        let timeout_secs: u64 = config.get_openai_timeout().unwrap_or(600);
 
         let auth = match api_key {
             Some(key) if !key.is_empty() => AuthMethod::BearerToken(key),
@@ -588,9 +588,16 @@ impl ProviderDef for OpenAiProvider {
 
     fn inventory_configured() -> bool {
         let config = crate::config::Config::global();
+        if config
+            .get_openai_base_url()
+            .ok()
+            .is_some_and(|base_url| !base_url.trim().is_empty())
+        {
+            return true;
+        }
         // If the host is explicitly set to something non-default, trust the user's
         // custom setup (e.g. a local server that doesn't require an API key).
-        if let Ok(host) = config.get_param::<String>("OPENAI_HOST") {
+        if let Ok(host) = config.get_openai_host() {
             if host != "https://api.openai.com" {
                 return true;
             }
@@ -603,25 +610,38 @@ impl ProviderDef for OpenAiProvider {
 
     fn inventory_identity() -> Result<InventoryIdentityInput> {
         let config = crate::config::Config::global();
+        let (host, base_path) = if let Some(raw_url) = config
+            .get_openai_base_url()
+            .ok()
+            .filter(|base_url| !base_url.trim().is_empty())
+        {
+            let parsed = Self::parse_base_url(&raw_url)?;
+            let base_path = if parsed.has_v1 {
+                OPEN_AI_DEFAULT_BASE_PATH.to_string()
+            } else {
+                OPEN_AI_VERSIONLESS_BASE_PATH.to_string()
+            };
+            (parsed.host, base_path)
+        } else {
+            (
+                config
+                    .get_openai_host()
+                    .unwrap_or_else(|_| "https://api.openai.com".to_string()),
+                config
+                    .get_openai_base_path()
+                    .unwrap_or_else(|_| OPEN_AI_DEFAULT_BASE_PATH.to_string()),
+            )
+        };
+
         let mut identity =
             InventoryIdentityInput::new(OPEN_AI_PROVIDER_NAME, OPEN_AI_PROVIDER_NAME)
-                .with_public(
-                    "host",
-                    config
-                        .get_param::<String>("OPENAI_HOST")
-                        .unwrap_or_else(|_| "https://api.openai.com".to_string()),
-                )
-                .with_public(
-                    "base_path",
-                    config
-                        .get_param::<String>("OPENAI_BASE_PATH")
-                        .unwrap_or_else(|_| OPEN_AI_DEFAULT_BASE_PATH.to_string()),
-                );
+                .with_public("host", host)
+                .with_public("base_path", base_path);
 
-        if let Ok(organization) = config.get_param::<String>("OPENAI_ORGANIZATION") {
+        if let Ok(organization) = config.get_openai_organization() {
             identity = identity.with_public("organization", organization);
         }
-        if let Ok(project) = config.get_param::<String>("OPENAI_PROJECT") {
+        if let Ok(project) = config.get_openai_project() {
             identity = identity.with_public("project", project);
         }
         if let Some(api_key) = config_secret_value(config, "OPENAI_API_KEY") {

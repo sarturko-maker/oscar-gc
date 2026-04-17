@@ -67,7 +67,7 @@ impl AnthropicProvider {
         let config = crate::config::Config::global();
         let api_key: String = config.get_secret("ANTHROPIC_API_KEY")?;
         let host: String = config
-            .get_param("ANTHROPIC_HOST")
+            .get_anthropic_host()
             .unwrap_or_else(|_| "https://api.anthropic.com".to_string());
 
         let auth = AuthMethod::ApiKey {
@@ -248,7 +248,7 @@ impl ProviderDef for AnthropicProvider {
                 .with_public(
                     "host",
                     config
-                        .get_param::<String>("ANTHROPIC_HOST")
+                        .get_anthropic_host()
                         .unwrap_or_else(|_| "https://api.anthropic.com".to_string()),
                 );
 

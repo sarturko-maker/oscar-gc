@@ -111,14 +111,11 @@ impl GooseAcpAgent {
 
         let config = self.config()?;
         config
-            .set_param_values(&[(
-                "GOOSE_PROVIDER".to_string(),
-                serde_json::Value::String(provider_id.clone()),
-            )])
+            .set_goose_provider(provider_id.clone())
             .internal_err_ctx("Failed to save default provider")?;
         if let Some(model_id) = model_id.as_deref() {
             config
-                .set_param("GOOSE_MODEL", model_id)
+                .set_goose_model(model_id.to_string())
                 .internal_err_ctx("Failed to save default model")?;
         } else {
             config

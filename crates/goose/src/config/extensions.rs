@@ -2,6 +2,7 @@ use super::base::Config;
 use crate::agents::extension::PLATFORM_EXTENSIONS;
 use crate::agents::ExtensionConfig;
 use indexmap::IndexMap;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Mapping;
 use tracing::warn;
@@ -17,7 +18,7 @@ fn default_extension_enabled() -> bool {
     true
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, ToSchema)]
+#[derive(Debug, Deserialize, Serialize, Clone, ToSchema, JsonSchema)]
 pub struct ExtensionEntry {
     #[serde(default = "default_extension_enabled")]
     pub enabled: bool,

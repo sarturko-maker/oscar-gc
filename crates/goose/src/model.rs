@@ -88,7 +88,7 @@ impl ModelConfig {
                 None
             }
         } else {
-            match crate::config::Config::global().get_param::<usize>("GOOSE_CONTEXT_LIMIT") {
+            match crate::config::Config::global().get_goose_context_limit() {
                 Ok(limit) => {
                     if limit == 0 {
                         return Err(ConfigError::InvalidRange(
@@ -213,7 +213,7 @@ impl ModelConfig {
     }
 
     fn parse_max_tokens() -> Result<Option<i32>, ConfigError> {
-        match crate::config::Config::global().get_param::<i32>("GOOSE_MAX_TOKENS") {
+        match crate::config::Config::global().get_goose_max_tokens() {
             Ok(tokens) => {
                 if tokens <= 0 {
                     return Err(ConfigError::InvalidRange(

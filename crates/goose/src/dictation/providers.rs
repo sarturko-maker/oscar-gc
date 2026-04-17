@@ -210,13 +210,13 @@ fn build_api_client(provider: DictationProvider) -> Result<(ApiClient, String)> 
     })?;
 
     let (base_url, query_params, endpoint_path) = if provider == DictationProvider::OpenAI {
-        let openai_base_url = config.get_param::<String>("OPENAI_BASE_URL").ok();
+        let openai_base_url = config.get_openai_base_url().ok();
 
         if let Ok(host) = std::env::var("OPENAI_HOST") {
             (host, vec![], def.endpoint_path.to_string())
         } else if let Some(target) = resolve_openai_base_url_target(openai_base_url.as_deref())? {
             target
-        } else if let Ok(host) = config.get_param::<String>("OPENAI_HOST") {
+        } else if let Ok(host) = config.get_openai_host() {
             (host, vec![], def.endpoint_path.to_string())
         } else {
             (

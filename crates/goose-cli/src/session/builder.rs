@@ -466,7 +466,7 @@ async fn configure_session_prompts(
             .await;
     }
 
-    let system_prompt_file: Option<String> = config.get_param("GOOSE_SYSTEM_PROMPT_FILE_PATH").ok();
+    let system_prompt_file: Option<String> = config.get_goose_system_prompt_file_path().ok();
     if let Some(ref path) = system_prompt_file {
         let override_prompt = std::fs::read_to_string(path).unwrap_or_else(|e| {
             output::render_error(&format!(
@@ -581,19 +581,20 @@ pub async fn build_session(session_config: SessionBuilderConfig) -> CliSession {
     // Extensions are loaded after session creation because we may change directory when resuming
     let agent_ptr = resolve_and_load_extensions(agent, extensions_for_provider, &session_id).await;
 
-    let edit_mode = config
-        .get_param::<String>("EDIT_MODE")
-        .ok()
-        .and_then(|edit_mode| match edit_mode.to_lowercase().as_str() {
-            "emacs" => Some(EditMode::Emacs),
-            "vi" => Some(EditMode::Vi),
-            _ => {
-                eprintln!("Invalid EDIT_MODE specified, defaulting to Emacs");
-                None
-            }
-        });
+    let edit_mode =
+        config
+            .get_edit_mode()
+            .ok()
+            .and_then(|edit_mode| match edit_mode.to_lowercase().as_str() {
+                "emacs" => Some(EditMode::Emacs),
+                "vi" => Some(EditMode::Vi),
+                _ => {
+                    eprintln!("Invalid EDIT_MODE specified, defaulting to Emacs");
+                    None
+                }
+            });
 
-    let debug_mode = session_config.debug || config.get_param("GOOSE_DEBUG").unwrap_or(false);
+    let debug_mode = session_config.debug || config.get_goose_debug().unwrap_or(false);
 
     let session = CliSession::new(
         Arc::try_unwrap(agent_ptr).unwrap_or_else(|_| panic!("There should be no more references")),
