@@ -345,4 +345,28 @@ describe("ThemeProvider", () => {
       document.documentElement.style.getPropertyValue("--density-spacing"),
     ).toBe("0.75");
   });
+
+  it("falls back to the built-in system theme when async theme loading fails", async () => {
+    createMediaQueryList(false);
+    mockLoadThemeData.mockRejectedValueOnce(new Error("chunk load failed"));
+
+    render(
+      <ThemeProvider>
+        <ThemeConsumer />
+      </ThemeProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("is-loading")).toHaveTextContent("false");
+    });
+
+    expect(screen.getByTestId("resolved-theme")).toHaveTextContent(
+      "github-light",
+    );
+    expect(screen.getByTestId("is-dark")).toHaveTextContent("false");
+    expect(document.documentElement).toHaveClass("light");
+    expect(
+      document.documentElement.style.getPropertyValue("--background"),
+    ).not.toBe("");
+  });
 });

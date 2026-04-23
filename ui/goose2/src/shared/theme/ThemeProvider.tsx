@@ -34,6 +34,15 @@ type CachedThemeState = {
   vars: Record<string, string>;
 };
 
+type FallbackThemeInfo = {
+  bg: string;
+  fg: string;
+  comment: string;
+  added: string;
+  deleted: string;
+  modified: string;
+};
+
 const LEGACY_THEME_STORAGE_KEY = "goose-theme";
 const THEME_MODE_STORAGE_KEY = "goose-theme-mode";
 const CUSTOM_THEME_STORAGE_KEY = "goose-custom-theme";
@@ -46,6 +55,25 @@ const DEFAULT_SYSTEM_THEMES = {
   light: "github-light",
   dark: "github-dark",
 } as const;
+
+const BUILTIN_FALLBACK_THEMES: Record<"light" | "dark", FallbackThemeInfo> = {
+  light: {
+    bg: "#ffffff",
+    fg: "#111827",
+    comment: "#6b7280",
+    added: "#1a7f37",
+    deleted: "#cf222e",
+    modified: "#9a6700",
+  },
+  dark: {
+    bg: "#111827",
+    fg: "#f9fafb",
+    comment: "#94a3b8",
+    added: "#3fb950",
+    deleted: "#f85149",
+    modified: "#d29922",
+  },
+};
 
 export const ACCENT_COLORS = [
   { name: "blue", value: "#3b82f6" },
@@ -220,6 +248,40 @@ async function applyTheme(resolvedThemeName: SyntaxThemeName) {
   return cachedTheme;
 }
 
+function applyFallbackTheme(systemPrefersDark: boolean): CachedThemeState {
+  const fallbackMode = systemPrefersDark ? "dark" : "light";
+  const resolvedThemeName = DEFAULT_SYSTEM_THEMES[fallbackMode];
+  const fallbackTheme = BUILTIN_FALLBACK_THEMES[fallbackMode];
+  const { isDark, vars } = createThemeVars(
+    fallbackTheme.bg,
+    fallbackTheme.fg,
+    fallbackTheme.comment,
+    {
+      added: fallbackTheme.added,
+      deleted: fallbackTheme.deleted,
+      modified: fallbackTheme.modified,
+    },
+  );
+
+  const root = document.documentElement;
+  for (const [key, value] of Object.entries(vars)) {
+    root.style.setProperty(key, value);
+  }
+  applyResolvedMode(isDark);
+
+  const cachedTheme: CachedThemeState = {
+    isDark,
+    resolvedThemeName,
+    vars,
+  };
+  window.localStorage.setItem(
+    THEME_CACHE_STORAGE_KEY,
+    JSON.stringify(cachedTheme),
+  );
+
+  return cachedTheme;
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "system",
@@ -309,24 +371,33 @@ export function ThemeProvider({
     loadingThemeRef.current = resolvedThemeName;
     setIsLoading(true);
 
-    void applyTheme(resolvedThemeName).then((nextTheme) => {
+    void (async () => {
+      let nextIsDark: boolean;
+
+      try {
+        const nextTheme = await applyTheme(resolvedThemeName);
+        nextIsDark = nextTheme.isDark;
+      } catch {
+        const fallbackTheme = applyFallbackTheme(systemPrefersDark);
+        nextIsDark = fallbackTheme.isDark;
+      }
+
       if (loadingThemeRef.current !== resolvedThemeName) {
         return;
       }
 
-      setIsDark(nextTheme.isDark);
+      setIsDark(nextIsDark);
       setIsLoading(false);
       if (selectedThemeName) {
         applyAccentColor(
           window.localStorage.getItem(ACCENT_STORAGE_KEY) ??
             DEFAULT_ACCENT_COLOR,
         );
-        return;
+      } else {
+        clearAccentColor();
       }
-
-      clearAccentColor();
-    });
-  }, [resolvedThemeName, selectedThemeName]);
+    })();
+  }, [resolvedThemeName, selectedThemeName, systemPrefersDark]);
 
   const setTheme = React.useCallback((themeName: SyntaxThemeName | null) => {
     setSelectedThemeName(themeName);

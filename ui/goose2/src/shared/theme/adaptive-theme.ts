@@ -48,6 +48,10 @@ export function luminance(hex: string): number {
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
+function getContrastColor(hexColor: string): string {
+  return luminance(hexColor) > 0.5 ? "#000000" : "#ffffff";
+}
+
 function mix(hex1: string, hex2: string, factor: number): string {
   const color1 = hexToRgb(hex1);
   const color2 = hexToRgb(hex2);
@@ -207,8 +211,8 @@ export function createThemeVars(
     isDark ? 0.15 : 0.12,
   );
   const hoverBackground = elevate(0.06);
-  const primaryForeground = hexToHsl(primaryBackground);
   const textForeground = hexToHsl(syntaxForeground);
+  const destructiveForeground = hexToHsl(getContrastColor(accentRed));
 
   return {
     isDark,
@@ -226,7 +230,7 @@ export function createThemeVars(
       "--accent-foreground": textForeground,
       "--secondary-foreground": textForeground,
       "--destructive": hexToHsl(accentRed),
-      "--destructive-foreground": primaryForeground,
+      "--destructive-foreground": destructiveForeground,
       "--border": hexToHsl(borderColor),
       "--input": hexToHsl(borderColor),
       "--ring": textForeground,
