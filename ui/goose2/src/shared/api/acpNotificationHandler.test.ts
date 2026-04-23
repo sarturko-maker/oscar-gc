@@ -14,6 +14,8 @@ describe("acpNotificationHandler", () => {
     clearReplayBuffer("draft-session-2");
     clearReplayBuffer("draft-session-3");
     clearReplayBuffer("draft-session-4");
+    clearReplayBuffer("draft-session-5");
+    clearReplayBuffer("draft-session-6");
     useChatStore.setState({
       messagesBySession: {},
       sessionStateById: {},
@@ -327,6 +329,118 @@ describe("acpNotificationHandler", () => {
           },
         ],
         isError: false,
+      },
+    ]);
+  });
+
+  it("preserves live text annotations and splits chunks when audience changes", async () => {
+    registerSession("draft-session-5", "goose-session-5", "goose", "/tmp");
+
+    await handleSessionNotification({
+      sessionId: "goose-session-5",
+      update: {
+        sessionUpdate: "agent_message_chunk",
+        messageId: "message-1",
+        content: {
+          type: "text",
+          text: "internal ",
+          annotations: {
+            audience: ["assistant"],
+          },
+        },
+      },
+    } as SessionNotification);
+
+    await handleSessionNotification({
+      sessionId: "goose-session-5",
+      update: {
+        sessionUpdate: "agent_message_chunk",
+        messageId: "message-1",
+        content: {
+          type: "text",
+          text: "prompt",
+          annotations: {
+            audience: ["assistant"],
+          },
+        },
+      },
+    } as SessionNotification);
+
+    await handleSessionNotification({
+      sessionId: "goose-session-5",
+      update: {
+        sessionUpdate: "agent_message_chunk",
+        messageId: "message-1",
+        content: {
+          type: "text",
+          text: "Visible reply",
+        },
+      },
+    } as SessionNotification);
+
+    expect(
+      useChatStore.getState().messagesBySession["draft-session-5"]?.[0]
+        ?.content,
+    ).toEqual([
+      {
+        type: "text",
+        text: "internal prompt",
+        annotations: {
+          audience: ["assistant"],
+        },
+      },
+      {
+        type: "text",
+        text: "Visible reply",
+      },
+    ]);
+  });
+
+  it("preserves replay text annotations on user message chunks", async () => {
+    registerSession("draft-session-6", "goose-session-6", "goose", "/tmp");
+    useChatStore.setState({
+      loadingSessionIds: new Set(["draft-session-6"]),
+    });
+
+    await handleSessionNotification({
+      sessionId: "goose-session-6",
+      update: {
+        sessionUpdate: "user_message_chunk",
+        messageId: "message-1",
+        content: {
+          type: "text",
+          text: "internal prompt",
+          annotations: {
+            audience: ["assistant"],
+          },
+        },
+      },
+    } as SessionNotification);
+
+    await handleSessionNotification({
+      sessionId: "goose-session-6",
+      update: {
+        sessionUpdate: "user_message_chunk",
+        messageId: "message-1",
+        content: {
+          type: "text",
+          text: "Visible prompt",
+        },
+      },
+    } as SessionNotification);
+
+    const buffer = getAndDeleteReplayBuffer("draft-session-6");
+    expect(buffer?.[0]?.content).toEqual([
+      {
+        type: "text",
+        text: "internal prompt",
+        annotations: {
+          audience: ["assistant"],
+        },
+      },
+      {
+        type: "text",
+        text: "Visible prompt",
       },
     ]);
   });

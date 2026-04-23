@@ -28,28 +28,34 @@ use crate::providers::inventory::{
 };
 use crate::session::session_manager::SessionType;
 use crate::session::{EnabledExtensionsState, Session, SessionManager};
+use crate::utils::sanitize_unicode_tags;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use fs_err as fs;
 use futures::future::{BoxFuture, Either};
 use goose_acp_macros::custom_methods;
-use rmcp::model::{CallToolResult, RawContent, ResourceContents, Role};
+use rmcp::model::{
+    AnnotateAble, Annotations as RmcpAnnotations, CallToolResult, Meta as RmcpMeta, RawContent,
+    RawImageContent, RawTextContent, ResourceContents, Role,
+};
 use sacp::schema::{
-    AgentCapabilities, AuthMethod, AuthMethodAgent, AuthenticateRequest, AuthenticateResponse,
-    BlobResourceContents, CancelNotification, CloseSessionRequest, CloseSessionResponse,
-    ConfigOptionUpdate, Content, ContentBlock, ContentChunk, CurrentModeUpdate, EmbeddedResource,
-    EmbeddedResourceResource, FileSystemCapabilities, ForkSessionRequest, ForkSessionResponse,
-    ImageContent, InitializeRequest, InitializeResponse, ListSessionsRequest, ListSessionsResponse,
-    LoadSessionRequest, LoadSessionResponse, McpCapabilities, McpServer, Meta, ModelId, ModelInfo,
-    NewSessionRequest, NewSessionResponse, PermissionOption, PermissionOptionKind,
+    AgentCapabilities, Annotations as AcpAnnotations, AuthMethod, AuthMethodAgent,
+    AuthenticateRequest, AuthenticateResponse, BlobResourceContents, CancelNotification,
+    CloseSessionRequest, CloseSessionResponse, ConfigOptionUpdate, Content, ContentBlock,
+    ContentChunk, CurrentModeUpdate, EmbeddedResource, EmbeddedResourceResource,
+    FileSystemCapabilities, ForkSessionRequest, ForkSessionResponse, ImageContent,
+    InitializeRequest, InitializeResponse, ListSessionsRequest, ListSessionsResponse,
+    LoadSessionRequest, LoadSessionResponse, McpCapabilities, McpServer, Meta as AcpMeta, ModelId,
+    ModelInfo, NewSessionRequest, NewSessionResponse, PermissionOption, PermissionOptionKind,
     PromptCapabilities, PromptRequest, PromptResponse, RequestPermissionOutcome,
-    RequestPermissionRequest, ResourceLink, SessionCapabilities, SessionCloseCapabilities,
-    SessionConfigOption, SessionConfigOptionCategory, SessionConfigSelectOption, SessionId,
-    SessionInfo, SessionListCapabilities, SessionMode, SessionModeId, SessionModeState,
-    SessionModelState, SessionNotification, SessionUpdate, SetSessionConfigOptionRequest,
-    SetSessionConfigOptionResponse, SetSessionModeRequest, SetSessionModeResponse,
-    SetSessionModelRequest, SetSessionModelResponse, StopReason, TextContent, TextResourceContents,
-    ToolCall, ToolCallContent, ToolCallId, ToolCallLocation, ToolCallStatus, ToolCallUpdate,
-    ToolCallUpdateFields, ToolKind, Usage, UsageUpdate,
+    RequestPermissionRequest, ResourceLink, Role as AcpRole, SessionCapabilities,
+    SessionCloseCapabilities, SessionConfigOption, SessionConfigOptionCategory,
+    SessionConfigSelectOption, SessionId, SessionInfo, SessionListCapabilities, SessionMode,
+    SessionModeId, SessionModeState, SessionModelState, SessionNotification, SessionUpdate,
+    SetSessionConfigOptionRequest, SetSessionConfigOptionResponse, SetSessionModeRequest,
+    SetSessionModeResponse, SetSessionModelRequest, SetSessionModelResponse, StopReason,
+    TextContent, TextResourceContents, ToolCall, ToolCallContent, ToolCallId, ToolCallLocation,
+    ToolCallStatus, ToolCallUpdate, ToolCallUpdateFields, ToolKind, Usage, UsageUpdate,
 };
 use sacp::util::MatchDispatchFrom;
 use sacp::{
@@ -218,14 +224,14 @@ fn thread_session_meta(
     meta
 }
 
-fn extract_timeout_from_meta(meta: &Option<Meta>) -> Option<u64> {
+fn extract_timeout_from_meta(meta: &Option<AcpMeta>) -> Option<u64> {
     meta.as_ref()
         .and_then(|m| m.get("timeout"))
         .and_then(|v| v.as_u64())
 }
 
-fn tool_chain_meta(chain_id: &str, chain_summary: &str) -> Meta {
-    let mut meta = Meta::new();
+fn tool_chain_meta(chain_id: &str, chain_summary: &str) -> AcpMeta {
+    let mut meta = AcpMeta::new();
     meta.insert(
         TOOL_CHAIN_META_KEY.to_string(),
         serde_json::Value::String(chain_id.to_string()),
@@ -235,6 +241,116 @@ fn tool_chain_meta(chain_id: &str, chain_summary: &str) -> Meta {
         serde_json::Value::String(chain_summary.to_string()),
     );
     meta
+}
+
+fn acp_meta_to_rmcp(meta: Option<AcpMeta>) -> Option<RmcpMeta> {
+    meta.map(RmcpMeta)
+}
+
+fn rmcp_meta_to_acp(meta: Option<RmcpMeta>) -> Option<AcpMeta> {
+    meta.map(|meta| meta.0)
+}
+
+fn acp_annotations_to_rmcp(annotations: Option<AcpAnnotations>) -> Option<RmcpAnnotations> {
+    annotations.map(|annotations| {
+        let mut rmcp_annotations = RmcpAnnotations::default();
+        rmcp_annotations.audience = annotations.audience.map(|audience| {
+            audience
+                .into_iter()
+                .map(|role| match role {
+                    AcpRole::Assistant => Role::Assistant,
+                    AcpRole::User => Role::User,
+                    _ => Role::User,
+                })
+                .collect()
+        });
+        rmcp_annotations.priority = annotations.priority.map(|priority| priority as f32);
+        rmcp_annotations.last_modified = annotations.last_modified.and_then(|last_modified| {
+            DateTime::parse_from_rfc3339(&last_modified)
+                .ok()
+                .map(|timestamp| timestamp.with_timezone(&Utc))
+        });
+        rmcp_annotations
+    })
+}
+
+fn rmcp_annotations_to_acp(annotations: Option<RmcpAnnotations>) -> Option<AcpAnnotations> {
+    annotations.map(|annotations| {
+        let audience = annotations.audience.map(|audience| {
+            audience
+                .into_iter()
+                .map(|role| match role {
+                    Role::Assistant => AcpRole::Assistant,
+                    Role::User => AcpRole::User,
+                })
+                .collect()
+        });
+
+        AcpAnnotations::new()
+            .audience(audience)
+            .last_modified(
+                annotations
+                    .last_modified
+                    .map(|last_modified| last_modified.to_rfc3339()),
+            )
+            .priority(annotations.priority.map(f64::from))
+    })
+}
+
+fn acp_text_to_message_content(
+    text: impl Into<String>,
+    annotations: Option<AcpAnnotations>,
+    meta: Option<AcpMeta>,
+) -> MessageContent {
+    MessageContent::Text(
+        RawTextContent {
+            text: sanitize_unicode_tags(&text.into()),
+            meta: acp_meta_to_rmcp(meta),
+        }
+        .optional_annotate(acp_annotations_to_rmcp(annotations)),
+    )
+}
+
+fn acp_prompt_block_to_message_content(block: ContentBlock) -> Option<MessageContent> {
+    match block {
+        ContentBlock::Text(text) => Some(acp_text_to_message_content(
+            text.text,
+            text.annotations,
+            text.meta,
+        )),
+        ContentBlock::Image(image) => Some(MessageContent::Image(
+            RawImageContent {
+                data: image.data,
+                mime_type: image.mime_type,
+                meta: acp_meta_to_rmcp(image.meta),
+            }
+            .optional_annotate(acp_annotations_to_rmcp(image.annotations)),
+        )),
+        ContentBlock::Resource(resource) => match resource.resource {
+            EmbeddedResourceResource::TextResourceContents(text_resource) => {
+                Some(acp_text_to_message_content(
+                    format!(
+                        "--- Resource: {} ---\n{}\n---\n",
+                        text_resource.uri, text_resource.text
+                    ),
+                    resource.annotations,
+                    resource.meta,
+                ))
+            }
+            EmbeddedResourceResource::BlobResourceContents(_) => None,
+            _ => None,
+        },
+        ContentBlock::ResourceLink(link) => read_resource_link(link.clone())
+            .map(|text| acp_text_to_message_content(text, link.annotations, link.meta)),
+        ContentBlock::Audio(..) => None,
+        _ => None,
+    }
+}
+
+fn rmcp_text_to_acp(text: &rmcp::model::TextContent) -> TextContent {
+    TextContent::new(text.text.clone())
+        .annotations(rmcp_annotations_to_acp(text.annotations.clone()))
+        .meta(rmcp_meta_to_acp(text.meta.clone()))
 }
 
 fn start_or_continue_tool_chain(
@@ -1642,28 +1758,8 @@ impl GooseAcpAgent {
         let mut user_message = Message::user();
 
         for block in prompt {
-            match block {
-                ContentBlock::Text(text) => {
-                    user_message = user_message.with_text(&text.text);
-                }
-                ContentBlock::Image(image) => {
-                    user_message = user_message.with_image(&image.data, &image.mime_type);
-                }
-                ContentBlock::Resource(resource) => {
-                    if let EmbeddedResourceResource::TextResourceContents(text_resource) =
-                        &resource.resource
-                    {
-                        let header = format!("--- Resource: {} ---\n", text_resource.uri);
-                        let content = format!("{}{}\n---\n", header, text_resource.text);
-                        user_message = user_message.with_text(&content);
-                    }
-                }
-                ContentBlock::ResourceLink(link) => {
-                    if let Some(text) = read_resource_link(link) {
-                        user_message = user_message.with_text(text)
-                    }
-                }
-                ContentBlock::Audio(..) | _ => (),
+            if let Some(content) = acp_prompt_block_to_message_content(block) {
+                user_message = user_message.with_content(content);
             }
         }
 
@@ -1684,7 +1780,7 @@ impl GooseAcpAgent {
                 cx.send_notification(SessionNotification::new(
                     session_id.clone(),
                     SessionUpdate::AgentMessageChunk(ContentChunk::new(ContentBlock::Text(
-                        TextContent::new(text.text.clone()),
+                        rmcp_text_to_acp(text),
                     ))),
                 ))?;
             }
@@ -2352,9 +2448,7 @@ impl GooseAcpAgent {
             for content_item in &message.content {
                 match content_item {
                     MessageContent::Text(text) => {
-                        let chunk = ContentChunk::new(ContentBlock::Text(TextContent::new(
-                            text.text.clone(),
-                        )));
+                        let chunk = ContentChunk::new(ContentBlock::Text(rmcp_text_to_acp(text)));
                         let update = match message.role {
                             Role::User => SessionUpdate::UserMessageChunk(chunk),
                             Role::Assistant => SessionUpdate::AgentMessageChunk(chunk),
@@ -4559,7 +4653,9 @@ pub async fn run(builtins: Vec<String>) -> Result<()> {
 mod tests {
     use super::*;
     use crate::conversation::message::{ToolRequest, ToolResponse};
-    use rmcp::model::{CallToolRequestParams, Content as RmcpContent};
+    use rmcp::model::{
+        AnnotateAble, CallToolRequestParams, Content as RmcpContent, RawTextContent,
+    };
     use sacp::schema::{
         EnvVariable, HttpHeader, McpServer, McpServerHttp, McpServerSse, McpServerStdio,
         PermissionOptionId, ResourceLink, SelectedPermissionOutcome, SessionConfigSelectOption,
@@ -5196,6 +5292,41 @@ print(\"hello, world\")
                 chain_id: "req_1".to_string(),
                 summary: "running commands".to_string(),
             })
+        );
+    }
+
+    #[test]
+    fn test_acp_prompt_block_to_message_content_preserves_text_audience() {
+        let content = acp_prompt_block_to_message_content(ContentBlock::Text(
+            TextContent::new("assistant-only prompt")
+                .annotations(AcpAnnotations::new().audience(vec![AcpRole::Assistant])),
+        ))
+        .expect("text blocks should convert");
+
+        let MessageContent::Text(text) = content else {
+            panic!("expected text content");
+        };
+
+        assert_eq!(text.text, "assistant-only prompt");
+        assert_eq!(text.audience(), Some(&vec![Role::Assistant]));
+    }
+
+    #[test]
+    fn test_rmcp_text_to_acp_preserves_text_audience() {
+        let text = RawTextContent {
+            text: "assistant-only replay".to_string(),
+            meta: None,
+        }
+        .with_audience(vec![Role::Assistant]);
+
+        let replay_text = rmcp_text_to_acp(&text);
+
+        assert_eq!(replay_text.text, "assistant-only replay");
+        assert_eq!(
+            replay_text
+                .annotations
+                .and_then(|annotations| annotations.audience),
+            Some(vec![AcpRole::Assistant]),
         );
     }
 

@@ -27,6 +27,10 @@ import {
   buildToolResponseBlock,
   hasToolCallPatch,
 } from "./toolCallBlockBuilders";
+import {
+  appendTextContent,
+  normalizeTextAnnotations,
+} from "./textContentBlocks";
 
 // Pre-set message ID for the next live stream per goose session
 const presetMessageIds = new Map<string, string>();
@@ -193,12 +197,11 @@ function handleReplay(sessionId: string, update: SessionUpdate): void {
       }
       const msg = getBufferedMessage(sessionId, messageId);
       if (msg && update.content.type === "text" && "text" in update.content) {
-        const last = msg.content[msg.content.length - 1];
-        if (last?.type === "text") {
-          (last as { type: "text"; text: string }).text += update.content.text;
-        } else {
-          msg.content.push({ type: "text", text: update.content.text });
-        }
+        msg.content = appendTextContent(
+          msg.content,
+          update.content.text,
+          normalizeTextAnnotations(update.content.annotations),
+        );
       }
       break;
     }
@@ -212,11 +215,14 @@ function handleReplay(sessionId: string, update: SessionUpdate): void {
         update.content.type === "text" &&
         "text" in update.content
       ) {
+        const annotations = normalizeTextAnnotations(
+          update.content.annotations,
+        );
         buffer.push({
           id: messageId,
           role: "user",
           created: Date.now(),
-          content: [{ type: "text", text: update.content.text }],
+          content: [{ type: "text", text: update.content.text, annotations }],
           metadata: { userVisible: true, agentVisible: true },
         });
       } else if (
@@ -224,12 +230,11 @@ function handleReplay(sessionId: string, update: SessionUpdate): void {
         update.content.type === "text" &&
         "text" in update.content
       ) {
-        const last = existing.content[existing.content.length - 1];
-        if (last?.type === "text") {
-          (last as { type: "text"; text: string }).text += update.content.text;
-        } else {
-          existing.content.push({ type: "text", text: update.content.text });
-        }
+        existing.content = appendTextContent(
+          existing.content,
+          update.content.text,
+          normalizeTextAnnotations(update.content.annotations),
+        );
       }
       break;
     }
@@ -319,8 +324,15 @@ function handleLive(
       }
 
       if (update.content.type === "text" && "text" in update.content) {
+        const text = update.content.text;
+        const annotations = normalizeTextAnnotations(
+          update.content.annotations,
+        );
         store.setStreamingMessageId(sessionId, messageId);
-        store.updateStreamingText(sessionId, update.content.text);
+        store.updateMessage(sessionId, messageId, (msg) => ({
+          ...msg,
+          content: appendTextContent(msg.content, text, annotations),
+        }));
       }
       break;
     }
