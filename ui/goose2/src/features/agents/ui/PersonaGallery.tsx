@@ -20,12 +20,13 @@ interface PersonaGalleryProps {
 
 function SkeletonCard() {
   return (
-    <div aria-hidden="true" className="flex w-[200px] shrink-0 flex-col py-4">
-      <div className="flex h-[420px] w-full items-end justify-center">
-        <Skeleton className="h-full w-[140px]" />
+    <div aria-hidden="true" className="flex w-[160px] shrink-0 flex-col py-4">
+      <div className="flex h-[336px] w-full items-end justify-center">
+        <Skeleton className="h-full w-[112px]" />
       </div>
       <Skeleton className="mt-4 h-px w-full" />
-      <Skeleton className="mt-4 h-[144px] w-full" />
+      <Skeleton className="mt-4 h-5 w-24 rounded-full" />
+      <Skeleton className="mt-2 h-[144px] w-full" />
     </div>
   );
 }
@@ -58,7 +59,7 @@ export function PersonaGallery({
       <section
         role="status"
         aria-label={t("gallery.loading")}
-        className="flex h-full items-center gap-32 overflow-x-auto px-16"
+        className="flex h-full items-center justify-evenly gap-8 overflow-x-auto px-16"
       >
         <SkeletonCard />
         <SkeletonCard />
@@ -72,7 +73,7 @@ export function PersonaGallery({
     <section
       {...dropHandlers}
       className={cn(
-        "flex h-full items-center gap-32 overflow-x-auto px-16 transition-colors",
+        "flex h-full items-center justify-evenly gap-8 overflow-x-auto px-16 transition-colors",
         isDragOver && "ring-2 ring-ring ring-offset-2 ring-inset",
       )}
     >

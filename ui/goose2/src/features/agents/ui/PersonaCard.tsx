@@ -76,14 +76,14 @@ export function PersonaCard({
       onKeyDown={handleCardKeyDown}
       tabIndex={0}
       className={cn(
-        "group relative flex w-[200px] shrink-0 cursor-pointer flex-col py-4",
+        "group relative flex w-[160px] shrink-0 cursor-pointer flex-col py-4",
         "transition-colors duration-200",
         isActive && "bg-black/[0.03]",
       )}
     >
       {/* Fixed-height figure box: figure aligned to bottom, centered horizontally;
           wider figures bleed into the gap between cells (intentional editorial overflow) */}
-      <div className="flex h-[420px] w-full items-end justify-center">
+      <div className="flex h-[336px] w-full items-end justify-center">
         <img
           src={resolvePersonaFigure(persona.displayName)}
           alt=""
@@ -94,10 +94,13 @@ export function PersonaCard({
 
       <div className="mt-4 h-px w-full bg-black/30" />
 
-      <p className="mt-4 line-clamp-6 h-[144px] w-full text-[16px] leading-[24px] text-[var(--text-muted-alex)]">
-        <span className="mr-1 inline-flex h-5 items-center rounded-full bg-[var(--surface-button)] px-[6px] pb-[3px] align-middle text-[14px] text-[var(--text-title-alex)]">
+      <div className="mt-4 w-full">
+        <span className="inline-flex h-5 items-center rounded-full bg-[var(--surface-button)] px-[6px] pb-[3px] text-[14px] text-[var(--text-title-alex)]">
           {persona.displayName}
         </span>
+      </div>
+
+      <p className="mt-2 line-clamp-6 h-[144px] w-full text-[16px] leading-[24px] text-[var(--text-muted-alex)]">
         {persona.systemPrompt}
       </p>
 
