@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BookOpen, Bot, History, Home, Search } from "lucide-react";
-import { getDisplaySessionTitle } from "@/features/chat/lib/sessionTitle";
-import { GooseIcon } from "@/shared/ui/icons/GooseIcon";
+import { BookOpen, Bot, History, Home } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 import type { AppView } from "@/app/types";
 import type { ProjectInfo } from "@/features/projects/api/projects";
@@ -12,11 +10,7 @@ import {
   useChatSessionStore,
 } from "@/features/chat/stores/chatSessionStore";
 import { isSessionRunning } from "@/features/chat/lib/sessionActivity";
-import { useAgentStore } from "@/features/agents/stores/agentStore";
-import { useProjectStore } from "@/features/projects/stores/projectStore";
-import { useSessionSearch } from "@/features/sessions/hooks/useSessionSearch";
 import { SidebarProjectsSection } from "./SidebarProjectsSection";
-import { SidebarSearchResults } from "./SidebarSearchResults";
 import { useSidebarHighlight } from "./useSidebarHighlight";
 
 interface SidebarProps {
@@ -34,11 +28,6 @@ interface SidebarProps {
   onReorderProject?: (fromId: string, toId: string) => void;
   onNavigate?: (view: AppView) => void;
   onSelectSession?: (sessionId: string) => void;
-  onSelectSearchResult?: (
-    sessionId: string,
-    messageId?: string,
-    query?: string,
-  ) => void;
   activeView?: AppView;
   activeSessionId?: string | null;
   className?: string;
@@ -62,15 +51,13 @@ export function Sidebar({
   onReorderProject,
   onNavigate,
   onSelectSession,
-  onSelectSearchResult,
   activeView,
   activeSessionId,
   className,
   projects,
 }: SidebarProps) {
-  const { t, i18n } = useTranslation(["sidebar", "common"]);
+  const { t } = useTranslation("sidebar");
   const [expanded, setExpanded] = useState(!collapsed);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const prevCollapsed = useRef(collapsed);
   const [expandedProjects, setExpandedProjects] = useState<
     Record<string, boolean>
@@ -92,10 +79,6 @@ export function Sidebar({
     sessions,
     chatStore.messagesBySession,
   );
-  const activeSessions = visibleSessions.filter(
-    (session) => !session.archivedAt,
-  );
-
   useEffect(() => {
     if (collapsed) {
       setExpanded(false);
@@ -110,7 +93,6 @@ export function Sidebar({
 
   const labelTransition = "transition-[opacity,width] duration-300 ease-out";
   const labelVisible = expanded && !collapsed;
-  const defaultTitle = t("common:session.defaultTitle");
   const navItems: readonly { id: AppView; label: string; icon: typeof Bot }[] =
     [
       { id: "agents", label: t("navigation.agents"), icon: Bot },
@@ -171,24 +153,6 @@ export function Sidebar({
     return { byProject, standalone: limitedStandalone };
   })();
 
-  const agentStoreState = useAgentStore();
-  const projectStoreState = useProjectStore();
-
-  const sidebarResolvers = {
-    getPersonaName: (personaId: string) =>
-      agentStoreState.getPersonaById(personaId)?.displayName,
-    getProjectName: (projectId: string) =>
-      projectStoreState.projects.find((p: { id: string }) => p.id === projectId)
-        ?.name,
-  };
-  const sidebarSearch = useSessionSearch({
-    sessions: activeSessions,
-    resolvers: sidebarResolvers,
-    locale: i18n.resolvedLanguage,
-    getDisplayTitle: (session) =>
-      getDisplaySessionTitle(session.title, defaultTitle),
-  });
-
   useEffect(() => {
     if (!activeSessionId) return;
     const activeSession = visibleSessions.find((s) => s.id === activeSessionId);
@@ -226,17 +190,6 @@ export function Sidebar({
         : next;
     });
   }, [projects]);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "k" && e.metaKey) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
 
   const toggleProject = (projectId: string) =>
     setExpandedProjects((prev) => ({ ...prev, [projectId]: !prev[projectId] }));
@@ -298,13 +251,9 @@ export function Sidebar({
           WebkitBackdropFilter: "blur(12px)",
         }}
       >
-        <div className="flex-shrink-0 px-3 pt-3 pb-1">
-          <GooseIcon className="text-foreground" />
-        </div>
-
         <nav
           ref={navRef}
-          className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 py-1 pt-1.5 scrollbar-none"
+          className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1.5 pb-5 pt-5 scrollbar-none"
           onMouseLeave={onNavMouseLeave}
         >
           {currentRect && (
@@ -322,32 +271,6 @@ export function Sidebar({
           )}
 
           <div className="relative z-10 space-y-0.5">
-            <div className="mb-4 flex items-center w-full rounded-md gap-2 border-b border-[var(--surface-button)] px-2.5 py-1.5 text-[var(--text-body-alex)] text-muted-foreground hover:text-foreground hover:bg-transparent">
-              <Search className="size-3.5 flex-shrink-0 text-placeholder" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                enterKeyHint="search"
-                value={sidebarSearch.query}
-                onChange={(e) => sidebarSearch.setQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    void sidebarSearch.search();
-                  }
-                }}
-                placeholder={t("search.placeholder")}
-                className={cn(
-                  "focus-override appearance-none bg-transparent border-none text-xs flex-1 min-w-0 placeholder:text-placeholder outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
-                  labelTransition,
-                  labelVisible
-                    ? "opacity-100 w-auto"
-                    : "opacity-0 w-0 overflow-hidden",
-                )}
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-
             <button
               ref={homeRef}
               type="button"
@@ -424,67 +347,31 @@ export function Sidebar({
             })}
           </div>
 
-          {sidebarSearch.submittedQuery ? (
-            <div className="relative z-10 space-y-2">
-              {sidebarSearch.error && (
-                <p className="px-1 text-xs text-danger">{t("search.error")}</p>
-              )}
-
-              {sidebarSearch.isSearching &&
-                sidebarSearch.results.length === 0 && (
-                  <div className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-                    {t("search.searching")}
-                  </div>
-                )}
-
-              {(!sidebarSearch.isSearching ||
-                sidebarSearch.results.length > 0) && (
-                <SidebarSearchResults
-                  results={sidebarSearch.results}
-                  activeSessionId={activeSessionId}
-                  onSelectResult={(sessionId, messageId) => {
-                    if (messageId) {
-                      onSelectSearchResult?.(
-                        sessionId,
-                        messageId,
-                        sidebarSearch.submittedQuery,
-                      );
-                      return;
-                    }
-                    onSelectSession?.(sessionId);
-                  }}
-                  getPersonaName={sidebarResolvers.getPersonaName}
-                  getProjectName={sidebarResolvers.getProjectName}
-                />
-              )}
-            </div>
-          ) : (
-            <SidebarProjectsSection
-              projects={projects}
-              projectSessions={projectSessions}
-              expandedProjects={expandedProjects}
-              toggleProject={toggleProject}
-              collapsed={collapsed}
-              labelTransition={labelTransition}
-              labelVisible={labelVisible}
-              activeSessionId={activeSessionId}
-              activeProjectId={activeProjectId}
-              onNavigate={onNavigate}
-              onSelectSession={onSelectSession}
-              onNewChatInProject={onNewChatInProject}
-              onNewChat={onNewChat}
-              onCreateProject={onCreateProject}
-              onEditProject={onEditProject}
-              onArchiveProject={onArchiveProject}
-              onArchiveChat={onArchiveChat}
-              onRenameChat={onRenameChat}
-              onMoveToProject={onMoveToProject}
-              onReorderProject={onReorderProject}
-              onItemMouseEnter={onItemMouseEnter}
-              activeSessionRefCallback={activeSessionRefCallback}
-              activeProjectRefCallback={activeProjectRefCallback}
-            />
-          )}
+          <SidebarProjectsSection
+            projects={projects}
+            projectSessions={projectSessions}
+            expandedProjects={expandedProjects}
+            toggleProject={toggleProject}
+            collapsed={collapsed}
+            labelTransition={labelTransition}
+            labelVisible={labelVisible}
+            activeSessionId={activeSessionId}
+            activeProjectId={activeProjectId}
+            onNavigate={onNavigate}
+            onSelectSession={onSelectSession}
+            onNewChatInProject={onNewChatInProject}
+            onNewChat={onNewChat}
+            onCreateProject={onCreateProject}
+            onEditProject={onEditProject}
+            onArchiveProject={onArchiveProject}
+            onArchiveChat={onArchiveChat}
+            onRenameChat={onRenameChat}
+            onMoveToProject={onMoveToProject}
+            onReorderProject={onReorderProject}
+            onItemMouseEnter={onItemMouseEnter}
+            activeSessionRefCallback={activeSessionRefCallback}
+            activeProjectRefCallback={activeProjectRefCallback}
+          />
         </nav>
       </div>
     </div>

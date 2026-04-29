@@ -16,11 +16,6 @@
     "sessionHistory": "Historial de sesiones",
     "skills": "Habilidades"
   },
-  "search": {
-    "error": "La búsqueda de mensajes falló. Mostrando solo coincidencias de metadatos.",
-    "placeholder": "Buscar conversaciones",
-    "searching": "Buscando chats..."
-  },
   "sections": {
     "projects": "Proyectos",
     "recents": "Recientes"

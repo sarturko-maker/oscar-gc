@@ -362,14 +362,14 @@ export function ChatInput({
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className={cn("px-4 pb-6 pt-2", className)}>
+      <div className={cn("px-4 pb-3 pt-2", className)}>
         <div className="mx-auto max-w-3xl">
           <Popover open={mentionOpen}>
             {/* biome-ignore lint/a11y/noStaticElementInteractions: drop zone for file attachments */}
             <div
               ref={containerRef}
               className={cn(
-                "relative bg-transparent px-4 pb-3 pt-4 transition-colors",
+                "relative bg-transparent px-4 pb-2 pt-4 transition-colors",
                 isAttachmentDragOver && "bg-muted/20",
               )}
               onDragEnter={handleDragEnter}
@@ -454,7 +454,7 @@ export function ChatInput({
                   }
                   disabled={disabled}
                   rows={1}
-                  className="mb-3 min-h-[36px] max-h-[200px] w-full resize-none bg-transparent px-1 text-[14px] leading-relaxed text-foreground placeholder:font-light placeholder:text-muted-foreground/60 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-60"
+                  className="mb-2 min-h-[36px] max-h-[200px] w-full resize-none bg-transparent px-1 text-[14px] leading-relaxed text-foreground placeholder:font-light placeholder:text-muted-foreground/60 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-60"
                   aria-label={t("input.ariaLabel")}
                 />
               </PopoverAnchor>

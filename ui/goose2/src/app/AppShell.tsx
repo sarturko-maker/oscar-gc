@@ -637,6 +637,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
             style={{
               width: sidebarCollapsed ? 0 : sidebarWidth + 12,
               paddingTop: 12,
+              paddingBottom: 12,
               paddingLeft: 12,
               transition: isResizing ? "none" : "width 200ms ease-out",
             }}
@@ -659,7 +660,6 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
               onMoveToProject={handleMoveToProject}
               onReorderProject={projectStore.reorderProjects}
               onSelectSession={handleSelectSession}
-              onSelectSearchResult={handleSelectSearchResult}
               activeView={activeView}
               activeSessionId={activeSessionId}
               projects={projectStore.projects}

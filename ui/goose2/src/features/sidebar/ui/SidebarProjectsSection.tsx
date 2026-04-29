@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   IconChevronDown,
   IconChevronRight,
+  IconFolder,
   IconLibraryPlusFilled,
   IconMessage,
   IconPlus,
@@ -154,15 +155,11 @@ function ProjectSection({
               : PROJECT_ROW_TEXT_CLASS,
           )}
         >
-          <span className="relative flex h-3 w-3 flex-shrink-0 items-center justify-center">
-            <span
-              className="absolute inline-block h-2 w-2 rounded-full transition-opacity duration-150 group-hover:opacity-0"
-              style={{ backgroundColor: project.color }}
-            />
+          <span className="flex h-3 w-3 flex-shrink-0 items-center justify-center text-muted-foreground transition-colors duration-150 group-hover:text-foreground">
             {isExpanded ? (
-              <IconChevronDown className="absolute h-3 w-3 opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
+              <IconChevronDown className="h-3 w-3" />
             ) : (
-              <IconChevronRight className="absolute h-3 w-3 opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
+              <IconChevronRight className="h-3 w-3" />
             )}
           </span>
           <span className="flex-1 min-w-0 truncate text-left">
@@ -330,11 +327,11 @@ export function SidebarProjectsSection({
             : "opacity-0 max-h-0 overflow-hidden",
       )}
     >
-      <div className="mx-3 mb-1 h-px bg-[var(--color-gray-200)]" />
+      <div className="mx-3 mt-3 h-px bg-black/15" />
       <div
         className={cn(
           "group flex items-center transition-all duration-300",
-          collapsed ? "px-0 pt-0 pb-1 justify-center" : "pt-4 pb-1",
+          collapsed ? "px-0 pt-0 pb-1 justify-center" : "pt-1 pb-1",
         )}
       >
         <span
@@ -377,10 +374,7 @@ export function SidebarProjectsSection({
               onClick={() => onNavigate?.("projects")}
               className="rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50"
             >
-              <span
-                className="inline-block size-2.5 rounded-full"
-                style={{ backgroundColor: project.color }}
-              />
+              <IconFolder className="size-4" />
             </Button>
           ))}
         </div>
@@ -468,11 +462,11 @@ export function SidebarProjectsSection({
         onDragLeave={handleRecentsDragLeave}
         onDrop={handleRecentsDrop}
       >
-        <div className="mx-3 mb-1 h-px bg-[var(--color-gray-200)]" />
+        <div className="mx-3 mt-3 h-px bg-black/15" />
         <div
           className={cn(
             "relative group flex items-center transition-all duration-300",
-            collapsed ? "px-0 pt-0 pb-1 justify-center" : "pt-4 pb-1",
+            collapsed ? "px-0 pt-0 pb-1 justify-center" : "pt-1 pb-1",
           )}
         >
           <span
