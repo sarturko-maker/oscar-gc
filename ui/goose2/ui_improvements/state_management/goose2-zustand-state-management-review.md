@@ -87,6 +87,19 @@ Strict standard:
 - then use `useShallow` on object/array selectors
 - do not use `useShallow` on primitive selectors
 
+More specifically, `useShallow` is good for:
+- replacing whole-store subscriptions with grouped object selectors in high-level consumers such as [AppShell.tsx](/Users/lifei/Development/goose/ui/goose2/src/app/AppShell.tsx:80), [Sidebar.tsx](/Users/lifei/Development/goose/ui/goose2/src/features/sidebar/ui/Sidebar.tsx:103), [usePersonas.ts](/Users/lifei/Development/goose/ui/goose2/src/features/agents/hooks/usePersonas.ts:12), and [useChat.ts](/Users/lifei/Development/goose/ui/goose2/src/features/chat/hooks/useChat.ts:108)
+- derived object/array selectors in places like [useProviderInventory.ts](/Users/lifei/Development/goose/ui/goose2/src/features/providers/hooks/useProviderInventory.ts:29)
+
+`useShallow` is not for:
+- primitive selectors like `loading`, `activeSessionId`, or `selectedProvider`
+- compensating for weak store boundaries or hidden store side effects
+- replacing selector discipline with a blanket optimization
+
+Maintainability conclusion:
+- `useShallow` is a good tactical improvement after selector cleanup
+- it does not replace the higher-value fixes in this review: selector-first reads, clearer store boundaries, explicit side-effect boundaries, and standardized persistence/reconciliation rules
+
 3. **Stores are too broad in responsibility**
 
 Separate stores are not automatically wrong, but several individual stores are carrying too many concerns.
@@ -107,6 +120,8 @@ Why this is a problem:
 - unrelated state changes share subscriber surfaces
 - tests become broader than necessary
 - small changes require too much knowledge of one store’s internals
+
+Immer is relevant here only as an update-readability tool, not as a boundary fix. It may improve maintainability in nested update-heavy stores such as [chatStore.ts](/Users/lifei/Development/goose/ui/goose2/src/features/chat/stores/chatStore.ts:104), where updates to `messagesBySession`, `sessionStateById`, `draftsBySession`, and `scrollTargetMessageBySession` currently require substantial object spread boilerplate, and to a lesser extent in [chatSessionStore.ts](/Users/lifei/Development/goose/ui/goose2/src/features/chat/stores/chatSessionStore.ts:137). It would not solve the higher-value problems in this review: broad store responsibilities, workflow/state mixing, hidden backend side effects, or ad hoc persistence. It is also unlikely to add much value to already-flat stores like [providerInventoryStore.ts](/Users/lifei/Development/goose/ui/goose2/src/features/providers/stores/providerInventoryStore.ts:19).
 
 4. **Domain state and UI state are mixed together**
 
