@@ -2,6 +2,8 @@ import { create } from "zustand";
 import {
   acpCreateSession,
   acpListSessions,
+  acpPrepareSession,
+  acpSetModel,
   type AcpSessionInfo,
 } from "@/shared/api/acp";
 import type { Session } from "@/shared/types/chat";
@@ -18,6 +20,7 @@ import {
 
 export interface ChatSession {
   id: string;
+  acpSessionId?: string;
   title: string;
   projectId?: string | null;
   providerId?: string;
@@ -74,8 +77,26 @@ interface CreateSessionOpts {
   modelName?: string;
 }
 
+export interface SessionBindingModel {
+  id: string;
+  name?: string;
+}
+
+interface PrepareSessionBindingArgs {
+  sessionId: string;
+  providerId: string;
+  workingDir: string;
+  personaId?: string;
+  projectId?: string | null;
+  model?: SessionBindingModel | null;
+}
+
 interface ChatSessionStoreActions {
   createSession: (opts?: CreateSessionOpts) => Promise<ChatSession>;
+  createLocalSession: (
+    opts?: Omit<CreateSessionOpts, "workingDir">,
+  ) => ChatSession;
+  prepareSessionBinding: (args: PrepareSessionBindingArgs) => Promise<void>;
   loadSessions: () => Promise<void>;
   updateSession: (id: string, patch: Partial<ChatSession>) => void;
   addSession: (session: ChatSession) => void;
@@ -99,6 +120,7 @@ function acpSessionToChatSession(session: AcpSessionInfo): ChatSession {
   const now = new Date().toISOString();
   return {
     id: session.sessionId,
+    acpSessionId: session.sessionId,
     title: normalizeAcpTitle(session.title) ?? "Untitled",
     projectId: session.projectId ?? undefined,
     providerId: session.providerId ?? undefined,
@@ -119,9 +141,45 @@ function sortByUpdatedAtDesc(sessions: ChatSession[]): ChatSession[] {
   );
 }
 
+function mergeAcpSessionsWithLocalState(
+  currentSessions: ChatSession[],
+  acpSessions: AcpSessionInfo[],
+): ChatSession[] {
+  const localSessionByAcpId = new Map<string, ChatSession>();
+  for (const session of currentSessions) {
+    if (session.acpSessionId && session.id !== session.acpSessionId) {
+      localSessionByAcpId.set(session.acpSessionId, session);
+    }
+  }
+
+  const localOnlySessions = currentSessions.filter(
+    (session) => !session.acpSessionId,
+  );
+  const mergedAcpSessions = acpSessions.map((session) => {
+    const chatSession = acpSessionToChatSession(session);
+    const localSession = localSessionByAcpId.get(session.sessionId);
+
+    if (!localSession) {
+      return chatSession;
+    }
+
+    return {
+      ...chatSession,
+      id: localSession.id,
+      modelName:
+        localSession.modelId === chatSession.modelId
+          ? localSession.modelName
+          : undefined,
+    };
+  });
+
+  return sortByUpdatedAtDesc([...localOnlySessions, ...mergedAcpSessions]);
+}
+
 export function sessionToChatSession(session: Session): ChatSession {
   return {
     id: session.id,
+    acpSessionId: session.id,
     title: session.title,
     projectId: session.projectId,
     providerId: session.providerId,
@@ -154,10 +212,11 @@ export const useChatSessionStore = create<ChatSessionStore>((set, get) => ({
     const { sessionId } = await acpCreateSession(providerId, opts.workingDir, {
       personaId: opts.personaId,
       modelId: opts.modelId,
-      projectId: opts.projectId,
+      ...(opts.projectId ? { projectId: opts.projectId } : {}),
     });
     const chatSession: ChatSession = {
       id: sessionId,
+      acpSessionId: sessionId,
       title: opts.title ?? DEFAULT_CHAT_TITLE,
       projectId: opts.projectId,
       providerId,
@@ -173,12 +232,77 @@ export const useChatSessionStore = create<ChatSessionStore>((set, get) => ({
     return chatSession;
   },
 
+  createLocalSession: (opts) => {
+    const now = new Date().toISOString();
+    const chatSession: ChatSession = {
+      id: crypto.randomUUID(),
+      title: opts?.title ?? DEFAULT_CHAT_TITLE,
+      projectId: opts?.projectId,
+      providerId: opts?.providerId ?? "goose",
+      personaId: opts?.personaId,
+      modelId: opts?.modelId,
+      modelName: opts?.modelName,
+      createdAt: now,
+      updatedAt: now,
+      messageCount: 0,
+    };
+    set((state) => ({ sessions: [chatSession, ...state.sessions] }));
+    return chatSession;
+  },
+
+  prepareSessionBinding: async ({
+    sessionId,
+    providerId,
+    workingDir,
+    personaId,
+    projectId,
+    model,
+  }) => {
+    const sessionBeforePrepare = get().getSession(sessionId);
+    const gooseSessionId = await acpPrepareSession(
+      sessionId,
+      providerId,
+      workingDir,
+      {
+        personaId,
+        ...(projectId ? { projectId } : {}),
+        ...(!sessionBeforePrepare?.acpSessionId ? { knownNew: true } : {}),
+      },
+    );
+    if (
+      gooseSessionId &&
+      get().getSession(sessionId)?.acpSessionId !== gooseSessionId
+    ) {
+      get().updateSession(sessionId, { acpSessionId: gooseSessionId });
+    }
+    if (!model?.id) {
+      return;
+    }
+
+    const liveSession = get().getSession(sessionId);
+    const modelAlreadyApplied =
+      Boolean(sessionBeforePrepare?.acpSessionId) &&
+      liveSession?.modelId === model.id &&
+      liveSession?.modelName === model.name;
+
+    if (modelAlreadyApplied) {
+      return;
+    }
+
+    await acpSetModel(sessionId, model.id);
+    get().updateSession(sessionId, {
+      modelId: model.id,
+      modelName: model.name,
+    });
+  },
+
   loadSessions: async () => {
     set({ isLoading: true });
     try {
       const acpSessions = await acpListSessions();
-      const sessions = sortByUpdatedAtDesc(
-        acpSessions.map(acpSessionToChatSession),
+      const sessions = mergeAcpSessionsWithLocalState(
+        get().sessions,
+        acpSessions,
       );
       const activeSessionId = get().activeSessionId;
       const activeSessionStillExists =
@@ -209,23 +333,24 @@ export const useChatSessionStore = create<ChatSessionStore>((set, get) => ({
     }));
 
     const updatedSession = get().sessions.find((session) => session.id === id);
+    const acpSessionId = updatedSession?.acpSessionId;
 
     // Persist title rename to backend
     if (
       "title" in patch &&
       "userSetName" in patch &&
       patch.userSetName &&
-      updatedSession &&
+      acpSessionId &&
       patch.title
     ) {
-      acpRenameSession(updatedSession.id, patch.title).catch((err: unknown) =>
+      acpRenameSession(acpSessionId, patch.title).catch((err: unknown) =>
         console.error("Failed to rename session in backend:", err),
       );
     }
 
     // Persist projectId change to backend
-    if ("projectId" in patch && updatedSession) {
-      updateSessionProject(updatedSession.id, patch.projectId ?? null).catch(
+    if ("projectId" in patch && acpSessionId) {
+      updateSessionProject(acpSessionId, patch.projectId ?? null).catch(
         (err: unknown) =>
           console.error("Failed to update session project in backend:", err),
       );
@@ -233,16 +358,20 @@ export const useChatSessionStore = create<ChatSessionStore>((set, get) => ({
   },
 
   addSession: (session) => {
+    const normalizedSession = {
+      ...session,
+      acpSessionId: session.acpSessionId ?? session.id,
+    };
     set((state) => {
       const existing = state.sessions.findIndex(
-        (candidate) => candidate.id === session.id,
+        (candidate) => candidate.id === normalizedSession.id,
       );
       if (existing >= 0) {
         const updated = [...state.sessions];
-        updated[existing] = { ...updated[existing], ...session };
+        updated[existing] = { ...updated[existing], ...normalizedSession };
         return { sessions: updated };
       }
-      return { sessions: [session, ...state.sessions] };
+      return { sessions: [normalizedSession, ...state.sessions] };
     });
   },
 
@@ -257,8 +386,8 @@ export const useChatSessionStore = create<ChatSessionStore>((set, get) => ({
         state.activeSessionId === id ? null : state.activeSessionId,
     }));
     const session = get().sessions.find((candidate) => candidate.id === id);
-    if (session) {
-      acpArchiveSession(session.id).catch((err: unknown) =>
+    if (session?.acpSessionId) {
+      acpArchiveSession(session.acpSessionId).catch((err: unknown) =>
         console.error("Failed to archive session in backend:", err),
       );
     }
@@ -271,8 +400,8 @@ export const useChatSessionStore = create<ChatSessionStore>((set, get) => ({
       ),
     }));
     const session = get().sessions.find((candidate) => candidate.id === id);
-    if (session) {
-      acpUnarchiveSession(session.id).catch((err: unknown) =>
+    if (session?.acpSessionId) {
+      acpUnarchiveSession(session.acpSessionId).catch((err: unknown) =>
         console.error("Failed to unarchive session in backend:", err),
       );
     }

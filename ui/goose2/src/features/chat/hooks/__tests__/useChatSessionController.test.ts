@@ -95,6 +95,14 @@ vi.mock("../useAgentModelPickerState", () => ({
     modelStatusMessage: mockPickerState.modelStatusMessage,
     handleProviderChange: vi.fn(),
     handleModelChange: (modelId: string) => {
+      if (modelId === "gpt-4.1") {
+        onModelSelected?.({
+          id: modelId,
+          name: modelId,
+          displayName: "GPT-4.1",
+          providerId: "openai",
+        });
+      }
       if (modelId === "claude-sonnet-4") {
         onModelSelected?.({
           id: modelId,
@@ -163,6 +171,7 @@ describe("useChatSessionController", () => {
       sessions: [
         {
           id: "session-1",
+          acpSessionId: "session-1",
           title: "Chat",
           providerId: "openai",
           modelId: "gpt-4o",
@@ -216,6 +225,85 @@ describe("useChatSessionController", () => {
       modelName: "Claude Sonnet 4",
     });
   });
+
+  it("binds an optimistic project session before setting its model", async () => {
+    mockAcpPrepareSession.mockResolvedValueOnce("goose-session-1");
+    useProjectStore.setState({
+      projects: [
+        {
+          id: "project-1",
+          name: "Project",
+          description: "",
+          prompt: "",
+          icon: "",
+          color: "#000000",
+          preferredProvider: "openai",
+          preferredModel: null,
+          workingDirs: ["/tmp/project"],
+          useWorktrees: false,
+          order: 0,
+          archivedAt: null,
+          createdAt: "2026-04-20T00:00:00.000Z",
+          updatedAt: "2026-04-20T00:00:00.000Z",
+          artifactsDir: "/tmp/project/artifacts",
+        },
+      ],
+      loading: false,
+      activeProjectId: null,
+    });
+    useChatSessionStore.setState({
+      sessions: [
+        {
+          id: "local-session-1",
+          title: "Chat",
+          projectId: "project-1",
+          providerId: "openai",
+          createdAt: "2026-04-20T00:00:00.000Z",
+          updatedAt: "2026-04-20T00:00:00.000Z",
+          messageCount: 0,
+        },
+      ],
+      activeSessionId: null,
+      isLoading: false,
+      hasHydratedSessions: true,
+      contextPanelOpenBySession: {},
+      activeWorkspaceBySession: {},
+    });
+
+    const { result } = renderHook(() =>
+      useChatSessionController({ sessionId: "local-session-1" }),
+    );
+
+    act(() => {
+      result.current.handleModelChange("gpt-4.1");
+    });
+
+    await waitFor(() => {
+      expect(mockAcpPrepareSession).toHaveBeenCalledWith(
+        "local-session-1",
+        "openai",
+        "/tmp/project",
+        {
+          personaId: undefined,
+          projectId: "project-1",
+          knownNew: true,
+        },
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        useChatSessionStore.getState().getSession("local-session-1"),
+      ).toMatchObject({
+        acpSessionId: "goose-session-1",
+        modelId: "gpt-4.1",
+        modelName: "GPT-4.1",
+      });
+    });
+
+    expect(mockAcpSetModel).toHaveBeenCalledWith("local-session-1", "gpt-4.1");
+  });
+
   it("restores the previous stored model preference when setting a model fails", async () => {
     window.localStorage.setItem(
       "goose:preferredModelsByAgent",
@@ -324,6 +412,7 @@ describe("useChatSessionController", () => {
       sessions: [
         {
           id: "session-2",
+          acpSessionId: "session-2",
           title: "Chat",
           providerId: "openai",
           createdAt: "2026-04-21T00:00:00.000Z",
@@ -383,6 +472,7 @@ describe("useChatSessionController", () => {
       sessions: [
         {
           id: "session-3",
+          acpSessionId: "session-3",
           title: "Chat",
           providerId: "openai",
           createdAt: "2026-04-21T00:00:00.000Z",

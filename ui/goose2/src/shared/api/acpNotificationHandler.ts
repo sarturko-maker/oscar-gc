@@ -32,6 +32,10 @@ import {
   getToolCallIdentity,
   getToolChainSummary,
 } from "./acpToolCallIdentity";
+import {
+  getLocalSessionId,
+  subscribeToSessionRegistration,
+} from "./acpSessionRegistry";
 import { perfLog } from "@/shared/lib/perfLog";
 
 // Pre-set message ID for the next live stream per session.
@@ -50,6 +54,20 @@ interface LivePerf {
   chunkCount: number;
 }
 const livePerf = new Map<string, LivePerf>();
+const pendingUsageUpdates = new Map<
+  string,
+  { accumulatedTotal: number; contextLimit: number }
+>();
+
+subscribeToSessionRegistration((localSessionId, gooseSessionId) => {
+  const pendingUsage = pendingUsageUpdates.get(gooseSessionId);
+  if (!pendingUsage) {
+    return;
+  }
+
+  useChatStore.getState().updateTokenState(localSessionId, pendingUsage);
+  pendingUsageUpdates.delete(gooseSessionId);
+});
 
 const toolCallStatusFromUpdate = (status: string): ToolCallStatus =>
   status === "failed" ? "error" : "completed";
@@ -129,7 +147,9 @@ export function clearActiveMessageId(sessionId: string): void {
 export async function handleSessionNotification(
   notification: SessionNotification,
 ): Promise<void> {
-  const sessionId = notification.sessionId;
+  const gooseSessionId = notification.sessionId;
+  const localSessionId = getLocalSessionId(gooseSessionId);
+  const sessionId = localSessionId ?? gooseSessionId;
   const { update } = notification;
   const isReplay = useChatStore.getState().loadingSessionIds.has(sessionId);
 
@@ -144,20 +164,20 @@ export async function handleSessionNotification(
     }
     perf.lastAt = now;
     perf.count += 1;
-    handleReplay(sessionId, update);
+    handleReplay(sessionId, gooseSessionId, update);
   } else {
-    const perf = livePerf.get(sessionId);
+    const perf = livePerf.get(gooseSessionId);
     if (perf && update.sessionUpdate === "agent_message_chunk") {
       perf.chunkCount += 1;
       if (perf.firstChunkAt === null) {
         perf.firstChunkAt = performance.now();
-        const sid = sessionId.slice(0, 8);
+        const sid = gooseSessionId.slice(0, 8);
         perfLog(
           `[perf:stream] ${sid} first agent_message_chunk at ttft=${(perf.firstChunkAt - perf.sendStartedAt).toFixed(1)}ms`,
         );
       }
     }
-    handleLive(sessionId, update);
+    handleLive(sessionId, gooseSessionId, update);
   }
 }
 
@@ -179,7 +199,11 @@ function getChunkMessageId(update: SessionUpdate): string | null {
     : null;
 }
 
-function handleReplay(sessionId: string, update: SessionUpdate): void {
+function handleReplay(
+  sessionId: string,
+  gooseSessionId: string,
+  update: SessionUpdate,
+): void {
   switch (update.sessionUpdate) {
     case "agent_message_chunk": {
       const msg = ensureReplayAssistantMessage(
@@ -320,7 +344,7 @@ function handleReplay(sessionId: string, update: SessionUpdate): void {
     case "session_info_update":
     case "config_option_update":
     case "usage_update":
-      handleShared(sessionId, update);
+      handleShared(sessionId, gooseSessionId, update);
       break;
 
     default:
@@ -328,7 +352,11 @@ function handleReplay(sessionId: string, update: SessionUpdate): void {
   }
 }
 
-function handleLive(sessionId: string, update: SessionUpdate): void {
+function handleLive(
+  sessionId: string,
+  gooseSessionId: string,
+  update: SessionUpdate,
+): void {
   const store = useChatStore.getState();
 
   switch (update.sessionUpdate) {
@@ -336,6 +364,7 @@ function handleLive(sessionId: string, update: SessionUpdate): void {
       const messageId = ensureLiveAssistantMessage(
         sessionId,
         getChunkMessageId(update) ?? undefined,
+        gooseSessionId,
       );
 
       if (update.content.type === "text" && "text" in update.content) {
@@ -346,7 +375,11 @@ function handleLive(sessionId: string, update: SessionUpdate): void {
     }
 
     case "tool_call": {
-      const messageId = ensureLiveAssistantMessage(sessionId);
+      const messageId = ensureLiveAssistantMessage(
+        sessionId,
+        undefined,
+        gooseSessionId,
+      );
       const identity = getToolCallIdentity(update);
       const chainSummary = getToolChainSummary(update);
 
@@ -377,7 +410,9 @@ function handleLive(sessionId: string, update: SessionUpdate): void {
         sessionId,
         update.toolCallId,
       );
-      const messageId = ownerMessageId ?? ensureLiveAssistantMessage(sessionId);
+      const messageId =
+        ownerMessageId ??
+        ensureLiveAssistantMessage(sessionId, undefined, gooseSessionId);
 
       const patch = toolCallUpdatePatch(update);
       if (
@@ -460,7 +495,7 @@ function handleLive(sessionId: string, update: SessionUpdate): void {
     case "session_info_update":
     case "config_option_update":
     case "usage_update":
-      handleShared(sessionId, update);
+      handleShared(sessionId, gooseSessionId, update);
       break;
 
     default:
@@ -468,7 +503,11 @@ function handleLive(sessionId: string, update: SessionUpdate): void {
   }
 }
 
-function handleShared(sessionId: string, update: SessionUpdate): void {
+function handleShared(
+  sessionId: string,
+  gooseSessionId: string,
+  update: SessionUpdate,
+): void {
   switch (update.sessionUpdate) {
     case "session_info_update": {
       handleSessionInfoUpdate(sessionId, update);
@@ -517,6 +556,13 @@ function handleShared(sessionId: string, update: SessionUpdate): void {
 
     case "usage_update": {
       const usage = update as SessionUpdate & { sessionUpdate: "usage_update" };
+      if (!getLocalSessionId(gooseSessionId)) {
+        pendingUsageUpdates.set(gooseSessionId, {
+          accumulatedTotal: usage.used,
+          contextLimit: usage.size,
+        });
+        break;
+      }
 
       useChatStore.getState().updateTokenState(sessionId, {
         accumulatedTotal: usage.used,
@@ -563,6 +609,7 @@ function findLiveMessageIdWithToolCall(
 function ensureLiveAssistantMessage(
   sessionId: string,
   preferredMessageId?: string | null,
+  gooseSessionId = sessionId,
 ): string {
   const store = useChatStore.getState();
   const existingStreamingMessageId = findStreamingMessageId(sessionId);
@@ -577,7 +624,7 @@ function ensureLiveAssistantMessage(
 
   const messageId =
     preferredMessageId ??
-    presetMessageIds.get(sessionId) ??
+    presetMessageIds.get(gooseSessionId) ??
     existingStreamingMessageId ??
     crypto.randomUUID();
 
@@ -597,13 +644,14 @@ function ensureLiveAssistantMessage(
 
   store.setPendingAssistantProvider(sessionId, null);
   store.setStreamingMessageId(sessionId, messageId);
-  clearActiveMessageId(sessionId);
+  clearActiveMessageId(gooseSessionId);
 
   return messageId;
 }
 
 export function clearMessageTracking(): void {
   presetMessageIds.clear();
+  pendingUsageUpdates.clear();
   clearReplayAssistantTracking();
 }
 

@@ -4,10 +4,14 @@ import { useChatSessionStore, type ChatSession } from "../chatSessionStore";
 
 const mockAcpCreateSession = vi.fn();
 const mockAcpListSessions = vi.fn();
+const mockAcpPrepareSession = vi.fn();
+const mockAcpSetModel = vi.fn();
 
 vi.mock("@/shared/api/acp", () => ({
   acpCreateSession: (...args: unknown[]) => mockAcpCreateSession(...args),
   acpListSessions: (...args: unknown[]) => mockAcpListSessions(...args),
+  acpPrepareSession: (...args: unknown[]) => mockAcpPrepareSession(...args),
+  acpSetModel: (...args: unknown[]) => mockAcpSetModel(...args),
 }));
 
 vi.mock("@/shared/api/acpApi", () => ({
@@ -31,6 +35,7 @@ function resetStore() {
 function makeSession(overrides: Partial<ChatSession> = {}): ChatSession {
   return {
     id: "session-1",
+    acpSessionId: "session-1",
     title: "Test Session",
     createdAt: "2026-04-01T00:00:00.000Z",
     updatedAt: "2026-04-01T00:00:00.000Z",
@@ -87,6 +92,30 @@ describe("chatSessionStore", () => {
         workingDir: "/tmp/project",
       });
       expect(useChatSessionStore.getState().sessions).toContainEqual(session);
+    });
+  });
+
+  describe("createLocalSession", () => {
+    it("creates an unbacked local draft session without touching ACP", () => {
+      const session = useChatSessionStore.getState().createLocalSession({
+        title: "New Chat",
+        projectId: "project-1",
+        providerId: "openai",
+        modelId: "gpt-4.1",
+        modelName: "GPT-4.1",
+      });
+
+      expect(mockAcpCreateSession).not.toHaveBeenCalled();
+      expect(session).toMatchObject({
+        title: "New Chat",
+        projectId: "project-1",
+        providerId: "openai",
+        modelId: "gpt-4.1",
+        modelName: "GPT-4.1",
+        messageCount: 0,
+      });
+      expect(session.acpSessionId).toBeUndefined();
+      expect(useChatSessionStore.getState().sessions[0]).toEqual(session);
     });
   });
 
@@ -194,6 +223,36 @@ describe("chatSessionStore", () => {
       expect(state.sessions).toHaveLength(1);
       expect(state.sessions[0].id).toBe("acp-1");
       expect(state.activeSessionId).toBeNull();
+    });
+
+    it("keeps unbacked local draft sessions during ACP refresh", async () => {
+      const localSession = useChatSessionStore.getState().createLocalSession({
+        title: "Local Draft",
+        projectId: "project-1",
+      });
+      useChatSessionStore.getState().setActiveSession(localSession.id);
+
+      mockAcpListSessions.mockResolvedValue([
+        {
+          sessionId: "acp-1",
+          title: "ACP Session",
+          updatedAt: "2026-04-02",
+          createdAt: "2026-04-02",
+          archivedAt: null,
+          userSetName: false,
+          messageCount: 1,
+          providerId: null,
+          modelId: null,
+        },
+      ]);
+
+      await useChatSessionStore.getState().loadSessions();
+
+      const state = useChatSessionStore.getState();
+      expect(state.sessions.map((session) => session.id)).toContain(
+        localSession.id,
+      );
+      expect(state.activeSessionId).toBe(localSession.id);
     });
 
     it("sets isLoading during fetch", async () => {

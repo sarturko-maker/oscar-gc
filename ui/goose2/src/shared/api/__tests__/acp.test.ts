@@ -101,7 +101,7 @@ describe("acpPrepareSession", () => {
 
     await expect(
       acpPrepareSession("acp-session-1", "openai", "/tmp/project"),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe("acp-session-1");
 
     expect(mockLoadSession).toHaveBeenCalledWith(
       "acp-session-1",
@@ -123,5 +123,31 @@ describe("acpPrepareSession", () => {
 
     expect(mockNewSession).not.toHaveBeenCalled();
     expect(mockSetProvider).not.toHaveBeenCalled();
+  });
+
+  it("creates a known-new session without probing load or resetting provider", async () => {
+    mockNewSession.mockResolvedValueOnce({ sessionId: "goose-session-1" });
+
+    const sessionRegistry = await import("../acpSessionRegistry");
+    const { acpPrepareSession } = await import("../acp");
+
+    await expect(
+      acpPrepareSession("local-session", "openai", "/tmp/project", {
+        projectId: "project-1",
+        knownNew: true,
+      }),
+    ).resolves.toBe("goose-session-1");
+
+    expect(mockLoadSession).not.toHaveBeenCalled();
+    expect(mockNewSession).toHaveBeenCalledWith(
+      "/tmp/project",
+      "openai",
+      "project-1",
+      undefined,
+    );
+    expect(mockSetProvider).not.toHaveBeenCalled();
+    expect(sessionRegistry.getGooseSessionId("local-session")).toBe(
+      "goose-session-1",
+    );
   });
 });

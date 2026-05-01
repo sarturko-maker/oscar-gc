@@ -2,33 +2,84 @@ import * as acpApi from "./acpApi";
 import { perfLog } from "@/shared/lib/perfLog";
 
 interface PreparedSession {
+  gooseSessionId: string;
   providerId: string;
   workingDir: string;
 }
 
+interface PrepareSessionOptions {
+  personaId?: string;
+  projectId?: string;
+  knownNew?: boolean;
+}
+
+type SessionRegistrationListener = (
+  localSessionId: string,
+  gooseSessionId: string,
+) => void;
+
 const prepared = new Map<string, PreparedSession>();
+const gooseToLocal = new Map<string, string>();
+const registrationListeners = new Set<SessionRegistrationListener>();
+
+function makeKey(sessionId: string, personaId?: string): string {
+  return personaId && personaId.length > 0
+    ? `${sessionId}__${personaId}`
+    : sessionId;
+}
+
+function notifySessionRegistered(
+  localSessionId: string,
+  gooseSessionId: string,
+): void {
+  for (const listener of registrationListeners) {
+    listener(localSessionId, gooseSessionId);
+  }
+}
+
+function restoreGooseRegistration(
+  gooseSessionId: string,
+  localSessionId: string | undefined,
+): void {
+  if (localSessionId === undefined) {
+    gooseToLocal.delete(gooseSessionId);
+    return;
+  }
+
+  gooseToLocal.set(gooseSessionId, localSessionId);
+}
+
+export function subscribeToSessionRegistration(
+  listener: SessionRegistrationListener,
+): () => void {
+  registrationListeners.add(listener);
+  return () => registrationListeners.delete(listener);
+}
 
 export async function prepareSession(
   sessionId: string,
   providerId: string,
   workingDir: string,
-): Promise<void> {
+  options: PrepareSessionOptions = {},
+): Promise<string> {
   const sid = sessionId.slice(0, 8);
+  const { personaId, projectId, knownNew = false } = options;
+  const key = makeKey(sessionId, personaId);
 
-  const existing = prepared.get(sessionId);
+  const existing = prepared.get(key) ?? prepared.get(sessionId);
   if (existing) {
     const tReuse = performance.now();
     let changed = false;
     if (existing.workingDir !== workingDir) {
-      await acpApi.updateWorkingDir(sessionId, workingDir);
+      await acpApi.updateWorkingDir(existing.gooseSessionId, workingDir);
       existing.workingDir = workingDir;
       changed = true;
     }
     if (existing.providerId !== providerId) {
       const tProv = performance.now();
-      await acpApi.setProvider(sessionId, providerId);
+      await acpApi.setProvider(existing.gooseSessionId, providerId);
       perfLog(
-        `[perf:prepare] ${sid} reuse setProvider(${providerId}) in ${(performance.now() - tProv).toFixed(1)}ms`,
+        `[perf:prepare] ${sid} reuse setProvider(${providerId}) in ${(performance.now() - tProv).toFixed(1)}ms (goose_sid=${existing.gooseSessionId.slice(0, 8)})`,
       );
       existing.providerId = providerId;
       changed = true;
@@ -36,29 +87,70 @@ export async function prepareSession(
     perfLog(
       `[perf:prepare] ${sid} reuse existing session (updates=${changed}) in ${(performance.now() - tReuse).toFixed(1)}ms`,
     );
-    return;
+    return existing.gooseSessionId;
   }
 
-  const tLoad = performance.now();
-  await acpApi.loadSession(sessionId, workingDir);
-  perfLog(
-    `[perf:prepare] ${sid} registry loadSession ok in ${(performance.now() - tLoad).toFixed(1)}ms`,
-  );
+  let gooseSessionId: string;
+  let providerApplied = false;
 
-  const tProv = performance.now();
-  await acpApi.setProvider(sessionId, providerId);
-  perfLog(
-    `[perf:prepare] ${sid} registry setProvider(${providerId}) in ${(performance.now() - tProv).toFixed(1)}ms`,
-  );
+  if (knownNew) {
+    const tNew = performance.now();
+    const response = await acpApi.newSession(
+      workingDir,
+      providerId,
+      projectId,
+      personaId,
+    );
+    gooseSessionId = response.sessionId;
+    providerApplied = true;
+    perfLog(
+      `[perf:prepare] ${sid} registry newSession done in ${(performance.now() - tNew).toFixed(1)}ms (goose_sid=${gooseSessionId.slice(0, 8)})`,
+    );
+  } else {
+    const tLoad = performance.now();
+    await acpApi.loadSession(sessionId, workingDir);
+    gooseSessionId = sessionId;
+    perfLog(
+      `[perf:prepare] ${sid} registry loadSession ok in ${(performance.now() - tLoad).toFixed(1)}ms`,
+    );
+  }
 
-  const entry = { providerId, workingDir };
+  if (!providerApplied) {
+    const tProv = performance.now();
+    await acpApi.setProvider(gooseSessionId, providerId);
+    perfLog(
+      `[perf:prepare] ${sid} registry setProvider(${providerId}) in ${(performance.now() - tProv).toFixed(1)}ms (goose_sid=${gooseSessionId.slice(0, 8)})`,
+    );
+  }
+
+  const entry = { gooseSessionId, providerId, workingDir };
+  prepared.set(key, entry);
   prepared.set(sessionId, entry);
+  prepared.set(gooseSessionId, entry);
+  gooseToLocal.set(gooseSessionId, sessionId);
+  notifySessionRegistered(sessionId, gooseSessionId);
 
-  return;
+  return gooseSessionId;
+}
+
+export function getGooseSessionId(
+  sessionId: string,
+  personaId?: string,
+): string | null {
+  const key = makeKey(sessionId, personaId);
+  return (
+    prepared.get(key)?.gooseSessionId ??
+    prepared.get(sessionId)?.gooseSessionId ??
+    null
+  );
+}
+
+export function getLocalSessionId(gooseSessionId: string): string | null {
+  return gooseToLocal.get(gooseSessionId) ?? null;
 }
 
 export function isSessionPrepared(sessionId: string): boolean {
-  return prepared.has(sessionId);
+  return getGooseSessionId(sessionId) !== null;
 }
 
 export function registerPreparedSession(
@@ -66,15 +158,54 @@ export function registerPreparedSession(
   providerId: string,
   workingDir: string,
 ): () => void {
+  return registerSession(sessionId, sessionId, providerId, workingDir);
+}
+
+export function registerSession(
+  sessionId: string,
+  gooseSessionId: string,
+  providerId: string,
+  workingDir: string,
+): () => void {
   const previousEntry = prepared.get(sessionId);
-  const entry = { providerId, workingDir };
+  const previousGooseEntry = prepared.get(gooseSessionId);
+  const previousGooseSessionLocal = gooseToLocal.get(gooseSessionId);
+  const previousSessionGooseLocal = previousEntry
+    ? gooseToLocal.get(previousEntry.gooseSessionId)
+    : undefined;
+  const entry = { gooseSessionId, providerId, workingDir };
+
+  if (
+    previousEntry &&
+    previousEntry.gooseSessionId !== gooseSessionId &&
+    gooseToLocal.get(previousEntry.gooseSessionId) === sessionId
+  ) {
+    gooseToLocal.delete(previousEntry.gooseSessionId);
+  }
 
   prepared.set(sessionId, entry);
+  prepared.set(gooseSessionId, entry);
+  gooseToLocal.set(gooseSessionId, sessionId);
+  notifySessionRegistered(sessionId, gooseSessionId);
 
   return () => {
     prepared.delete(sessionId);
     if (previousEntry) {
       prepared.set(sessionId, previousEntry);
+    }
+    if (gooseSessionId !== sessionId) {
+      prepared.delete(gooseSessionId);
+      if (previousGooseEntry) {
+        prepared.set(gooseSessionId, previousGooseEntry);
+      }
+    }
+
+    restoreGooseRegistration(gooseSessionId, previousGooseSessionLocal);
+    if (previousEntry && previousEntry.gooseSessionId !== gooseSessionId) {
+      restoreGooseRegistration(
+        previousEntry.gooseSessionId,
+        previousSessionGooseLocal,
+      );
     }
   };
 }

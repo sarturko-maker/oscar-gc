@@ -27,9 +27,13 @@ export interface AcpSendMessageOptions {
   images?: [string, string][];
 }
 
-export interface AcpCreateSessionOptions {
+export interface AcpPrepareSessionOptions {
   personaId?: string;
   projectId?: string;
+  knownNew?: boolean;
+}
+
+export interface AcpCreateSessionOptions extends AcpPrepareSessionOptions {
   modelId?: string | null;
 }
 
@@ -83,7 +87,11 @@ export async function acpSendMessage(
   const sid = sessionId.slice(0, 8);
   const tStart = performance.now();
 
-  if (!sessionRegistry.isSessionPrepared(sessionId)) {
+  const gooseSessionId = sessionRegistry.getGooseSessionId(
+    sessionId,
+    personaId,
+  );
+  if (!gooseSessionId) {
     throw new Error("Session not prepared. Call acpPrepareSession first.");
   }
 
@@ -110,7 +118,7 @@ export async function acpSendMessage(
   }
 
   const messageId = crypto.randomUUID();
-  setActiveMessageId(sessionId, messageId);
+  setActiveMessageId(gooseSessionId, messageId);
 
   perfLog(
     `[perf:send] ${sid} acpSendMessage → prompt(len=${prompt.length}, imgs=${images?.length ?? 0})`,
@@ -120,7 +128,7 @@ export async function acpSendMessage(
   if (personaId) meta.personaId = personaId;
   try {
     await directAcp.prompt(
-      sessionId,
+      gooseSessionId,
       content,
       Object.keys(meta).length > 0 ? meta : undefined,
     );
@@ -129,7 +137,7 @@ export async function acpSendMessage(
       `[perf:send] ${sid} prompt() resolved in ${(tDone - tPrompt).toFixed(1)}ms (total acpSendMessage ${(tDone - tStart).toFixed(1)}ms)`,
     );
   } finally {
-    clearActiveMessageId(sessionId);
+    clearActiveMessageId(gooseSessionId);
   }
 }
 
@@ -138,16 +146,27 @@ export async function acpPrepareSession(
   sessionId: string,
   providerId: string,
   workingDir: string,
-): Promise<void> {
+  options: AcpPrepareSessionOptions = {},
+): Promise<string> {
   const sid = sessionId.slice(0, 8);
   const t0 = performance.now();
   perfLog(
     `[perf:prepare] ${sid} acpPrepareSession start (provider=${providerId})`,
   );
-  await sessionRegistry.prepareSession(sessionId, providerId, workingDir);
+  const gooseSessionId = await sessionRegistry.prepareSession(
+    sessionId,
+    providerId,
+    workingDir,
+    {
+      personaId: options.personaId,
+      projectId: options.projectId,
+      knownNew: options.knownNew,
+    },
+  );
   perfLog(
     `[perf:prepare] ${sid} acpPrepareSession done in ${(performance.now() - t0).toFixed(1)}ms`,
   );
+  return gooseSessionId;
 }
 
 export async function acpCreateSession(
@@ -174,7 +193,8 @@ export async function acpSetModel(
   sessionId: string,
   modelId: string,
 ): Promise<void> {
-  return directAcp.setModel(sessionId, modelId);
+  const gooseSessionId = sessionRegistry.getGooseSessionId(sessionId);
+  return directAcp.setModel(gooseSessionId ?? sessionId, modelId);
 }
 
 export type { AcpSessionInfo };
@@ -196,7 +216,19 @@ export async function acpSearchSessions(
   query: string,
   sessionIds: string[],
 ): Promise<AcpSessionSearchResult[]> {
-  return searchSessionsViaExports(query, sessionIds);
+  const localByGooseSessionId = new Map<string, string>();
+  const gooseSessionIds = sessionIds.map((sessionId) => {
+    const gooseSessionId =
+      sessionRegistry.getGooseSessionId(sessionId) ?? sessionId;
+    localByGooseSessionId.set(gooseSessionId, sessionId);
+    return gooseSessionId;
+  });
+
+  const results = await searchSessionsViaExports(query, gooseSessionIds);
+  return results.map((result) => ({
+    ...result,
+    sessionId: localByGooseSessionId.get(result.sessionId) ?? result.sessionId,
+  }));
 }
 
 /**
@@ -205,21 +237,37 @@ export async function acpSearchSessions(
  * This triggers message replay via SessionNotification events that the
  * notification handler picks up automatically.
  */
-export async function acpLoadSession(
+export function acpLoadSession(
   sessionId: string,
   workingDir?: string,
+): Promise<void>;
+export function acpLoadSession(
+  sessionId: string,
+  gooseSessionId: string,
+  workingDir?: string,
+): Promise<void>;
+export async function acpLoadSession(
+  sessionId: string,
+  gooseSessionIdOrWorkingDir?: string,
+  workingDir?: string,
 ): Promise<void> {
-  const effectiveWorkingDir = workingDir ?? "~";
+  const gooseSessionId =
+    workingDir === undefined
+      ? (sessionRegistry.getGooseSessionId(sessionId) ?? sessionId)
+      : (gooseSessionIdOrWorkingDir ?? sessionId);
+  const effectiveWorkingDir =
+    workingDir === undefined ? (gooseSessionIdOrWorkingDir ?? "~") : workingDir;
   const sid = sessionId.slice(0, 8);
   const t0 = performance.now();
-  const rollbackSessionRegistration = sessionRegistry.registerPreparedSession(
+  const rollbackSessionRegistration = sessionRegistry.registerSession(
     sessionId,
+    gooseSessionId,
     "goose",
     effectiveWorkingDir,
   );
   try {
     perfLog(`[perf:load] ${sid} acpLoadSession → client.loadSession`);
-    await directAcp.loadSession(sessionId, effectiveWorkingDir);
+    await directAcp.loadSession(gooseSessionId, effectiveWorkingDir);
     perfLog(
       `[perf:load] ${sid} client.loadSession resolved in ${(performance.now() - t0).toFixed(1)}ms`,
     );
@@ -231,7 +279,8 @@ export async function acpLoadSession(
 
 /** Export a session as JSON via the goose binary. */
 export async function acpExportSession(sessionId: string): Promise<string> {
-  return directAcp.exportSession(sessionId);
+  const gooseSessionId = sessionRegistry.getGooseSessionId(sessionId);
+  return directAcp.exportSession(gooseSessionId ?? sessionId);
 }
 
 /** Import a session from JSON via the goose binary. Returns new session metadata. */
@@ -243,11 +292,19 @@ export async function acpImportSession(json: string): Promise<AcpSessionInfo> {
 export async function acpDuplicateSession(
   sessionId: string,
 ): Promise<AcpSessionInfo> {
-  return directAcp.forkSession(sessionId);
+  const gooseSessionId = sessionRegistry.getGooseSessionId(sessionId);
+  return directAcp.forkSession(gooseSessionId ?? sessionId);
 }
 
 /** Cancel an in-progress ACP session so the backend stops streaming. */
-export async function acpCancelSession(sessionId: string): Promise<boolean> {
-  await directAcp.cancelSession(sessionId);
+export async function acpCancelSession(
+  sessionId: string,
+  personaId?: string,
+): Promise<boolean> {
+  const gooseSessionId = sessionRegistry.getGooseSessionId(
+    sessionId,
+    personaId,
+  );
+  await directAcp.cancelSession(gooseSessionId ?? sessionId);
   return true;
 }
