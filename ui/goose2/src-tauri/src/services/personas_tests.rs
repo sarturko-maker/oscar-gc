@@ -40,7 +40,10 @@ fn markdown_persona_path_accepts_normal_slug() {
 fn local_avatar_reference_check_counts_remaining_personas() {
     let personas = vec![
         make_persona("one", Some(Avatar::Local("shared.png".to_string()))),
-        make_persona("two", Some(Avatar::Url("https://example.test/avatar.png".to_string()))),
+        make_persona(
+            "two",
+            Some(Avatar::Url("https://example.test/avatar.png".to_string())),
+        ),
         make_persona("three", Some(Avatar::Local("other.png".to_string()))),
     ];
 

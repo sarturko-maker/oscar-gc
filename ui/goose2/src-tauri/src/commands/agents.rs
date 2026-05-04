@@ -134,8 +134,8 @@ fn parse_markdown_agent(content: &str) -> Result<CreatePersonaRequest, String> {
         .ok_or_else(|| "Missing closing frontmatter delimiter".to_string())?;
     let yaml = &after_first[..end_idx];
     let body = after_first[end_idx + 4..].trim().to_string();
-    let frontmatter: MarkdownAgentFrontmatter = serde_yaml::from_str(yaml)
-        .map_err(|e| format!("Invalid frontmatter YAML: {}", e))?;
+    let frontmatter: MarkdownAgentFrontmatter =
+        serde_yaml::from_str(yaml).map_err(|e| format!("Invalid frontmatter YAML: {}", e))?;
 
     if frontmatter.name.trim().is_empty() {
         return Err("Agent name cannot be empty".to_string());

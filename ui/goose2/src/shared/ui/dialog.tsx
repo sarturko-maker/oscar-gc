@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Slot } from "@radix-ui/react-slot";
 import { XIcon } from "lucide-react";
@@ -36,26 +36,6 @@ function DialogClose({
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
-function hasDialogBody(children: React.ReactNode): boolean {
-  return React.Children.toArray(children).some((child) => {
-    if (!React.isValidElement(child)) {
-      return false;
-    }
-
-    if (child.type === DialogBody) {
-      return true;
-    }
-
-    if (child.type === React.Fragment) {
-      return hasDialogBody(
-        (child.props as { children?: React.ReactNode }).children,
-      );
-    }
-
-    return false;
-  });
-}
-
 function DialogOverlay({
   className,
   ...props
@@ -86,8 +66,6 @@ function DialogContent({
   showCloseButton?: boolean;
   width?: DialogWidth;
 }) {
-  const hasScrollableBody = hasDialogBody(children);
-
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay className={overlayClassName} />
@@ -103,9 +81,7 @@ function DialogContent({
           className={cn(
             "pointer-events-auto relative max-h-[calc(100dvh-2rem)] w-full gap-4 rounded-modal border bg-background p-6 shadow-modal data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
             dialogWidthClassName[width],
-            hasScrollableBody
-              ? "flex flex-col overflow-hidden"
-              : "grid overflow-y-auto",
+            "grid overflow-y-auto has-[[data-slot=dialog-body]]:flex has-[[data-slot=dialog-body]]:flex-col has-[[data-slot=dialog-body]]:overflow-hidden",
             className,
           )}
           {...props}
@@ -145,7 +121,10 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn(
+        "flex shrink-0 flex-col gap-2 text-center sm:text-left",
+        className,
+      )}
       {...props}
     />
   );
@@ -156,7 +135,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        "flex shrink-0 flex-col-reverse gap-2 sm:flex-row sm:justify-end",
         className,
       )}
       {...props}

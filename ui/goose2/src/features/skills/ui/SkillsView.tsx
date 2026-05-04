@@ -52,6 +52,28 @@ function getDuplicateSkillName(name: string, existingNames: Set<string>) {
   return `skill-copy-${Date.now().toString().slice(-8)}`;
 }
 
+let cachedProjectDirsKey = "";
+let cachedSkills: SkillViewInfo[] | null = null;
+
+function getProjectDirs(
+  projects: ReturnType<typeof useProjectStore.getState>["projects"],
+) {
+  return projects.flatMap((project) => project.workingDirs);
+}
+
+function getProjectDirsKey(projectDirs: string[]) {
+  return JSON.stringify(projectDirs.map((dir) => dir.trim()).filter(Boolean));
+}
+
+function getCachedSkills(projectDirsKey: string) {
+  return cachedProjectDirsKey === projectDirsKey ? cachedSkills : null;
+}
+
+export function clearSkillsViewCacheForTest() {
+  cachedProjectDirsKey = "";
+  cachedSkills = null;
+}
+
 interface SkillsViewProps {
   onStartChatWithSkill?: (skill: SkillInfo, projectId?: string | null) => void;
 }
@@ -68,8 +90,16 @@ export function SkillsView({ onStartChatWithSkill }: SkillsViewProps) {
   const [editingSkill, setEditingSkill] = useState<EditingSkill | undefined>(
     undefined,
   );
-  const [skills, setSkills] = useState<SkillViewInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const projectDirs = useMemo(() => getProjectDirs(projects), [projects]);
+  const projectDirsKey = useMemo(
+    () => getProjectDirsKey(projectDirs),
+    [projectDirs],
+  );
+  const initialCachedSkills = getCachedSkills(projectDirsKey);
+  const [skills, setSkills] = useState<SkillViewInfo[]>(
+    () => initialCachedSkills ?? [],
+  );
+  const [loading, setLoading] = useState(initialCachedSkills === null);
   const [deletingSkill, setDeletingSkill] = useState<SkillInfo | null>(null);
   const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
   const [expandedSectionIds, setExpandedSectionIds] = useState<string[]>([]);
@@ -78,10 +108,10 @@ export function SkillsView({ onStartChatWithSkill }: SkillsViewProps) {
   const loadSkills = useCallback(async (): Promise<SkillViewInfo[]> => {
     const requestId = loadRequestIdRef.current + 1;
     loadRequestIdRef.current = requestId;
+    const requestProjectDirsKey = projectDirsKey;
     setLoading(true);
 
     try {
-      const projectDirs = projects.flatMap((project) => project.workingDirs);
       const result = await listSkills(projectDirs);
       if (loadRequestIdRef.current !== requestId) {
         return [];
@@ -89,6 +119,8 @@ export function SkillsView({ onStartChatWithSkill }: SkillsViewProps) {
       const nextSkills = withInferredSkillCategories(
         hydrateProjectNames(result, projects),
       );
+      cachedProjectDirsKey = requestProjectDirsKey;
+      cachedSkills = nextSkills;
       setSkills(nextSkills);
       return nextSkills;
     } catch {
@@ -101,7 +133,7 @@ export function SkillsView({ onStartChatWithSkill }: SkillsViewProps) {
         setLoading(false);
       }
     }
-  }, [projects, t]);
+  }, [projectDirs, projectDirsKey, projects, t]);
 
   useEffect(() => {
     loadSkills();

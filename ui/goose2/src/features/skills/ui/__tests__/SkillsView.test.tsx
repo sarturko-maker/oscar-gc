@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { SkillInfo } from "../../api/skills";
-import { SkillsView } from "../SkillsView";
+import { clearSkillsViewCacheForTest, SkillsView } from "../SkillsView";
 
 type MockProject = {
   id: string;
@@ -98,6 +98,7 @@ const { listSkills, deleteSkill, updateSkill } = (await import(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  clearSkillsViewCacheForTest();
   mockProjects = [
     {
       id: "project-alpha",
@@ -235,6 +236,25 @@ describe("SkillsView", () => {
 
     await screen.findByText("beta-skill");
     expect(screen.queryByText("code-review")).not.toBeInTheDocument();
+  });
+
+  it("shows cached skills immediately when returning to the page", async () => {
+    const secondLoad = createDeferred<typeof mockSkills>();
+    listSkills
+      .mockResolvedValueOnce(mockSkills)
+      .mockReturnValueOnce(secondLoad.promise);
+    const { unmount } = render(<SkillsView />);
+
+    await screen.findByText("code-review");
+    unmount();
+
+    render(<SkillsView />);
+
+    expect(screen.getByText("code-review")).toBeInTheDocument();
+    expect(screen.getByText("test-writer")).toBeInTheDocument();
+    expect(listSkills).toHaveBeenCalledTimes(2);
+
+    secondLoad.resolve(mockSkills);
   });
 
   it("matches saved project working directories with trailing separators", async () => {

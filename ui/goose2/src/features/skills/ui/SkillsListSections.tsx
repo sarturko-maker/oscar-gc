@@ -77,7 +77,7 @@ export function SkillsListSections({
           />
 
           <AccordionContent className="pb-0">
-            <div className="motion-safe:group-data-[state=closed]/skills-section:animate-accordion-content-close motion-safe:group-data-[state=open]/skills-section:animate-accordion-content-open border-t border-border-soft-divider will-change-[opacity,transform]">
+            <div className="border-t border-border-soft-divider">
               <div className="divide-y divide-border-soft-divider">
                 {section.skills.map((skill) => (
                   <div

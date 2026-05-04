@@ -1,70 +1,17 @@
-import * as React from "react";
+import type * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 
-const DROPDOWN_MENU_OPEN_EVENT = "goose:dropdown-menu-open";
-
 function DropdownMenu({
-  open: controlledOpen,
-  defaultOpen = false,
-  onOpenChange,
-  closeOnSiblingOpen = true,
+  modal = false,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Root> & {
-  closeOnSiblingOpen?: boolean;
-}) {
-  const menuId = React.useId();
-  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen);
-  const open = controlledOpen ?? uncontrolledOpen;
-
-  const handleOpenChange = React.useCallback(
-    (nextOpen: boolean) => {
-      if (controlledOpen === undefined) {
-        setUncontrolledOpen(nextOpen);
-      }
-      onOpenChange?.(nextOpen);
-
-      if (nextOpen && closeOnSiblingOpen && typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent(DROPDOWN_MENU_OPEN_EVENT, {
-            detail: { id: menuId },
-          }),
-        );
-      }
-    },
-    [closeOnSiblingOpen, controlledOpen, menuId, onOpenChange],
-  );
-
-  React.useEffect(() => {
-    if (!closeOnSiblingOpen || !open || typeof window === "undefined") {
-      return;
-    }
-
-    const handleSiblingOpen = (event: Event) => {
-      const siblingMenuId = (event as CustomEvent<{ id?: string }>).detail?.id;
-      if (siblingMenuId === menuId) {
-        return;
-      }
-
-      if (controlledOpen === undefined) {
-        setUncontrolledOpen(false);
-      }
-      onOpenChange?.(false);
-    };
-
-    window.addEventListener(DROPDOWN_MENU_OPEN_EVENT, handleSiblingOpen);
-    return () => {
-      window.removeEventListener(DROPDOWN_MENU_OPEN_EVENT, handleSiblingOpen);
-    };
-  }, [closeOnSiblingOpen, controlledOpen, menuId, onOpenChange, open]);
-
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
   return (
     <DropdownMenuPrimitive.Root
       data-slot="dropdown-menu"
-      open={open}
-      onOpenChange={handleOpenChange}
+      modal={modal}
       {...props}
     />
   );

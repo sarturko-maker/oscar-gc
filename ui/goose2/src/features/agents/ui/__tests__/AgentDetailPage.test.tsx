@@ -55,7 +55,8 @@ describe("AgentDetailPage", () => {
     const user = userEvent.setup();
     renderDetail();
 
-    await user.click(screen.getByRole("button", { name: "Share" }));
+    screen.getByRole("button", { name: "Share" }).focus();
+    await user.keyboard("{Enter}");
 
     expect(screen.getByRole("button", { name: "More" })).toBeInTheDocument();
     expect(

@@ -117,11 +117,11 @@ pub fn copy_file_to_clipboard(path: String) -> Result<(), String> {
         }
 
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        return Err(if stderr.is_empty() {
+        Err(if stderr.is_empty() {
             "Failed to copy file".to_string()
         } else {
             stderr
-        });
+        })
     }
 
     #[cfg(target_os = "windows")]

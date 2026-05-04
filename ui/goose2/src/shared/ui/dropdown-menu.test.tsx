@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
@@ -14,13 +15,34 @@ import {
 function SiblingMenus() {
   return (
     <div>
-      <DropdownMenu modal={false}>
+      <DropdownMenu>
         <DropdownMenuTrigger>More</DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem>Duplicate</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <DropdownMenu modal={false}>
+      <DropdownMenu>
+        <DropdownMenuTrigger>Share</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>Copy file to clipboard</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+function ControlledSiblingMenus() {
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  return (
+    <div>
+      <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
+        <DropdownMenuTrigger>More</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
         <DropdownMenuTrigger>Share</DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem>Copy file to clipboard</DropdownMenuItem>
@@ -34,6 +56,27 @@ describe("DropdownMenu", () => {
   it("closes an open sibling menu when another menu opens", async () => {
     const user = userEvent.setup();
     render(<SiblingMenus />);
+
+    await user.click(screen.getByRole("button", { name: "More" }));
+    expect(
+      screen.getByRole("menuitem", { name: "Duplicate" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Share" }));
+
+    expect(
+      screen.getByRole("menuitem", { name: "Copy file to clipboard" }),
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("menuitem", { name: "Duplicate" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("closes a controlled sibling menu when another menu opens", async () => {
+    const user = userEvent.setup();
+    render(<ControlledSiblingMenus />);
 
     await user.click(screen.getByRole("button", { name: "More" }));
     expect(

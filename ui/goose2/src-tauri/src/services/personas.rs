@@ -31,7 +31,9 @@ impl PersonaStore {
         Self::migrate_legacy_personas_json(&store_path);
         Self::ensure_seed_agents();
         let merged = Self::load_markdown_personas();
-        Self { personas: Mutex::new(merged) }
+        Self {
+            personas: Mutex::new(merged),
+        }
     }
 
     fn store_path() -> PathBuf {
@@ -112,14 +114,20 @@ impl PersonaStore {
 
         let target_dir = Self::agents_dir();
         if let Err(err) = std::fs::create_dir_all(&target_dir) {
-            warn!("Failed to create agents directory {:?}: {}", target_dir, err);
+            warn!(
+                "Failed to create agents directory {:?}: {}",
+                target_dir, err
+            );
             return;
         }
 
         let entries = match std::fs::read_dir(&legacy_dir) {
             Ok(entries) => entries,
             Err(err) => {
-                warn!("Failed to read legacy agents directory {:?}: {}", legacy_dir, err);
+                warn!(
+                    "Failed to read legacy agents directory {:?}: {}",
+                    legacy_dir, err
+                );
                 return;
             }
         };
@@ -169,11 +177,17 @@ impl PersonaStore {
             let filename = format!("{}.md", Self::slugify_name(&persona.display_name));
             let path = Self::unique_agent_path(&dir, &filename);
             if let Err(err) = std::fs::write(&path, Self::persona_to_markdown(&persona)) {
-                warn!("Failed to migrate persona '{}' to markdown: {}", persona.display_name, err);
+                warn!(
+                    "Failed to migrate persona '{}' to markdown: {}",
+                    persona.display_name, err
+                );
             }
         }
 
-        let _ = std::fs::write(Self::migration_marker_path(), chrono::Utc::now().to_rfc3339());
+        let _ = std::fs::write(
+            Self::migration_marker_path(),
+            chrono::Utc::now().to_rfc3339(),
+        );
     }
 
     fn unique_agent_path(dir: &Path, filename: &str) -> PathBuf {
@@ -353,7 +367,10 @@ impl PersonaStore {
         }
     }
 
-    fn markdown_from_parts(frontmatter: &MarkdownFrontmatter, body: &str) -> Result<String, String> {
+    fn markdown_from_parts(
+        frontmatter: &MarkdownFrontmatter,
+        body: &str,
+    ) -> Result<String, String> {
         let yaml = serde_yaml::to_string(frontmatter)
             .map_err(|e| format!("Failed to serialize frontmatter: {}", e))?;
         let body = body.trim();
@@ -496,11 +513,7 @@ impl PersonaStore {
         Ok(persona)
     }
 
-    pub fn import_markdown(
-        &self,
-        display_name: &str,
-        markdown: &str,
-    ) -> Result<Persona, String> {
+    pub fn import_markdown(&self, display_name: &str, markdown: &str) -> Result<Persona, String> {
         let agents_dir = Self::agents_dir();
         std::fs::create_dir_all(&agents_dir)
             .map_err(|e| format!("Failed to create agents directory: {}", e))?;
