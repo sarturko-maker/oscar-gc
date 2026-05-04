@@ -80,15 +80,6 @@ export function PersonaCard({
         isActive && "border-border bg-muted/20",
       )}
     >
-      {isFeatured ? (
-        <Badge
-          variant="featured"
-          className="absolute right-5 top-5 z-10 text-[10px]"
-        >
-          {t("card.featured")}
-        </Badge>
-      ) : null}
-
       <div className="flex items-start justify-between gap-3">
         <Avatar className="size-12 border border-border-soft bg-muted/30">
           <AvatarImage src={avatarSrc ?? undefined} alt={persona.displayName} />
@@ -156,9 +147,14 @@ export function PersonaCard({
 
       <div className="mt-4 min-w-0 space-y-1">
         <div className="flex min-w-0 items-center gap-2">
-          <h3 className="min-w-0 flex-1 truncate text-sm font-medium leading-5 text-foreground">
+          <h3 className="min-w-0 truncate text-sm font-medium leading-5 text-foreground">
             {persona.displayName}
           </h3>
+          {isFeatured ? (
+            <Badge variant="featured" className="text-[10px]">
+              {t("card.featured")}
+            </Badge>
+          ) : null}
         </div>
 
         {providerModelLabel ? (

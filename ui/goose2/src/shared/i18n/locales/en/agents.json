@@ -61,7 +61,7 @@
     "loading": "Loading agents",
     "new": "New Agent",
     "noResults": "No agents found",
-    "noResultsDescription": "Try a different name, prompt, provider, or model."
+    "noResultsDescription": "Try a different name or prompt."
   },
   "statuses": {
     "error": "Error",
@@ -96,7 +96,7 @@
     "reveal": "Show in folder",
     "saveCopy": "Save a copy...",
     "saveCopyFailed": "Couldn't save a copy.",
-    "searchPlaceholder": "Search agents...",
+    "searchPlaceholder": "Search agents",
     "source": "Source",
     "startChat": "Start chat with {{name}}",
     "startChatShort": "Start chat",

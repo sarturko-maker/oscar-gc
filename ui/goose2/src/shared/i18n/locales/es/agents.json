@@ -61,7 +61,7 @@
     "loading": "Cargando agentes",
     "new": "Nuevo agente",
     "noResults": "No se encontraron agentes",
-    "noResultsDescription": "Prueba con otro nombre, prompt, proveedor o modelo."
+    "noResultsDescription": "Prueba con otro nombre o prompt."
   },
   "statuses": {
     "error": "Error",
@@ -96,7 +96,7 @@
     "reveal": "Mostrar en carpeta",
     "saveCopy": "Guardar una copia...",
     "saveCopyFailed": "No se pudo guardar una copia.",
-    "searchPlaceholder": "Buscar agentes...",
+    "searchPlaceholder": "Buscar agentes",
     "source": "Origen",
     "startChat": "Iniciar chat con {{name}}",
     "startChatShort": "Iniciar chat",
