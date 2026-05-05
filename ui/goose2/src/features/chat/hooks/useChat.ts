@@ -364,11 +364,13 @@ export function useChat(
     store.setPendingAssistantProvider(sessionId, null);
   }, [sessionId, store]);
 
-  const getWorkingDir = useCallback(
-    () =>
-      useChatSessionStore.getState().activeWorkspaceBySession[sessionId]?.path,
-    [sessionId],
-  );
+  const getWorkingDir = useCallback(() => {
+    const sessionStore = useChatSessionStore.getState();
+    return (
+      sessionStore.activeWorkspaceBySession[sessionId]?.path ??
+      sessionStore.getSession(sessionId)?.workingDir
+    );
+  }, [sessionId]);
 
   const compactConversation = useCallback(
     async (overridePersona?: { id: string; name?: string }) => {

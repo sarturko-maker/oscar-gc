@@ -182,6 +182,7 @@ export function ChatView({
           isOpen={isContextPanelOpen}
           label={contextPanelLabel}
           project={controller.project}
+          sessionWorkingDir={controller.session?.workingDir}
           setOpen={setContextPanelOpen}
         />
       </div>

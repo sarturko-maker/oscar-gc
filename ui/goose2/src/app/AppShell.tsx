@@ -33,6 +33,7 @@ import { useProviderInventoryStore } from "@/features/providers/stores/providerI
 import { sanitizeReplayMessages } from "@/features/chat/lib/replaySanitizer";
 import type { SkillInfo } from "@/features/skills/api/skills";
 import { toChatSkillDraft } from "@/features/skills/lib/skillChatPrompt";
+import { resolveInheritedProjectWorkspace } from "@/features/chat/lib/workspaceContext";
 
 export type AppView =
   | "home"
@@ -112,7 +113,14 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
             .getState()
             .projects.find((p) => p.id === session.projectId) ?? null)
         : null;
-      const workingDir = await resolveSessionCwd(project);
+      const activeWorkspace =
+        session?.id != null
+          ? useChatSessionStore.getState().activeWorkspaceBySession[session.id]
+          : undefined;
+      const workingDir = await resolveSessionCwd(
+        project,
+        activeWorkspace?.path ?? session?.workingDir,
+      );
       await acpLoadSession(sessionId, workingDir);
       const tFlush = performance.now();
       useChatStore.getState().setSessionLoading(sessionId, false);
@@ -275,6 +283,12 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
         );
       const sessionState = useChatSessionStore.getState();
       const chatState = useChatStore.getState();
+      const inheritedWorkspace = resolveInheritedProjectWorkspace({
+        projectId: project?.id,
+        sessions: sessionState.sessions,
+        activeSessionId: sessionState.activeSessionId,
+        activeWorkspaceBySession: sessionState.activeWorkspaceBySession,
+      });
       const existingDraft = findExistingDraft({
         sessions: sessionState.sessions,
         activeSessionId: sessionState.activeSessionId,
@@ -287,6 +301,12 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
       });
 
       if (existingDraft) {
+        if (inheritedWorkspace) {
+          sessionStore.setActiveWorkspace(existingDraft.id, inheritedWorkspace);
+          sessionStore.updateSession(existingDraft.id, {
+            workingDir: inheritedWorkspace.path,
+          });
+        }
         sessionStore.setActiveSession(existingDraft.id);
         setActiveView("chat");
         chatStore.setActiveSession(existingDraft.id);
@@ -296,7 +316,10 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
         return existingDraft;
       }
 
-      const workingDir = await resolveSessionCwd(project);
+      const workingDir = await resolveSessionCwd(
+        project,
+        inheritedWorkspace?.path,
+      );
       const session = await sessionStore.createSession({
         title,
         projectId: project?.id,
@@ -305,6 +328,9 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
         modelId: sessionModelPreference.modelId,
         modelName: sessionModelPreference.modelName,
       });
+      if (inheritedWorkspace) {
+        sessionStore.setActiveWorkspace(session.id, inheritedWorkspace);
+      }
       sessionStore.setActiveSession(session.id);
       setActiveView("chat");
       chatStore.setActiveSession(session.id);
@@ -465,6 +491,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
           session.providerId ?? agentStore.selectedProvider ?? "goose",
           workingDir,
         );
+        sessionStore.updateSession(sessionId, { workingDir });
       })().catch((error) => {
         console.error(
           "Failed to update ACP session project working directory:",

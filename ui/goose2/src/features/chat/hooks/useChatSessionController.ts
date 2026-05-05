@@ -167,6 +167,7 @@ export function useChatSessionController({
         nextWorkspacePath,
       );
       await acpPrepareSession(sessionId, providerId, workingDir);
+      useChatSessionStore.getState().updateSession(sessionId, { workingDir });
       if (!modelSelection?.id) {
         return;
       }
