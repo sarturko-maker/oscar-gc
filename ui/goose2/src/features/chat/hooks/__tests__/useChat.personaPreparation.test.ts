@@ -33,6 +33,7 @@ describe("useChat persona preparation", () => {
       sessions: [],
       activeSessionId: null,
       isLoading: false,
+      isContextPanelOpen: false,
       contextPanelOpenBySession: {},
       activeWorkspaceBySession: {},
     });
