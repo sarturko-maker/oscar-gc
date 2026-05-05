@@ -1875,6 +1875,13 @@
         "content": {
           "type": "string"
         },
+        "metadata": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {}
+        },
         "global": {
           "type": "boolean"
         },
@@ -1936,6 +1943,14 @@
         "content": {
           "type": "string"
         },
+        "metadata": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {},
+          "description": "Source-specific frontmatter fields that are not represented by the top-level contract.\nFor agents, `name` and `description` remain top-level and authoritative;\nreserved metadata entries with those keys are ignored on write and omitted on read."
+        },
         "directory": {
           "type": "string",
           "description": "Absolute path to the source on disk. A directory for skills, a file for\nrecipes and agents. Built-in skills use read-only synthetic\n`builtin://skills/<name>` paths."
@@ -1982,7 +1997,7 @@
           ]
         }
       },
-      "description": "List discovered sources.\n\nIf `type` is omitted or `skill`, this lists filesystem/plugin skills only.\nBoth global and project-scoped skills are included when `project_dir` is\nset. If `type` is `builtinSkill`, this lists shipped read-only built-in\nskills.",
+      "description": "List discovered sources.\n\nIf `type` is omitted or `skill`, this lists filesystem/plugin skills only.\nProject-scoped sources are included when `project_dir` is set. If `type`\nis `builtinSkill`, this lists shipped read-only built-in skills. If `type`\nis `agent`, this lists agent source files.",
       "x-side": "agent",
       "x-method": "_goose/sources/list"
     },
@@ -2019,6 +2034,13 @@
         },
         "content": {
           "type": "string"
+        },
+        "metadata": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {}
         }
       },
       "required": [

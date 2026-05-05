@@ -766,6 +766,10 @@ export const zCreateSourceRequest = z.object({
     name: z.string(),
     description: z.string(),
     content: z.string(),
+    metadata: z.union([
+        z.record(z.unknown()),
+        z.null()
+    ]).optional(),
     global: z.boolean(),
     projectDir: z.union([
         z.string(),
@@ -783,6 +787,10 @@ export const zSourceEntry = z.object({
     name: z.string(),
     description: z.string(),
     content: z.string(),
+    metadata: z.union([
+        z.record(z.unknown()),
+        z.null()
+    ]).optional(),
     directory: z.string(),
     global: z.boolean(),
     supportingFiles: z.array(z.string()).optional()
@@ -796,9 +804,9 @@ export const zCreateSourceResponse = z.object({
  * List discovered sources.
  *
  * If `type` is omitted or `skill`, this lists filesystem/plugin skills only.
- * Both global and project-scoped skills are included when `project_dir` is
- * set. If `type` is `builtinSkill`, this lists shipped read-only built-in
- * skills.
+ * Project-scoped sources are included when `project_dir` is set. If `type`
+ * is `builtinSkill`, this lists shipped read-only built-in skills. If `type`
+ * is `agent`, this lists agent source files.
  */
 export const zListSourcesRequest = z.object({
     type: z.union([
@@ -823,7 +831,11 @@ export const zUpdateSourceRequest = z.object({
     path: z.string(),
     name: z.string(),
     description: z.string(),
-    content: z.string()
+    content: z.string(),
+    metadata: z.union([
+        z.record(z.unknown()),
+        z.null()
+    ]).optional()
 });
 
 export const zUpdateSourceResponse = z.object({

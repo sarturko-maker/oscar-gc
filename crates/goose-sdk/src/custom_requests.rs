@@ -1,7 +1,7 @@
 use sacp::{JsonRpcRequest, JsonRpcResponse};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 /// Schema descriptor for a single custom method, produced by the
 /// `#[custom_methods]` macro's generated `custom_method_schemas()` function.
@@ -842,6 +842,11 @@ pub struct SourceEntry {
     pub name: String,
     pub description: String,
     pub content: String,
+    /// Source-specific frontmatter fields that are not represented by the top-level contract.
+    /// For agents, `name` and `description` remain top-level and authoritative;
+    /// reserved metadata entries with those keys are ignored on write and omitted on read.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<BTreeMap<String, serde_json::Value>>,
     /// Absolute path to the source on disk. A directory for skills, a file for
     /// recipes and agents. Built-in skills use read-only synthetic
     /// `builtin://skills/<name>` paths.
@@ -877,6 +882,8 @@ pub struct CreateSourceRequest {
     pub name: String,
     pub description: String,
     pub content: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<BTreeMap<String, serde_json::Value>>,
     pub global: bool,
     /// Absolute path to the project root. Required when `global` is false.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -892,9 +899,9 @@ pub struct CreateSourceResponse {
 /// List discovered sources.
 ///
 /// If `type` is omitted or `skill`, this lists filesystem/plugin skills only.
-/// Both global and project-scoped skills are included when `project_dir` is
-/// set. If `type` is `builtinSkill`, this lists shipped read-only built-in
-/// skills.
+/// Project-scoped sources are included when `project_dir` is set. If `type`
+/// is `builtinSkill`, this lists shipped read-only built-in skills. If `type`
+/// is `agent`, this lists agent source files.
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcRequest)]
 #[request(method = "_goose/sources/list", response = ListSourcesResponse)]
 #[serde(rename_all = "camelCase")]
@@ -922,6 +929,8 @@ pub struct UpdateSourceRequest {
     pub name: String,
     pub description: String,
     pub content: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<BTreeMap<String, serde_json::Value>>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, JsonSchema, JsonRpcResponse)]

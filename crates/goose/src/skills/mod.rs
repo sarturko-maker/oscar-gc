@@ -252,6 +252,7 @@ fn parse_skill_content(content: &str, path: &Path, global: bool) -> Option<Sourc
         name,
         description: metadata.description,
         content: body,
+        metadata: None,
         directory: path.to_string_lossy().into_owned(),
         global,
         supporting_files: Vec::new(),

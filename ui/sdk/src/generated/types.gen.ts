@@ -747,6 +747,9 @@ export type CreateSourceRequest = {
     name: string;
     description: string;
     content: string;
+    metadata?: {
+        [key: string]: unknown;
+    } | null;
     global: boolean;
     /**
      * Absolute path to the project root. Required when `global` is false.
@@ -774,6 +777,14 @@ export type SourceEntry = {
     description: string;
     content: string;
     /**
+     * Source-specific frontmatter fields that are not represented by the top-level contract.
+     * For agents, `name` and `description` remain top-level and authoritative;
+     * reserved metadata entries with those keys are ignored on write and omitted on read.
+     */
+    metadata?: {
+        [key: string]: unknown;
+    } | null;
+    /**
      * Absolute path to the source on disk. A directory for skills, a file for
      * recipes and agents. Built-in skills use read-only synthetic
      * `builtin://skills/<name>` paths.
@@ -795,9 +806,9 @@ export type SourceEntry = {
  * List discovered sources.
  *
  * If `type` is omitted or `skill`, this lists filesystem/plugin skills only.
- * Both global and project-scoped skills are included when `project_dir` is
- * set. If `type` is `builtinSkill`, this lists shipped read-only built-in
- * skills.
+ * Project-scoped sources are included when `project_dir` is set. If `type`
+ * is `builtinSkill`, this lists shipped read-only built-in skills. If `type`
+ * is `agent`, this lists agent source files.
  */
 export type ListSourcesRequest = {
     type?: SourceType | null;
@@ -817,6 +828,9 @@ export type UpdateSourceRequest = {
     name: string;
     description: string;
     content: string;
+    metadata?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type UpdateSourceResponse = {

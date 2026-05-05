@@ -12,7 +12,7 @@ use crate::recipe::local_recipes::load_local_recipe_file;
 use crate::recipe::{Recipe, Settings, RECIPE_FILE_EXTENSIONS};
 use crate::session::extension_data::EnabledExtensionsState;
 use crate::session::SessionType;
-use crate::sources::parse_frontmatter;
+use crate::sources::parse_agent_markdown;
 use anyhow::Result;
 use async_trait::async_trait;
 use goose_sdk::custom_requests::{SourceEntry, SourceType};
@@ -87,44 +87,33 @@ pub struct CompletedTask {
     pub duration: Duration,
 }
 
-#[derive(Debug, Deserialize)]
-struct AgentMetadata {
-    name: String,
-    #[serde(default)]
-    description: Option<String>,
-    #[serde(default)]
-    model: Option<String>,
-}
-
 fn parse_agent_content(content: &str, path: &Path) -> Option<SourceEntry> {
-    let (metadata, body): (AgentMetadata, String) = match parse_frontmatter(content) {
+    let parsed = match parse_agent_markdown(content) {
         Ok(Some(parsed)) => parsed,
         Ok(None) => return None,
         Err(e) => {
-            // Missing fields means this file has valid YAML but isn't an agent — skip silently.
-            // Only warn on actual YAML syntax errors.
-            if e.to_string().contains("missing field") {
-                return None;
-            }
             warn!("Failed to parse agent file {}: {}", path.display(), e);
             return None;
         }
     };
 
-    let description = metadata.description.unwrap_or_else(|| {
-        let model_info = metadata
-            .model
-            .as_ref()
-            .map(|m| format!(" ({})", m))
+    let description = parsed.frontmatter.description.unwrap_or_else(|| {
+        let model_info = parsed
+            .frontmatter
+            .metadata
+            .get("model")
+            .and_then(|m| m.as_str())
+            .map(|m| format!(" ({m})"))
             .unwrap_or_default();
         format!("Agent{}", model_info)
     });
 
     Some(SourceEntry {
         source_type: SourceType::Agent,
-        name: metadata.name,
+        name: parsed.frontmatter.name,
         description,
-        content: body,
+        content: parsed.body,
+        metadata: Some(parsed.frontmatter.metadata),
         directory: path.to_string_lossy().into_owned(),
         global: false,
         supporting_files: Vec::new(),
@@ -171,6 +160,7 @@ fn scan_recipes_from_dir(
                     name,
                     description: recipe.description.clone(),
                     content: recipe.instructions.clone().unwrap_or_default(),
+                    metadata: None,
                     directory: path.to_string_lossy().into_owned(),
                     global: false,
                     supporting_files: Vec::new(),
@@ -598,6 +588,7 @@ impl SummonClient {
                 name: sr.name.clone(),
                 description,
                 content: String::new(),
+                metadata: None,
                 directory: sr.path.clone(),
                 global: false,
                 supporting_files: Vec::new(),
@@ -1200,11 +1191,16 @@ impl SummonClient {
                 .map_err(|e| format!("Failed to read agent file: {}", e))?
         };
 
-        let (metadata, _): (AgentMetadata, String) = parse_frontmatter(&agent_content)
+        let parsed = parse_agent_markdown(&agent_content)
             .map_err(|e| format!("Failed to parse agent frontmatter: {}", e))?
             .ok_or("No frontmatter found in agent file")?;
 
-        let model = metadata.model;
+        let model = parsed
+            .frontmatter
+            .metadata
+            .get("model")
+            .and_then(|value| value.as_str())
+            .map(ToString::to_string);
 
         // max_turns is set later in build_task_config so it can incorporate params.max_turns
         // with the correct priority ordering; setting it here would cause it to be overridden
