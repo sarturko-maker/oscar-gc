@@ -1299,7 +1299,7 @@ impl Agent {
             });
             let mut compaction_attempts = 0;
             let mut last_assistant_text = String::new();
-            let mut goal_checks_remaining: u32 = 3;
+            let mut goal_check_pending = false;
 
             loop {
                 if is_token_cancelled(&cancel_token) {
@@ -1645,6 +1645,8 @@ impl Agent {
                                 }
 
                                 no_tools_called = false;
+                                // Agent is actively working — re-check goal when it next finishes
+                                goal_check_pending = false;
                             }
                         }
                         #[allow(unused_variables)]
@@ -1795,18 +1797,27 @@ impl Agent {
                         None if did_recovery_compact_this_iteration => {
                             // continue from last user message after recovery compact
                         }
-                        None if self.goal.lock().await.is_some() && goal_checks_remaining > 0 => {
+                        None if self.goal.lock().await.is_some() && !goal_check_pending => {
+                            // Agent finished without tool calls and a goal is set.
+                            // Nudge it to verify the goal before exiting.
+                            goal_check_pending = true;
                             let goal = self.goal.lock().await.clone().unwrap();
-                            goal_checks_remaining -= 1;
                             let nudge = format!(
                                 "Before finishing, verify that the following goal has been fully met:\n\n\
                                  **Goal:** {goal}\n\n\
                                  If the goal IS met, respond with a brief confirmation summary.\n\
                                  If the goal is NOT met, continue working toward it."
                             );
-                            let message = Message::user().with_text(&nudge);
-                            messages_to_add.push(message.clone());
-                            yield AgentEvent::Message(message);
+                            let message = Message::user().with_text(&nudge)
+                                .with_visibility(false, true);
+                            messages_to_add.push(message);
+                            // Show a visible status so the user knows the agent is verifying
+                            yield AgentEvent::Message(
+                                Message::assistant().with_system_notification(
+                                    SystemNotificationType::InlineMessage,
+                                    format!("Checking goal: {goal}"),
+                                )
+                            );
                         }
                         None => {
                             match self.handle_retry_logic(&mut conversation, &session_config, &initial_messages).await {

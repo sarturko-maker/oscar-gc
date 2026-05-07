@@ -1242,10 +1242,11 @@ mod tests {
                 "Expected provider to be called more than once due to goal checking, got {call_count}"
             );
             assert!(
-                call_count <= 5,
-                "Expected at most 5 provider calls (1 initial + up to 3 goal checks + 1 final), got {call_count}"
+                call_count <= 3,
+                "Expected at most 3 provider calls (1 initial + 1 goal check + 1 exit), got {call_count}"
             );
 
+            // The goal nudge should NOT appear in yielded events (it's internal)
             let nudge_messages: Vec<_> = messages
                 .iter()
                 .filter(|m| {
@@ -1254,8 +1255,9 @@ mod tests {
                 })
                 .collect();
             assert!(
-                !nudge_messages.is_empty(),
-                "Expected at least one goal-check nudge message"
+                nudge_messages.is_empty(),
+                "Goal nudge should be hidden from user, but found {} in events",
+                nudge_messages.len()
             );
 
             Ok(())
