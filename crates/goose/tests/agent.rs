@@ -1251,13 +1251,20 @@ mod tests {
                 .iter()
                 .filter(|m| {
                     m.as_concat_text()
-                        .contains("verify that the following goal")
+                        .contains("check whether the following goal")
                 })
                 .collect();
             assert!(
                 nudge_messages.is_empty(),
                 "Goal nudge should be hidden from user, but found {} in events",
                 nudge_messages.len()
+            );
+
+            // Goal should be cleared after being met
+            assert_eq!(
+                agent.get_goal().await,
+                None,
+                "Goal should be cleared after the agent finishes with it met"
             );
 
             Ok(())

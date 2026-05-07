@@ -1798,28 +1798,26 @@ impl Agent {
                             // continue from last user message after recovery compact
                         }
                         None if self.goal.lock().await.is_some() && !goal_check_pending => {
-                            // Agent finished without tool calls and a goal is set.
-                            // Nudge it to verify the goal before exiting.
                             goal_check_pending = true;
                             let goal = self.goal.lock().await.clone().unwrap();
                             let nudge = format!(
-                                "Before finishing, verify that the following goal has been fully met:\n\n\
+                                "Before finishing, check whether the following goal has been fully met:\n\n\
                                  **Goal:** {goal}\n\n\
-                                 If the goal IS met, respond with a brief confirmation summary.\n\
-                                 If the goal is NOT met, continue working toward it."
+                                 If not, continue working toward it."
                             );
                             let message = Message::user().with_text(&nudge)
                                 .with_visibility(false, true);
                             messages_to_add.push(message);
-                            // Show a visible status so the user knows the agent is verifying
                             yield AgentEvent::Message(
                                 Message::assistant().with_system_notification(
                                     SystemNotificationType::InlineMessage,
-                                    format!("Checking goal: {goal}"),
+                                    format!("Goal: {goal}"),
                                 )
                             );
                         }
+
                         None => {
+                            self.set_goal(None).await;
                             match self.handle_retry_logic(&mut conversation, &session_config, &initial_messages).await {
                                 Ok(should_retry) => {
                                     if should_retry {
