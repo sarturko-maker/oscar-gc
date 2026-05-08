@@ -4,11 +4,11 @@ import {
   readConfig,
   removeConfig,
   upsertConfig,
-  getExtensions as apiGetExtensions,
   addExtension as apiAddExtension,
   removeExtension as apiRemoveExtension,
   providers,
 } from '../api';
+import { getConfiguredExtensions } from '../acp/extensions';
 import { pruneDeprecatedBundledExtensions, syncBundledExtensions } from './settings/extensions';
 import type {
   ConfigResponse,
@@ -121,13 +121,13 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   );
 
   const refreshExtensions = useCallback(async () => {
-    const result = await apiGetExtensions();
+    const result = await getConfiguredExtensions();
 
     if (result.response.status === 422) {
       throw new MalformedConfigError();
     }
 
-    if (result.error && !result.data) {
+    if ('error' in result && result.error && !result.data) {
       console.error(result.error);
       return extensionsList;
     }
@@ -220,7 +220,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
       // Load extensions
       try {
-        const extensionsResponse = await apiGetExtensions();
+        const extensionsResponse = await getConfiguredExtensions();
         let extensions = normalizeExtensions(extensionsResponse.data?.extensions || []);
 
         // Always sync bundled extensions from bundled-extensions.json
@@ -243,7 +243,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
         extensions = await pruneDeprecatedBundledExtensions(extensions, removeExtensionForSync);
         await syncBundledExtensions(extensions, addExtensionForSync);
         // Reload extensions after sync
-        const refreshedResponse = await apiGetExtensions();
+        const refreshedResponse = await getConfiguredExtensions();
         extensions = normalizeExtensions(refreshedResponse.data?.extensions || []);
 
         setExtensionsList(extensions);
