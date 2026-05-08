@@ -386,8 +386,8 @@ fn agent_source_entry(path: &Path, global: bool, writable: bool) -> Result<Sourc
             description: frontmatter.description,
             content,
             path: path.to_string_lossy().to_string(),
-            global: global,
-            writable: writable,
+            global,
+            writable,
             supporting_files: Vec::new(),
             properties: frontmatter.properties,
         }
