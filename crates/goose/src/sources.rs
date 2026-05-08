@@ -10,7 +10,6 @@ use crate::skills::{
 };
 use crate::source_roots::SourceRoot;
 use agent_client_protocol::Error;
-use base64::Engine;
 use fs_err as fs;
 use goose_sdk::custom_requests::{SourceEntry, SourceType};
 use serde::{Deserialize, Serialize};
@@ -432,9 +431,7 @@ fn normalize_agent_avatar(avatar: Option<String>) -> Option<String> {
         return None;
     }
 
-    let persisted = if avatar.starts_with("data:") {
-        persist_data_url_avatar(&avatar)
-    } else if avatar.starts_with("file://") {
+    let persisted = if avatar.starts_with("file://") {
         persist_file_url_avatar(&avatar)
     } else {
         return Some(avatar);
@@ -447,38 +444,6 @@ fn normalize_agent_avatar(avatar: Option<String>) -> Option<String> {
             Some(avatar)
         }
     }
-}
-
-fn persist_data_url_avatar(data_url: &str) -> Result<String, Error> {
-    let (header, encoded) = data_url
-        .split_once(',')
-        .ok_or_else(|| Error::invalid_params().data("Invalid data URL avatar"))?;
-    if !header.ends_with(";base64") {
-        return Err(Error::invalid_params().data("Avatar data URL must be base64 encoded"));
-    }
-
-    let mime_type = header
-        .strip_prefix("data:")
-        .and_then(|value| value.strip_suffix(";base64"))
-        .unwrap_or("image/png");
-    let extension = match mime_type {
-        "image/jpeg" | "image/jpg" => "jpg",
-        "image/gif" => "gif",
-        "image/webp" => "webp",
-        "image/svg+xml" => "svg",
-        _ => "png",
-    };
-    let bytes = base64::engine::general_purpose::STANDARD
-        .decode(encoded)
-        .map_err(|e| Error::invalid_params().data(format!("Invalid avatar data URL: {e}")))?;
-    let dir = agent_avatars_dir()?;
-    fs::create_dir_all(&dir).map_err(|e| {
-        Error::internal_error().data(format!("Failed to create avatar directory: {e}"))
-    })?;
-    let path = dir.join(format!("{}.{}", uuid::Uuid::now_v7(), extension));
-    fs::write(&path, bytes)
-        .map_err(|e| Error::internal_error().data(format!("Failed to write avatar file: {e}")))?;
-    Ok(format!("file://{}", path.to_string_lossy()))
 }
 
 fn persist_file_url_avatar(file_url: &str) -> Result<String, Error> {
