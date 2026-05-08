@@ -126,7 +126,7 @@ export function PersonaGallery({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".json,application/json"
+          accept=".agent.md,.persona.md,text/markdown,text/plain"
           className="hidden"
           onChange={handleFileChange}
         />

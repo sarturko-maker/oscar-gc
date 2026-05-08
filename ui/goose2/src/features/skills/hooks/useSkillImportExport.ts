@@ -14,7 +14,7 @@ export function useSkillImportExport(onAfterImport: () => Promise<void>) {
 
     try {
       const result = await exportSkill(skill.path);
-      downloadExport(result.json, result.filename);
+      downloadExport(result.data, result.filename, result.mimeType);
       toast.success(t("view.exportedTo", { filename: result.filename }));
     } catch {
       toast.error(t("view.exportError"));

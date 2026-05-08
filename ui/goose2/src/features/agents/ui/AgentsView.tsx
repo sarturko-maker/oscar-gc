@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { downloadBase64File } from "@/shared/lib/encoding";
 import { SearchBar } from "@/shared/ui/SearchBar";
 import { Button, buttonVariants } from "@/shared/ui/button";
 import {
@@ -142,16 +143,11 @@ export function AgentsView() {
     async (persona: Persona) => {
       try {
         const result = await exportPersona(persona.id);
-        // Trigger a browser download with the JSON content
-        const blob = new Blob([result.json], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = result.suggestedFilename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadBase64File(
+          result.data,
+          result.suggestedFilename,
+          result.mimeType,
+        );
         toast.success(
           t("view.exportedTo", { filename: result.suggestedFilename }),
         );
@@ -196,8 +192,8 @@ export function AgentsView() {
         title: t("common:actions.import"),
         filters: [
           {
-            name: "JSON",
-            extensions: ["json"],
+            name: "Agent Markdown",
+            extensions: ["md"],
           },
         ],
       });

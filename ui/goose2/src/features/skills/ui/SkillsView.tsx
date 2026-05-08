@@ -325,7 +325,7 @@ export function SkillsView({ onStartChatWithSkill }: SkillsViewProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".skill.json,.json"
+        accept=".zip,application/zip"
         className="hidden"
         onChange={handleFileChange}
       />

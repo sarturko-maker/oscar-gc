@@ -1,10 +1,4 @@
-const JSON_MIME_TYPES = new Set([
-  "",
-  "application/json",
-  "application/x-json",
-  "text/json",
-  "text/plain",
-]);
+const MARKDOWN_MIME_TYPES = new Set(["", "text/markdown", "text/plain"]);
 
 export interface ImportMessageDescriptor {
   key:
@@ -19,13 +13,13 @@ export function validatePersonaImportFile(
   file: Pick<File, "name" | "type">,
 ): ImportMessageDescriptor | null {
   const lowerName = file.name.toLowerCase();
-  if (!lowerName.endsWith(".json")) {
+  if (!lowerName.endsWith(".agent.md") && !lowerName.endsWith(".persona.md")) {
     return {
       key: "view.importInvalidExtension",
     } satisfies ImportMessageDescriptor;
   }
 
-  if (!JSON_MIME_TYPES.has(file.type)) {
+  if (!MARKDOWN_MIME_TYPES.has(file.type)) {
     return {
       key: "view.importInvalidMimeType",
     } satisfies ImportMessageDescriptor;
