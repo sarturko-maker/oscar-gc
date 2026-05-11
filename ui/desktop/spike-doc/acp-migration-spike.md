@@ -162,6 +162,15 @@ ui/desktop renderer
 
 In the final state `goosed` is not bundled or spawned by the desktop app.
 
+Before deleting the `goosed` bridge, verify that the final `goose serve` path has the same
+desktop-specific ACP behavior that the bridge depended on during migration. In particular:
+
+- config and data directories match the desktop app's expected Goose paths
+- builtin extension setup matches what desktop needs
+- ACP initialization uses the correct desktop platform identity
+- any state initialized today by `goosed` startup is either no longer needed or is initialized by
+  the final desktop `goose serve` launch path
+
 ## Migration Bridge vs Final Server
 
 Mounting `/acp` in `goosed` should be treated as a bridge, not the destination.
