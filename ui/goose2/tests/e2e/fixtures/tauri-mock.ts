@@ -4,7 +4,7 @@
  * without the real Tauri backend.
  *
  * Also installs a `window.WebSocket` stub for the ACP connection so features
- * like skills (which use `client.extMethod("_goose/sources/...")`) can run
+ * like skills (which use `client.extMethod("_goose/v1/sources/...")`) can run
  * without a live goose-acp server.
  */
 
@@ -240,21 +240,21 @@ export function buildInitScript(options?: {
             }
             return jsonRpcResult(message.id, { stopReason: "end_turn" });
           }
-          case "_goose/providers/list":
+          case "_goose/v1/providers/list":
             return jsonRpcResult(message.id, { entries: PROVIDER_INVENTORY });
-          case "_goose/providers/setup/catalog/list":
+          case "_goose/v1/providers/setup/catalog/list":
             return jsonRpcResult(message.id, { providers: [] });
-          case "_goose/providers/inventory/refresh":
+          case "_goose/v1/providers/inventory/refresh":
             return jsonRpcResult(message.id, { started: [], skipped: [] });
-          case "_goose/defaults/read":
-          case "_goose/defaults/save":
+          case "_goose/v1/defaults/read":
+          case "_goose/v1/defaults/save":
             return jsonRpcResult(message.id, {
               providerId: message.params?.providerId ?? "openai",
               modelId: message.params?.modelId ?? "gpt-4.1",
             });
-          case "_goose/onboarding/import/scan":
+          case "_goose/v1/onboarding/import/scan":
             return jsonRpcResult(message.id, { candidates: [] });
-          case "_goose/onboarding/import/apply":
+          case "_goose/v1/onboarding/import/apply":
             return jsonRpcResult(message.id, {
               imported: {
                 providers: 0,
@@ -274,10 +274,10 @@ export function buildInitScript(options?: {
               },
               warnings: [],
             });
-          case "_goose/working_dir/update":
+          case "_goose/v1/session/working-dir/update":
           case "goose/working_dir/update":
             return jsonRpcResult(message.id, {});
-          case "_goose/sources/list": {
+          case "_goose/v1/sources/list": {
             const sourceType = message.params?.type;
             if (sourceType === "agent") {
               return jsonRpcResult(message.id, { sources: PERSONAS.map(personaToSourceEntry) });
@@ -287,7 +287,7 @@ export function buildInitScript(options?: {
             }
             return jsonRpcResult(message.id, { sources: SKILLS.map(skillToSourceEntry) });
           }
-          case "_goose/sources/create": {
+          case "_goose/v1/sources/create": {
             const sourceType = message.params?.type ?? "skill";
             const name = message.params?.name ?? (sourceType === "agent" ? "New Agent" : "new-skill");
             return jsonRpcResult(message.id, {
@@ -297,14 +297,14 @@ export function buildInitScript(options?: {
                 description: message.params?.description ?? "",
                 content: message.params?.content ?? "",
                 path: "/mock/.agents/" + (sourceType === "agent" ? "agents" : "skills") + "/" + name,
-                global: message.params?.global ?? true,
+                global: message.params?.target?.scope !== "projectDir" && message.params?.target?.scope !== "projectId",
                 writable: true,
                 supportingFiles: [],
                 properties: message.params?.properties ?? {},
               },
             });
           }
-          case "_goose/sources/update":
+          case "_goose/v1/sources/update":
           case "goose/sources/update": {
             const sourceType = message.params?.type ?? "skill";
             const path =
@@ -334,10 +334,10 @@ export function buildInitScript(options?: {
               },
             });
           }
-          case "_goose/sources/delete":
+          case "_goose/v1/sources/delete":
           case "goose/sources/delete":
             return jsonRpcResult(message.id, {});
-          case "_goose/sources/export":
+          case "_goose/v1/sources/export":
           case "goose/sources/export": {
             const path = message.params?.path ?? "/mock/.agents/skills/skill";
             const name = String(path).split("/").filter(Boolean).at(-1) ?? "skill";
@@ -346,7 +346,7 @@ export function buildInitScript(options?: {
               filename: name + ".skill.json",
             });
           }
-          case "_goose/sources/import":
+          case "_goose/v1/sources/import":
             return jsonRpcResult(message.id, { sources: SKILLS.map(skillToSourceEntry) });
           default:
             return jsonRpcResult(message.id, {});

@@ -120,6 +120,10 @@ interface MethodMeta {
 function methodToCamelCase(method: string): string {
   return method
     .split(/[/_]/)
+    .filter((part) => part !== "v1")
+    .map((part) =>
+      part.replace(/[^a-zA-Z0-9]+(.)/g, (_, chr: string) => chr.toUpperCase()),
+    )
     .map((part, i) =>
       i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1),
     )

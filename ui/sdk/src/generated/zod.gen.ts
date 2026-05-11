@@ -760,6 +760,23 @@ export const zSourceType = z.enum([
 ]);
 
 /**
+ * Target scope for creating or importing sources.
+ */
+export const zSourceScope = z.union([
+    z.object({
+        scope: z.literal('global')
+    }),
+    z.object({
+        projectDir: z.string(),
+        scope: z.literal('projectDir')
+    }),
+    z.object({
+        projectId: z.string(),
+        scope: z.literal('projectId')
+    })
+]);
+
+/**
  * Create a new source in an explicit target scope (global or project-scoped).
  */
 export const zCreateSourceRequest = z.object({
@@ -767,15 +784,7 @@ export const zCreateSourceRequest = z.object({
     name: z.string(),
     description: z.string(),
     content: z.string(),
-    global: z.boolean(),
-    projectDir: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
-    projectId: z.union([
-        z.string(),
-        z.null()
-    ]).optional(),
+    target: zSourceScope,
     properties: z.record(z.unknown()).optional()
 });
 
@@ -865,17 +874,13 @@ export const zExportSourceResponse = z.object({
 });
 
 /**
- * Import a source from a JSON export payload produced by `_goose/sources/export`.
+ * Import a source from a JSON export payload produced by `_goose/v1/sources/export`.
  * The imported source is written into the explicit target scope; on name
  * collisions a `-imported` suffix is appended.
  */
 export const zImportSourcesRequest = z.object({
     data: z.string(),
-    global: z.boolean(),
-    projectDir: z.union([
-        z.string(),
-        z.null()
-    ]).optional()
+    target: zSourceScope
 });
 
 export const zImportSourcesResponse = z.object({

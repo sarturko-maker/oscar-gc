@@ -78,7 +78,7 @@ fn test_custom_get_tools() {
 
         let result = send_custom(
             conn.cx(),
-            "_goose/tools",
+            "_goose/v1/tools/list",
             serde_json::json!({ "sessionId": session_id }),
         )
         .await;
@@ -96,8 +96,12 @@ fn test_custom_get_extensions() {
         let openai = OpenAiFixture::new(vec![], Arc::new(EnforceSessionId::default())).await;
         let conn = AcpServerConnection::new(TestConnectionConfig::default(), openai).await;
 
-        let result =
-            send_custom(conn.cx(), "_goose/config/extensions", serde_json::json!({})).await;
+        let result = send_custom(
+            conn.cx(),
+            "_goose/v1/config/extensions/list",
+            serde_json::json!({}),
+        )
+        .await;
         assert!(result.is_ok(), "expected ok, got: {:?}", result);
 
         let response = result.unwrap();
@@ -120,7 +124,7 @@ fn test_custom_list_builtin_skill_sources() {
 
         let response = send_custom(
             conn.cx(),
-            "_goose/sources/list",
+            "_goose/v1/sources/list",
             serde_json::json!({ "type": "builtinSkill" }),
         )
         .await
@@ -152,7 +156,7 @@ fn test_custom_provider_inventory_includes_metadata() {
         let openai = OpenAiFixture::new(vec![], Arc::new(EnforceSessionId::default())).await;
         let conn = AcpServerConnection::new(TestConnectionConfig::default(), openai).await;
 
-        let response = send_custom(conn.cx(), "_goose/providers/list", serde_json::json!({}))
+        let response = send_custom(conn.cx(), "_goose/v1/providers/list", serde_json::json!({}))
             .await
             .expect("provider inventory should succeed");
         let providers = response
@@ -193,7 +197,7 @@ fn test_custom_preferences_read_save_remove() {
 
         let response = send_custom(
             conn.cx(),
-            "_goose/preferences/read",
+            "_goose/v1/preferences/read",
             serde_json::json!({
                 "keys": [
                     "autoCompactThreshold",
@@ -215,7 +219,7 @@ fn test_custom_preferences_read_save_remove() {
 
         send_custom(
             conn.cx(),
-            "_goose/preferences/save",
+            "_goose/v1/preferences/save",
             serde_json::json!({
                 "values": [
                     { "key": "voiceDictationProvider", "value": "__disabled__" },
@@ -228,7 +232,7 @@ fn test_custom_preferences_read_save_remove() {
 
         send_custom(
             conn.cx(),
-            "_goose/preferences/remove",
+            "_goose/v1/preferences/remove",
             serde_json::json!({
                 "keys": ["voiceDictationProvider"],
             }),
@@ -238,7 +242,7 @@ fn test_custom_preferences_read_save_remove() {
 
         let response = send_custom(
             conn.cx(),
-            "_goose/preferences/read",
+            "_goose/v1/preferences/read",
             serde_json::json!({
                 "keys": ["voiceDictationProvider", "voiceDictationPreferredMic"],
             }),
@@ -280,13 +284,13 @@ fn test_custom_preferences_save_rejects_invalid_values() {
         ];
 
         for payload in invalid_payloads {
-            let result = send_custom(conn.cx(), "_goose/preferences/save", payload).await;
+            let result = send_custom(conn.cx(), "_goose/v1/preferences/save", payload).await;
             assert!(result.is_err(), "expected invalid params error");
         }
 
         let result = send_custom(
             conn.cx(),
-            "_goose/preferences/save",
+            "_goose/v1/preferences/save",
             serde_json::json!({
                 "values": [
                     { "key": "voiceDictationPreferredMic", "value": "mic-1" },
@@ -299,7 +303,7 @@ fn test_custom_preferences_save_rejects_invalid_values() {
 
         let response = send_custom(
             conn.cx(),
-            "_goose/preferences/read",
+            "_goose/v1/preferences/read",
             serde_json::json!({
                 "keys": ["voiceDictationPreferredMic"],
             }),
@@ -331,7 +335,7 @@ fn test_custom_defaults_read() {
         };
         let conn = AcpServerConnection::new(config, openai).await;
 
-        let response = send_custom(conn.cx(), "_goose/defaults/read", serde_json::json!({}))
+        let response = send_custom(conn.cx(), "_goose/v1/defaults/read", serde_json::json!({}))
             .await
             .expect("defaults read should succeed");
         assert_eq!(
@@ -371,7 +375,7 @@ fn test_custom_dictation_secret_save_delete() {
 
         send_custom(
             conn.cx(),
-            "_goose/dictation/secret/save",
+            "_goose/v1/dictation/secret/save",
             serde_json::json!({
                 "provider": "groq",
                 "value": "groq-key",
@@ -380,9 +384,13 @@ fn test_custom_dictation_secret_save_delete() {
         .await
         .expect("dictation secret save should succeed");
 
-        let config = send_custom(conn.cx(), "_goose/dictation/config", serde_json::json!({}))
-            .await
-            .expect("dictation config should succeed");
+        let config = send_custom(
+            conn.cx(),
+            "_goose/v1/dictation/config",
+            serde_json::json!({}),
+        )
+        .await
+        .expect("dictation config should succeed");
         assert_eq!(
             config
                 .pointer("/providers/groq/configured")
@@ -392,7 +400,7 @@ fn test_custom_dictation_secret_save_delete() {
 
         let provider_config_result = send_custom(
             conn.cx(),
-            "_goose/dictation/secret/save",
+            "_goose/v1/dictation/secret/save",
             serde_json::json!({
                 "provider": "openai",
                 "value": "openai-key",
@@ -406,7 +414,7 @@ fn test_custom_dictation_secret_save_delete() {
 
         let unknown_result = send_custom(
             conn.cx(),
-            "_goose/dictation/secret/save",
+            "_goose/v1/dictation/secret/save",
             serde_json::json!({
                 "provider": "unknown",
                 "value": "key",
@@ -420,7 +428,7 @@ fn test_custom_dictation_secret_save_delete() {
 
         send_custom(
             conn.cx(),
-            "_goose/dictation/secret/delete",
+            "_goose/v1/dictation/secret/delete",
             serde_json::json!({
                 "provider": "groq",
             }),
@@ -428,9 +436,13 @@ fn test_custom_dictation_secret_save_delete() {
         .await
         .expect("dictation secret delete should succeed");
 
-        let config = send_custom(conn.cx(), "_goose/dictation/config", serde_json::json!({}))
-            .await
-            .expect("dictation config should succeed");
+        let config = send_custom(
+            conn.cx(),
+            "_goose/v1/dictation/config",
+            serde_json::json!({}),
+        )
+        .await
+        .expect("dictation config should succeed");
         assert_eq!(
             config
                 .pointer("/providers/groq/configured")

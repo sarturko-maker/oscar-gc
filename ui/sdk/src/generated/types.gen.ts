@@ -747,17 +747,7 @@ export type CreateSourceRequest = {
     name: string;
     description: string;
     content: string;
-    global: boolean;
-    /**
-     * Absolute path to the project root. Required when `global` is false.
-     */
-    projectDir?: string | null;
-    /**
-     * Project source ID. When set with `global: false`, the backend resolves
-     * the project's first working directory automatically. Takes precedence
-     * over `project_dir`.
-     */
-    projectId?: string | null;
+    target: SourceScope;
     /**
      * Arbitrary key/value metadata.
      */
@@ -770,6 +760,19 @@ export type CreateSourceRequest = {
  * The type of source entity.
  */
 export type SourceType = 'skill' | 'builtinSkill' | 'recipe' | 'subrecipe' | 'agent' | 'project';
+
+/**
+ * Target scope for creating or importing sources.
+ */
+export type SourceScope = {
+    scope: 'global';
+} | {
+    projectDir: string;
+    scope: 'projectDir';
+} | {
+    projectId: string;
+    scope: 'projectId';
+};
 
 export type CreateSourceResponse = {
     source: SourceEntry;
@@ -885,14 +888,13 @@ export type ExportSourceResponse = {
 };
 
 /**
- * Import a source from a JSON export payload produced by `_goose/sources/export`.
+ * Import a source from a JSON export payload produced by `_goose/v1/sources/export`.
  * The imported source is written into the explicit target scope; on name
  * collisions a `-imported` suffix is appended.
  */
 export type ImportSourcesRequest = {
     data: string;
-    global: boolean;
-    projectDir?: string | null;
+    target: SourceScope;
 };
 
 export type ImportSourcesResponse = {
