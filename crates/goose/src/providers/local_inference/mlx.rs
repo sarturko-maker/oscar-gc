@@ -361,8 +361,6 @@ mod imp {
 
 #[cfg(not(feature = "mlx"))]
 mod imp {
-    use std::any::Any;
-
     use crate::providers::errors::ProviderError;
     use crate::providers::local_inference::backend::{
         BackendLoadedModel, LocalGenerationRequest, LocalInferenceBackend,
@@ -377,14 +375,6 @@ mod imp {
     impl MlxBackend {
         pub(in crate::providers::local_inference) fn new() -> Self {
             Self
-        }
-    }
-
-    struct UnavailableLoadedModel;
-
-    impl BackendLoadedModel for UnavailableLoadedModel {
-        fn as_any_mut(&mut self) -> &mut dyn Any {
-            self
         }
     }
 

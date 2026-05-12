@@ -4,6 +4,7 @@ mod llamacpp;
 pub mod local_model_registry;
 mod mlx;
 pub(crate) mod multimodal;
+#[cfg(feature = "mlx")]
 mod native_tool_parsing;
 mod tool_emulation;
 mod tool_parsing;

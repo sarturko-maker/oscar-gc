@@ -444,7 +444,24 @@ async fn local_model_id_from_spec(spec: &str) -> anyhow::Result<String> {
 }
 
 fn mark_download_failed(model_id: &str, error: impl std::fmt::Display) {
-    get_download_manager().update_progress(&format!("{}-model", model_id), |progress| {
+    let manager = get_download_manager();
+    let download_id = format!("{}-model", model_id);
+    if manager.get_progress(&download_id).is_none() {
+        manager.set_progress(DownloadProgress {
+            model_id: download_id.clone(),
+            status: DownloadStatus::Failed,
+            bytes_downloaded: 0,
+            total_bytes: 0,
+            progress_percent: 0.0,
+            speed_bps: None,
+            eta_seconds: None,
+            error: Some(error.to_string()),
+            task_exited: true,
+        });
+        return;
+    }
+
+    manager.update_progress(&download_id, |progress| {
         if progress.status != DownloadStatus::Cancelled {
             progress.status = DownloadStatus::Failed;
             progress.error = Some(error.to_string());
