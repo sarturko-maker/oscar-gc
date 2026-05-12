@@ -11,14 +11,16 @@ use axum::{
 use futures::future::join_all;
 use goose::config::paths::Paths;
 use goose::download_manager::{get_download_manager, DownloadProgress};
-use goose::providers::local_inference::hf_models::{self, HfModelInfo, HfQuantVariant};
+use goose::providers::local_inference::hf_models::{self, HfModelInfo, HfModelVariant};
 use goose::providers::local_inference::{
     available_inference_memory_bytes,
-    hf_models::{resolve_model_spec, resolve_model_spec_full, HfGgufFile},
+    hf_models::{
+        register_resolved_model, resolve_local_model_spec, resolve_model_spec, HfGgufFile,
+    },
     local_model_registry::{
         default_settings_for_model, featured_mmproj_spec, get_registry, is_featured_model,
-        model_id_from_repo, LocalModelEntry, ModelDownloadStatus as RegistryDownloadStatus,
-        ModelSettings, ShardFile, FEATURED_MODELS,
+        model_id_from_repo, LocalModelEntry, LocalModelStorage,
+        ModelDownloadStatus as RegistryDownloadStatus, ModelSettings, FEATURED_MODELS,
     },
     recommend_local_model,
 };
@@ -147,6 +149,8 @@ async fn ensure_featured_models_in_registry() -> Result<(), ErrorResponse> {
                 quantization: pending.quantization,
                 local_path,
                 source_url: hf_file.download_url,
+                backend_id: settings.backend_id.clone(),
+                storage: LocalModelStorage::GooseManaged,
                 settings,
                 size_bytes: hf_file.size_bytes,
                 mmproj_path: None,
@@ -317,10 +321,11 @@ pub struct SearchQuery {
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct RepoVariantsResponse {
-    pub variants: Vec<HfQuantVariant>,
+    pub variants: Vec<HfModelVariant>,
     pub recommended_index: Option<usize>,
     pub available_memory_bytes: u64,
     pub downloaded_quants: Vec<String>,
+    pub downloaded_variants: Vec<String>,
 }
 
 #[utoipa::path(
@@ -339,7 +344,7 @@ pub async fn search_hf_models(
     Query(params): Query<SearchQuery>,
 ) -> Result<Json<Vec<HfModelInfo>>, ErrorResponse> {
     let limit = params.limit.unwrap_or(20).min(50);
-    let results = hf_models::search_gguf_models(&params.q, limit)
+    let results = hf_models::search_local_models(&params.q, limit)
         .await
         .map_err(|e| ErrorResponse::internal(format!("Search failed: {}", e)))?;
     Ok(Json(results))
@@ -357,24 +362,42 @@ pub async fn get_repo_files(
     Path((author, repo)): Path<(String, String)>,
 ) -> Result<Json<RepoVariantsResponse>, ErrorResponse> {
     let repo_id = format!("{}/{}", author, repo);
-    let variants = hf_models::get_repo_gguf_variants(&repo_id)
+    let variants = hf_models::get_repo_local_variants(&repo_id)
         .await
         .map_err(|e| ErrorResponse::internal(format!("Failed to fetch repo files: {}", e)))?;
 
     let runtime = state.get_inference_runtime()?;
     let available_memory = available_inference_memory_bytes(&runtime);
-    let recommended_index = hf_models::recommend_variant(&variants, available_memory);
+    let gguf_variants: Vec<_> = variants
+        .iter()
+        .filter(|variant| variant.backend_id == "llamacpp")
+        .map(
+            |variant| goose::providers::local_inference::hf_models::HfQuantVariant {
+                quantization: variant.variant_id.clone(),
+                size_bytes: variant.size_bytes,
+                filename: variant.filename.clone().unwrap_or_default(),
+                download_url: variant.download_url.clone().unwrap_or_default(),
+                description: "",
+                quality_rank: variant.quality_rank,
+                sharded: variant.sharded,
+            },
+        )
+        .collect();
+    let recommended_index = hf_models::recommend_variant(&gguf_variants, available_memory);
 
-    let downloaded_quants = {
+    let (downloaded_quants, downloaded_variants) = {
         let registry = get_registry()
             .lock()
             .map_err(|_| ErrorResponse::internal("Failed to acquire registry lock"))?;
-        registry
+        let models: Vec<_> = registry
             .list_models()
             .iter()
             .filter(|m| m.repo_id == repo_id && m.is_downloaded())
-            .map(|m| m.quantization.clone())
-            .collect()
+            .collect();
+        (
+            models.iter().map(|m| m.quantization.clone()).collect(),
+            models.iter().map(|m| m.id.clone()).collect(),
+        )
     };
 
     Ok(Json(RepoVariantsResponse {
@@ -382,12 +405,13 @@ pub async fn get_repo_files(
         recommended_index,
         available_memory_bytes: available_memory,
         downloaded_quants,
+        downloaded_variants,
     }))
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct DownloadModelRequest {
-    /// Model spec like "bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M"
+    /// Model spec/download id like "bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M" or "mlx-community/Qwen3-4B-bf16@mlx:bf16"
     pub spec: String,
 }
 
@@ -403,93 +427,11 @@ pub struct DownloadModelRequest {
 pub async fn download_hf_model(
     Json(req): Json<DownloadModelRequest>,
 ) -> Result<(StatusCode, Json<String>), ErrorResponse> {
-    let (repo_id, quantization) = hf_models::parse_model_spec(&req.spec)
-        .map_err(|e| ErrorResponse::bad_request(format!("Invalid spec format: {e}")))?;
-
-    let (_repo, resolved) = resolve_model_spec_full(&req.spec)
+    let resolved = resolve_local_model_spec(&req.spec)
         .await
         .map_err(|e| ErrorResponse::bad_request(format!("Invalid spec: {}", e)))?;
-
-    let model_id = model_id_from_repo(&repo_id, &quantization);
-    let models_dir = Paths::in_data_dir("models");
-    let first_file = &resolved.files[0];
-    let first_local_path = models_dir.join(&first_file.filename);
-
-    let shard_files: Vec<ShardFile> = if resolved.files.len() > 1 {
-        resolved
-            .files
-            .iter()
-            .skip(1)
-            .map(|f| ShardFile {
-                filename: f.filename.clone(),
-                local_path: models_dir.join(&f.filename),
-                source_url: f.download_url.clone(),
-                size_bytes: f.size_bytes,
-            })
-            .collect()
-    } else {
-        vec![]
-    };
-
-    let entry = LocalModelEntry {
-        id: model_id.clone(),
-        repo_id,
-        filename: first_file.filename.clone(),
-        quantization,
-        local_path: first_local_path.clone(),
-        source_url: first_file.download_url.clone(),
-        settings: default_settings_for_model(&model_id),
-        size_bytes: resolved.total_size,
-        mmproj_path: None,
-        mmproj_source_url: None,
-        mmproj_size_bytes: 0,
-        shard_files: shard_files.clone(),
-    };
-
-    // add_model enriches the entry with mmproj metadata from the featured table
-    let mmproj_path = {
-        let mut registry = get_registry()
-            .lock()
-            .map_err(|_| ErrorResponse::internal("Failed to acquire registry lock"))?;
-        registry
-            .add_model(entry)
-            .map_err(|e| ErrorResponse::internal(format!("{}", e)))?;
-        registry.get_model(&model_id).and_then(|e| {
-            e.mmproj_path
-                .as_ref()
-                .zip(e.mmproj_source_url.as_ref())
-                .map(|(p, u)| (p.clone(), u.clone()))
-        })
-    };
-
-    let dm = get_download_manager();
-    let all_files: Vec<(String, std::path::PathBuf)> = resolved
-        .files
-        .iter()
-        .map(|f| (f.download_url.clone(), models_dir.join(&f.filename)))
-        .collect();
-
-    dm.download_model_sharded(
-        format!("{}-model", model_id),
-        all_files,
-        resolved.total_size,
-        None,
-    )
-    .await
-    .map_err(|e| ErrorResponse::internal(format!("Download failed: {}", e)))?;
-
-    if let Some((mmproj_path, mmproj_url)) = mmproj_path {
-        if !mmproj_path.exists() {
-            dm.download_model(
-                format!("{}-mmproj", model_id),
-                mmproj_url,
-                mmproj_path,
-                None,
-            )
-            .await
-            .map_err(|e| ErrorResponse::internal(format!("mmproj download failed: {}", e)))?;
-        }
-    }
+    let model_id = register_resolved_model(resolved, &req.spec)
+        .map_err(|e| ErrorResponse::internal(format!("Failed to register model: {}", e)))?;
 
     Ok((StatusCode::ACCEPTED, Json(model_id)))
 }

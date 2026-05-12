@@ -2,7 +2,10 @@ mod backend;
 pub mod hf_models;
 mod llamacpp;
 pub mod local_model_registry;
+mod mlx;
 pub(crate) mod multimodal;
+mod native_tool_parsing;
+mod tool_emulation;
 mod tool_parsing;
 
 use crate::config::ExtensionConfig;
@@ -19,6 +22,7 @@ use async_trait::async_trait;
 use backend::{BackendLoadedModel, LocalInferenceBackend};
 use futures::future::BoxFuture;
 use llamacpp::{LlamaCppBackend, LLAMACPP_BACKEND_ID};
+use mlx::{MlxBackend, MLX_BACKEND_ID};
 use rmcp::model::Tool;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -63,8 +67,10 @@ impl InferenceRuntime {
             return Ok(runtime);
         }
         let llamacpp_backend: Arc<dyn LocalInferenceBackend> = Arc::new(LlamaCppBackend::new()?);
+        let mlx_backend: Arc<dyn LocalInferenceBackend> = Arc::new(MlxBackend::new());
         let mut backends = HashMap::new();
         backends.insert(LLAMACPP_BACKEND_ID, llamacpp_backend);
+        backends.insert(MLX_BACKEND_ID, mlx_backend);
         let runtime = Arc::new(Self {
             models: StdMutex::new(HashMap::new()),
             backends,
@@ -82,14 +88,18 @@ impl InferenceRuntime {
 
     fn backend_for_model(
         &self,
-        _resolved: &ResolvedModelPaths,
+        resolved: &ResolvedModelPaths,
     ) -> Result<Arc<dyn LocalInferenceBackend>, ProviderError> {
-        self.backends
-            .get(LLAMACPP_BACKEND_ID)
-            .cloned()
-            .ok_or_else(|| {
-                ProviderError::ExecutionError("Local inference backend unavailable".to_string())
-            })
+        let backend_id = resolved
+            .backend_id
+            .as_deref()
+            .unwrap_or(LLAMACPP_BACKEND_ID);
+        self.backends.get(backend_id).cloned().ok_or_else(|| {
+            ProviderError::ExecutionError(format!(
+                "Local inference backend '{}' unavailable",
+                backend_id
+            ))
+        })
     }
 
     fn get_or_create_model_slot(&self, key: ModelCacheKey) -> ModelSlot {
@@ -119,6 +129,7 @@ pub(super) struct ResolvedModelPaths {
     pub context_limit: usize,
     pub settings: crate::providers::local_inference::local_model_registry::ModelSettings,
     pub mmproj_path: Option<PathBuf>,
+    pub backend_id: Option<String>,
 }
 
 /// Resolve model path, context limit, settings, and mmproj path for a model ID from the registry.
@@ -139,11 +150,16 @@ fn resolve_model_path(model_id: &str) -> Option<ResolvedModelPaths> {
             settings.vision_capable = defaults.vision_capable;
             settings.mmproj_size_bytes = entry.mmproj_size_bytes;
             let mmproj_path = entry.mmproj_path.as_ref().filter(|p| p.exists()).cloned();
+            let backend_id = entry
+                .backend_id
+                .clone()
+                .or_else(|| settings.backend_id.clone());
             return Some(ResolvedModelPaths {
                 model_path: entry.local_path.clone(),
                 context_limit: ctx,
                 settings,
                 mmproj_path,
+                backend_id,
             });
         }
     }
