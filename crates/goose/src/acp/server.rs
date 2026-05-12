@@ -27,22 +27,23 @@ use crate::source_roots::SourceRoot;
 use crate::utils::sanitize_unicode_tags;
 use agent_client_protocol::schema::{
     AgentCapabilities, Annotations, AuthMethod, AuthMethodAgent, AuthenticateRequest,
-    AuthenticateResponse, BlobResourceContents, CancelNotification, CloseSessionRequest,
-    CloseSessionResponse, ConfigOptionUpdate, Content, ContentBlock, ContentChunk,
-    CurrentModeUpdate, EmbeddedResource, EmbeddedResourceResource, FileSystemCapabilities,
-    ForkSessionRequest, ForkSessionResponse, ImageContent, InitializeRequest, InitializeResponse,
-    ListSessionsRequest, ListSessionsResponse, LoadSessionRequest, LoadSessionResponse,
-    McpCapabilities, McpServer, Meta, ModelId, ModelInfo, NewSessionRequest, NewSessionResponse,
-    PermissionOption, PermissionOptionKind, PromptCapabilities, PromptRequest, PromptResponse,
-    RequestPermissionOutcome, RequestPermissionRequest, ResourceLink, SessionCapabilities,
-    SessionCloseCapabilities, SessionConfigOption, SessionConfigOptionCategory,
-    SessionConfigSelectOption, SessionId, SessionInfo, SessionInfoUpdate, SessionListCapabilities,
-    SessionMode, SessionModeId, SessionModeState, SessionModelState, SessionNotification,
-    SessionUpdate, SetSessionConfigOptionRequest, SetSessionConfigOptionResponse,
-    SetSessionModeRequest, SetSessionModeResponse, SetSessionModelRequest, SetSessionModelResponse,
-    StopReason, TextContent, TextResourceContents, ToolCall, ToolCallContent, ToolCallId,
-    ToolCallLocation, ToolCallStatus, ToolCallUpdate, ToolCallUpdateFields, ToolKind, Usage,
-    UsageUpdate,
+    AuthenticateResponse, AvailableCommand, AvailableCommandInput, AvailableCommandsUpdate,
+    BlobResourceContents, CancelNotification, CloseSessionRequest, CloseSessionResponse,
+    ConfigOptionUpdate, Content, ContentBlock, ContentChunk, CurrentModeUpdate, EmbeddedResource,
+    EmbeddedResourceResource, FileSystemCapabilities, ForkSessionRequest, ForkSessionResponse,
+    ImageContent, InitializeRequest, InitializeResponse, ListSessionsRequest, ListSessionsResponse,
+    LoadSessionRequest, LoadSessionResponse, McpCapabilities, McpServer, Meta, ModelId, ModelInfo,
+    NewSessionRequest, NewSessionResponse, PermissionOption, PermissionOptionKind,
+    PromptCapabilities, PromptRequest, PromptResponse, RequestPermissionOutcome,
+    RequestPermissionRequest, ResourceLink, SessionCapabilities, SessionCloseCapabilities,
+    SessionConfigOption, SessionConfigOptionCategory, SessionConfigSelectOption, SessionId,
+    SessionInfo, SessionInfoUpdate, SessionListCapabilities, SessionMode, SessionModeId,
+    SessionModeState, SessionModelState, SessionNotification, SessionUpdate,
+    SetSessionConfigOptionRequest, SetSessionConfigOptionResponse, SetSessionModeRequest,
+    SetSessionModeResponse, SetSessionModelRequest, SetSessionModelResponse, StopReason,
+    TextContent, TextResourceContents, ToolCall, ToolCallContent, ToolCallId, ToolCallLocation,
+    ToolCallStatus, ToolCallUpdate, ToolCallUpdateFields, ToolKind, UnstructuredCommandInput,
+    Usage, UsageUpdate,
 };
 use agent_client_protocol::util::MatchDispatchFrom;
 use agent_client_protocol::{
@@ -1044,6 +1045,33 @@ fn build_usage_update(session: &Session, context_limit: usize) -> UsageUpdate {
 }
 
 impl GooseAcpAgent {
+    fn available_commands_update() -> AvailableCommandsUpdate {
+        let commands = crate::slash_command::list_acp_commands()
+            .into_iter()
+            .map(|entry| {
+                let mut command = AvailableCommand::new(entry.name, entry.description);
+                if let Some(input_hint) = entry.input_hint {
+                    command = command.input(AvailableCommandInput::Unstructured(
+                        UnstructuredCommandInput::new(input_hint),
+                    ));
+                }
+                command
+            })
+            .collect();
+
+        AvailableCommandsUpdate::new(commands)
+    }
+
+    fn send_available_commands_update(
+        cx: &ConnectionTo<Client>,
+        session_id: &SessionId,
+    ) -> Result<(), agent_client_protocol::Error> {
+        cx.send_notification(SessionNotification::new(
+            session_id.clone(),
+            SessionUpdate::AvailableCommandsUpdate(Self::available_commands_update()),
+        ))
+    }
+
     pub fn permission_manager(&self) -> Arc<PermissionManager> {
         Arc::clone(&self.permission_manager)
     }
@@ -2417,10 +2445,11 @@ impl GooseAcpAgent {
         }
         if let Some(usage_update) = initial_usage_update {
             cx.send_notification(SessionNotification::new(
-                acp_session_id,
+                acp_session_id.clone(),
                 SessionUpdate::UsageUpdate(usage_update),
             ))?;
         }
+        Self::send_available_commands_update(cx, &acp_session_id)?;
         debug!(
             target: "perf",
             sid = %sid,
@@ -2785,6 +2814,7 @@ impl GooseAcpAgent {
                 SessionUpdate::UsageUpdate(usage_update),
             ))?;
         }
+        Self::send_available_commands_update(cx, &args.session_id)?;
         debug!(
             target: "perf",
             sid = %sid,
