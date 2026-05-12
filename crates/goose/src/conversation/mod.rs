@@ -1270,7 +1270,11 @@ mod tests {
 
         let mut conv = Conversation::empty();
         for fragment in ["I ", "should ", "think ", "about ", "this."] {
-            conv.push(Message::assistant().with_thinking(fragment, "").with_id("turn-1"));
+            conv.push(
+                Message::assistant()
+                    .with_thinking(fragment, "")
+                    .with_id("turn-1"),
+            );
         }
 
         assert_eq!(conv.messages().len(), 1);
@@ -1290,9 +1294,21 @@ mod tests {
         use crate::conversation::message::MessageContent;
 
         let mut conv = Conversation::empty();
-        conv.push(Message::assistant().with_thinking("a", "").with_id("turn-1"));
-        conv.push(Message::assistant().with_thinking("b", "sig1").with_id("turn-1"));
-        conv.push(Message::assistant().with_thinking("c", "").with_id("turn-1"));
+        conv.push(
+            Message::assistant()
+                .with_thinking("a", "")
+                .with_id("turn-1"),
+        );
+        conv.push(
+            Message::assistant()
+                .with_thinking("b", "sig1")
+                .with_id("turn-1"),
+        );
+        conv.push(
+            Message::assistant()
+                .with_thinking("c", "")
+                .with_id("turn-1"),
+        );
 
         let content = &conv.messages()[0].content;
         assert_eq!(content.len(), 1);
@@ -1312,7 +1328,11 @@ mod tests {
 
         // First push: single Thinking block — establishes the message in the conversation.
         let mut conv = Conversation::empty();
-        conv.push(Message::assistant().with_thinking("first", "").with_id("turn-1"));
+        conv.push(
+            Message::assistant()
+                .with_thinking("first", "")
+                .with_id("turn-1"),
+        );
 
         // Second push has multiple blocks (Thinking + Text). The merge arm requires
         // `message.content.len() == 1`, so this must NOT coalesce into the existing
@@ -1324,11 +1344,7 @@ mod tests {
         let content = &conv.messages()[0].content;
         assert_eq!(content.len(), 3);
         match (&content[0], &content[1], &content[2]) {
-            (
-                MessageContent::Thinking(a),
-                MessageContent::Thinking(b),
-                MessageContent::Text(c),
-            ) => {
+            (MessageContent::Thinking(a), MessageContent::Thinking(b), MessageContent::Text(c)) => {
                 assert_eq!(a.thinking, "first");
                 assert_eq!(b.thinking, "second");
                 assert_eq!(c.text, "and now text");
