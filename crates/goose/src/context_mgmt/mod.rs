@@ -23,7 +23,7 @@ const TOOLCALL_SUMMARIZATION_BATCH_SIZE: usize = 10;
 /// Context window size at or below which tool-pair summarization may activate.
 /// Above this limit, truncation + full compaction are sufficient and the
 /// summarization side-effects (stale ghost messages) outweigh the benefit.
-const TOOL_PAIR_SUMMARIZATION_CONTEXT_LIMIT: usize = 64_000;
+const TOOL_PAIR_SUMMARIZATION_CONTEXT_LIMIT: usize = 65_536;
 
 fn tool_pair_summarization_enabled() -> bool {
     Config::global()
