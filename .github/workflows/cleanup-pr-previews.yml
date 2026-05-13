@@ -1,0 +1,30 @@
+name: Cleanup Stale PR Previews
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    name: Remove previews for closed/merged PRs
+    runs-on: ubuntu-latest
+    if: github.repository == 'aaif-goose/goose'
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b  # v7.2.0
+
+      - name: Clean up stale PR previews
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/clean-gh-pages.sh
+
+      - name: Force push cleaned branch
+        run: |
+          updated_ref=$(git rev-parse origin/gh-pages)
+          git push origin "$updated_ref":gh-pages --force

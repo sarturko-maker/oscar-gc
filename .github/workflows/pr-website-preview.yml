@@ -47,21 +47,3 @@ jobs:
         if: ${{ github.event.pull_request.head.repo.full_name == 'aaif-goose/goose' }}
         with:
           source-dir: documentation/build
-
-  cleanup:
-    runs-on: ubuntu-latest
-    needs: deploy
-    if: github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == 'aaif-goose/goose'
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
-        with:
-          fetch-depth: 0
-
-      - uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b  # v7.2.0
-
-      - name: Clean up gh-pages branch
-        run: |
-          bash scripts/clean-gh-pages.sh
-          git push origin $(git rev-parse origin/gh-pages):gh-pages --force

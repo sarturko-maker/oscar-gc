@@ -7,11 +7,6 @@ echo "Starting gh-pages branch cleanup..."
 REMOVE_PATHS_FILE="/tmp/remove-paths.txt"
 > "$REMOVE_PATHS_FILE"
 
-dirs_with_visible_files=$(git ls-tree -r origin/gh-pages:pr-preview --name-only 2>/dev/null | \
-    grep -v '/\.' | \
-    cut -d/ -f1 | \
-    sort -u || true)
-
 all_dirs=$(git ls-tree -d origin/gh-pages:pr-preview --name-only 2>/dev/null || true)
 
 if [ -z "$all_dirs" ]; then
@@ -20,20 +15,31 @@ if [ -z "$all_dirs" ]; then
     exit 0
 fi
 
+echo "Found PR preview directories: $(echo "$all_dirs" | wc -l | tr -d ' ')"
+
 while IFS= read -r dir; do
-    if [ -n "$dir" ]; then
-        if ! echo "$dirs_with_visible_files" | grep -q "^${dir}$"; then
-            dir_path="pr-preview/$dir"
-            echo "Found directory to remove: $dir_path"
-            echo "$dir_path" >> "$REMOVE_PATHS_FILE"
-        fi
+    if [ -z "$dir" ]; then continue; fi
+
+    pr_num="${dir#pr-}"
+
+    # Check if PR is still open via GitHub CLI
+    state=$(gh pr view "$pr_num" --json state -q '.state' 2>/dev/null || echo "UNKNOWN")
+
+    if [ "$state" = "OPEN" ]; then
+        echo "PR #$pr_num is OPEN — keeping pr-preview/$dir"
+    else
+        echo "PR #$pr_num is $state — marking pr-preview/$dir for removal"
+        echo "pr-preview/$dir" >> "$REMOVE_PATHS_FILE"
     fi
 done <<< "$all_dirs"
 
 if [ ! -s "$REMOVE_PATHS_FILE" ]; then
-    echo "No empty or hidden-file-only directories found. Nothing to clean up."
+    echo "All preview directories belong to open PRs. Nothing to clean."
     rm "$REMOVE_PATHS_FILE"
     exit 0
 fi
 
-uvx git-filter-repo@2.47.0 --paths-from-file "$REMOVE_PATHS_FILE" --invert-paths --refs origin/gh-pages
+count=$(wc -l < "$REMOVE_PATHS_FILE" | tr -d ' ')
+echo "Removing $count preview directories..."
+
+uvx git-filter-repo@2.47.0 --force --paths-from-file "$REMOVE_PATHS_FILE" --invert-paths --refs refs/remotes/origin/gh-pages
