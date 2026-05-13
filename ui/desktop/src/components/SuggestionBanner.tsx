@@ -1,32 +1,65 @@
 import { useEffect, useState, useCallback } from 'react';
-import { MessageSquarePlus, Inbox, LoaderCircle, X, Check } from 'lucide-react';
+import { MessageSquarePlus, Inbox, LoaderCircle, X, Check, Share2, Copy } from 'lucide-react';
 import { Button } from './ui/button';
-import { getChannelInfo, getSuggestions, sendSuggestion } from '../api/sdk.gen';
+import { getChannelInfo, getSuggestions, sendSuggestion, shareSessionNostr } from '../api/sdk.gen';
 import { toast } from 'react-toastify';
+
+interface Suggestion {
+  text: string;
+  senderName?: string | null;
+  eventId: string;
+  timestamp: number;
+}
 
 interface SuggestionBannerProps {
   sessionId: string;
   onAcceptSuggestion: (text: string) => void;
 }
 
+const SENDER_NAME_KEY = 'goose_suggestion_sender_name';
+
+function getSavedSenderName(): string {
+  try {
+    return localStorage.getItem(SENDER_NAME_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+function saveSenderName(name: string) {
+  try {
+    localStorage.setItem(SENDER_NAME_KEY, name);
+  } catch {
+    // ignore
+  }
+}
+
 export default function SuggestionBanner({ sessionId, onAcceptSuggestion }: SuggestionBannerProps) {
   const [role, setRole] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<Array<{ text: string; eventId: string; timestamp: number }>>([]);
+  const [checked, setChecked] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSendInput, setShowSendInput] = useState(false);
   const [suggestionText, setSuggestionText] = useState('');
+  const [senderName, setSenderName] = useState(getSavedSenderName);
   const [isSending, setIsSending] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
 
-  // Check if this session has a channel
   useEffect(() => {
     let cancelled = false;
     getChannelInfo({ path: { session_id: sessionId }, throwOnError: false })
       .then((resp) => {
-        if (!cancelled && resp.data) {
-          setRole(resp.data.role);
+        if (!cancelled) {
+          if (resp.data) {
+            setRole(resp.data.role);
+          }
+          setChecked(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setChecked(true);
+      });
     return () => { cancelled = true; };
   }, [sessionId]);
 
@@ -55,23 +88,50 @@ export default function SuggestionBanner({ sessionId, onAcceptSuggestion }: Sugg
   const handleSend = useCallback(async () => {
     if (!suggestionText.trim()) return;
     setIsSending(true);
+    if (senderName.trim()) {
+      saveSenderName(senderName.trim());
+    }
     try {
       await sendSuggestion({
         path: { session_id: sessionId },
-        body: { text: suggestionText.trim() },
+        body: {
+          text: suggestionText.trim(),
+          senderName: senderName.trim() || undefined,
+        },
         throwOnError: true,
       });
       setSuggestionText('');
       setShowSendInput(false);
       toast.success('Suggestion sent');
-    } catch (error) {
+    } catch {
       toast.error('Failed to send suggestion');
     } finally {
       setIsSending(false);
     }
-  }, [sessionId, suggestionText]);
+  }, [sessionId, suggestionText, senderName]);
 
-  const handleAccept = useCallback((suggestion: { text: string; eventId: string }) => {
+  const handleShare = useCallback(async () => {
+    setIsSharing(true);
+    try {
+      const resp = await shareSessionNostr({
+        path: { session_id: sessionId },
+        body: {},
+        throwOnError: true,
+      });
+      if (resp.data?.deeplink) {
+        setShareLink(resp.data.deeplink);
+        setRole('owner');
+        await navigator.clipboard.writeText(resp.data.deeplink);
+        toast.success('Share link copied to clipboard');
+      }
+    } catch {
+      toast.error('Failed to share session');
+    } finally {
+      setIsSharing(false);
+    }
+  }, [sessionId]);
+
+  const handleAccept = useCallback((suggestion: Suggestion) => {
     setSuggestions((prev) => prev.filter((s) => s.eventId !== suggestion.eventId));
     onAcceptSuggestion(suggestion.text);
   }, [onAcceptSuggestion]);
@@ -80,9 +140,48 @@ export default function SuggestionBanner({ sessionId, onAcceptSuggestion }: Sugg
     setSuggestions((prev) => prev.filter((s) => s.eventId !== eventId));
   }, []);
 
-  if (!role) return null;
+  if (!checked) return null;
 
-  // Participant: show "send suggestion" button
+  // No channel yet — offer to share
+  if (!role) {
+    return (
+      <div className="mx-4 mb-2">
+        {shareLink ? (
+          <div className="rounded-lg border border-border-primary bg-background-secondary p-3 space-y-2">
+            <p className="text-sm text-text-primary">Session shared! Link copied to clipboard.</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-xs bg-background-primary p-2 rounded truncate">{shareLink}</code>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(shareLink);
+                  toast.success('Copied');
+                }}
+              >
+                <Copy className="w-3 h-3" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={handleShare}
+            disabled={isSharing}
+            className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+          >
+            {isSharing ? (
+              <LoaderCircle className="w-4 h-4 animate-spin" />
+            ) : (
+              <Share2 className="w-4 h-4" />
+            )}
+            Share this session for collaboration
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Participant: send suggestion
   if (role === 'participant') {
     if (showSendInput) {
       return (
@@ -96,6 +195,13 @@ export default function SuggestionBanner({ sessionId, onAcceptSuggestion }: Sugg
               <X className="w-4 h-4 text-text-secondary" />
             </button>
           </div>
+          <input
+            type="text"
+            className="w-full rounded border border-border-primary bg-background-primary p-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Your name (optional)"
+            value={senderName}
+            onChange={(e) => setSenderName(e.target.value)}
+          />
           <textarea
             className="w-full min-h-[60px] rounded border border-border-primary bg-background-primary p-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="Type your suggestion..."
@@ -132,9 +238,8 @@ export default function SuggestionBanner({ sessionId, onAcceptSuggestion }: Sugg
 
   // Owner: show incoming suggestions
   if (role === 'owner') {
-    if (isLoading && suggestions.length === 0) return null; // don't flash loading on first render
-
-    if (suggestions.length === 0) return null; // nothing to show
+    if (isLoading && suggestions.length === 0) return null;
+    if (suggestions.length === 0) return null;
 
     return (
       <div className="mx-4 mb-2 space-y-2">
@@ -148,7 +253,9 @@ export default function SuggestionBanner({ sessionId, onAcceptSuggestion }: Sugg
                 <div className="flex items-center gap-2 mb-1">
                   <Inbox className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                    Suggestion received
+                    {suggestion.senderName
+                      ? `Suggestion from ${suggestion.senderName}`
+                      : 'Suggestion received'}
                   </span>
                   <span className="text-xs text-text-secondary">
                     {new Date(suggestion.timestamp * 1000).toLocaleString()}

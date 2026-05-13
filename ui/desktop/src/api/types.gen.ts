@@ -71,6 +71,7 @@ export type ChannelInfoResponse = {
 };
 
 export type ChannelSuggestRequest = {
+    senderName?: string | null;
     text: string;
 };
 
@@ -1439,6 +1440,7 @@ export type SuccessCheck = {
 
 export type SuggestionResponse = {
     eventId: string;
+    senderName?: string | null;
     text: string;
     timestamp: number;
 };

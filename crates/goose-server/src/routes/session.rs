@@ -78,6 +78,7 @@ pub struct ImportSessionNostrRequest {
 #[serde(rename_all = "camelCase")]
 pub struct ChannelSuggestRequest {
     text: String,
+    sender_name: Option<String>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -93,6 +94,7 @@ pub struct ChannelInfoResponse {
 #[serde(rename_all = "camelCase")]
 pub struct SuggestionResponse {
     text: String,
+    sender_name: Option<String>,
     event_id: String,
     timestamp: u64,
 }
@@ -579,6 +581,7 @@ async fn send_suggestion(
         &channel.encryption_key,
         &channel.event_id,
         &request.text,
+        request.sender_name.as_deref(),
         channel.relays,
     )
     .await
@@ -634,6 +637,7 @@ async fn get_suggestions(
             .into_iter()
             .map(|s| SuggestionResponse {
                 text: s.text,
+                sender_name: s.sender_name,
                 event_id: s.event_id,
                 timestamp: s.timestamp,
             })

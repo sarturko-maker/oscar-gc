@@ -294,20 +294,30 @@ fn normalize_relays(relays: Vec<String>) -> Vec<String> {
 #[serde(rename_all = "camelCase")]
 pub struct Suggestion {
     pub text: String,
+    pub sender_name: Option<String>,
     pub event_id: String,
     pub timestamp: u64,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+struct SuggestionPayload {
+    text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    sender_name: Option<String>,
 }
 
 pub async fn publish_suggestion(
     encryption_key_hex: &str,
     original_event_id: &str,
     text: &str,
+    sender_name: Option<&str>,
     relays: Vec<String>,
 ) -> Result<()> {
     publish_suggestion_with(
         encryption_key_hex,
         original_event_id,
         text,
+        sender_name,
         relays,
         &LiveNostrClient,
     )
@@ -318,6 +328,7 @@ pub async fn publish_suggestion_with<P>(
     encryption_key_hex: &str,
     original_event_id: &str,
     text: &str,
+    sender_name: Option<&str>,
     relays: Vec<String>,
     publisher: &P,
 ) -> Result<()>
@@ -329,12 +340,18 @@ where
         return Err(anyhow!("At least one Nostr relay is required"));
     }
 
+    let payload = SuggestionPayload {
+        text: text.to_string(),
+        sender_name: sender_name.map(|s| s.to_string()),
+    };
+    let payload_json = serde_json::to_string(&payload)?;
+
     let secret_key = SecretKey::parse(encryption_key_hex)?;
     let encryption_keys = Keys::new(secret_key.clone());
     let encrypted = nip44::encrypt(
         &secret_key,
         &encryption_keys.public_key(),
-        text,
+        &payload_json,
         nip44::Version::V2,
     )?;
 
@@ -389,9 +406,17 @@ where
     let mut suggestions = Vec::new();
     for event in events {
         match nip44::decrypt(&secret_key, &encryption_keys.public_key(), &event.content) {
-            Ok(text) => {
+            Ok(decrypted) => {
+                // Try JSON payload first, fall back to plain text for backwards compat
+                let (text, sender_name) =
+                    if let Ok(payload) = serde_json::from_str::<SuggestionPayload>(&decrypted) {
+                        (payload.text, payload.sender_name)
+                    } else {
+                        (decrypted, None)
+                    };
                 suggestions.push(Suggestion {
                     text,
+                    sender_name,
                     event_id: event.id.to_hex(),
                     timestamp: event.created_at.as_secs(),
                 });
