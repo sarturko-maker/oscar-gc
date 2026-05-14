@@ -187,6 +187,7 @@ interface ChatInputProps {
   sessionModel?: string | null;
   sessionProvider?: string | null;
   sessionLoaded?: boolean;
+  latestInference?: Message['metadata']['inference'] | null;
 }
 
 export default function ChatInput({
@@ -217,6 +218,7 @@ export default function ChatInput({
   sessionModel,
   sessionProvider,
   sessionLoaded,
+  latestInference,
 }: ChatInputProps) {
   const [_value, setValue] = useState(initialValue);
   const [displayValue, setDisplayValue] = useState(initialValue); // For immediate visual feedback
@@ -1710,6 +1712,7 @@ export default function ChatInput({
                 setView={setView}
                 sessionModel={effectiveModel}
                 sessionProvider={effectiveProvider}
+                latestInference={latestInference}
                 onModelChanged={setModelOverride}
                 sessionLoaded={sessionLoaded}
               />
