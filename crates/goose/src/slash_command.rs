@@ -39,7 +39,7 @@ pub fn list_acp_commands(working_dir: Option<&Path>) -> Vec<SlashCommandEntry> {
         .map(|command| normalize_command_name(&command.name))
         .collect();
 
-    for command in recipe_commands(crate::slash_commands::list_commands()) {
+    for command in recipe_commands(crate::recipe_slash_commands::list_commands()) {
         if reserved_names.insert(command.name.clone()) {
             commands.push(command);
         }
@@ -54,7 +54,7 @@ pub fn list_acp_commands(working_dir: Option<&Path>) -> Vec<SlashCommandEntry> {
 }
 
 fn recipe_commands(
-    mappings: Vec<crate::slash_commands::SlashCommandMapping>,
+    mappings: Vec<crate::recipe_slash_commands::SlashCommandMapping>,
 ) -> Vec<SlashCommandEntry> {
     mappings
         .into_iter()
@@ -268,7 +268,7 @@ mod tests {
         )
         .unwrap();
 
-        let commands = recipe_commands(vec![crate::slash_commands::SlashCommandMapping {
+        let commands = recipe_commands(vec![crate::recipe_slash_commands::SlashCommandMapping {
             command: "/review".to_string(),
             recipe_path: recipe_path.to_string_lossy().to_string(),
         }]);
@@ -289,7 +289,7 @@ mod tests {
         )
         .unwrap();
 
-        let commands = recipe_commands(vec![crate::slash_commands::SlashCommandMapping {
+        let commands = recipe_commands(vec![crate::recipe_slash_commands::SlashCommandMapping {
             command: "status".to_string(),
             recipe_path: recipe_path.to_string_lossy().to_string(),
         }]);
@@ -308,7 +308,7 @@ mod tests {
         )
         .unwrap();
 
-        let commands = recipe_commands(vec![crate::slash_commands::SlashCommandMapping {
+        let commands = recipe_commands(vec![crate::recipe_slash_commands::SlashCommandMapping {
             command: "review".to_string(),
             recipe_path: recipe_path.to_string_lossy().to_string(),
         }]);
@@ -327,7 +327,7 @@ mod tests {
         )
         .unwrap();
 
-        let commands = recipe_commands(vec![crate::slash_commands::SlashCommandMapping {
+        let commands = recipe_commands(vec![crate::recipe_slash_commands::SlashCommandMapping {
             command: "deploy".to_string(),
             recipe_path: recipe_path.to_string_lossy().to_string(),
         }]);
@@ -353,7 +353,7 @@ mod tests {
             .iter()
             .map(|command| normalize_command_name(&command.name))
             .collect();
-        for command in recipe_commands(vec![crate::slash_commands::SlashCommandMapping {
+        for command in recipe_commands(vec![crate::recipe_slash_commands::SlashCommandMapping {
             command: "review".to_string(),
             recipe_path: recipe_path.to_string_lossy().to_string(),
         }]) {
@@ -388,7 +388,7 @@ mod tests {
         std::fs::write(&invalid_recipe_path, "not: a recipe").unwrap();
 
         let commands = recipe_commands(vec![
-            crate::slash_commands::SlashCommandMapping {
+            crate::recipe_slash_commands::SlashCommandMapping {
                 command: "missing".to_string(),
                 recipe_path: tmp
                     .path()
@@ -396,7 +396,7 @@ mod tests {
                     .to_string_lossy()
                     .to_string(),
             },
-            crate::slash_commands::SlashCommandMapping {
+            crate::recipe_slash_commands::SlashCommandMapping {
                 command: "invalid".to_string(),
                 recipe_path: invalid_recipe_path.to_string_lossy().to_string(),
             },
@@ -415,7 +415,7 @@ mod tests {
         )
         .unwrap();
 
-        let commands = recipe_commands(vec![crate::slash_commands::SlashCommandMapping {
+        let commands = recipe_commands(vec![crate::recipe_slash_commands::SlashCommandMapping {
             command: "deploy".to_string(),
             recipe_path: recipe_path.to_string_lossy().to_string(),
         }]);

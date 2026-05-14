@@ -410,7 +410,7 @@ impl Agent {
         _session_id: &str,
     ) -> Result<Option<Message>> {
         let full_command = format!("/{}", command);
-        let recipe_path = match crate::slash_commands::get_recipe_for_command(&full_command) {
+        let recipe_path = match crate::recipe_slash_commands::get_recipe_for_command(&full_command) {
             Some(path) => path,
             None => return Ok(None),
         };

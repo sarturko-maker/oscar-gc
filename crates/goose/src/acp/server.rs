@@ -2869,7 +2869,7 @@ impl GooseAcpAgent {
 
             if !Self::is_builtin_agent_command(parsed.command) {
                 if let Some(recipe_path) =
-                    crate::slash_commands::get_recipe_for_command(&full_command)
+                    crate::recipe_slash_commands::get_recipe_for_command(&full_command)
                 {
                     if recipe_path.exists() {
                         cx.send_notification(SessionNotification::new(
