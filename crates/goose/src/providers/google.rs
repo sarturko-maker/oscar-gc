@@ -177,9 +177,10 @@ impl Provider for GoogleProvider {
             .await?;
         let status = response.status();
         if !status.is_success() {
+            let url = response.url().to_string();
             let body = response.text().await.unwrap_or_default();
             let payload = serde_json::from_str::<serde_json::Value>(&body).ok();
-            return Err(map_http_error_to_provider_error(status, payload));
+            return Err(map_http_error_to_provider_error(status, payload, &url));
         }
 
         let json: serde_json::Value = response.json().await?;

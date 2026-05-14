@@ -115,6 +115,7 @@ fn check_context_length_exceeded(text: &str) -> bool {
 pub fn map_http_error_to_provider_error(
     status: StatusCode,
     payload: Option<Value>,
+    url: &str,
 ) -> ProviderError {
     let extract_message = || -> String {
         payload
@@ -132,13 +133,14 @@ pub fn map_http_error_to_provider_error(
     let error = match status {
         StatusCode::OK => unreachable!("Should not call this function with OK status"),
         StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => ProviderError::Authentication(format!(
-            "Authentication failed. Status: {}. Response: {}",
+            "Authentication failed for {url}. Status: {}. Response: {}",
             status,
             extract_message()
         )),
-        StatusCode::NOT_FOUND => {
-            ProviderError::RequestFailed(format!("Resource not found (404): {}", extract_message()))
-        }
+        StatusCode::NOT_FOUND => ProviderError::RequestFailed(format!(
+            "Resource not found (404) at {url}: {}",
+            extract_message()
+        )),
         StatusCode::PAYMENT_REQUIRED => ProviderError::CreditsExhausted {
             details: extract_message(),
             top_up_url: None,
@@ -156,11 +158,13 @@ pub fn map_http_error_to_provider_error(
             details: extract_message(),
             retry_delay: None,
         },
-        _ if status.is_server_error() => {
-            ProviderError::ServerError(format!("Server error ({}): {}", status, extract_message()))
-        }
+        _ if status.is_server_error() => ProviderError::ServerError(format!(
+            "Server error ({}) at {url}: {}",
+            status,
+            extract_message()
+        )),
         _ => ProviderError::RequestFailed(format!(
-            "Request failed with status {}: {}",
+            "Request failed with status {} at {url}: {}",
             status,
             extract_message()
         )),
@@ -181,10 +185,11 @@ pub fn map_http_error_to_provider_error(
 pub async fn handle_status(response: Response) -> Result<Response, ProviderError> {
     let status = response.status();
     if !status.is_success() {
+        let url = response.url().to_string();
         let headers = response.headers().clone();
         let body = response.text().await.unwrap_or_default();
         let payload = serde_json::from_str::<Value>(&body).ok();
-        let mut err = map_http_error_to_provider_error(status, payload.clone());
+        let mut err = map_http_error_to_provider_error(status, payload.clone(), &url);
         if let ProviderError::RateLimitExceeded { details, .. } = &err {
             err = ProviderError::RateLimitExceeded {
                 details: details.clone(),

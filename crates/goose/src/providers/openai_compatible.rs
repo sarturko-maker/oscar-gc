@@ -244,7 +244,7 @@ mod tests {
         payload: Option<Value>,
         expected_variant: &str,
     ) {
-        let err = map_http_error_to_provider_error(status, payload);
+        let err = map_http_error_to_provider_error(status, payload, "http://test/endpoint");
         let actual = err.telemetry_type();
         let expected_telemetry = match expected_variant {
             "CreditsExhausted" => "credits_exhausted",

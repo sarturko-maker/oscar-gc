@@ -126,6 +126,7 @@ impl VeniceProvider {
             .await?;
 
         let status = response.status();
+        let url = response.url().to_string();
         tracing::debug!("Venice response status: {}", status);
 
         if !status.is_success() {
@@ -180,7 +181,7 @@ impl VeniceProvider {
 
             // Use the common error mapping function
             let error_json = serde_json::from_str::<Value>(&error_body).ok();
-            return Err(map_http_error_to_provider_error(status, error_json));
+            return Err(map_http_error_to_provider_error(status, error_json, &url));
         }
 
         let response_text = response.text().await?;
