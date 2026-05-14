@@ -6,6 +6,7 @@ use goose_sdk::custom_requests::SourceEntry;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SlashCommandSource {
     Builtin,
+    Recipe,
     Skill,
 }
 
@@ -31,16 +32,45 @@ pub fn list_builtin_commands() -> Vec<SlashCommandEntry> {
 
 pub fn list_acp_commands(working_dir: Option<&Path>) -> Vec<SlashCommandEntry> {
     let mut commands = list_builtin_commands();
-    let reserved_names: HashSet<String> = commands
+    let mut reserved_names: HashSet<String> = commands
         .iter()
         .map(|command| normalize_command_name(&command.name))
         .collect();
+
+    for command in recipe_commands(crate::slash_commands::list_commands()) {
+        let name = normalize_command_name(&command.name);
+        if reserved_names.insert(name) {
+            commands.push(command);
+        }
+    }
+
     commands.extend(
         skill_commands(crate::skills::list_installed_skills(working_dir))
             .into_iter()
             .filter(|command| !reserved_names.contains(&normalize_command_name(&command.name))),
     );
     commands
+}
+
+fn recipe_commands(
+    mappings: Vec<crate::slash_commands::SlashCommandMapping>,
+) -> Vec<SlashCommandEntry> {
+    mappings
+        .into_iter()
+        .filter_map(|mapping| {
+            let name = normalize_command_name(&mapping.command);
+            if name.is_empty() {
+                return None;
+            }
+
+            Some(SlashCommandEntry {
+                name,
+                description: recipe_description(&mapping.recipe_path),
+                source: SlashCommandSource::Recipe,
+                input_hint: None,
+            })
+        })
+        .collect()
 }
 
 fn skill_commands(sources: Vec<SourceEntry>) -> Vec<SlashCommandEntry> {
@@ -64,6 +94,22 @@ fn skill_commands(sources: Vec<SourceEntry>) -> Vec<SlashCommandEntry> {
 
 fn normalize_command_name(name: &str) -> String {
     name.trim_start_matches('/').to_lowercase()
+}
+
+fn recipe_description(recipe_path: &str) -> String {
+    let default_description = "Run recipe slash command".to_string();
+    let Ok(recipe_content) = std::fs::read_to_string(recipe_path) else {
+        return default_description;
+    };
+    let Ok(recipe) = crate::recipe::Recipe::from_content(&recipe_content) else {
+        return default_description;
+    };
+
+    if recipe.description.is_empty() {
+        recipe.title
+    } else {
+        recipe.description
+    }
 }
 
 fn builtin_input_hint(command: &str) -> Option<&'static str> {
@@ -167,6 +213,63 @@ mod tests {
             .collect();
 
         assert_eq!(names, vec!["review"]);
+    }
+
+    #[test]
+    fn recipe_commands_use_recipe_description() {
+        let tmp = TempDir::new().unwrap();
+        let recipe_path = tmp.path().join("review.yaml");
+        std::fs::write(
+            &recipe_path,
+            "version: 1.0.0\ntitle: Review Recipe\ndescription: Review with a recipe\ninstructions: Review the change\n",
+        )
+        .unwrap();
+
+        let commands = recipe_commands(vec![crate::slash_commands::SlashCommandMapping {
+            command: "/review".to_string(),
+            recipe_path: recipe_path.to_string_lossy().to_string(),
+        }]);
+
+        assert_eq!(commands.len(), 1);
+        assert_eq!(commands[0].name, "review");
+        assert_eq!(commands[0].description, "Review with a recipe");
+        assert_eq!(commands[0].source, SlashCommandSource::Recipe);
+        assert_eq!(commands[0].input_hint, None);
+    }
+
+    #[test]
+    fn recipe_commands_reserve_names_before_skills() {
+        let mut commands = list_builtin_commands();
+        let mut reserved_names: HashSet<String> = commands
+            .iter()
+            .map(|command| normalize_command_name(&command.name))
+            .collect();
+        for command in recipe_commands(vec![crate::slash_commands::SlashCommandMapping {
+            command: "review".to_string(),
+            recipe_path: "missing.yaml".to_string(),
+        }]) {
+            let name = normalize_command_name(&command.name);
+            if reserved_names.insert(name) {
+                commands.push(command);
+            }
+        }
+        commands.extend(
+            skill_commands(vec![source_entry(
+                SourceType::Skill,
+                "review",
+                "Review code",
+            )])
+            .into_iter()
+            .filter(|command| !reserved_names.contains(&normalize_command_name(&command.name))),
+        );
+
+        let review_commands: Vec<_> = commands
+            .iter()
+            .filter(|command| command.name == "review")
+            .collect();
+
+        assert_eq!(review_commands.len(), 1);
+        assert_eq!(review_commands[0].source, SlashCommandSource::Recipe);
     }
 
     fn source_entry(source_type: SourceType, name: &str, description: &str) -> SourceEntry {
