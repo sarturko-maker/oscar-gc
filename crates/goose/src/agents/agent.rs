@@ -1282,7 +1282,7 @@ impl Agent {
         if message_text.trim().starts_with('/') {
             let command = message_text.split_whitespace().next();
             if let Some(cmd) = command {
-                if crate::recipe_slash_commands::get_recipe_for_command(cmd).is_some() {
+                if crate::slash_commands::recipe_slash_command::get_recipe_for_command(cmd).is_some() {
                     #[cfg(feature = "telemetry")]
                     crate::posthog::emit_custom_slash_command_used();
                 }

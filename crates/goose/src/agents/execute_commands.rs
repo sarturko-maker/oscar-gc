@@ -7,6 +7,7 @@ use crate::conversation::message::{Message, SystemNotificationType};
 use crate::recipe::build_recipe::build_recipe_from_template;
 use crate::recipe::{RecipeParameter, RecipeParameterRequirement};
 use crate::skills::loaded_skill_context_with_args;
+use crate::slash_commands::{recipe_slash_command, skill_slash_command};
 
 use super::Agent;
 
@@ -213,9 +214,6 @@ impl Agent {
     }
 
     async fn handle_skills_command(&self, session_id: &str) -> Result<Option<Message>> {
-        use crate::skills::list_installed_skills;
-        use goose_sdk::custom_requests::SourceType;
-
         let working_dir = self
             .config
             .session_manager
@@ -223,34 +221,7 @@ impl Agent {
             .await
             .ok()
             .map(|s| s.working_dir);
-        let sources = list_installed_skills(working_dir.as_deref());
-        let skills: Vec<_> = sources
-            .iter()
-            .filter(|s| matches!(s.source_type, SourceType::Skill | SourceType::BuiltinSkill))
-            .collect();
-
-        let mut output = String::new();
-        if skills.is_empty() {
-            output.push_str("No skills installed.\n\n");
-            output.push_str("Skills are loaded from SKILL.md files in:\n");
-            output.push_str("  - ~/.agents/skills/ (global)\n");
-            output.push_str("  - ~/.agents/plugins/*/skills/ (installed plugins)\n");
-            output.push_str("  - .agents/skills/ (in current project)\n");
-        } else {
-            output.push_str(&format!("**Installed skills ({}):**\n\n", skills.len()));
-            for skill in &skills {
-                let kind_label = if skill.source_type == SourceType::BuiltinSkill {
-                    " *(builtin)*"
-                } else {
-                    ""
-                };
-                output.push_str(&format!(
-                    "- **{}**{}: {}\n",
-                    skill.name, kind_label, skill.description
-                ));
-            }
-        }
-
+        let output = skill_slash_command::format_installed_skills(working_dir.as_deref());
         Ok(Some(Message::assistant().with_text(output)))
     }
 
@@ -410,7 +381,7 @@ impl Agent {
         _session_id: &str,
     ) -> Result<Option<Message>> {
         let full_command = format!("/{}", command);
-        let recipe_path = match crate::recipe_slash_commands::get_recipe_for_command(&full_command) {
+        let recipe_path = match recipe_slash_command::get_recipe_for_command(&full_command) {
             Some(path) => path,
             None => return Ok(None),
         };

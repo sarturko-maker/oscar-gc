@@ -1046,7 +1046,7 @@ fn build_usage_update(session: &Session, context_limit: usize) -> UsageUpdate {
 
 impl GooseAcpAgent {
     fn available_commands_update(working_dir: &std::path::Path) -> AvailableCommandsUpdate {
-        let commands = crate::slash_command::list_acp_commands(Some(working_dir))
+        let commands = crate::slash_commands::slash_command::list_acp_commands(Some(working_dir))
             .into_iter()
             .map(|entry| {
                 let mut command = AvailableCommand::new(entry.name, entry.description);
@@ -2869,7 +2869,7 @@ impl GooseAcpAgent {
 
             if !Self::is_builtin_agent_command(parsed.command) {
                 if let Some(recipe_path) =
-                    crate::recipe_slash_commands::get_recipe_for_command(&full_command)
+                    crate::slash_commands::recipe_slash_command::get_recipe_for_command(&full_command)
                 {
                     if recipe_path.exists() {
                         cx.send_notification(SessionNotification::new(
