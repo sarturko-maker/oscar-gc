@@ -1702,6 +1702,13 @@ impl GooseAcpAgent {
             SessionUpdate::ToolCall(initial_tool_call),
         ))?;
 
+        if Config::global()
+            .get_goose_disable_tool_call_summary()
+            .unwrap_or(false)
+        {
+            return Ok(());
+        }
+
         if let Ok(tool_call) = &tool_request.tool_call {
             let agent = match &session.agent {
                 AgentHandle::Ready(a) => a.clone(),
@@ -2179,6 +2186,104 @@ impl GooseAcpAgent {
             })?;
 
         Ok(())
+    }
+
+    fn input_hint_for_recipe(
+        params: Option<&Vec<crate::recipe::RecipeParameter>>,
+    ) -> Option<String> {
+        let params = params?;
+
+        params
+            .iter()
+            .find(|p| p.key == "args")
+            .or_else(|| params.iter().find(|p| p.default.is_none()))
+            .or_else(|| params.first())
+            .map(|p| p.description.clone())
+    }
+
+    async fn build_available_commands_from_slash_commands() -> Vec<AvailableCommand> {
+        let mut commands = Vec::new();
+
+        for mapping in crate::slash_commands::list_commands() {
+            if Self::is_builtin_agent_command(&mapping.command) {
+                continue;
+            }
+
+            let recipe_path = std::path::PathBuf::from(&mapping.recipe_path);
+
+            if !recipe_path.exists() {
+                continue;
+            }
+
+            let Ok(recipe_content) = tokio::fs::read_to_string(&recipe_path).await else {
+                continue;
+            };
+
+            let Some(recipe_dir) = recipe_path.parent() else {
+                continue;
+            };
+
+            let recipe_dir_str = recipe_dir.display().to_string();
+
+            let Ok(validation_result) =
+                crate::recipe::validate_recipe::validate_recipe_template_from_content(
+                    &recipe_content,
+                    Some(recipe_dir_str),
+                )
+            else {
+                continue;
+            };
+
+            let required_param_count = validation_result
+                .parameters
+                .as_ref()
+                .map(|params| params.iter().filter(|p| p.default.is_none()).count())
+                .unwrap_or(0);
+
+            if required_param_count > 1 {
+                continue;
+            }
+
+            let mut command =
+                AvailableCommand::new(mapping.command, validation_result.description.clone());
+
+            if let Some(hint) = Self::input_hint_for_recipe(validation_result.parameters.as_ref()) {
+                command = command.input(AvailableCommandInput::Unstructured(
+                    UnstructuredCommandInput::new(hint),
+                ));
+            }
+
+            commands.push(command);
+        }
+
+        commands
+    }
+
+    async fn send_available_commands_update(
+        &self,
+        cx: &ConnectionTo<Client>,
+        session_id: &SessionId,
+    ) -> Result<(), agent_client_protocol::Error> {
+        let commands = Self::build_available_commands_from_slash_commands().await;
+
+        cx.send_notification(SessionNotification::new(
+            session_id.clone(),
+            SessionUpdate::AvailableCommandsUpdate(AvailableCommandsUpdate::new(commands)),
+        ))?;
+
+        Ok(())
+    }
+
+    fn is_builtin_agent_command(command: &str) -> bool {
+        let normalized = command.trim_start_matches('/');
+
+        crate::agents::execute_commands::list_commands()
+            .iter()
+            .any(|cmd| cmd.name == normalized)
+            || crate::agents::execute_commands::COMPACT_TRIGGERS
+                .iter()
+                .filter_map(|trigger| trigger.strip_prefix('/'))
+                .any(|trigger| trigger == normalized)
     }
 }
 
@@ -2844,6 +2949,29 @@ impl GooseAcpAgent {
 
         let user_message = Self::convert_acp_prompt_to_message(&args.prompt);
 
+        let message_text = user_message.as_concat_text();
+        if let Some(parsed) = crate::agents::execute_commands::parse_slash_command(&message_text) {
+            let full_command = format!("/{}", parsed.command);
+
+            if !Self::is_builtin_agent_command(parsed.command) {
+                if let Some(recipe_path) =
+                    crate::slash_commands::get_recipe_for_command(&full_command)
+                {
+                    if recipe_path.exists() {
+                        cx.send_notification(SessionNotification::new(
+                            args.session_id.clone(),
+                            SessionUpdate::AgentMessageChunk(ContentChunk::new(
+                                ContentBlock::Text(TextContent::new(format!(
+                                    "Running recipe: {}",
+                                    full_command
+                                ))),
+                            )),
+                        ))?;
+                    }
+                }
+            }
+        }
+
         let session_config = SessionConfig {
             id: session_id.clone(),
             schedule_id: None,
@@ -3292,6 +3420,7 @@ impl GooseAcpAgent {
         let mut response = ForkSessionResponse::new(acp_session_id.clone())
             .modes(mode_state)
             .meta(meta);
+
         if let Some(ms) = model_state {
             response = response.models(ms);
         }

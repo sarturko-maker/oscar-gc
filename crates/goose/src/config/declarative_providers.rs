@@ -86,6 +86,12 @@ pub struct DeclarativeProviderConfig {
     pub base_path: Option<String>,
     #[serde(default)]
     pub env_vars: Option<Vec<EnvVarConfig>>,
+    /// Controls whether `fetch_supported_models` calls the provider's `/v1/models`
+    /// endpoint or returns the static `models` list directly.
+    ///
+    /// - `Some(false)` + non-empty `models`: return the static list; no API call.
+    ///   Construction fails if `models` is empty.
+    /// - `Some(true)` or `None`: try the API; fall back to `models` on 404.
     #[serde(default)]
     pub dynamic_models: Option<bool>,
     #[serde(default)]
@@ -871,5 +877,32 @@ mod tests {
 
         let result = expand_env_vars("${TEST_EXPAND_OVERRIDE}/path", &env_vars).unwrap();
         assert_eq!(result, "https://from-env.com/path");
+    }
+
+    #[test]
+    fn test_routstr_json_deserializes() {
+        let json = include_str!("../providers/declarative/routstr.json");
+        let config: DeclarativeProviderConfig =
+            serde_json::from_str(json).expect("routstr.json should parse");
+        assert_eq!(config.name, "routstr");
+        assert_eq!(config.display_name, "Routstr");
+        assert!(matches!(config.engine, ProviderEngine::OpenAI));
+        assert_eq!(config.api_key_env, "ROUTSTR_API_KEY");
+        assert_eq!(config.base_url, "${ROUTSTR_HOST}/v1");
+        assert_eq!(config.dynamic_models, Some(true));
+        assert_eq!(config.supports_streaming, Some(true));
+        assert!(config.skip_canonical_filtering);
+        assert_eq!(config.models.len(), 6);
+
+        let env_vars = config.env_vars.as_ref().expect("env_vars should be set");
+        assert_eq!(env_vars.len(), 1);
+        assert_eq!(env_vars[0].name, "ROUTSTR_HOST");
+        assert!(!env_vars[0].required);
+        assert!(!env_vars[0].secret);
+        assert_eq!(env_vars[0].primary, Some(true));
+        assert_eq!(
+            env_vars[0].default,
+            Some("https://api.routstr.com".to_string())
+        );
     }
 }
