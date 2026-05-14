@@ -96,6 +96,35 @@ pub(crate) fn validate_skill_name(name: &str) -> Result<(), Error> {
     Ok(())
 }
 
+pub fn render_loaded_skill(skill: &SourceEntry) -> String {
+    let mut output = format!(
+        "# Loaded Skill: {} ({})\n\n{}\n",
+        skill.name,
+        skill.source_type,
+        skill.to_load_text()
+    );
+
+    if !skill.supporting_files.is_empty() {
+        let skill_dir = Path::new(&skill.path);
+        output.push_str(&format!(
+            "\n## Supporting Files\n\nSkill directory: {}\n\n",
+            skill.path
+        ));
+        for file in &skill.supporting_files {
+            if let Ok(relative) = Path::new(file).strip_prefix(skill_dir) {
+                let rel_str = relative.to_string_lossy().replace('\\', "/");
+                output.push_str(&format!(
+                    "- {} → load_skill(name: \"{}/{}\")\n",
+                    rel_str, skill.name, rel_str
+                ));
+            }
+        }
+    }
+
+    output.push_str("\n---\nThis knowledge is now available in your context.");
+    output
+}
+
 fn canonicalize_or_original(path: &Path) -> PathBuf {
     path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
 }

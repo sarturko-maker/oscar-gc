@@ -123,32 +123,9 @@ impl McpClientTrait for SkillsClient {
         let skills = discover_skills(Some(&self.working_dir));
 
         if let Some(skill) = skills.iter().find(|s| s.name == skill_name) {
-            let mut output = format!(
-                "# Loaded Skill: {} ({})\n\n{}\n",
-                skill.name,
-                skill.source_type,
-                skill.to_load_text()
-            );
-
-            if !skill.supporting_files.is_empty() {
-                let skill_dir = Path::new(&skill.path);
-                output.push_str(&format!(
-                    "\n## Supporting Files\n\nSkill directory: {}\n\n",
-                    skill.path
-                ));
-                for file in &skill.supporting_files {
-                    if let Ok(relative) = Path::new(file).strip_prefix(skill_dir) {
-                        let rel_str = relative.to_string_lossy().replace('\\', "/");
-                        output.push_str(&format!(
-                            "- {} → load_skill(name: \"{}/{}\")\n",
-                            rel_str, skill.name, rel_str
-                        ));
-                    }
-                }
-            }
-
-            output.push_str("\n---\nThis knowledge is now available in your context.");
-            return Ok(CallToolResult::success(vec![Content::text(output)]));
+            return Ok(CallToolResult::success(vec![Content::text(
+                crate::skills::render_loaded_skill(skill),
+            )]));
         }
 
         if let Some((parent_skill_name, raw_relative_path)) = skill_name.split_once('/') {

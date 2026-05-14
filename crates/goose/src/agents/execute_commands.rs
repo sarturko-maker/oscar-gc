@@ -83,7 +83,14 @@ impl Agent {
             "skills" => self.handle_skills_command(session_id).await,
             "doctor" => Ok(Some(crate::doctor::run(self, session_id).await?)),
             _ => {
-                self.handle_recipe_command(command, params_str, session_id)
+                if let Some(message) = self
+                    .handle_recipe_command(command, params_str, session_id)
+                    .await?
+                {
+                    return Ok(Some(message));
+                }
+
+                self.handle_skill_command(command, params_str, session_id)
                     .await
             }
         }
@@ -438,6 +445,44 @@ impl Agent {
             .flatten()
             .collect::<Vec<_>>()
             .join("\n\n");
+
+        Ok(Some(Message::user().with_text(prompt)))
+    }
+
+    async fn handle_skill_command(
+        &self,
+        command: &str,
+        params_str: &str,
+        session_id: &str,
+    ) -> Result<Option<Message>> {
+        let working_dir = self
+            .config
+            .session_manager
+            .get_session(session_id, false)
+            .await
+            .ok()
+            .map(|session| session.working_dir);
+
+        let skill = crate::skills::list_installed_skills(working_dir.as_deref())
+            .into_iter()
+            .find(|skill| skill.name.eq_ignore_ascii_case(command));
+
+        let Some(skill) = skill else {
+            return Ok(None);
+        };
+
+        let task = if params_str.is_empty() {
+            "Use this skill for the current task."
+        } else {
+            params_str
+        };
+
+        let prompt = format!(
+            "The user invoked the Goose skill `{}`.\n\n{}\n\nUser request:\n{}",
+            skill.name,
+            crate::skills::render_loaded_skill(&skill),
+            task
+        );
 
         Ok(Some(Message::user().with_text(prompt)))
     }

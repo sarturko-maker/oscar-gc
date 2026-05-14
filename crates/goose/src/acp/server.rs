@@ -1045,8 +1045,8 @@ fn build_usage_update(session: &Session, context_limit: usize) -> UsageUpdate {
 }
 
 impl GooseAcpAgent {
-    fn available_commands_update() -> AvailableCommandsUpdate {
-        let commands = crate::slash_command::list_acp_commands()
+    fn available_commands_update(working_dir: &std::path::Path) -> AvailableCommandsUpdate {
+        let commands = crate::slash_command::list_acp_commands(Some(working_dir))
             .into_iter()
             .map(|entry| {
                 let mut command = AvailableCommand::new(entry.name, entry.description);
@@ -1065,10 +1065,11 @@ impl GooseAcpAgent {
     fn send_available_commands_update(
         cx: &ConnectionTo<Client>,
         session_id: &SessionId,
+        working_dir: &std::path::Path,
     ) -> Result<(), agent_client_protocol::Error> {
         cx.send_notification(SessionNotification::new(
             session_id.clone(),
-            SessionUpdate::AvailableCommandsUpdate(Self::available_commands_update()),
+            SessionUpdate::AvailableCommandsUpdate(Self::available_commands_update(working_dir)),
         ))
     }
 
@@ -2424,6 +2425,8 @@ impl GooseAcpAgent {
             .prepare_session_init_config(&resolved, &mode_state, &goose_session)
             .await;
 
+        let working_dir = goose_session.working_dir.clone();
+
         self.spawn_agent_setup(
             cx,
             agent_tx,
@@ -2449,7 +2452,7 @@ impl GooseAcpAgent {
                 SessionUpdate::UsageUpdate(usage_update),
             ))?;
         }
-        Self::send_available_commands_update(cx, &acp_session_id)?;
+        Self::send_available_commands_update(cx, &acp_session_id, &working_dir)?;
         debug!(
             target: "perf",
             sid = %sid,
@@ -2814,7 +2817,7 @@ impl GooseAcpAgent {
                 SessionUpdate::UsageUpdate(usage_update),
             ))?;
         }
-        Self::send_available_commands_update(cx, &args.session_id)?;
+        Self::send_available_commands_update(cx, &args.session_id, &args.cwd)?;
         debug!(
             target: "perf",
             sid = %sid,
@@ -3270,11 +3273,13 @@ impl GooseAcpAgent {
             .prepare_session_init_config(&resolved, &mode_state, &goose_session)
             .await;
 
+        let acp_session_id = SessionId::new(new_session_id.clone());
+
         self.spawn_agent_setup(
             cx,
             agent_tx,
             AgentSetupRequest {
-                session_id: SessionId::new(new_session_id.clone()),
+                session_id: acp_session_id.clone(),
                 goose_session,
                 mcp_servers: args.mcp_servers,
                 resolved_provider: resolved.ok(),
@@ -3284,7 +3289,7 @@ impl GooseAcpAgent {
 
         let meta = session_meta(&new_session);
 
-        let mut response = ForkSessionResponse::new(SessionId::new(new_session_id))
+        let mut response = ForkSessionResponse::new(acp_session_id.clone())
             .modes(mode_state)
             .meta(meta);
         if let Some(ms) = model_state {
@@ -3293,6 +3298,7 @@ impl GooseAcpAgent {
         if let Some(co) = config_options {
             response = response.config_options(co);
         }
+        Self::send_available_commands_update(cx, &acp_session_id, &args.cwd)?;
         Ok(response)
     }
 
