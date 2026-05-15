@@ -229,11 +229,8 @@ fn parse_recipe_args(
     optional: &[&RecipeParameter],
 ) -> Result<Vec<(String, String)>> {
     let tokens = crate::utils::split_command_args(params_str)?;
-    let known_keys: HashSet<&str> = required
-        .iter()
-        .chain(optional.iter())
-        .map(|p| p.key.as_str())
-        .collect();
+    let required_keys: HashSet<&str> = required.iter().map(|p| p.key.as_str()).collect();
+    let optional_keys: HashSet<&str> = optional.iter().map(|p| p.key.as_str()).collect();
 
     let mut positionals: Vec<String> = Vec::new();
     let mut flags: Vec<(String, String)> = Vec::new();
@@ -241,7 +238,14 @@ fn parse_recipe_args(
     while i < tokens.len() {
         let token = &tokens[i];
         if let Some(flag) = token.strip_prefix("--") {
-            if !known_keys.contains(flag) {
+            if required_keys.contains(flag) {
+                return Err(anyhow!(
+                    "Parameter '{}' is required; pass it positionally, not as --{}",
+                    flag,
+                    flag
+                ));
+            }
+            if !optional_keys.contains(flag) {
                 return Err(anyhow!("Unknown parameter: --{}", flag));
             }
             let value = tokens
@@ -468,6 +472,21 @@ mod tests {
         assert!(err
             .to_string()
             .contains("Unexpected positional argument: extra"));
+    }
+
+    #[test]
+    fn parse_recipe_args_rejects_required_param_passed_as_flag() {
+        let component = required_param("component");
+        let from = required_param("from");
+        let required = vec![&component, &from];
+
+        let err = parse_recipe_args("--component Button old-lib", &required, &[]).unwrap_err();
+
+        let msg = err.to_string();
+        assert!(
+            msg.contains("'component' is required") && msg.contains("--component"),
+            "unexpected error: {msg}"
+        );
     }
 
     #[test]
