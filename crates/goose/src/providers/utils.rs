@@ -149,7 +149,7 @@ fn parse_google_retry_delay(payload: &Value) -> Option<Duration> {
 /// - `Err(ProviderError)`: Describes the failure reason.
 pub async fn handle_response_google_compat(response: Response) -> Result<Value, ProviderError> {
     let status = response.status();
-    let url = response.url().to_string();
+    let url = super::http_status::sanitize_url(response.url().as_str());
     let payload: Option<Value> = response.json().await.ok();
     let final_status = get_google_final_status(status, payload.as_ref());
 

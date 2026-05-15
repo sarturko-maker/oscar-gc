@@ -13,6 +13,23 @@ use serde_json::Value;
 
 use super::errors::ProviderError;
 
+/// Strip credentials and sensitive query parameters from a URL for safe
+/// inclusion in error messages and logs. Drops userinfo (`user:pass@`) and
+/// all query parameters (which may contain API keys like `?key=...`).
+/// Returns the original string unchanged if it doesn't parse as a URL
+/// (e.g. a bare path like "v1/models").
+pub fn sanitize_url(raw: &str) -> String {
+    let Ok(mut url) = url::Url::parse(raw) else {
+        return raw.to_string();
+    };
+    if !url.username().is_empty() || url.password().is_some() {
+        let _ = url.set_username("");
+        let _ = url.set_password(None);
+    }
+    url.set_query(None);
+    url.to_string()
+}
+
 /// Hard cap on retry delays we'll honor from remote responses. A malformed
 /// 429 with `retry_after_seconds: 1e30` (or a far-future HTTP-date) should
 /// degrade to "no retry hint" rather than freeze the agent or panic when
@@ -185,7 +202,7 @@ pub fn map_http_error_to_provider_error(
 pub async fn handle_status(response: Response) -> Result<Response, ProviderError> {
     let status = response.status();
     if !status.is_success() {
-        let url = response.url().to_string();
+        let url = sanitize_url(response.url().as_str());
         let headers = response.headers().clone();
         let body = response.text().await.unwrap_or_default();
         let payload = serde_json::from_str::<Value>(&body).ok();

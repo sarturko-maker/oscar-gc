@@ -9,7 +9,7 @@ use super::base::{
     ConfigKey, MessageStream, Provider, ProviderDef, ProviderMetadata, ProviderUsage, Usage,
 };
 use super::errors::ProviderError;
-use super::openai_compatible::map_http_error_to_provider_error;
+use super::openai_compatible::{map_http_error_to_provider_error, sanitize_url};
 use super::retry::ProviderRetry;
 use crate::conversation::message::{Message, MessageContent};
 
@@ -126,7 +126,7 @@ impl VeniceProvider {
             .await?;
 
         let status = response.status();
-        let url = response.url().to_string();
+        let url = sanitize_url(response.url().as_str());
         tracing::debug!("Venice response status: {}", status);
 
         if !status.is_success() {
