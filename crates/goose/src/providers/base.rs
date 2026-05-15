@@ -395,7 +395,8 @@ pub struct ModelInfo {
     /// Whether this model supports cache control
     pub supports_cache_control: Option<bool>,
     /// Whether this model supports reasoning/thinking controls
-    pub reasoning: Option<bool>,
+    #[serde(default)]
+    pub reasoning: bool,
 }
 
 impl ModelInfo {
@@ -408,7 +409,7 @@ impl ModelInfo {
             output_token_cost: None,
             currency: None,
             supports_cache_control: None,
-            reasoning: None,
+            reasoning: false,
         }
     }
 
@@ -426,7 +427,7 @@ impl ModelInfo {
             output_token_cost: Some(output_cost),
             currency: Some("$".to_string()),
             supports_cache_control: None,
-            reasoning: None,
+            reasoning: false,
         }
     }
 }
@@ -439,6 +440,11 @@ fn model_info_for_provider_model(provider_name: &str, model_name: &str) -> Model
         registry.get(provider, model)
     });
 
+    let reasoning = canonical
+        .as_ref()
+        .and_then(|model| model.reasoning)
+        .unwrap_or_else(|| ModelConfig::new_or_fail(model_name).is_reasoning_model());
+
     ModelInfo {
         name: model_name.to_string(),
         context_limit: ModelConfig::new_or_fail(model_name)
@@ -448,7 +454,7 @@ fn model_info_for_provider_model(provider_name: &str, model_name: &str) -> Model
         output_token_cost: None,
         currency: None,
         supports_cache_control: None,
-        reasoning: canonical.and_then(|model| model.reasoning),
+        reasoning,
     }
 }
 
@@ -1759,7 +1765,7 @@ mod tests {
             output_token_cost: None,
             currency: None,
             supports_cache_control: None,
-            reasoning: None,
+            reasoning: false,
         };
         assert_eq!(info.context_limit, 1000);
 
@@ -1771,7 +1777,7 @@ mod tests {
             output_token_cost: None,
             currency: None,
             supports_cache_control: None,
-            reasoning: None,
+            reasoning: false,
         };
         assert_eq!(info, info2);
 
@@ -1783,7 +1789,7 @@ mod tests {
             output_token_cost: None,
             currency: None,
             supports_cache_control: None,
-            reasoning: None,
+            reasoning: false,
         };
         assert_ne!(info, info3);
     }
