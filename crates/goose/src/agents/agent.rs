@@ -894,23 +894,31 @@ impl Agent {
             .await
             .record_tool_arguments(&tool_call.arguments, &session.working_dir);
 
-        if self
-            .hook_manager
-            .has_hooks(crate::hooks::HookEvent::PreToolUse)
-        {
-            let ctx =
-                crate::hooks::HookContext::new(crate::hooks::HookEvent::PreToolUse, &session.id)
-                    .with_tool(
-                        tool_call.name.to_string(),
-                        tool_call
-                            .arguments
-                            .as_ref()
-                            .map(|a| serde_json::Value::Object(a.clone())),
-                    )
-                    .with_working_dir(session.working_dir.to_string_lossy().to_string());
-            self.hook_manager
-                .emit(crate::hooks::HookEvent::PreToolUse, ctx)
-                .await;
+        use crate::hooks::{HookContext, HookDecision, HookEvent};
+        if self.hook_manager.has_hooks(HookEvent::PreToolUse) {
+            let ctx = HookContext::new(HookEvent::PreToolUse, &session.id)
+                .with_tool(
+                    tool_call.name.to_string(),
+                    tool_call
+                        .arguments
+                        .as_ref()
+                        .map(|a| serde_json::Value::Object(a.clone())),
+                )
+                .with_working_dir(session.working_dir.to_string_lossy().to_string());
+            if let HookDecision::Deny { reason, plugin } = self
+                .hook_manager
+                .emit_blocking(HookEvent::PreToolUse, ctx)
+                .await
+            {
+                return (
+                    request_id,
+                    Err(ErrorData::new(
+                        ErrorCode::INVALID_REQUEST,
+                        format!("Tool call blocked by plugin `{plugin}`: {reason}"),
+                        None,
+                    )),
+                );
+            }
         }
 
         let tool_input_for_extended = tool_call

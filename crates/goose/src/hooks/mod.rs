@@ -208,6 +208,14 @@ impl HookContext {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HookDecision {
+    Allow,
+    Deny { reason: String, plugin: String },
+}
+
+const DEFAULT_DENY_REASON: &str = "denied by plugin hook";
+
 /// Loads and executes plugin hooks.
 #[derive(Debug, Default, Clone)]
 pub struct HookManager {
@@ -262,54 +270,72 @@ impl HookManager {
         self.rules.get(&event).is_some_and(|r| !r.is_empty())
     }
 
-    /// Fire all rules whose matcher matches the event context. Errors from
-    /// individual hooks are logged but never propagated — a misbehaving hook
-    /// MUST NOT crash the host tool.
+    pub async fn emit_blocking(&self, event: HookEvent, ctx: HookContext) -> HookDecision {
+        self.dispatch(event, ctx, true).await
+    }
+
     pub async fn emit(&self, event: HookEvent, ctx: HookContext) {
-        let Some(rules) = self.rules.get(&event) else {
-            return;
+        self.dispatch(event, ctx, false).await;
+    }
+
+    async fn dispatch(&self, event: HookEvent, ctx: HookContext, blocking: bool) -> HookDecision {
+        let Some(rules) = self.rules.get(&event).filter(|r| !r.is_empty()) else {
+            return HookDecision::Allow;
         };
-        if rules.is_empty() {
-            return;
-        }
 
         let payload = match serde_json::to_string(&ctx) {
             Ok(s) => s,
             Err(err) => {
                 warn!(event = %event, error = %err, "Failed to serialize hook context");
-                return;
+                return HookDecision::Allow;
             }
         };
 
+        let matcher_target = ctx.matcher_context.as_deref().unwrap_or("");
+
         for rule in rules {
-            if let Some(matcher) = &rule.matcher {
-                let target = ctx.matcher_context.as_deref().unwrap_or("");
-                if !matcher.is_match(target) {
-                    continue;
-                }
+            if !rule
+                .matcher
+                .as_ref()
+                .is_none_or(|m| m.is_match(matcher_target))
+            {
+                continue;
             }
 
-            for action in &rule.actions {
-                let LoadedAction::Command { command, timeout } = action;
-                debug!(
-                    plugin = %rule.plugin_name,
-                    event = %event,
-                    command = %command,
-                    "Running plugin hook",
-                );
-                if let Err(err) =
-                    run_command_hook(command, &rule.plugin_root, &payload, *timeout).await
-                {
+            for LoadedAction::Command { command, timeout } in &rule.actions {
+                debug!(plugin = %rule.plugin_name, event = %event, command, "Running plugin hook");
+                let output =
+                    match run_command_hook(command, &rule.plugin_root, &payload, *timeout).await {
+                        Ok(output) => output,
+                        Err(err) => {
+                            warn!(
+                                plugin = %rule.plugin_name, event = %event, command, error = %err,
+                                "Plugin hook failed",
+                            );
+                            continue;
+                        }
+                    };
+
+                if blocking {
+                    if let Some(reason) = deny_reason(&output) {
+                        info!(plugin = %rule.plugin_name, event = %event, command, reason, "Plugin hook denied tool call");
+                        return HookDecision::Deny {
+                            reason,
+                            plugin: rule.plugin_name.clone(),
+                        };
+                    }
+                } else if !output.status.success() {
                     warn!(
-                        plugin = %rule.plugin_name,
-                        event = %event,
-                        command = %command,
-                        error = %err,
-                        "Plugin hook failed",
+                        plugin = %rule.plugin_name, event = %event, command,
+                        code = ?output.status.code(),
+                        stderr = %String::from_utf8_lossy(&output.stderr).trim(),
+                        "Plugin hook exited non-zero",
                     );
                 }
             }
         }
+
+        HookDecision::Allow
     }
 }
 
@@ -392,7 +418,7 @@ async fn run_command_hook(
     plugin_root: &Path,
     payload: &str,
     timeout: Duration,
-) -> Result<()> {
+) -> Result<std::process::Output> {
     let command = expand_plugin_root(raw_command, plugin_root);
     let mut child = Command::new("sh")
         .arg("-c")
@@ -410,21 +436,40 @@ async fn run_command_hook(
         let _ = stdin.shutdown().await;
     }
 
-    let output = match tokio::time::timeout(timeout, child.wait_with_output()).await {
-        Ok(res) => res.with_context(|| format!("waiting on hook `{command}`"))?,
-        Err(_) => anyhow::bail!("hook `{command}` timed out after {:?}", timeout),
-    };
+    tokio::time::timeout(timeout, child.wait_with_output())
+        .await
+        .map_err(|_| anyhow::anyhow!("hook `{command}` timed out after {:?}", timeout))?
+        .with_context(|| format!("waiting on hook `{command}`"))
+}
 
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!(
-            "hook `{command}` exited with {:?}: {}",
-            output.status.code(),
-            stderr.trim()
-        );
+fn deny_reason(output: &std::process::Output) -> Option<String> {
+    if output.status.code() == Some(2) {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        return Some(non_empty_or_default(stderr));
     }
 
-    Ok(())
+    #[derive(Deserialize)]
+    struct Resp {
+        decision: Option<String>,
+        reason: Option<String>,
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let trimmed = stdout.trim();
+    if !trimmed.starts_with('{') {
+        return None;
+    }
+    let parsed: Resp = serde_json::from_str(trimmed).ok()?;
+    (parsed.decision.as_deref() == Some("block"))
+        .then(|| non_empty_or_default(parsed.reason.unwrap_or_default()))
+}
+
+fn non_empty_or_default(s: String) -> String {
+    if s.is_empty() {
+        DEFAULT_DENY_REASON.to_string()
+    } else {
+        s
+    }
 }
 
 fn expand_plugin_root(command: &str, plugin_root: &Path) -> String {
@@ -519,6 +564,39 @@ mod tests {
 
         let written = std::fs::read_to_string(&marker).unwrap();
         assert_eq!(written.trim(), root.to_string_lossy());
+    }
+
+    #[tokio::test]
+    async fn emit_blocking_denies_on_exit_code_2_and_fails_open_otherwise() {
+        let tmp = tempfile::tempdir().unwrap();
+        let deny_hooks = r#"{"hooks":{"PreToolUse":[{"hooks":[{"type":"command","command":"sh -c 'echo blocked by policy 1>&2; exit 2'"}]}]}}"#;
+        let allow_hooks = r#"{"hooks":{"PreToolUse":[{"hooks":[{"type":"command","command":"sh -c 'exit 1'"}]}]}}"#;
+
+        for (name, hooks, expect_deny) in
+            [("deny", deny_hooks, true), ("allow", allow_hooks, false)]
+        {
+            let root = write_plugin(tmp.path(), name, hooks);
+            let mgr = make_manager(vec![DiscoveredPlugin {
+                name: name.into(),
+                root,
+                source: PluginSource::UserPlaced,
+            }]);
+            let decision = mgr
+                .emit_blocking(
+                    HookEvent::PreToolUse,
+                    HookContext::new(HookEvent::PreToolUse, "s")
+                        .with_tool("developer__shell", None),
+                )
+                .await;
+            match (expect_deny, decision) {
+                (true, HookDecision::Deny { reason, plugin }) => {
+                    assert_eq!(plugin, "deny");
+                    assert!(reason.contains("blocked by policy"), "reason: {reason}");
+                }
+                (false, HookDecision::Allow) => {}
+                (expected, got) => panic!("expected deny={expected}, got {got:?}"),
+            }
+        }
     }
 
     #[tokio::test]
