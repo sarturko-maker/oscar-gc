@@ -9,6 +9,7 @@
   },
   "main": ".vite/build/main.js",
   "scripts": {
+    "postinstall": "pnpm --filter @aaif/goose-sdk run build",
     "typecheck": "tsc --noEmit",
     "generate-api": "openapi-ts",
     "start-gui": "pnpm run generate-api && pnpm run i18n:compile && electron-forge start",
