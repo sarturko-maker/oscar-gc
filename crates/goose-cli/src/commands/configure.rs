@@ -24,7 +24,10 @@ use goose::model::ModelConfig;
 use goose::posthog::{get_telemetry_choice, TELEMETRY_ENABLED_KEY};
 use goose::providers::base::ConfigKey;
 use goose::providers::chatgpt_codex::reasoning_levels_for_model;
-use goose::providers::formats::anthropic::supports_adaptive_thinking;
+use goose::providers::formats::anthropic::{
+    default_thinking_effort, is_claude_opus_47, supports_adaptive_thinking,
+    supports_enabled_thinking,
+};
 use goose::providers::provider_test::test_provider_configuration;
 use goose::providers::{create, providers, retry_operation, RetryConfig};
 use goose::session::SessionType;
@@ -776,6 +779,7 @@ pub async fn configure_provider_dialog() -> anyhow::Result<bool> {
 
     if model.to_lowercase().starts_with("claude-") {
         let supports_adaptive = supports_adaptive_thinking(&model);
+        let supports_enabled = supports_enabled_thinking(&model);
 
         let mut thinking_select = cliclack::select("Select extended thinking mode for Claude:");
         if supports_adaptive {
@@ -785,9 +789,11 @@ pub async fn configure_provider_dialog() -> anyhow::Result<bool> {
                 "",
             );
         }
-        thinking_select = thinking_select
-            .item("enabled", "Enabled - Fixed token budget for thinking", "")
-            .item("disabled", "Disabled - No extended thinking", "");
+        if supports_enabled {
+            thinking_select =
+                thinking_select.item("enabled", "Enabled - Fixed token budget for thinking", "");
+        }
+        thinking_select = thinking_select.item("disabled", "Disabled - No extended thinking", "");
         if supports_adaptive {
             thinking_select = thinking_select.initial_value("adaptive");
         } else {
@@ -797,16 +803,18 @@ pub async fn configure_provider_dialog() -> anyhow::Result<bool> {
         config.set_claude_thinking_type(thinking_type)?;
 
         if thinking_type == "adaptive" {
-            let effort: &str = cliclack::select("Select adaptive thinking effort level:")
+            let default_effort = default_thinking_effort(&model).to_string();
+            let mut effort_select = cliclack::select("Select adaptive thinking effort level:")
                 .item("low", "Low - Minimal thinking, fastest responses", "")
                 .item("medium", "Medium - Moderate thinking", "")
-                .item("high", "High - Deep reasoning (default)", "")
-                .item(
-                    "max",
-                    "Max - No constraints on thinking depth (Opus 4.6 only)",
-                    "",
-                )
-                .initial_value("high")
+                .item("high", "High - Deep reasoning", "");
+            if is_claude_opus_47(&model) {
+                effort_select =
+                    effort_select.item("xhigh", "Extra High - Extended deep reasoning", "");
+            }
+            let effort: &str = effort_select
+                .item("max", "Max - No constraints on thinking depth", "")
+                .initial_value(default_effort.as_str())
                 .interact()?;
             config.set_claude_thinking_effort(effort)?;
         } else if thinking_type == "enabled" {

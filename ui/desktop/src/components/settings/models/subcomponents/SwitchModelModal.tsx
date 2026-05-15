@@ -21,6 +21,15 @@ import Model, { getProviderMetadata, fetchModelsForProviders } from '../modelInt
 import { getPredefinedModelsFromEnv, shouldShowPredefinedModels } from '../predefinedModelsUtils';
 import { ProviderType } from '../../../../api';
 import { trackModelChanged } from '../../../../utils/analytics';
+import {
+  defaultClaudeThinkingEffort,
+  getClaudeThinkingEffortValues,
+  getClaudeThinkingTypeValues,
+  isClaudeModel,
+  isClaudeOpus47,
+  normalizeClaudeThinkingEffort,
+  supportsAdaptiveThinking,
+} from '../claudeThinking';
 
 const i18n = defineMessages({
   thinkingLevelLow: {
@@ -41,7 +50,11 @@ const i18n = defineMessages({
   },
   claudeEffortHigh: {
     id: 'switchModelModal.claudeEffortHigh',
-    defaultMessage: 'High - Deep reasoning (default)',
+    defaultMessage: 'High - Deep reasoning',
+  },
+  claudeEffortXHigh: {
+    id: 'switchModelModal.claudeEffortXHigh',
+    defaultMessage: 'Extra High - Extended deep reasoning',
   },
   claudeEffortMax: {
     id: 'switchModelModal.claudeEffortMax',
@@ -185,16 +198,7 @@ const i18n = defineMessages({
   },
 });
 
-// THINKING_LEVEL_OPTIONS and CLAUDE_THINKING_EFFORT_OPTIONS are created inside the component to support i18n.
-
-function isClaudeModel(name: string | null | undefined): boolean {
-  return !!name && name.toLowerCase().startsWith('claude-');
-}
-
-function supportsAdaptiveThinking(name: string): boolean {
-  const lower = name.toLowerCase();
-  return lower.includes('claude-opus-4-6') || lower.includes('claude-sonnet-4-6');
-}
+// THINKING_LEVEL_OPTIONS and Claude thinking labels are created inside the component to support i18n.
 
 const PREFERRED_MODEL_PATTERNS = [
   /claude-sonnet-4/i,
@@ -261,12 +265,13 @@ export const SwitchModelModal = ({
     { value: 'high', label: intl.formatMessage(i18n.thinkingLevelHigh) },
   ];
 
-  const CLAUDE_THINKING_EFFORT_OPTIONS = [
-    { value: 'low', label: intl.formatMessage(i18n.claudeEffortLow) },
-    { value: 'medium', label: intl.formatMessage(i18n.claudeEffortMedium) },
-    { value: 'high', label: intl.formatMessage(i18n.claudeEffortHigh) },
-    { value: 'max', label: intl.formatMessage(i18n.claudeEffortMax) },
-  ];
+  const CLAUDE_THINKING_EFFORT_LABELS = {
+    low: intl.formatMessage(i18n.claudeEffortLow),
+    medium: intl.formatMessage(i18n.claudeEffortMedium),
+    high: intl.formatMessage(i18n.claudeEffortHigh),
+    xhigh: intl.formatMessage(i18n.claudeEffortXHigh),
+    max: intl.formatMessage(i18n.claudeEffortMax),
+  };
 
   const { getProviders, read, upsert } = useConfig();
   const {
@@ -304,6 +309,11 @@ export const SwitchModelModal = ({
     import('../../../../api').ProviderDetails[]
   >([]);
   const fetchedProviders = useRef<Set<string>>(new Set());
+  // Keep persisted Claude settings distinct from modal auto-defaults, so model changes can
+  // normalize unsupported choices without overriding explicit config or user choices.
+  const claudeThinkingTypeConfigured = useRef(false);
+  const claudeThinkingEffortConfigured = useRef(false);
+  const claudeThinkingTypeTouched = useRef(false);
   const [thinkingLevel, setThinkingLevel] = useState<string>('low');
   const [claudeThinkingType, setClaudeThinkingType] = useState<string>('disabled');
   const [claudeThinkingEffort, setClaudeThinkingEffort] = useState<string>('high');
@@ -318,8 +328,38 @@ export const SwitchModelModal = ({
     if (!showClaudeThinking) return;
     if (claudeThinkingType === 'adaptive' && !modelSupportsAdaptive) {
       setClaudeThinkingType('disabled');
+    } else if (
+      claudeThinkingType === 'enabled' &&
+      !getClaudeThinkingTypeValues(modelName).includes('enabled')
+    ) {
+      setClaudeThinkingType('adaptive');
+      setClaudeThinkingEffort(defaultClaudeThinkingEffort(modelName));
+    } else if (
+      isClaudeOpus47(modelName) &&
+      !claudeThinkingTypeConfigured.current &&
+      !claudeThinkingTypeTouched.current &&
+      claudeThinkingType === 'disabled'
+    ) {
+      setClaudeThinkingType('adaptive');
+      setClaudeThinkingEffort(defaultClaudeThinkingEffort(modelName));
+    } else if (claudeThinkingType === 'adaptive') {
+      const normalizedEffort = normalizeClaudeThinkingEffort(modelName, claudeThinkingEffort);
+      if (normalizedEffort !== claudeThinkingEffort) {
+        setClaudeThinkingEffort(normalizedEffort);
+      } else if (isClaudeOpus47(modelName) && !claudeThinkingEffortConfigured.current) {
+        const defaultEffort = defaultClaudeThinkingEffort(modelName);
+        if (claudeThinkingEffort !== defaultEffort) {
+          setClaudeThinkingEffort(defaultEffort);
+        }
+      }
     }
-  }, [modelName, showClaudeThinking, modelSupportsAdaptive, claudeThinkingType]);
+  }, [
+    modelName,
+    showClaudeThinking,
+    modelSupportsAdaptive,
+    claudeThinkingType,
+    claudeThinkingEffort,
+  ]);
 
   useEffect(() => {
     const readConfig = async (key: string): Promise<string | null> => {
@@ -333,9 +373,15 @@ export const SwitchModelModal = ({
     };
     (async () => {
       const tt = await readConfig('CLAUDE_THINKING_TYPE');
-      if (tt) setClaudeThinkingType(tt);
+      if (tt) {
+        claudeThinkingTypeConfigured.current = true;
+        setClaudeThinkingType(tt);
+      }
       const effort = await readConfig('CLAUDE_THINKING_EFFORT');
-      if (effort) setClaudeThinkingEffort(effort);
+      if (effort) {
+        claudeThinkingEffortConfigured.current = true;
+        setClaudeThinkingEffort(effort);
+      }
       const budget = await readConfig('CLAUDE_THINKING_BUDGET');
       if (budget) setClaudeThinkingBudget(budget);
     })();
@@ -402,12 +448,16 @@ export const SwitchModelModal = ({
       }
 
       if (showClaudeThinking) {
+        const normalizedClaudeThinkingEffort = normalizeClaudeThinkingEffort(
+          modelName,
+          claudeThinkingEffort
+        );
         const params: Record<string, unknown> = {
           ...modelObj.request_params,
           thinking_type: claudeThinkingType,
         };
         if (claudeThinkingType === 'adaptive') {
-          params.effort = claudeThinkingEffort;
+          params.effort = normalizedClaudeThinkingEffort;
         } else if (claudeThinkingType === 'enabled') {
           params.budget_tokens = parseInt(claudeThinkingBudget, 10) || 16000;
         }
@@ -415,7 +465,9 @@ export const SwitchModelModal = ({
 
         upsert('CLAUDE_THINKING_TYPE', claudeThinkingType, false).catch(console.warn);
         if (claudeThinkingType === 'adaptive') {
-          upsert('CLAUDE_THINKING_EFFORT', claudeThinkingEffort, false).catch(console.warn);
+          upsert('CLAUDE_THINKING_EFFORT', normalizedClaudeThinkingEffort, false).catch(
+            console.warn
+          );
         } else if (claudeThinkingType === 'enabled') {
           upsert(
             'CLAUDE_THINKING_BUDGET',
@@ -673,13 +725,19 @@ export const SwitchModelModal = ({
     }
   };
 
-  const claudeThinkingTypeOptions = [
-    ...(modelSupportsAdaptive
-      ? [{ value: 'adaptive', label: intl.formatMessage(i18n.claudeAdaptive) }]
-      : []),
-    { value: 'enabled', label: intl.formatMessage(i18n.claudeEnabled) },
-    { value: 'disabled', label: intl.formatMessage(i18n.claudeDisabled) },
-  ];
+  const claudeThinkingTypeLabels = {
+    adaptive: intl.formatMessage(i18n.claudeAdaptive),
+    enabled: intl.formatMessage(i18n.claudeEnabled),
+    disabled: intl.formatMessage(i18n.claudeDisabled),
+  };
+  const claudeThinkingTypeOptions = getClaudeThinkingTypeValues(modelName).map((value) => ({
+    value,
+    label: claudeThinkingTypeLabels[value],
+  }));
+  const claudeThinkingEffortOptions = getClaudeThinkingEffortValues(modelName).map((value) => ({
+    value,
+    label: CLAUDE_THINKING_EFFORT_LABELS[value],
+  }));
 
   const claudeThinkingControls = showClaudeThinking && (
     <div className="mt-2 flex flex-col gap-3">
@@ -690,7 +748,12 @@ export const SwitchModelModal = ({
           value={claudeThinkingTypeOptions.find((o) => o.value === claudeThinkingType)}
           onChange={(newValue: unknown) => {
             const option = newValue as { value: string; label: string } | null;
-            setClaudeThinkingType(option?.value || 'disabled');
+            const nextType = option?.value || 'disabled';
+            claudeThinkingTypeTouched.current = true;
+            setClaudeThinkingType(nextType);
+            if (nextType === 'adaptive') {
+              setClaudeThinkingEffort(defaultClaudeThinkingEffort(modelName));
+            }
           }}
           placeholder={intl.formatMessage(i18n.selectThinkingMode)}
         />
@@ -699,11 +762,12 @@ export const SwitchModelModal = ({
         <div>
           <label className="text-sm text-textSubtle mb-1 block">{intl.formatMessage(i18n.thinkingEffort)}</label>
           <Select
-            options={CLAUDE_THINKING_EFFORT_OPTIONS}
-            value={CLAUDE_THINKING_EFFORT_OPTIONS.find((o) => o.value === claudeThinkingEffort)}
+            options={claudeThinkingEffortOptions}
+            value={claudeThinkingEffortOptions.find((o) => o.value === claudeThinkingEffort)}
             onChange={(newValue: unknown) => {
               const option = newValue as { value: string; label: string } | null;
-              setClaudeThinkingEffort(option?.value || 'high');
+              claudeThinkingEffortConfigured.current = true;
+              setClaudeThinkingEffort(option?.value || defaultClaudeThinkingEffort(modelName));
             }}
             placeholder={intl.formatMessage(i18n.selectEffortLevel)}
           />

@@ -314,7 +314,6 @@
   "costTracker.pricingUnavailable": {
     "defaultMessage": "Pricing data unavailable for {model}"
   },
-
   "costTracker.totalSessionCost": {
     "defaultMessage": "Total session cost: {cost}"
   },
@@ -4408,7 +4407,7 @@
     "defaultMessage": "Disabled - No extended thinking"
   },
   "switchModelModal.claudeEffortHigh": {
-    "defaultMessage": "High - Deep reasoning (default)"
+    "defaultMessage": "High - Deep reasoning"
   },
   "switchModelModal.claudeEffortLow": {
     "defaultMessage": "Low - Minimal thinking, fastest responses"
@@ -4418,6 +4417,9 @@
   },
   "switchModelModal.claudeEffortMedium": {
     "defaultMessage": "Medium - Moderate thinking"
+  },
+  "switchModelModal.claudeEffortXHigh": {
+    "defaultMessage": "Extra High - Extended deep reasoning"
   },
   "switchModelModal.claudeEnabled": {
     "defaultMessage": "Enabled - Fixed token budget for thinking"
