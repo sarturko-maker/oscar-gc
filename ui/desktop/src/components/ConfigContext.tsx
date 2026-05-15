@@ -14,7 +14,6 @@ import type {
   ConfigResponse,
   UpsertConfigQuery,
   ConfigKeyQuery,
-  ExtensionResponse,
   ProviderDetails,
   ExtensionQuery,
   ExtensionConfig,
@@ -46,14 +45,6 @@ interface ConfigContextType {
 
 interface ConfigProviderProps {
   children: React.ReactNode;
-}
-
-export class MalformedConfigError extends Error {
-  constructor() {
-    super('Check contents of ~/.config/goose/config.yaml');
-    this.name = 'MalformedConfigError';
-    Object.setPrototypeOf(this, MalformedConfigError.prototype);
-  }
 }
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
@@ -114,22 +105,11 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   );
 
   const refreshExtensions = useCallback(async () => {
-    const result = await getConfiguredExtensions();
-
-    if (result.response.status === 422) {
-      throw new MalformedConfigError();
-    }
-
-    if ('error' in result && result.error && !result.data) {
-      console.error(result.error);
-      return extensionsList;
-    }
-
-    const extensionResponse: ExtensionResponse = result.data!;
-    setExtensionsList(extensionResponse.extensions);
-    setExtensionWarnings(extensionResponse.warnings || []);
-    return extensionResponse.extensions;
-  }, [extensionsList]);
+    const { extensions, warnings } = await getConfiguredExtensions();
+    setExtensionsList(extensions);
+    setExtensionWarnings(warnings || []);
+    return extensions;
+  }, []);
 
   const addExtension = useCallback(
     async (name: string, config: ExtensionConfig, enabled: boolean) => {
@@ -213,7 +193,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
       // Load extensions
       try {
         const extensionsResponse = await getConfiguredExtensions();
-        let extensions = extensionsResponse.data?.extensions || [];
+        let extensions = extensionsResponse.extensions;
 
         // Always sync bundled extensions from bundled-extensions.json
         // This ensures:
@@ -236,10 +216,10 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
         await syncBundledExtensions(extensions, addExtensionForSync);
         // Reload extensions after sync
         const refreshedResponse = await getConfiguredExtensions();
-        extensions = refreshedResponse.data?.extensions || [];
+        extensions = refreshedResponse.extensions;
 
         setExtensionsList(extensions);
-        setExtensionWarnings(extensionsResponse.data?.warnings || []);
+        setExtensionWarnings(extensionsResponse.warnings || []);
       } catch (error) {
         console.error('Failed to load extensions:', error);
       }
