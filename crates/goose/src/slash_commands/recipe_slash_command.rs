@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
@@ -227,8 +228,6 @@ fn parse_recipe_args(
     required: &[&RecipeParameter],
     optional: &[&RecipeParameter],
 ) -> Result<Vec<(String, String)>> {
-    use std::collections::HashSet;
-
     let tokens = crate::utils::split_command_args(params_str)?;
     let known_keys: HashSet<&str> = required
         .iter()
@@ -236,10 +235,9 @@ fn parse_recipe_args(
         .map(|p| p.key.as_str())
         .collect();
 
-    let mut result = Vec::new();
-    let mut required_idx = 0;
+    let mut positionals: Vec<String> = Vec::new();
+    let mut flags: Vec<(String, String)> = Vec::new();
     let mut i = 0;
-
     while i < tokens.len() {
         let token = &tokens[i];
         if let Some(flag) = token.strip_prefix("--") {
@@ -248,22 +246,28 @@ fn parse_recipe_args(
             }
             let value = tokens
                 .get(i + 1)
+                .filter(|v| !v.starts_with("--"))
                 .ok_or_else(|| anyhow!("Missing value for --{}", flag))?;
-            if value.starts_with("--") {
-                return Err(anyhow!("Missing value for --{}", flag));
-            }
-            result.push((flag.to_string(), value.clone()));
+            flags.push((flag.to_string(), value.clone()));
             i += 2;
         } else {
-            if required_idx >= required.len() {
-                return Err(anyhow!("Unexpected positional argument: {}", token));
-            }
-            result.push((required[required_idx].key.clone(), token.clone()));
-            required_idx += 1;
+            positionals.push(token.clone());
             i += 1;
         }
     }
 
+    let mut result = Vec::new();
+    if required.len() == 1 && !positionals.is_empty() {
+        result.push((required[0].key.clone(), positionals.join(" ")));
+    } else {
+        for (idx, value) in positionals.into_iter().enumerate() {
+            if idx >= required.len() {
+                return Err(anyhow!("Unexpected positional argument: {}", value));
+            }
+            result.push((required[idx].key.clone(), value));
+        }
+    }
+    result.extend(flags);
     Ok(result)
 }
 
@@ -317,6 +321,82 @@ mod tests {
                 ("component".to_string(), "Button Group".to_string()),
                 ("from".to_string(), "old-lib".to_string()),
                 ("to".to_string(), "new-lib".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_recipe_args_greedy_captures_multi_word_required_with_optional_flag() {
+        let location = required_param("location");
+        let theme = optional_param("theme");
+        let required = vec![&location];
+        let optional = vec![&theme];
+
+        let parsed =
+            parse_recipe_args("Melbourne weather --theme culture", &required, &optional).unwrap();
+
+        assert_eq!(
+            parsed,
+            vec![
+                ("location".to_string(), "Melbourne weather".to_string()),
+                ("theme".to_string(), "culture".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_recipe_args_greedy_captures_multi_word_required_without_flags() {
+        let location = required_param("location");
+        let theme = optional_param("theme");
+        let required = vec![&location];
+        let optional = vec![&theme];
+
+        let parsed = parse_recipe_args("Melbourne weather", &required, &optional).unwrap();
+
+        assert_eq!(
+            parsed,
+            vec![("location".to_string(), "Melbourne weather".to_string())]
+        );
+    }
+
+    #[test]
+    fn parse_recipe_args_greedy_still_accepts_quoted_required_value() {
+        let location = required_param("location");
+        let theme = optional_param("theme");
+        let required = vec![&location];
+        let optional = vec![&theme];
+
+        let parsed = parse_recipe_args(
+            r#""Melbourne weather" --theme culture"#,
+            &required,
+            &optional,
+        )
+        .unwrap();
+
+        assert_eq!(
+            parsed,
+            vec![
+                ("location".to_string(), "Melbourne weather".to_string()),
+                ("theme".to_string(), "culture".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_recipe_args_greedy_handles_flag_before_required_positional() {
+        let location = required_param("location");
+        let theme = optional_param("theme");
+        let required = vec![&location];
+        let optional = vec![&theme];
+
+        let parsed =
+            parse_recipe_args("--theme culture Melbourne weather", &required, &optional).unwrap();
+
+        assert_eq!(
+            parsed,
+            vec![
+                ("location".to_string(), "Melbourne weather".to_string()),
+                ("theme".to_string(), "culture".to_string()),
             ]
         );
     }
