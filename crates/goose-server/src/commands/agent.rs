@@ -79,6 +79,7 @@ pub async fn run() -> Result<()> {
         data_dir: Paths::data_dir(),
         config_dir: Paths::config_dir(),
         goose_platform: GoosePlatform::GooseDesktop,
+        additional_source_roots: Vec::new(),
     }));
 
     let rest_router = crate::routes::configure(app_state.clone(), secret_key.clone()).layer(
