@@ -597,14 +597,60 @@ enum DatabricksResponsesProtocol {
 
 fn responses_protocol_for_databricks(
     model_name: &str,
-    tools: &[Tool],
+    payload: &Value,
 ) -> DatabricksResponsesProtocol {
-    let (_model_name, reasoning_effort) = super::utils::extract_reasoning_effort(model_name);
-    if !tools.is_empty() && reasoning_effort.is_some() {
+    if payload_has_function_tools(payload)
+        && databricks_chat_completions_would_use_reasoning_effort(model_name, payload)
+    {
         DatabricksResponsesProtocol::ResponsesApi
     } else {
         DatabricksResponsesProtocol::ChatCompletions
     }
+}
+
+fn payload_has_function_tools(payload: &Value) -> bool {
+    payload
+        .get("tools")
+        .and_then(|tools| tools.as_array())
+        .is_some_and(|tools| {
+            tools.iter().any(|tool| {
+                tool.get("type").and_then(|tool_type| tool_type.as_str()) == Some("function")
+            })
+        })
+}
+
+fn databricks_chat_completions_would_use_reasoning_effort(
+    model_name: &str,
+    payload: &Value,
+) -> bool {
+    // Databricks' Chat Completions backend rejects GPT-5.5 function tools as
+    // a reasoning_effort request even when Goose omits an explicit effort.
+    payload_has_explicit_reasoning_effort(payload) || is_gpt_5_5_alias(model_name)
+}
+
+fn payload_has_explicit_reasoning_effort(payload: &Value) -> bool {
+    payload
+        .get("reasoning")
+        .and_then(|reasoning| reasoning.get("effort"))
+        .is_some_and(|effort| !effort.is_null())
+        || payload
+            .get("reasoning_effort")
+            .is_some_and(|effort| !effort.is_null())
+}
+
+fn is_gpt_5_5_alias(model_name: &str) -> bool {
+    let (base_model_name, _) = super::utils::extract_reasoning_effort(model_name);
+    let normalized = base_model_name.replace('.', "-").to_ascii_lowercase();
+
+    normalized.match_indices("gpt-5-5").any(|(index, _)| {
+        let before = index
+            .checked_sub(1)
+            .and_then(|i| normalized.as_bytes().get(i));
+        let after = normalized.as_bytes().get(index + "gpt-5-5".len());
+
+        before.map_or(true, |byte| matches!(byte, b'-' | b'/' | b'_'))
+            && after.map_or(true, |byte| matches!(byte, b'-' | b'/' | b'_'))
+    })
 }
 
 fn create_responses_payload_for_databricks(
@@ -613,8 +659,8 @@ fn create_responses_payload_for_databricks(
     messages: &[Message],
     tools: &[Tool],
 ) -> Result<(Value, DatabricksResponsesProtocol)> {
-    let protocol = responses_protocol_for_databricks(&model_config.model_name, tools);
     let mut payload = create_responses_request(model_config, system, messages, tools)?;
+    let protocol = responses_protocol_for_databricks(&model_config.model_name, &payload);
 
     if protocol == DatabricksResponsesProtocol::ChatCompletions {
         adapt_responses_payload_for_databricks(&mut payload);
@@ -790,6 +836,31 @@ mod tests {
         }
     }
 
+    fn model_config(model_name: &str) -> ModelConfig {
+        ModelConfig {
+            model_name: model_name.to_string(),
+            context_limit: None,
+            temperature: None,
+            max_tokens: Some(4096),
+            toolshim: false,
+            toolshim_model: None,
+            fast_model_config: None,
+            request_params: None,
+            reasoning: None,
+        }
+    }
+
+    fn test_tool() -> Tool {
+        Tool::new(
+            "my_tool",
+            "A tool",
+            object!({
+                "type": "object",
+                "properties": {}
+            }),
+        )
+    }
+
     #[test]
     fn responses_models_route_to_responses_endpoint() {
         let provider = test_provider();
@@ -917,53 +988,81 @@ mod tests {
 
     #[test]
     fn responses_protocol_uses_native_responses_for_tools_with_reasoning_effort() {
-        let tool = Tool::new(
-            "my_tool",
-            "A tool",
-            object!({
-                "type": "object",
-                "properties": {}
-            }),
-        );
+        let tool = test_tool();
+        let payload = create_responses_request(
+            &model_config("databricks-gpt-5.5-high"),
+            "You are helpful.",
+            &[],
+            std::slice::from_ref(&tool),
+        )
+        .unwrap();
 
         assert_eq!(
-            responses_protocol_for_databricks(
-                "databricks-gpt-5.5-high",
-                std::slice::from_ref(&tool)
-            ),
+            responses_protocol_for_databricks("databricks-gpt-5.5-high", &payload),
             DatabricksResponsesProtocol::ResponsesApi
         );
+
+        let payload = create_responses_request(
+            &model_config("databricks-gpt-5.4"),
+            "You are helpful.",
+            &[],
+            std::slice::from_ref(&tool),
+        )
+        .unwrap();
+
         assert_eq!(
-            responses_protocol_for_databricks("databricks-gpt-5.5", std::slice::from_ref(&tool)),
+            responses_protocol_for_databricks("databricks-gpt-5.4", &payload),
             DatabricksResponsesProtocol::ChatCompletions
         );
+
+        let payload = create_responses_request(
+            &model_config("databricks-gpt-5.5-high"),
+            "You are helpful.",
+            &[],
+            &[],
+        )
+        .unwrap();
+
         assert_eq!(
-            responses_protocol_for_databricks("databricks-gpt-5.5-high", &[]),
+            responses_protocol_for_databricks("databricks-gpt-5.5-high", &payload),
             DatabricksResponsesProtocol::ChatCompletions
         );
     }
 
     #[test]
+    fn responses_protocol_uses_native_responses_for_gpt_5_5_aliases_with_tools() {
+        let tool = test_tool();
+
+        for model_name in [
+            "goose-gpt-5-5",
+            "compass-openai-gpt-5-5",
+            "databricks-gpt-5-5",
+            "databricks-gpt-5.5",
+        ] {
+            let payload = create_responses_request(
+                &model_config(model_name),
+                "You are helpful.",
+                &[],
+                std::slice::from_ref(&tool),
+            )
+            .unwrap();
+
+            assert!(
+                payload.get("reasoning").is_none(),
+                "default reasoning should not require an explicit reasoning payload for {model_name}"
+            );
+            assert_eq!(
+                responses_protocol_for_databricks(model_name, &payload),
+                DatabricksResponsesProtocol::ResponsesApi,
+                "unexpected protocol for {model_name}"
+            );
+        }
+    }
+
+    #[test]
     fn responses_payload_keeps_native_format_for_tools_with_reasoning_effort() {
-        let model_config = ModelConfig {
-            model_name: "databricks-gpt-5.5-high".to_string(),
-            context_limit: None,
-            temperature: None,
-            max_tokens: Some(4096),
-            toolshim: false,
-            toolshim_model: None,
-            fast_model_config: None,
-            request_params: None,
-            reasoning: None,
-        };
-        let tool = Tool::new(
-            "my_tool",
-            "A tool",
-            object!({
-                "type": "object",
-                "properties": {}
-            }),
-        );
+        let model_config = model_config("databricks-gpt-5.5-high");
+        let tool = test_tool();
 
         let (payload, protocol) = create_responses_payload_for_databricks(
             &model_config,
@@ -979,6 +1078,35 @@ mod tests {
         assert!(payload.get("messages").is_none());
         assert_eq!(payload["reasoning"]["effort"], "high");
         assert_eq!(payload["reasoning"]["summary"], "auto");
+        assert!(payload.get("reasoning_effort").is_none());
+        assert_eq!(payload["max_output_tokens"], 4096);
+        assert!(payload.get("max_completion_tokens").is_none());
+
+        let tools = payload["tools"].as_array().unwrap();
+        assert_eq!(tools[0]["type"], "function");
+        assert_eq!(tools[0]["name"], "my_tool");
+        assert_eq!(tools[0]["strict"], false);
+        assert!(tools[0].get("function").is_none());
+    }
+
+    #[test]
+    fn responses_payload_keeps_native_format_for_gpt_5_5_alias_with_default_reasoning() {
+        let model_config = model_config("goose-gpt-5-5");
+        let tool = test_tool();
+
+        let (payload, protocol) = create_responses_payload_for_databricks(
+            &model_config,
+            "You are helpful.",
+            &[],
+            &[tool],
+        )
+        .unwrap();
+
+        assert_eq!(protocol, DatabricksResponsesProtocol::ResponsesApi);
+        assert_eq!(payload["model"], "goose-gpt-5-5");
+        assert!(payload.get("input").is_some());
+        assert!(payload.get("messages").is_none());
+        assert!(payload.get("reasoning").is_none());
         assert!(payload.get("reasoning_effort").is_none());
         assert_eq!(payload["max_output_tokens"], 4096);
         assert!(payload.get("max_completion_tokens").is_none());
