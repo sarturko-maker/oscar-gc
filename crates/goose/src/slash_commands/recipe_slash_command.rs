@@ -1,13 +1,14 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
 use super::types::{SlashCommandEntry, SlashCommandSource};
 use super::util::normalize_command_name;
 use crate::config::Config;
-use crate::recipe::{RecipeParameter, RecipeParameterRequirement};
+use crate::recipe::build_recipe::{build_recipe_from_template, RecipeError};
+use crate::recipe::{RecipeParameter, RecipeParameterRequirement, Response};
 
 const SLASH_COMMANDS_CONFIG_KEY: &str = "slash_commands";
 
@@ -63,9 +64,7 @@ pub fn get_recipe_for_command(command: &str) -> Option<PathBuf> {
         .map(|mapping| PathBuf::from(mapping.recipe_path))
 }
 
-pub(super) fn commands_from_mappings(
-    mappings: Vec<SlashCommandMapping>,
-) -> Vec<SlashCommandEntry> {
+pub(super) fn commands_from_mappings(mappings: Vec<SlashCommandMapping>) -> Vec<SlashCommandEntry> {
     mappings
         .into_iter()
         .filter_map(|mapping| {
@@ -141,10 +140,244 @@ fn input_hint_for_recipe(params: Option<&Vec<RecipeParameter>>) -> Option<String
     )
 }
 
+fn invalid_recipe_msg(command: &str, reason: impl std::fmt::Display) -> String {
+    format!("Recipe /{} is not valid: {}", command, reason)
+}
+
+pub fn resolve_command(
+    command: &str,
+    params_str: &str,
+) -> Result<Option<(Option<Response>, String)>, String> {
+    let full_command = format!("/{}", command);
+    let Some(recipe_path) = get_recipe_for_command(&full_command) else {
+        return Ok(None);
+    };
+
+    if !recipe_path.exists() {
+        return Ok(None);
+    }
+
+    let recipe_content =
+        std::fs::read_to_string(&recipe_path).map_err(|e| invalid_recipe_msg(command, e))?;
+
+    let recipe_dir = recipe_path
+        .parent()
+        .ok_or_else(|| invalid_recipe_msg(command, "unable to resolve recipe directory"))?;
+
+    let recipe_dir_str = recipe_dir.display().to_string();
+    let validation_result = crate::recipe::validate_recipe::validate_recipe_template_from_content(
+        &recipe_content,
+        Some(recipe_dir_str),
+    )
+    .map_err(|e| invalid_recipe_msg(command, e))?;
+
+    let empty_params: Vec<RecipeParameter> = Vec::new();
+    let all_params = validation_result
+        .parameters
+        .as_ref()
+        .unwrap_or(&empty_params);
+    let required: Vec<&RecipeParameter> = all_params
+        .iter()
+        .filter(|p| {
+            matches!(
+                p.requirement,
+                RecipeParameterRequirement::Required | RecipeParameterRequirement::UserPrompt
+            )
+        })
+        .collect();
+    let optional: Vec<&RecipeParameter> = all_params
+        .iter()
+        .filter(|p| matches!(p.requirement, RecipeParameterRequirement::Optional))
+        .collect();
+
+    let param_values: Vec<(String, String)> = if params_str.is_empty() {
+        vec![]
+    } else if required.len() == 1 && optional.is_empty() {
+        vec![(required[0].key.clone(), params_str.to_string())]
+    } else {
+        parse_recipe_args(params_str, &required, &optional)
+            .map_err(|e| format!("Recipe /{}: {}", command, e))?
+    };
+
+    let param_values_len = param_values.len();
+
+    let recipe = build_recipe_from_template(
+        recipe_content,
+        recipe_dir,
+        param_values,
+        None::<fn(&str, &str) -> Result<String>>,
+    )
+    .map_err(|e| match e {
+        RecipeError::MissingParams { parameters } => invalid_recipe_msg(
+            command,
+            format!("requires parameter(s): {}.", parameters.join(", "),),
+        ),
+        other => invalid_recipe_msg(command, other),
+    })?;
+
+    let prompt = [recipe.instructions.as_deref(), recipe.prompt.as_deref()]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>()
+        .join("\n\n");
+
+    Ok(Some((recipe.response, prompt)))
+}
+
+fn parse_recipe_args(
+    params_str: &str,
+    required: &[&RecipeParameter],
+    optional: &[&RecipeParameter],
+) -> Result<Vec<(String, String)>> {
+    use std::collections::HashSet;
+
+    let tokens = crate::utils::split_command_args(params_str)?;
+    let known_keys: HashSet<&str> = required
+        .iter()
+        .chain(optional.iter())
+        .map(|p| p.key.as_str())
+        .collect();
+
+    let mut result = Vec::new();
+    let mut required_idx = 0;
+    let mut i = 0;
+
+    while i < tokens.len() {
+        let token = &tokens[i];
+        if let Some(flag) = token.strip_prefix("--") {
+            if !known_keys.contains(flag) {
+                return Err(anyhow!("Unknown parameter: --{}", flag));
+            }
+            let value = tokens
+                .get(i + 1)
+                .ok_or_else(|| anyhow!("Missing value for --{}", flag))?;
+            if value.starts_with("--") {
+                return Err(anyhow!("Missing value for --{}", flag));
+            }
+            result.push((flag.to_string(), value.clone()));
+            i += 2;
+        } else {
+            if required_idx >= required.len() {
+                return Err(anyhow!("Unexpected positional argument: {}", token));
+            }
+            result.push((required[required_idx].key.clone(), token.clone()));
+            required_idx += 1;
+            i += 1;
+        }
+    }
+
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::recipe::RecipeParameterInputType;
     use tempfile::TempDir;
+
+    fn required_param(key: &str) -> RecipeParameter {
+        RecipeParameter {
+            key: key.to_string(),
+            input_type: RecipeParameterInputType::String,
+            requirement: RecipeParameterRequirement::Required,
+            description: format!("{key} parameter"),
+            default: None,
+            options: None,
+        }
+    }
+
+    fn optional_param(key: &str) -> RecipeParameter {
+        RecipeParameter {
+            key: key.to_string(),
+            input_type: RecipeParameterInputType::String,
+            requirement: RecipeParameterRequirement::Optional,
+            description: format!("{key} parameter"),
+            default: Some("default".to_string()),
+            options: None,
+        }
+    }
+
+    #[test]
+    fn parse_recipe_args_maps_required_positionals_and_optional_flags() {
+        let component = required_param("component");
+        let from = required_param("from");
+        let to = optional_param("to");
+        let scope = optional_param("scope");
+        let required = vec![&component, &from];
+        let optional = vec![&to, &scope];
+
+        let parsed = parse_recipe_args(
+            r#""Button Group" old-lib --to new-lib"#,
+            &required,
+            &optional,
+        )
+        .unwrap();
+
+        assert_eq!(
+            parsed,
+            vec![
+                ("component".to_string(), "Button Group".to_string()),
+                ("from".to_string(), "old-lib".to_string()),
+                ("to".to_string(), "new-lib".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_recipe_args_allows_values_containing_equals() {
+        let component = required_param("component");
+        let note = optional_param("note");
+        let required = vec![&component];
+        let optional = vec![&note];
+
+        let parsed = parse_recipe_args(r#"Button --note "a=b""#, &required, &optional).unwrap();
+
+        assert_eq!(
+            parsed,
+            vec![
+                ("component".to_string(), "Button".to_string()),
+                ("note".to_string(), "a=b".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_recipe_args_errors_when_flag_value_is_another_flag() {
+        let component = required_param("component");
+        let from = required_param("from");
+        let to = optional_param("to");
+        let scope = optional_param("scope");
+        let required = vec![&component, &from];
+        let optional = vec![&to, &scope];
+
+        let err =
+            parse_recipe_args("Button old-lib --to --scope all", &required, &optional).unwrap_err();
+
+        assert!(err.to_string().contains("Missing value for --to"));
+    }
+
+    #[test]
+    fn parse_recipe_args_errors_on_extra_positionals() {
+        let component = required_param("component");
+        let from = required_param("from");
+        let required = vec![&component, &from];
+
+        let err = parse_recipe_args("Button old-lib extra", &required, &[]).unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("Unexpected positional argument: extra"));
+    }
+
+    #[test]
+    fn parse_recipe_args_errors_on_unknown_flag() {
+        let component = required_param("component");
+        let required = vec![&component];
+
+        let err = parse_recipe_args("Button --unknown value", &required, &[]).unwrap_err();
+
+        assert!(err.to_string().contains("Unknown parameter: --unknown"));
+    }
 
     #[test]
     fn commands_from_mappings_use_recipe_description() {

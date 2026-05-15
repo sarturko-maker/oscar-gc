@@ -40,6 +40,25 @@ pub fn format_installed_skills(working_dir: Option<&Path>) -> String {
     output
 }
 
+pub fn resolve_command(
+    command: &str,
+    params_str: &str,
+    working_dir: Option<&Path>,
+) -> Result<Option<String>, String> {
+    let Some(skill) = crate::skills::list_installed_skills(working_dir)
+        .into_iter()
+        .find(|skill| skill.name.eq_ignore_ascii_case(command))
+    else {
+        return Ok(None);
+    };
+
+    let args = (!params_str.is_empty()).then_some(params_str);
+    let prompt = crate::skills::loaded_skill_context_with_args(&skill, args)
+        .map_err(|e| format!("Skill /{}: {}", command, e))?;
+
+    Ok(Some(prompt))
+}
+
 pub(super) fn commands_from_sources(sources: Vec<SourceEntry>) -> Vec<SlashCommandEntry> {
     sources
         .into_iter()
