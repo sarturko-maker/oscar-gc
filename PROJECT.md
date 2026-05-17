@@ -16,5 +16,6 @@ Nothing further is in scope until those four are working.
 | Sprint | Goal | Status |
 |---|---|---|
 | 1 | Unmodified Goose builds + MiniMax round-trip on `lq-vps`. No product code. | Closed 2026-05-17 |
+| 2 | Oscar GC rebrand (branding metadata only). First custom-distribution cycle. | Closed 2026-05-18 |
 
 See `SPRINT_LOG.md` for entries. See `CLAUDE.md` for operating rules.

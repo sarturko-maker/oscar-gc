@@ -128,9 +128,44 @@ Despite `etcetera`'s `top_level_domain: "Block"` in `crates/goose/src/config/pat
 
 Worth knowing for Sprint 2 — if we want truly stateless invocations we'll need to engage `crates/goose-cli/src/session/builder.rs` directly.
 
+## Sprint 2 — Oscar GC rebrand (2026-05-18, lq-vps)
+
+Branding-metadata-only rebuild. Source edits in commit `62c9a08a4` (5 files under `ui/desktop/`). Build command sequence (Linux, x64, zip target — same as Sprint 1):
+
+```bash
+source bin/activate-hermit
+cd ui/desktop
+pnpm install                                       # 8.8s (refresh after package.json name change)
+pnpm run i18n:compile
+pnpm run make --targets=@electron-forge/maker-zip  # ~50s on lq-vps
+```
+
+Artefact: `ui/desktop/out/make/zip/linux/x64/Oscar-GC-linux-x64-1.34.0.zip` (200M).
+
+`unzip -l` excerpt — key entries:
+
+```
+Archive:  Oscar-GC-linux-x64-1.34.0.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  2026-05-18 00:18   Oscar-GC-linux-x64/
+206036184  2026-05-18 00:17   Oscar-GC-linux-x64/oscar-gc            <-- Electron binary (renamed via packagerConfig.executableName)
+  5908254  2026-05-18 00:18   Oscar-GC-linux-x64/resources/app.asar
+271316120  2026-05-18 00:18   Oscar-GC-linux-x64/resources/bin/goosed <-- bundled Rust server (kept as upstream per ADR-001)
+```
+
+Verified pass criteria:
+- Zip filename `Oscar-GC-linux-x64-1.34.0.zip` (Title-Case-Hyphenated per ADR-002).
+- Top-level dir `Oscar-GC-linux-x64/`.
+- Electron binary `oscar-gc` (kebab-case per ADR-002).
+- No top-level `Goose` binary leaked (`unzip -l … | grep -E 'Oscar-GC-linux-x64/Goose$'` returns nothing).
+- Bundled `resources/bin/goosed` retained — Rust crate renames are out of Sprint 2 scope (ADR-001).
+
+`out/` footprint after Sprint 2: ~400M (Sprint 1's `Goose-linux-x64-1.34.0.zip` 200M still present alongside).
+
 ## Pending
 
-(none — Sprint 1 complete)
+(none — Sprint 2 complete)
 
 ## Corrections
 
