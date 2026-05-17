@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=Goose
-Exec=/usr/lib/Goose/Goose %U
-Icon=/usr/share/pixmaps/Goose.png
+Name=Oscar GC
+Exec=/usr/lib/oscar-gc/oscar-gc %U
+Icon=/usr/share/pixmaps/oscar-gc.png
 Terminal=false
 Type=Application
 Categories=Development;

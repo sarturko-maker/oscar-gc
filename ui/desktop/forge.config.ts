@@ -6,6 +6,8 @@ let cfg = {
   asar: true,
   extraResource: ['src/bin', 'src/images'],
   icon: 'src/images/icon',
+  name: 'Oscar-GC',
+  executableName: 'oscar-gc',
   // Windows specific configuration
   win32: {
     icon: 'src/images/icon.ico',
@@ -17,7 +19,7 @@ let cfg = {
   // Protocol registration
   protocols: [
     {
-      name: 'GooseProtocol',
+      name: 'OscarGCProtocol',
       schemes: ['goose'],
     },
   ],
@@ -34,9 +36,9 @@ let cfg = {
     ],
     // Usage descriptions for macOS TCC (Transparency, Consent, and Control)
     NSCalendarsUsageDescription:
-      'Goose needs access to your calendars to help manage and query calendar events.',
+      'Oscar GC needs access to your calendars to help manage and query calendar events.',
     NSRemindersUsageDescription:
-      'Goose needs access to your reminders to help manage and query reminders.',
+      'Oscar GC needs access to your reminders to help manage and query reminders.',
   },
 };
 
@@ -63,7 +65,7 @@ module.exports = {
       name: '@electron-forge/publisher-github',
       config: {
         repository: {
-          owner: process.env.GITHUB_OWNER || 'aaif-goose',
+          owner: process.env.GITHUB_OWNER || 'sarturko-maker',
           name: process.env.GITHUB_REPO || 'goose',
         },
         prerelease: false,
@@ -85,8 +87,8 @@ module.exports = {
     {
       name: '@electron-forge/maker-deb',
       config: {
-        name: 'Goose',
-        bin: 'Goose',
+        name: 'Oscar GC',
+        bin: 'oscar-gc',
         maintainer: 'AAIF (Agentic AI Foundation)',
         homepage: 'https://goose-docs.ai/',
         categories: ['Development'],
@@ -100,8 +102,8 @@ module.exports = {
     {
       name: '@electron-forge/maker-rpm',
       config: {
-        name: 'Goose',
-        bin: 'Goose',
+        name: 'Oscar GC',
+        bin: 'oscar-gc',
         maintainer: 'AAIF (Agentic AI Foundation)',
         homepage: 'https://goose-docs.ai/',
         categories: ['Development'],
