@@ -15,6 +15,6 @@ Nothing further is in scope until those four are working.
 
 | Sprint | Goal | Status |
 |---|---|---|
-| 1 | Research the fork — read, build, report. No product code. | Pending brief |
+| 1 | Unmodified Goose builds + MiniMax round-trip on `lq-vps`. No product code. | Closed 2026-05-17 |
 
 See `SPRINT_LOG.md` for entries. See `CLAUDE.md` for operating rules.
