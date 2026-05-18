@@ -427,3 +427,48 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 **ADRs**: none this sprint.
 
 **Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.
+
+---
+
+### Sprint 8 — Hub welcome banner closes Sprint 7's P0 closing-message race (closed 2026-05-18)
+
+**Goal**: implement Sprint 7's recommended fix (option (c) — Hub welcome banner reading `profile.json`) such that the P0 (LLM closing message never rendered, ≤1500 ms race against `OscarOnboardingGuard` unmount) is closed and P1-A / P1-C / P1-D close as consequences. ADR-015 written before any implementing code. Re-dogfood to confirm. Brief in chat; plan at `/root/.claude/plans/sprint-8-ethereal-hedgehog.md`.
+
+**Built**
+
+- **ADR-015** at `docs/adr/015-welcome-bridge-hub-banner.md` (commit `c21135162`, 45 lines, ADR-at-decision-time per CLAUDE.md). Records: decision (move the welcome bridge from agent chat turn to Hub banner reading `profile.json`); evaluation of options (a), (b), (c) from Sprint 7's friction log with one-paragraph pointer to the report instead of re-litigation; reuse evaluation of `AlertBox` and `GroupedExtensionLoadingToast` (both declined, wrong register); localStorage dismissal rationale; explicit "extends ADR-014, does not supersede" relationship.
+- **`OscarHubBanner`** at `ui/desktop/src/components/oscar/OscarHubBanner.tsx` (commit `44387ef2b`, 47 LoC). Reads `useOscarProfile()` (existing hook from Sprint 6); reads dismissal flag from `localStorage` synchronously on first render; renders editorial card with Cormorant title (italic-copper accent on first name), Outfit body, IBM Plex Mono copper "DISMISS" button; on dismiss writes `localStorage.setItem('oscar.hubWelcomeDismissed', 'true')` and unmounts. Renders `null` when profile is loading, null, or dismissal flag is set. No new hooks, no new IPC, no profile-schema change.
+- **`.oscar__banner*` CSS** appended to `ui/desktop/src/styles/main.css` (commit `44387ef2b`, ~60 LoC). Card layout with copper left-border on `--card-bg` (paper-cream), Cormorant 20px title, italic-copper title accent, Outfit 13px body, IBM Plex Mono 10px tracked uppercase dismiss with copper hover. All tokens existing from ADR-007 (no new tokens, no Tailwind config touched).
+- **`Hub.tsx`** integration (commit `44387ef2b`, 3-line diff). Import `OscarHubBanner`; render it as the first child of the centred `flex-col` column, above the existing eyebrow. No other Hub changes; banner self-handles its own visibility.
+- **Bundle verified** via `npx @electron/asar extract` → `/tmp/sprint8-asar/`. Grep confirmed all six `.oscar__banner*` selectors in the renderer CSS, the `Welcome to Oscar GC` literal and `oscar.hubWelcomeDismissed` localStorage key in the renderer JS bundle.
+- **Dogfood driver harness enhancements** (test-tooling, not product code): `DOGFOOD_SCREENSHOT_BASE` env var (driver no longer hardcodes Sprint 7's path; defaults to `docs/dogfood/sprint-7/screenshots` for back-compat); new `click <selector>` subcommand for the post-onboarding dismiss action; matching docblock updates in `dogfood.sh` and `dogfood-driver.mjs`. Future UX-heavy sprints inherit a per-sprint screenshot path and click affordance.
+- **Re-dogfood pass** at `docs/dogfood/sprint-8/`: Daniel Okafor persona reused from Sprint 7 (Arturs decision: render-layer-only fix → persona variety adds no signal; reuse makes the delta crisp). 9-screenshot turn-by-turn run for `sprint-8-daniel` + 2-screenshot cold-relaunch session; `transcript-daniel.md`, `profile-daniel.json`, `session-extract-daniel.json` from session `20260518_13`. Mirrors of the three lifecycle frames at `docs/screenshots/sprint-8/{root-with-banner,root-banner-dismissed,root-cold-relaunch}.png`.
+- **Sprint 7 friction-log update** in `docs/dogfood/sprint-7/README.md` §4: per-finding `Status (post Sprint 8)` lines recorded. P0-A closed (commit `44387ef2b`); P1-A and P1-C closed by deprecation (banner is the verification surface, recap is no longer load-bearing); P1-D closed; P1-B deferred to Sprint 9; P2-A through P2-F unchanged.
+
+**Closure verification per Sprint 7 criteria** (not by guessing — quotes the Sprint 7 §4 criteria, compares Sprint 8 state):
+
+- **P0-A**: Sprint 7 said "no confirmation that the save succeeded, no bridge to the sidebar, no name on screen." Sprint 8 state: banner carries name + sidebar bridge + save acknowledgment, render-deterministic. Closed.
+- **P1-A**: Sprint 7 said "the contract is unstable." Sprint 8 state: recap deprecated as verification surface; banner reads `profile.json` regardless of LLM recap path. Closed by deprecation.
+- **P1-C**: Sprint 7 said "erodes trust in the recap." Sprint 8 state: same as P1-A — recap no longer the trust surface. Closed by deprecation.
+- **P1-D**: Sprint 7 said "no welcome-by-name, no 'your sidebar has been populated', no entry point." Sprint 8 state: banner has all three. Closed.
+
+**Pattern observation surfaced by the Sprint 8 run**: Sprint 8's LLM took a *different* final-turn path than Sprint 7's primary — skipped the recap-before-save entirely, called the tool on "Confirmed", then emitted a confused post-tool "Save?" instead of the system prompt's instructed closing message. Either failure mode (Sprint 7's emitted-but-late closing message; Sprint 8's confused post-tool turn) would have been user-visible if we'd tried to keep the welcome on the chat surface. The banner is invariant under both — render-deterministic from `profile.json`, ignoring whatever the LLM emitted as its last turn. ADR-015's option (c) sidesteps a *class* of LLM-final-turn failures, not a single race. Recorded in detail in `docs/dogfood/sprint-8/transcript-daniel.md` §Notes and `README.md` §9.
+
+**Deferred**
+
+- **P1-B** (one-line tightening of P3 example sentence per Sprint 7's report) — Sprint 9. Per Arturs plan-time decision: every system-prompt edit deserves its own focused dogfood pass, and Sprint 8's pass is already loaded verifying the banner. Sprint 9 picks up P1-B with a clean slate.
+- **P2-A through P2-F** — all six untouched this sprint. P2-A / P2-C / P2-D belong with the next system-prompt edit; P2-B with the next profile-schema iteration (likely v2 when the per-area context fields arrive); P2-E / P2-F with the first surface that lists `sessions.db` rows.
+- **Push `oscar-onboarding-mcp` to GitHub** — Sprint 6 carry-forward, still pending. Sprint 7 also carried this; Sprint 8 didn't reach it. Sprint 9 candidate.
+- **Memory MCP wiring into the desktop binary** — Sprint 5 carry-forward, still alive. Sprint 9 anchor candidate.
+- **Banner copy variation** (per-role, per-tenant) — out of v1 scope per ADR-015; future ADR if surfaced.
+- **Tying dismissal flag to `profile.completed_at`** — ADR-015's known limitation. Defer until user-reported.
+
+**Carry-forwards for Sprint 9**
+
+- **Pick Sprint 9 anchor**: either (a) the carried-forward P1-B + P2 sweep on `systemPrompt.ts` (small, focused, well-bounded), or (b) memory MCP wiring into the desktop binary (the four-item short-term goal item not yet started), or (c) adeu integration as a Commercial-area MCP server (also four-item short-term goal). Brief in chat at sprint open will choose.
+- **Render-deterministic pattern** is now a precedent. Whenever a feature's user-visible state can be derived from a settled artefact (profile, schema, persisted record), prefer that to an LLM-emitted message. Sprint 8's transcript §9 is the reference.
+- **Dogfood harness extensions** (env-configurable screenshot base, `click <selector>` subcommand) are general-purpose — future UX sprints inherit them.
+
+**ADRs**: 015 (extends ADR-014; does not supersede).
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.

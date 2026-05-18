@@ -538,9 +538,76 @@ After `finalize_profile` writes the profile, quit the app and call `launch <labe
 
 No new apt packages, no new system services. Playwright reused from the existing `ui/node_modules/`.
 
+## Sprint 8 — Hub welcome banner re-dogfood (2026-05-18, lq-vps)
+
+Sprint 8 adds a one-time, dismissable Hub welcome banner per ADR-015. Re-uses the Sprint 7 dogfood harness with two harness-side enhancements (no product change beyond the banner itself).
+
+### Reset host state between sprints (Sprint 8 dogfood gotcha)
+
+The banner's dismissal flag lives in Electron renderer localStorage. Electron's user-data dir on Linux is **`~/.config/Oscar GC/`** (with a space — Electron honours `ui/desktop/package.json`'s `productName: "Oscar GC"`). The leveldb store backing localStorage lives at `~/.config/Oscar GC/Local Storage/`. To reset for a clean Sprint 8 dogfood:
+
+```bash
+rm -f ~/.config/oscar/profile.json                # retrigger onboarding
+rm -rf "/root/.config/Oscar GC/Local Storage"     # clear oscar.hubWelcomeDismissed
+rm -rf /tmp/oscar-dogfood                         # clear driver state
+```
+
+The quoted path (`"…Oscar GC/Local Storage"`) is required — the space matters.
+
+### Dogfood harness enhancements
+
+Two additions to the Sprint 7 driver, both backwards-compatible:
+
+| Capability | How |
+|---|---|
+| Per-sprint screenshot path | `DOGFOOD_SCREENSHOT_BASE=docs/dogfood/sprint-N/screenshots` env var. Driver defaults to `docs/dogfood/sprint-7/screenshots` if unset. |
+| Click an arbitrary selector | `bash scripts/dogfood/dogfood.sh click "<css-selector>"` — connects via CDP, clicks, waits 300ms, screenshots with a slug-encoded label. Used for the Sprint 8 banner dismiss. |
+
+Driver docblock at `ui/desktop/scripts/dogfood-driver.mjs` lists the full subcommand set.
+
+### Verification recipe (Sprint 8 exit criteria)
+
+```bash
+# pre-flight reset
+rm -f ~/.config/oscar/profile.json
+rm -rf "/root/.config/Oscar GC/Local Storage"
+rm -rf /tmp/oscar-dogfood
+
+# launch + drive
+DOGFOOD_SCREENSHOT_BASE=docs/dogfood/sprint-8/screenshots \
+  bash scripts/dogfood/dogfood.sh launch sprint-8-daniel
+# … send persona turns until the agent calls finalize_profile and chat unmounts …
+
+# post-onboarding banner check
+DOGFOOD_SCREENSHOT_BASE=docs/dogfood/sprint-8/screenshots \
+  bash scripts/dogfood/dogfood.sh screenshot post-onboarding-hub-with-banner
+DOGFOOD_SCREENSHOT_BASE=docs/dogfood/sprint-8/screenshots \
+  bash scripts/dogfood/dogfood.sh click ".oscar__banner-dismiss"
+
+# cold-relaunch dismissal persistence
+DOGFOOD_SCREENSHOT_BASE=docs/dogfood/sprint-8/screenshots \
+  bash scripts/dogfood/dogfood.sh quit
+DOGFOOD_SCREENSHOT_BASE=docs/dogfood/sprint-8/screenshots \
+  bash scripts/dogfood/dogfood.sh launch sprint-8-daniel-relaunch   # throws on chat-input timeout — expected
+DOGFOOD_SCREENSHOT_BASE=docs/dogfood/sprint-8/screenshots \
+  bash scripts/dogfood/dogfood.sh screenshot cold-relaunch-hub
+```
+
+The relaunch `launch` throws because `OscarOnboardingGuard` skipped onboarding (profile exists) and `.oscar__chat-input` never appears — that timeout *is* the success signal. The screenshot subcommand still works against the running app.
+
+### Footprint after Sprint 8
+
+| Artefact | Footprint |
+|---|---|
+| `docs/dogfood/sprint-8/` (report + transcript + extracts + 11 PNGs) | ~7 MB |
+| `docs/screenshots/sprint-8/` (3 mirror PNGs) | ~1.8 MB |
+| `~/.config/Oscar GC/Local Storage/` | <1 KB (one leveldb record for the dismissal flag) |
+
+No new apt packages, no new system services. No new daemons. Driver and screenshot harness unchanged in shape; one env var and one subcommand added.
+
 ## Pending
 
-(none — Sprint 7 complete)
+(none — Sprint 8 complete)
 
 ## Corrections
 

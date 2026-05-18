@@ -63,6 +63,7 @@ Bundling itself becomes a sprint when there are enough MCP servers and a clear "
 | 5 | Minimal in-house memory MCP server. New sibling repo `sarturko-maker/oscar-memory-mcp`. Two-tool stdio extension registered with Goose CLI; verified end-to-end. | Closed 2026-05-18 |
 | 6 | First-launch onboarding as an agent-driven interview. New sibling repo `sarturko-maker/oscar-onboarding-mcp` with `finalize_profile` tool; recipe-scoped onboarding agent in a dedicated Editorial chat surface; `~/.config/oscar/profile.json` schema (v1); sidebar runtime-reads the profile. | Closed 2026-05-18 |
 | 7 | Onboarding dogfood — CC operates Oscar GC as a real in-house lawyer (two personas, primary + edge) against real MiniMax. Surfaces one P0 (closing-message race), four P1s, six P2s. Establishes the "CC as the user" dogfood pattern; harness committed under `scripts/dogfood/`. Report at `docs/dogfood/sprint-7/`. | Closed 2026-05-18 |
+| 8 | Hub welcome banner closes Sprint 7's P0 closing-message race. ADR-015 (extends ADR-014). `OscarHubBanner` reads `profile.json` directly; dismissable; localStorage persisted. Closes P0-A, P1-D; deprecates P1-A / P1-C as load-bearing failures. P1-B deferred to Sprint 9. Re-dogfood confirms all four. Dogfood harness gains env-configurable screenshot base + `click <selector>` subcommand. Report at `docs/dogfood/sprint-8/`. | Closed 2026-05-18 |
 
 See `SPRINT_LOG.md` for entries. See `CLAUDE.md` for operating rules.
 

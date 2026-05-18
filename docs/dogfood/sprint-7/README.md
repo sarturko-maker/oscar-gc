@@ -63,6 +63,7 @@ A small deviation from the plan: the Node driver lives at `ui/desktop/scripts/do
   - (a) Agent emits closing message *before* the tool call (changes the agent contract — closing line becomes a setup line; ambiguous if tool fails).
   - (b) Guard waits for an explicit session-complete signal, not just profile-file existence (richer polling state).
   - (c) Move the welcome bridge off the chat surface entirely — render it as a one-time Hub banner that reads the just-written profile. (Recommended — also addresses finding 5 and P1-D below.)
+- **Status (post Sprint 8):** **Closed** in commit `44387ef2b` (Sprint 8 — option (c) shipped per ADR-015). Re-dogfood (`docs/dogfood/sprint-8/`) confirms the user now sees a name-personalised Hub banner ("Welcome to Oscar GC, Daniel.") reading `profile.json` directly. The agent's closing message no longer determines what the user sees; the banner is render-deterministic.
 
 ### P1
 
@@ -71,6 +72,7 @@ A small deviation from the plan: the Node driver lives at `ui/desktop/scripts/do
 - **What happened:** Primary skipped the recap until the user pushed back. Edge delivered the recap unprompted. The system prompt's P4 spec says recap is required; LLM compliance is inconsistent.
 - **Why it hurts:** A user expecting verification before save may not get it (primary case). A user who didn't ask for it may be surprised by an extra paragraph (edge case). Either way the contract is unstable.
 - **Fix direction:** Move the recap off the LLM entirely — render a deterministic profile preview in the chat surface between the agent's "ready to save?" and the user's final confirmation. Falls out naturally from fix (c) above.
+- **Status (post Sprint 8):** **Closed by deprecation** in commit `44387ef2b`. The Hub banner reads `profile.json` directly — the LLM's in-conversation recap is no longer the verification surface. Sprint 8's re-dogfood saw the LLM skip the pre-save recap entirely (different LLM path than Sprint 7's primary) and the user-visible verification was still complete because the banner does not depend on what the LLM emitted.
 
 **P1-B — Two contradictory questions in same turn (primary P3 end).**
 - **Turn:** primary 13:40:09 — "Looks close to your practice, or want to drop or add anything? ... What do you want to keep?"
@@ -78,17 +80,20 @@ A small deviation from the plan: the Node driver lives at `ui/desktop/scripts/do
 - **Why it hurts:** Two opposing framings make the user choose which to answer. Daniel (detail-oriented) ignored the "keep" framing; a less confident user might enumerate inclusions instead of exclusions and end up with a different profile.
 - **Edge session did not reproduce:** asked only the drop framing.
 - **Fix direction:** Tighten the system prompt's example sentence. Show the *exact* question the agent should ask, not a paraphrase.
+- **Status (post Sprint 8):** **Deferred to Sprint 9.** Sprint 8 was render-layer-only (banner fix); didn't touch `systemPrompt.ts`. Per Arturs's plan-time decision: every system-prompt edit deserves its own focused dogfood pass, so P1-B inherits a clean run when Sprint 9 picks it up.
 
 **P1-C — Recap factual condensation: dropped a detail (primary).**
 - **Turn:** primary 13:40:59 — recap says "drives, controls, switchgear" but user said "drives, controls, switchgear, cabling".
 - **Why it hurts:** A commercial counsel notices when details get dropped. Erodes trust in the recap.
 - **Fix direction:** Same as P1-A — move the recap off the LLM so it can't editorialise.
+- **Status (post Sprint 8):** **Closed by deprecation** in commit `44387ef2b`. Same logic as P1-A — the LLM-recap is no longer load-bearing. `profile.json` is the source of truth; banner consumes it directly.
 
 **P1-D — Hub landing has no acknowledgment of just-completed onboarding.**
 - **Turn:** post-tool-call in both sessions.
 - **What happened:** Hub renders the same generic "Oscar GC — An in-house legal agent platform" hero copy in both pre-onboarding state (theoretical — never seen, blocked by guard) and post-onboarding state (actually shown). The hero copy doesn't change. No welcome-by-name, no "your sidebar has been populated", no entry point.
 - **Why it hurts:** Combined with P0-A, the user is parachuted from a five-minute conversation into a marketing page. The sidebar is the only visible delta and it's narrow and quiet.
 - **Fix direction:** First-arrival Hub banner reading from `profile.json` (e.g., "Welcome, Daniel — your sidebar reflects the practice areas you cover. Pick one to begin.") Dismissible. One-time. Could also serve as the closing-message bridge per P0-A.
+- **Status (post Sprint 8):** **Closed** in commit `44387ef2b`. Banner shipped per the fix-direction sketch (italic-copper name in Cormorant title, Outfit body with sidebar-bridge cue, copper mono dismiss). See `docs/dogfood/sprint-8/screenshots/sprint-8-daniel/07-post-onboarding-hub-with-banner.png`.
 
 ### P2
 
@@ -120,6 +125,10 @@ A small deviation from the plan: the Node driver lives at `ui/desktop/scripts/do
 **P2-F — Session DB carries unrelated test-run pollution.**
 - `sessions.db` contains nine prior sessions from Sprint 6 development (CLI tests, test profiles, etc.). If any future Oscar surface lists recent sessions, these will appear.
 - Out of strict scope. Tracked here so it isn't forgotten.
+
+---
+
+**Status (post Sprint 8) — P2-A through P2-F:** all six unchanged. None in Sprint 8's code paths (banner work). Carry forward to whichever future sprint touches `systemPrompt.ts` (P2-A / P2-C / P2-D), the profile schema (P2-B), or session-DB hygiene / session-listing surfaces (P2-E / P2-F).
 
 ---
 
