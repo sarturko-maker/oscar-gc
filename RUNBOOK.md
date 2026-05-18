@@ -350,9 +350,140 @@ Explicit tool naming (`oscar-memory__store_note`) in the prompts matters: withou
 
 No new apt packages, no new system services, no new daemons. Goose spawns the server fresh per invocation.
 
+## Sprint 6 — Onboarding MCP server + recipe-driven agent (2026-05-18, lq-vps)
+
+Second sibling MCP server, first recipe-scoped agent invocation from the desktop binary. Goose-fork-side changes are limited to host config, source under `ui/desktop/src/`, screenshots, and these docs.
+
+### Sibling repo location
+
+```
+/srv/projects/oscar-onboarding-mcp/   # local clone
+git@github.com:sarturko-maker/oscar-onboarding-mcp.git   # SSH remote — PUSH PENDING (see "Push pending" below)
+```
+
+Local initial commit: `82266afce`. SDK pinned to `@modelcontextprotocol/sdk@=1.29.0`. Three sibling-repo ADRs (persistence-JSON, all-args-A-class, Apache 2.0) mirror the Sprint 5 sibling pattern.
+
+### Bootstrap order (matters on a fresh VPS)
+
+```bash
+git clone git@github.com:sarturko-maker/oscar-onboarding-mcp.git /srv/projects/oscar-onboarding-mcp
+cd /srv/projects/oscar-onboarding-mcp
+source /srv/projects/goose/bin/activate-hermit
+pnpm install
+pnpm build                                       # produces dist/index.js (gitignored)
+pnpm smoke                                       # optional: MCP roundtrip via the SDK client
+```
+
+`dist/index.js` is gitignored. The recipe in the desktop bundle (`onboardingRecipe.ts`) hardcodes the absolute path `/srv/projects/oscar-onboarding-mcp/dist/index.js`. Cloning to a different parent path requires editing the recipe constant and rebuilding.
+
+### Goose CLI registration
+
+Appended to `~/.config/goose/config.yaml` under `extensions:` (sibling of `oscar-memory`):
+
+```yaml
+  oscar-onboarding:
+    enabled: true
+    type: stdio
+    name: oscar-onboarding
+    description: 'First-launch onboarding profile writer. One tool: finalize_profile.'
+    cmd: node
+    args:
+      - /srv/projects/oscar-onboarding-mcp/dist/index.js
+    timeout: 30
+```
+
+Same gatekeeper / YAML-pitfall rules as Sprint 5 apply. `description` value here has no embedded `:` colon, so no single-quoting required strictly, but quoted for consistency with the sibling entry.
+
+### `cmd: node` vs `cmd: /usr/bin/node` (Sprint 6 gotcha)
+
+The CLI sees `node` resolve to `/usr/bin/node` via the parent shell's PATH — same as Sprint 5. The DESKTOP binary, when goosed spawns the extension subprocess, inherits an Electron PATH where Hermit's `node` shim resolves first; the shim prints `Starting node setup (common).` to stderr and quits before MCP initialization, surfacing as `Failed to load extension oscar-onboarding` in the `~/.local/state/goose/logs/server/*.log` files.
+
+The fix lives in the recipe's extension config, not in `~/.config/goose/config.yaml`: `ui/desktop/src/components/oscar/onboarding/onboardingRecipe.ts` hardcodes `cmd: '/usr/bin/node'`. The global YAML stanza still uses `cmd: node` for CLI compatibility. ADR-008 already flagged the hardcoded-path constraint for production builds.
+
+### Profile data directory
+
+The MCP server creates `~/.config/oscar/profile.json` on the first `finalize_profile` call. Override with `OSCAR_PROFILE_PATH=` for tests. Permissions are `0600` (owner read/write only — same atomic-write pattern as `oscar-memory`'s `notes.json`).
+
+```bash
+ls -la ~/.config/oscar/profile.json
+cat ~/.config/oscar/profile.json | python3 -m json.tool
+rm -f ~/.config/oscar/profile.json   # re-trigger onboarding on next desktop launch
+```
+
+### Verification recipe (the Sprint 6 exit-criteria runs)
+
+**CLI verify** (proves the MCP server end-to-end through Goose):
+
+```bash
+set -a; . /srv/projects/lq-ai-agentic/.env; set +a
+TMP_PROFILE=$(mktemp /tmp/oscar-onboarding-verify-XXXXXX.json); rm "$TMP_PROFILE"
+OSCAR_PROFILE_PATH="$TMP_PROFILE" \
+GOOSE_PROVIDER=minimax GOOSE_MODEL=MiniMax-M2.5 \
+  /srv/projects/goose/target/release/goose run --no-session \
+  --text "Use the oscar-onboarding__finalize_profile tool to save this profile verbatim. schema_version is 1. completed_at is 2026-05-18T14:00:00Z. user is name=Test User role=general-counsel role_label=General Counsel. corporate is name=TestCo industry=Testing size_band=51-200. practice_areas is a list with one entry: id=commercial name=Commercial body=test source=default. provider is kind=minimax model=MiniMax-M2.5."
+cat "$TMP_PROFILE"
+rm -f "$TMP_PROFILE"
+```
+
+Pass criteria: `▸ finalize_profile oscar-onboarding` header in the transcript; tmp file contains the expected JSON shape.
+
+**Desktop verify** (proves the recipe-driven session + chat surface):
+
+```bash
+rm -f ~/.config/oscar/profile.json                          # ensure empty state
+bash scripts/capture-oscar.sh --out-dir /tmp/sprint6-verify --routes "/"
+# Inspect /tmp/sprint6-verify/root.png — should show OscarOnboardingView,
+# greeting visible, no extension-load toast in the upper-right.
+```
+
+**Live conversation verify** (proves streaming + agent voice):
+
+```bash
+rm -f ~/.config/oscar/profile.json
+set -a; . /srv/projects/lq-ai-agentic/.env; set +a
+export GOOSE_PROVIDER=minimax GOOSE_MODEL=MiniMax-M2.5 GOOSE_DISABLE_KEYRING=1
+Xvfb :99 -screen 0 1440x900x24 -ac -nolisten tcp >/tmp/xvfb-99.log 2>&1 & XVFB_PID=$!
+sleep 1
+DISPLAY=:99 source bin/activate-hermit && \
+  cd ui/desktop && node scripts/capture-conversation.mjs
+kill $XVFB_PID
+# Inspect docs/screenshots/sprint-6/onboarding-mid-conversation.png —
+# should show three turns: greeting, user "Arturs Sliede.", agent's P1 follow-up.
+```
+
+### Footprint after Sprint 6
+
+| Artefact | Footprint |
+|---|---|
+| `/srv/projects/oscar-onboarding-mcp/` source + node_modules | ~30 MB |
+| `/srv/projects/oscar-onboarding-mcp/dist/` | ~6 KB |
+| `~/.config/oscar/profile.json` | <4 KB (small JSON) |
+| `docs/screenshots/sprint-6/` (5 PNGs) | ~2.8 MB |
+
+No new apt packages, no new system services, no new daemons.
+
+### Push pending (one-shot action)
+
+Initial sibling-repo commit landed locally only. The classifier blocked `gh repo create sarturko-maker/oscar-onboarding-mcp --public --license apache-2.0` as a public-surface action without explicit per-invocation authorization. To push:
+
+```bash
+# 1. Create the public Apache-2.0 repo (one-shot, requires user approval).
+gh repo create sarturko-maker/oscar-onboarding-mcp \
+  --public \
+  --description "First-launch onboarding interview server. Writes Oscar GC's user profile JSON via a single finalize_profile MCP tool. Sibling of sarturko-maker/goose." \
+  --license apache-2.0
+
+# 2. Wire the remote and push.
+cd /srv/projects/oscar-onboarding-mcp
+git remote add origin git@github.com:sarturko-maker/oscar-onboarding-mcp.git
+git push -u origin main
+```
+
+The local repo is otherwise functional — desktop launches, recipe loads, tool is callable. Push is a discoverability + audit-trail concern; the dev VPS does not need it for the desktop binary to work.
+
 ## Pending
 
-(none — Sprint 5 complete)
+- Push `oscar-onboarding-mcp` to GitHub (see "Push pending" above).
 
 ## Corrections
 

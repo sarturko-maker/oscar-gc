@@ -316,4 +316,58 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
-(Sprint 6 entry lands when Sprint 6 closes.)
+### Sprint 6 — First-launch onboarding as an agent-driven interview (closed 2026-05-18)
+
+**Goal**: replace the empty post-Hub state with a one-conversation onboarding interview. A first-launch lawyer talks to an agent — name, role, company, practice scope, provider — and emerges with `~/.config/oscar/profile.json` written. The sidebar then reflects what they actually do, not a hardcoded 13. Pattern reference: `anthropics/claude-for-legal` cold-start-interview, departed from at the structural level (one unified interview, not nine per-plugin). Brief in chat; plan at `/root/.claude/plans/comprehensive-rewrite-sprint-stateless-wombat.md`.
+
+**Built** (split across this repo and the new sibling `sarturko-maker/oscar-onboarding-mcp`)
+
+- **New sibling repo `oscar-onboarding-mcp`** at `/srv/projects/oscar-onboarding-mcp/`. TypeScript MCP server, ~130 LoC across `src/{index,server,store,schema}.ts`. Single tool `finalize_profile(profile)` that validates against a Zod schema (`ProfileSchema`, versioned with `schema_version: 1`) and atomically writes `~/.config/oscar/profile.json` (mkdir → write tmpfile → fsync → rename). Pinned deps: `@modelcontextprotocol/sdk@=1.29.0`, `zod@=4.4.3`, `typescript@=6.0.3`. Apache 2.0. Three sibling-repo ADRs (persistence-JSON / all-args-A-class / Apache 2.0) mirroring `oscar-memory-mcp`'s skeleton. Initial commit `82266afce` on the sibling repo (local only — see "Push pending" below).
+- **Seven ADRs** in this repo, committed before any implementing code (`a5b7e0323`):
+  - 008 — Recipe is the vehicle for the onboarding agent.
+  - 009 — Tool surface lives in a new sibling MCP server; recipe whitelist locks scope.
+  - 010 — System-prompt structure (four phases, hard tool-call exit, pushback rules).
+  - 011 — Profile schema (v1) at `~/.config/oscar/profile.json`; forward-compat fields.
+  - 012 — Provider config is env-var-only for Sprint 6; pasted-key flow deferred.
+  - 013 — Dedicated `<OscarOnboardingView>` chat surface, not BaseChat reuse.
+  - 014 — Post-onboarding lands at Hub; sidebar carries the visible delta.
+- **`oscar-onboarding` extension registered globally** in `~/.config/goose/config.yaml` (stanza mirrors `oscar-memory`). CLI verified end-to-end via `goose run --debug --no-session --text "Use the oscar-onboarding__finalize_profile tool..."` — tool header printed, profile JSON written to a tmp `OSCAR_PROFILE_PATH`, structure inspected on disk.
+- **Onboarding implementation** (commit `f1b62304d`, lint fix `8ff1a8a05`):
+  - `ui/desktop/src/components/oscar/onboarding/` — `systemPrompt.ts` (four-phase contour, persona, exit rules, embedded default-area seed for the agent to reference verbatim), `onboardingRecipe.ts` (Recipe constant with extension whitelist + minimax/M2.5 settings + hardcoded `/usr/bin/node`), `OscarOnboardingView.tsx` (~110 LoC; bootstraps session, consumes `useChatStream`, renders messages), `OscarChatTurn` + `OscarChatInput` (~75 LoC combined; Editorial shell around shared Goose infrastructure), `OscarOnboardingGuard.tsx` (polls profile every 1.5s, renders view if absent else children).
+  - `ui/desktop/src/components/oscar/hooks/` — `useOscarProfile` (reads profile via IPC, optional poll), `usePracticeAreas` (returns profile's areas or default seed).
+  - `ui/desktop/src/styles/main.css` — `.oscar__chat-*` block (~160 LoC) using ADR-007 Editorial tokens (paper / ink / copper / serif / sans-editorial / mono-editorial). No new Tailwind config.
+  - `ui/desktop/src/main.ts` + `preload.ts` — `oscar:read-profile` IPC handler. Bridged through preload as `window.electron.readOscarProfile()`.
+  - `ui/desktop/src/sessions.ts` — additive: `createSession()` now accepts `recipe?: Recipe` in options, sets `body.recipe` directly without a deepLink decode roundtrip.
+  - `ui/desktop/src/components/oscar/practiceAreas.ts` — adds `source: "default"` to every entry; type widened to `interface PracticeArea` with `source: PracticeAreaSource`. Default seed remains in-tree as the fallback for pre-onboarding state.
+  - `ui/desktop/src/components/oscar/OscarSidebar.tsx` and `PracticeAreaPlaceholder.tsx` — swap their static `PRACTICE_AREAS` import for `usePracticeAreas()`.
+  - `ui/desktop/src/App.tsx` — wraps the existing `<OnboardingGuard>`'s children with `<OscarOnboardingGuard>`. Two guards stack: Goose's owns provider, ours owns profile.
+- **Reuse vs not-reuse** — uses Goose's `useChatStream`, `createSession`, `getTextAndImageContent`, `Message` / `ChatState`, `getInitialWorkingDir`, `errorMessage`. Does not reuse `UserMessage` (313 LoC; edit/fork/copy/images/timestamps), `GooseMessage` (215 LoC; tool-call cards, thinking blocks, confirmations), `ChatInput` (1862 LoC; voice/attachments/slash/history), or `MarkdownContent` (315 LoC; katex/syntax-highlighter). ADR-013 rationale plus the per-component evidence in the chat-thread transcript.
+- **Build + verify** — `pnpm run lint:check` clean (typecheck + eslint `--max-warnings 0` + i18n). `pnpm run make --targets=@electron-forge/maker-zip` produced `ui/desktop/out/make/zip/linux/x64/Oscar-GC-linux-x64-1.34.0.zip` (200M). `npx @electron/asar extract → /tmp/sprint6-asar/`. Grep confirmed all 9 `.oscar__chat-*` selectors in CSS, the system prompt opening line, the `oscar-onboarding` extension name, and `finalize_profile` in the renderer App JS, and the `oscar:read-profile` channel + `OSCAR_PROFILE_PATH` env name in `main.js` / `preload.js`.
+- **Screenshots** (`f1b62304d` follow-on `e…`; under `docs/screenshots/sprint-6/`):
+  - `onboarding-empty.png` (499k) — first launch, profile absent, Editorial chat surface with greeting and input. No toast errors.
+  - `onboarding-mid-conversation.png` (519k) — driven by `capture-conversation.mjs`: user types "Arturs Sliede.", MiniMax-M2.5 responds in the agent's voice asking for role + company. Proves the streaming wiring and the system prompt's P1 contour.
+  - `root.png` (620k) — post-onboarding Hub at `/`; sidebar reflects the profile's 9 entries (8 defaults + 1 user-added "Procurement") numbered 01–09.
+  - `practice-custom-procurement.png` (614k) — `/practice/custom-procurement` renders the placeholder with the body the agent wrote; row 09 active in copper.
+  - `practice-commercial-disputes.png` (617k) — default-area route after onboarding, row 02 active.
+
+**Deferred**
+
+- **Pasted-key flow** — ADR-012 already records this. Sprint 6 supports env-var-set MiniMax only. The agent's wrap message asks the user to set `MINIMAX_API_KEY` and restart if it's missing; `finalize_profile` is never called in that branch.
+- **Per-practice-area cold-start interviews** — the claude-for-legal-style per-plugin pattern. Optional, on-demand, later sprint. Schema's per-area additive fields are forward-compatible.
+- **Settings page to re-run / edit onboarding** — out of scope. The lawyer hand-edits `~/.config/oscar/profile.json` for now.
+- **Multi-provider switching in the conversation** — schema's `provider.kind` is a discriminator; UX is a later sprint.
+- **Memory MCP wiring into the desktop binary** — Sprint 5 carry-forward, still deferred to Sprint 7+. Sprint 6 establishes profile + per-area context, so `scope_id` is now resolvable from practice-area state for the future B-class migration.
+- **`onboarding-mid-conversation.png` toast** — the "Successfully loaded 1 extension" toast appears in the upper-right when the recipe whitelist resolves the oscar-onboarding extension; harmless but visible. Toast suppression for the onboarding surface is cosmetic-only carry-forward.
+- **Production-grade `node` path** — the recipe hardcodes `/usr/bin/node` for the dev VPS. Shipping `.deb`/`.rpm` will bundle node or use a search path; ADR-008's hardcoded-path note documents the constraint.
+
+**Carry-forwards for Sprint 7**
+
+- **Push `oscar-onboarding-mcp` to GitHub.** The classifier blocked the initial `gh repo create sarturko-maker/oscar-onboarding-mcp --public` action. Sprint 6's sibling-repo work is committed locally at `/srv/projects/oscar-onboarding-mcp/` (initial commit `82266afce`). The remote push needs Arturs's explicit one-shot approval (or a permission rule add); deferring to the start of the next session to avoid blocking sprint close.
+- **Memory MCP wiring into the desktop binary** — Sprint 5 carry-forward, still alive. The profile now exists, so per-area `scope_id` is well-defined when the wiring lands.
+- **Per-element surfaces** (Customer / Entity / Stream) inside each practice area. Replaces the placeholder pages with real primary-unit views.
+- **Pasted-key flow with proper secret-storage seam** (ADR-012's future-ADR territory).
+- **Per-practice-area cold-start interviews** (optional, later sprint).
+
+**ADRs**: 008, 009, 010, 011, 012, 013, 014 in this repo; sibling-repo 001 (persistence-JSON), 002 (all-args-A-class), 003 (Apache 2.0).
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.
