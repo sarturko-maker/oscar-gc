@@ -261,4 +261,59 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 4.6 — Editorial as Oscar GC's default surface; ADR-004 superseded (closed 2026-05-18)
+
+**Goal**: respond to Arturs's reading of Sprint 4.5 ("we are still in dark mode and I cannot believe the fonts tally with the design") by re-reading `/srv/projects/LQdesign/` from scratch, no assumptions, and bringing Oscar GC into actual alignment with LegalQuants. The Sprint 4.5 brief had flagged this as the open question — Hub-as-Editorial; flag, don't switch. This sprint switches, with the ADR-004 supersession in writing.
+
+**What Sprint 4.5 got wrong**
+
+- Loyal to ADR-004 (Terminal default), but ADR-004's premise — "Oscar GC is a desktop product, Terminal is for products" — read "product" as load-bearing. The LQdesign folder treats "LegalQuants" as load-bearing: Terminal's stated scope is narrow ("legalquants.com, the cohort product, landing pages, dashboards" — the marketing surface), and every published LegalQuants artefact (`index.html`, `Masdar Proposal.html`, `lq-report.html`) is Editorial.
+- Two of the brand's three "hinge" elements (Cormorant Garamond + copper, per the README) were off-screen: Cormorant loaded-but-unused, copper declared as a token with zero consumers.
+- The wordmark rendered as a monolithic Inter 900 block — missing both wordmarks' contrast pattern ("Legal" plain + "Quants" emphasized, copper italic in Editorial / indigo gradient in Terminal).
+
+**Built**
+
+- `docs/adr/007-editorial-default-surface.md` (commit `f00287760`) — supersedes ADR-004. Written before any code change per CLAUDE.md "ADRs at decision time".
+- `ui/desktop/src/styles/main.css` (commit `4e66342dc`):
+  - Two new `@font-face` blocks via Google Fonts CDN: **Outfit** (variable 300–700) and **IBM Plex Mono** (static 400/500/600). Latin subset, matches Inter's `unicode-range`.
+  - Renamed `.oscar-terminal` → `.oscar` everywhere (the name no longer encodes a surface choice).
+  - Token flip: `--night`/`--glow-*`/`--indigo-*` removed; `--paper`/`--ink-*`/`--copper`/`--rule-*`/`--card-bg`/`--card-border` in. `--serif`, `--sans-editorial`, `--mono-editorial` are the active font variables.
+  - New element classes — `.oscar__hero` + `.oscar__hero-em` (Cormorant 700 / italic copper accent), `.oscar__rule` (48×3 copper), `.oscar__subtitle` (Outfit 14/1.7), `.oscar__placeholder-title` + `.oscar__placeholder-title-em` (Cormorant 500/42px, italic copper), `.oscar__placeholder-body` (Outfit 13/1.7), `.oscar__eyebrow` (IBM Plex Mono 9px/0.2em/copper with trailing hairline rule via `::after`), `.oscar__sidebar` (paper-deep), `.oscar__sidebar-item--active` (copper-glow bg + copper border-left), `.oscar__sidebar-item-num` (IBM Plex Mono 10px ink-faint, flips to copper on active).
+  - Orb-glow CSS removed. Paper-grain fractal-noise SVG overlay added on `.oscar::after` (0.04 opacity), matching `.ed-page::after`.
+- `ui/desktop/src/components/Hub.tsx`, `OscarSidebar.tsx`, `PracticeAreaPlaceholder.tsx` (commit `59e04c8b4`) — rewired to `.oscar*` selectors and the Editorial cover/section structure:
+  - Hub: eyebrow "Office of the General Counsel" + hero "Oscar `GC.`" (italic copper on `GC.`) + copper rule + Outfit subtitle.
+  - Sidebar: "Practice Areas" eyebrow (replaces "PRACTICE // AREAS"); `01–13` numerics restyled via CSS (no JSX change beyond class rename).
+  - Placeholder: per-area copper eyebrow + Cormorant title with italic-copper "— placeholder." accent + Outfit body.
+- Build + verify: `pnpm run make --targets=@electron-forge/maker-zip` succeeded; `npx tsc --noEmit` clean. Bundle grep confirmed all four font families, the new `.oscar*` selectors, the brand strings, the font URLs, and the copper hex `9a3412` in the renderer CSS bundle.
+- Screenshots (commit `849482256`) — re-captured under `docs/screenshots/sprint-4.6/`: root, commercial, commercial-disputes, cosec. The Editorial rendering is visibly different and visibly LegalQuants — paper cream, copper italic on the wordmark, IBM Plex Mono copper eyebrows with hairline rule, copper-glow active rail state.
+
+**Side-by-side**
+
+| Route | Sprint 4.5 (Terminal) | Sprint 4.6 (Editorial) | Change |
+|---|---|---|---|
+| `/` | `sprint-4.5/root.png` (112k) — dark, indigo orb, Inter 900 "Oscar GC" | `sprint-4.6/root.png` (612k) — cream paper, Cormorant 700 + italic copper "GC.", 48×3 copper rule, Outfit subtitle | Full surface flip; LegalQuants wordmark contrast pattern adopted. |
+| `/#/practice/commercial` | `sprint-4.5/practice-commercial.png` (55k) | `sprint-4.6/practice-commercial.png` (608k) | Sidebar row 01 active in copper-glow with copper "01"; "Commercial — placeholder." with italic-copper "— placeholder." |
+| `/#/practice/commercial-disputes` | `sprint-4.5/practice-commercial-disputes.png` (56k) | `sprint-4.6/practice-commercial-disputes.png` (610k) | Same pattern, row 02 active. |
+| `/#/practice/cosec` | `sprint-4.5/practice-cosec.png` (54k) | `sprint-4.6/practice-cosec.png` (607k) | Row 13 active — confirms treatment scales to bottom of list. |
+
+**Deferred**
+
+- **Oscar GC SVG wordmark** — text-rendered Cormorant + italic copper now closes most of the "brand mark application" gap from Sprint 4.5 without a designed mark. A bespoke Oscar GC SVG (mirroring `wordmark-editorial.svg`'s structure with the LegalQuants wordmark replaced) is still a separate branding task per PROJECT.md follow-up #4.
+- **`.ed-page-rule` top-of-page treatment** — placeholder pages currently centre content rather than render the LQ page-rule pattern (1px rule across the top with 48px×3px copper accent at the left). Adopt when placeholder pages become real practice-area surfaces in a later sprint.
+- **`.ed-callout` / `.ed-quote` / `.ed-card` patterns** — defined in LQ's `editorial.css`; not yet used because there's no content to host them. Add when the first real consumer appears.
+- **Terminal accent surface** — if Oscar GC ever needs a Bloomberg-style dashboard or logs view, it lands as a Terminal-accent surface inside the Editorial structural shell, with its own ADR.
+- **Inter and JetBrains Mono fonts** — still loaded but unused in product surfaces. Cost is one extra CDN connection; removal is mechanical (delete two `@font-face` blocks in `main.css`). Keep for now in case the Terminal-accent surface above lands.
+- **Self-hosting all five font families** — Sprint 3 carry-forward still alive, now with five families to vendor instead of three. Revisit at pilot stage.
+
+**Carry-forwards for Sprint 6**
+
+- Sprint 6 anchor decision (carried from Sprint 5): wire `oscar-memory` MCP into the desktop binary's MCP config, or build the onboarding flow. Editorial surface now in place to host either.
+- Sprint 4.6 closes the visual-fidelity carry-forwards from Sprints 3, 4, 4.5. The remaining Sprint 4 carry-forwards (orphan-file cleanup, `/`-redirect product policy, per-area body refinement, configurable practice-area list) are unchanged.
+
+**ADRs**: 007 (supersedes 004).
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.
+
+---
+
 (Sprint 6 entry lands when Sprint 6 closes.)

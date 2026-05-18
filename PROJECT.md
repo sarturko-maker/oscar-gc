@@ -41,6 +41,7 @@ Capture the per-release decision as a one-line note in `SPRINT_LOG.md` under the
 | 3 | First `ui/desktop/src/` source change — Oscar GC landing placeholder. LQdesign Terminal default. | Closed 2026-05-18 |
 | 4 | Practice-area sidebar (13 entries) + placeholder routes. Seam moves to AppLayout. | Closed 2026-05-18 |
 | 4.5 | Visual fidelity audit + gap closure against LQdesign Terminal: JetBrains Mono + Cormorant Garamond loaded; eyebrow / orb / `01`–`13` mono numerics / indigo-tinted sidebar active state applied. | Closed 2026-05-18 |
+| 4.6 | Editorial as Oscar GC's default surface; supersedes ADR-004. Cream paper, Cormorant Garamond hero with italic copper accent, IBM Plex Mono eyebrows with hairline rule, Outfit body, copper-glow active sidebar. Outfit + IBM Plex Mono loaded; class scope renamed `.oscar-terminal` → `.oscar`. | Closed 2026-05-18 |
 | 5 | Minimal in-house memory MCP server. New sibling repo `sarturko-maker/oscar-memory-mcp`. Two-tool stdio extension registered with Goose CLI; verified end-to-end. | Closed 2026-05-18 |
 
 See `SPRINT_LOG.md` for entries. See `CLAUDE.md` for operating rules.
