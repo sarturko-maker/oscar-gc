@@ -28,8 +28,8 @@ inbound/
 
 | Type | Command | Outputs |
 |---|---|---|
-| Demand letter received | `/litigation-legal:demand-received [path]` | triage.md + optional response draft |
-| Subpoena served | `/litigation-legal:subpoena-triage [path]` | triage.md + objections memo |
+| Demand letter received | `demand-received [path]` | triage.md + optional response draft |
+| Subpoena served | `subpoena-triage [path]` | triage.md + objections memo |
 | Regulator inquiry | *future skill* | |
 
 Each triage cross-checks `matters/_log.yaml` for related matters (same counterparty, overlapping subject). If a related matter exists, the triage flags it and offers to add this as a related_matter entry. If this inbound item should itself become a tracked matter, the triage hands off to `/matter-intake` with fields pre-populated.

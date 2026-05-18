@@ -4,16 +4,18 @@ description: Build or update a chronology from declared document sources and upl
 argument-hint: "[slug] [--format=working|sof|witness-[name]]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/litigation-legal @ 4d55f539; Apache 2.0 -->
+
 # /chronology
 
-1. Load `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/matter.md` → theory, pivot fact, key facts.
-2. Load `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` → Document storage sources, default matter folder pattern.
+1. Load `~/.config/oscar/state/litigation-legal/matters/[slug]/matter.md` → theory, pivot fact, key facts.
+2. Load `~/.config/oscar/profile.json` → Document storage sources, default matter folder pattern.
 3. Follow the workflow and reference below.
-4. Identify sources in order: user-provided paths this session, default matter folder, declared sources from `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md`.
+4. Identify sources in order: user-provided paths this session, default matter folder, declared sources from `~/.config/oscar/profile.json`.
 5. For readable sources: extract dated events. For unreachable sources: note in Gaps.
 6. De-dupe, merge with sources list per event.
 7. Tag significance (🔴/🟡/⚪) per matter theory.
-8. Write `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/chronology.md` (or format variant per flag).
+8. Write `~/.config/oscar/state/litigation-legal/matters/[slug]/chronology.md` (or format variant per flag).
 9. If prior version exists: version number increments, diff summary presented to user.
 10. Confirm before finalizing: "Here's what I built. Scan the 🔴 entries — anything I miscalled?"
 
@@ -64,16 +66,16 @@ Common:
 - Any files the user uploads or paths they provide in-session.
 
 `--matter` mode also reads:
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/matter.md` → case theory, key facts, pivot fact (for significance tagging), key dates.
+- `~/.config/oscar/state/litigation-legal/matters/[slug]/matter.md` → case theory, key facts, pivot fact (for significance tagging), key dates.
 - Default matter folder pattern from CLAUDE.md → where docs for this slug live.
 
 `--documents` mode also reads:
 - eDiscovery platform metadata if a connector is available (Everlaw, Relativity, DISCO, Aurora) — by custodian + date range.
 - Bates-range manifest or production index if the user points at one.
 
-**Conflicts gate — unbypassable (`--matter` mode).** Before building the chronology, check `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/_log.yaml` for the matter slug. If the matter is not in `_log.yaml`, refuse and route:
+**Conflicts gate — unbypassable (`--matter` mode).** Before building the chronology, check `~/.config/oscar/state/litigation-legal/matters/_log.yaml` for the matter slug. If the matter is not in `_log.yaml`, refuse and route:
 
-> "I don't see [matter slug] in the matter log. Run `/litigation-legal:matter-intake` first so the conflicts check runs and the matter workspace is set up. I won't build a chronology on a matter that hasn't been intaken — the conflicts check is the gate."
+> "I don't see [matter slug] in the matter log. Run `matter-intake` first so the conflicts check runs and the matter workspace is set up. I won't build a chronology on a matter that hasn't been intaken — the conflicts check is the gate."
 
 Do not proceed on an unintaken matter. Intake is what runs conflicts and writes the `_log.yaml` row this skill reads from. `--documents` mode (running against an ad-hoc document set without a matter slug) is exempt from the gate, but its outputs should be treated as pre-matter research and not filed as if matter work product.
 
@@ -173,7 +175,7 @@ Default output is the working chronology. Variants on request.
 
 ### Working chronology (default)
 
-Location: `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/chronology.md`. Complete, tagged, annotated. The reference doc counsel works from.
+Location: `~/.config/oscar/state/litigation-legal/matters/[slug]/chronology.md`. Complete, tagged, annotated. The reference doc counsel works from.
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs — differs by role; see `## Who's using this`]

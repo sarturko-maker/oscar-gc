@@ -10,9 +10,11 @@ description: >
   "batch review", or points at a folder of documents and asks to compare them.
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/corporate-legal @ 4d55f539; Apache 2.0 -->
+
 # /tabular-review
 
-1. Load `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` → diligence structure, thresholds, house format.
+1. Load `~/.config/oscar/profile.json` → diligence structure, thresholds, house format.
 2. Confirm: what documents, what columns, where does the output go.
 3. Build the typed schema. Write `.review-schema.yaml`. Confirm with the user.
 4. Sample run (3–5 docs). Adjust schema. Confirm.
@@ -22,9 +24,9 @@ description: >
 8. Summary: verification workload (counts of not_present / unclear / needs_review per column), flagged columns, where the files are, reminder that every cell is a lead not a finding.
 
 ```
-/corporate-legal:tabular-review
-/corporate-legal:tabular-review --schema .review-schema.yaml --docs ./vdr/02-Contracts/
-/corporate-legal:tabular-review --template ma-diligence
+tabular-review
+tabular-review --schema .review-schema.yaml --docs ./vdr/02-Contracts/
+tabular-review --template ma-diligence
 ```
 
 **`--schema <path>`:** Use an existing schema file instead of building one. Useful for re-runs and incremental additions.
@@ -41,7 +43,7 @@ description: >
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/corporate-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/corporate-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/corporate-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -55,8 +57,8 @@ This is also not a replacement for a human reading the document. Every cell this
 
 ## Load context
 
-- `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` → diligence structure, materiality thresholds, house format preferences
-- `~/.claude/plugins/config/claude-for-legal/corporate-legal/deals/[code]/deal-context.md` if working a specific deal
+- `~/.config/oscar/profile.json` → diligence structure, materiality thresholds, house format preferences
+- `~/.config/oscar/state/corporate-legal/deals/[code]/deal-context.md` if working a specific deal
 - An existing schema file if the user has one (`.review-schema.yaml`)
 
 ## The column type system

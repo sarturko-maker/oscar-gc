@@ -8,6 +8,8 @@ description: >
 argument-hint: "[brief description of the allegation]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /investigation-open
 
 Opens a new investigation matter — runs intake, generates the sources
@@ -15,19 +17,19 @@ checklist, and creates the persistent investigation log.
 
 ## Instructions
 
-1. Load `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md`.
+1. Load `~/.config/oscar/profile.json`.
 2. Load the `internal-investigation` reference skill and run Mode 1 (Open).
 3. If a matter with the same slug already exists, warn before overwriting.
 
 ## Examples
 
 ```
-/employment-legal:investigation-open
+investigation-open
 Harassment complaint filed against a manager in the Austin office.
 ```
 
 ```
-/employment-legal:investigation-open
+investigation-open
 (skill will ask for details)
 ```
 

@@ -2,7 +2,7 @@
 #
 # One entry per matter under `matters:`. Source of truth for /portfolio-status rollups.
 # Closed matters stay in this file (searchable history) but are filtered out
-# of active rollups by default. Edit via /litigation-legal:matter-intake,
+# of active rollups by default. Edit via matter-intake,
 # /matter-update, and /matter-close — direct edits are fine but show your work in
 # the matter's history.md.
 #

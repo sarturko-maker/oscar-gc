@@ -10,9 +10,11 @@ description: >
 argument-hint: "[--init | --report [--days N] | --update [--from-report] | --sweep | --audit | --export [--format csv|table]]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/corporate-legal @ 4d55f539; Apache 2.0 -->
+
 # /entity-compliance
 
-1. Load `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` → `## Entity Management` (entity table, jurisdictions, registered agent).
+1. Load `~/.config/oscar/profile.json` → `## Entity Management` (entity table, jurisdictions, registered agent).
 2. Route to the correct mode below based on flag:
    - No flag or `--init`: Mode 1 — initialize tracker from entity table
    - `--report`: Mode 2 — surface upcoming deadlines and overdue items
@@ -20,7 +22,7 @@ argument-hint: "[--init | --report [--days N] | --update [--from-report] | --swe
    - `--sweep`: Mode 3c — walk through unknown/overdue items one by one
    - `--audit`: Mode 4 — full health audit
    - `--export`: Mode 5 — produce CSV or table export
-3. Read/write `~/.claude/plugins/config/claude-for-legal/corporate-legal/entities/compliance-tracker.yaml`.
+3. Read/write `~/.config/oscar/state/corporate-legal/entities/compliance-tracker.yaml`.
 4. After any update: show summary of changes and next action.
 
 ---
@@ -47,7 +49,7 @@ to share it.
 
 ## Jurisdiction assumption
 
-> This tracker computes deadlines against the state or country of formation / qualification recorded per entity. Filing rules, due-date mechanics, and fee structures vary materially by jurisdiction. If an entity's actual footprint differs from what's in `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` (undisclosed foreign qualification, dissolved entities, jurisdictional re-domestication, international filings managed by a local agent), the output may not apply as written — confirm with the registered agent or local counsel for that jurisdiction.
+> This tracker computes deadlines against the state or country of formation / qualification recorded per entity. Filing rules, due-date mechanics, and fee structures vary materially by jurisdiction. If an entity's actual footprint differs from what's in `~/.config/oscar/profile.json` (undisclosed foreign qualification, dissolved entities, jurisdictional re-domestication, international filings managed by a local agent), the output may not apply as written — confirm with the registered agent or local counsel for that jurisdiction.
 
 ## Entity-type disambiguation (especially Delaware)
 
@@ -67,7 +69,7 @@ to share it.
 
 ## Tracker file
 
-Lives at `~/.claude/plugins/config/claude-for-legal/corporate-legal/entities/compliance-tracker.yaml`. Structure:
+Lives at `~/.config/oscar/state/corporate-legal/entities/compliance-tracker.yaml`. Structure:
 
 ```yaml
 # Entity Compliance Tracker
@@ -124,7 +126,7 @@ Run when no tracker exists, or with `--rebuild` to regenerate from scratch.
 
 ### Step 1: Load entity table
 
-Read `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` → `## Entity Management` → Entity table. If the entity table
+Read `~/.config/oscar/profile.json` → `## Entity Management` → Entity table. If the entity table
 is populated (from org chart upload at cold-start), use it directly. If not,
 ask the user to either run the cold-start module or provide the entity list.
 
@@ -191,7 +193,7 @@ If formation_date is null: set status to `unknown` and flag for confirmation.
 
 ### Step 3: Write the tracker
 
-Generate `~/.claude/plugins/config/claude-for-legal/corporate-legal/entities/compliance-tracker.yaml` with all entities and their
+Generate `~/.config/oscar/state/corporate-legal/entities/compliance-tracker.yaml` with all entities and their
 calculated filing requirements. Set initial status:
 - `current` if last_filed is within the current filing period
 - `due_soon` if due within 90 days and no last_filed for current period
@@ -213,7 +215,7 @@ Status summary:
   🔴 Overdue:   [N]
   ❓ Unknown:   [N] (confirm with registered agent)
 
-Run /corporate-legal:entity-compliance --report to see what's due.
+Run entity-compliance --report to see what's due.
 ```
 
 ---
@@ -223,7 +225,7 @@ Run /corporate-legal:entity-compliance --report to see what's due.
 Surfaces upcoming deadlines and flags overdue items. Default: next 90 days.
 
 ```
-/corporate-legal:entity-compliance --report [--days 30|60|90|180]
+entity-compliance --report [--days 30|60|90|180]
 ```
 
 Output format:
@@ -265,7 +267,7 @@ Updates one or more entities in the tracker. Three sub-modes:
 
 ### Consequential-action gate (file SOI / annual report)
 
-**Before directing or confirming a filing:** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`. If the Role is **Non-lawyer**:
+**Before directing or confirming a filing:** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is **Non-lawyer**:
 
 > Filing a Statement of Information, annual report, or franchise tax return with a Secretary of State has legal consequences — it's a formal representation from the entity, it carries fees, and missed or incorrect filings can cause loss of good standing or franchise-tax defaults. Have you reviewed this with an attorney (or a qualified registered agent) before filing? If yes, proceed to record the filing. If no, here's a brief to bring to them:
 >
@@ -282,7 +284,7 @@ Do not record a new `last_filed` date past this gate without an explicit yes. Tr
 ### 3a: Manual update
 
 ```
-/corporate-legal:entity-compliance --update
+entity-compliance --update
 ```
 
 Attorney tells Claude what was filed:
@@ -297,7 +299,7 @@ Claude updates:
 ### 3b: Registered agent report upload
 
 ```
-/corporate-legal:entity-compliance --update --from-report
+entity-compliance --update --from-report
 ```
 
 User uploads a CT Corp, National Registered Agents, or similar compliance
@@ -325,7 +327,7 @@ Not in report (in tracker, no update): [list — status unchanged]
 ### 3c: Bulk status sweep
 
 ```
-/corporate-legal:entity-compliance --sweep
+entity-compliance --sweep
 ```
 
 Walks through each entity with `unknown` or `overdue` status and asks for
@@ -341,7 +343,7 @@ Updates tracker after each confirmation. Produces a completion summary.
 ## Mode 4: Health audit
 
 ```
-/corporate-legal:entity-compliance --audit
+entity-compliance --audit
 ```
 
 Broader review beyond just filing status. Surfaces:
@@ -365,13 +367,13 @@ Broader review beyond just filing status. Surfaces:
   refreshing, especially if M&A or financing is anticipated.
 
 **Foreign qualification gaps:**
-- Based on `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` entity table: are there states in the company's
+- Based on `~/.config/oscar/profile.json` entity table: are there states in the company's
   operational footprint (offices, employees) where entities are not foreign
   qualified? This requires the attorney to confirm operational presence —
   Claude can flag the question but cannot determine presence independently.
 
 **Intercompany agreement gaps:**
-- From `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`: if intercompany agreements are marked as partial or no,
+- From `~/.config/oscar/profile.json`: if intercompany agreements are marked as partial or no,
   flag which entity relationships likely need agreements (parent-subsidiary
   services, IP licenses, loans).
 
@@ -396,8 +398,8 @@ GOOD STANDING
 
 POTENTIAL GAPS
   Foreign qualification: [flag question — confirm operational presence in:]
-    [list of states from `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` footprint not in tracker as qualified]
-  Intercompany agreements: [status from `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`]
+    [list of states from `~/.config/oscar/profile.json` footprint not in tracker as qualified]
+  Intercompany agreements: [status from `~/.config/oscar/profile.json`]
 
 RECOMMENDED ACTIONS
   1. [Highest priority action]
@@ -409,7 +411,7 @@ RECOMMENDED ACTIONS
 ## Mode 5: Export
 
 ```
-/corporate-legal:entity-compliance --export [--format csv|table]
+entity-compliance --export [--format csv|table]
 ```
 
 Produces a flat export suitable for sharing with finance, legal ops, or

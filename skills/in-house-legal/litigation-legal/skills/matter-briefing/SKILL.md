@@ -4,11 +4,13 @@ description: Deep briefing on one matter — current posture, what's changed, ne
 argument-hint: "[slug]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/litigation-legal @ 4d55f539; Apache 2.0 -->
+
 # /matter-briefing
 
-1. Load `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` → risk calibration + relevant stakeholders.
+1. Load `~/.config/oscar/profile.json` → risk calibration + relevant stakeholders.
 2. Follow the workflow and reference below.
-3. Read `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/matter.md` + `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/history.md` + log row from `_log.yaml`.
+3. Read `~/.config/oscar/state/litigation-legal/matters/[slug]/matter.md` + `~/.config/oscar/state/litigation-legal/matters/[slug]/history.md` + log row from `_log.yaml`.
 4. Produce briefing: current posture, what's changed since last update, next deadline, open questions, risk re-assessment check ("does the `risk:` field still reflect reality?").
 5. Flag staleness: if `last_updated` > 30 days, say so.
 
@@ -22,14 +24,14 @@ Give the counsel a clean read on one matter in the time it takes to walk to a co
 
 ## Load context
 
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/_log.yaml` — structured row
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/matter.md` — narrative intake
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/history.md` — event log
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` — risk calibration (so "risk: high" means something specific, not generic)
+- `~/.config/oscar/state/litigation-legal/matters/_log.yaml` — structured row
+- `~/.config/oscar/state/litigation-legal/matters/[slug]/matter.md` — narrative intake
+- `~/.config/oscar/state/litigation-legal/matters/[slug]/history.md` — event log
+- `~/.config/oscar/profile.json` — risk calibration (so "risk: high" means something specific, not generic)
 
 **Conflicts gate — unbypassable.** Before briefing, check `_log.yaml` for the matter slug. If the matter is not in `_log.yaml`, refuse and route:
 
-> "I don't see [matter slug] in the matter log. Run `/litigation-legal:matter-intake` first so the conflicts check runs and the matter workspace is set up. I won't build a briefing on a matter that hasn't been intaken — the conflicts check is the gate."
+> "I don't see [matter slug] in the matter log. Run `matter-intake` first so the conflicts check runs and the matter workspace is set up. I won't build a briefing on a matter that hasn't been intaken — the conflicts check is the gate."
 
 ## Input
 
@@ -92,7 +94,7 @@ Slug (required). If ambiguous or missing, ask the user to pick from a list of ac
 
 ## Staleness
 
-If `last_updated > 30 days ago`: flag at the top AND suggest running `/litigation-legal:matter-update [slug]` after the meeting to capture whatever's discussed.
+If `last_updated > 30 days ago`: flag at the top AND suggest running `matter-update [slug]` after the meeting to capture whatever's discussed.
 
 ## Tone
 

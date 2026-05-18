@@ -1,0 +1,4 @@
+[
+  {"id": "primary-regulators-and-industry", "prompt": "Which regulators do you watch day to day, and what does your company do that makes those the right ones? (e.g., 'fintech — CFPB, FTC, state AGs, FinCEN' or 'medical device — FDA, HHS-OIG, state pharmacy boards'.) This sets your watchlist and tells the feed filter which industry-adjacent enforcement actions count as material vs. FYI.", "priority": 1},
+  {"id": "rulemaking-participation-posture", "prompt": "When one of your regulators opens a comment period on a proposed rule, do you typically file comments — directly, through a trade association, or not at all? If you do file, who decides whether to comment and who drafts? This controls whether NPRM comment deadlines get logged as decisions you need to make or just noted in passing.", "priority": 1}
+]

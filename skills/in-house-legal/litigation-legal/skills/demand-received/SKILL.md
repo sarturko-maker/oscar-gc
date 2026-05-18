@@ -4,14 +4,16 @@ description: Triage an inbound demand letter — extract fields, cross-check the
 argument-hint: "[path-to-incoming] [--slug=custom-slug]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/litigation-legal @ 4d55f539; Apache 2.0 -->
+
 # /demand-received
 
 1. Read the incoming document from provided path.
-2. Load `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/_log.yaml` for portfolio cross-check.
-3. Load `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` → risk calibration, landscape, demand-letter practice.
+2. Load `~/.config/oscar/state/litigation-legal/matters/_log.yaml` for portfolio cross-check.
+3. Load `~/.config/oscar/profile.json` → risk calibration, landscape, demand-letter practice.
 4. Follow the workflow and reference below.
 5. Extract fields; cross-check portfolio; assess merit; present options with recommendation.
-6. Write `~/.claude/plugins/config/claude-for-legal/litigation-legal/inbound/[slug]/triage.md`. Copy or link incoming to `~/.claude/plugins/config/claude-for-legal/litigation-legal/inbound/[slug]/incoming.[ext]`.
+6. Write `~/.config/oscar/state/litigation-legal/inbound/[slug]/triage.md`. Copy or link incoming to `~/.config/oscar/state/litigation-legal/inbound/[slug]/incoming.[ext]`.
 7. Hand off per user choice:
    - Create matter → `matter-intake` pre-populated
    - Respond with counter-demand → `demand-intake` pre-populated
@@ -29,8 +31,8 @@ Inbound demand letters are the bread and butter of an in-house litigation practi
 ## Load context
 
 - The incoming document (user provides path or drops it in-session)
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/_log.yaml` — scan for related matters (same counterparty, overlapping counterparties via entity relationships, or matter type + recent date)
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` → risk calibration (for merit assessment), landscape (is the sender a frequent adversary?), demand-letter practice (house tone and response defaults)
+- `~/.config/oscar/state/litigation-legal/matters/_log.yaml` — scan for related matters (same counterparty, overlapping counterparties via entity relationships, or matter type + recent date)
+- `~/.config/oscar/profile.json` → risk calibration (for merit assessment), landscape (is the sender a frequent adversary?), demand-letter practice (house tone and response defaults)
 
 ## Workflow
 
@@ -73,7 +75,7 @@ Not a legal opinion — a structured read:
 - **Strength on their side** — if they went to court tomorrow, what's their story?
 - **Strength on our side** — what are our likely defenses?
 - **Damages demanded vs. likely** — is the ask proportionate to what a court would award if they won?
-- **Leverage and pressure** — are they credibly prepared to sue? Do they have capacity? Are they a repeat-litigant adversary per `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md`?
+- **Leverage and pressure** — are they credibly prepared to sue? Do they have capacity? Are they a repeat-litigant adversary per `~/.config/oscar/profile.json`?
 
 Output a triage rating: **substantial merit / debatable / weak / frivolous**. Be blunt. The user is triaging, not writing the brief.
 
@@ -117,7 +119,7 @@ Flag any legal deadlines that are tight. Calendar them.
 
 ### Step 6: Write triage
 
-Output: `~/.claude/plugins/config/claude-for-legal/litigation-legal/inbound/[slug]/triage.md`.
+Output: `~/.config/oscar/state/litigation-legal/inbound/[slug]/triage.md`.
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs — differs by role; see `## Who's using this`]
@@ -221,7 +223,7 @@ Based on recommendation and user confirmation:
 - Matter creation → hand off to `/matter-intake` with: counterparty, type, `source: demand-letter` (inbound), initial theory framed defensively, pre-populated.
 - Counter-response as outbound demand → hand off to `/demand-intake` with: counterparty, context from triage, desired outcome as the response.
 - Link to existing matter → update that matter's `related_matters` in `_log.yaml`; append event to its `history.md`.
-- Standalone → leave in `~/.claude/plugins/config/claude-for-legal/litigation-legal/inbound/`; no portfolio change.
+- Standalone → leave in `~/.config/oscar/state/litigation-legal/inbound/`; no portfolio change.
 
 ## Close with the next-steps decision tree
 

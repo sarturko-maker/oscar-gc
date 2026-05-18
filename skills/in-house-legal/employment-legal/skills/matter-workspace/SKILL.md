@@ -9,27 +9,29 @@ description: >
 argument-hint: "<new | list | switch | close | none> [slug]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /matter-workspace
 
 Practitioners work across multiple clients and matters. A matter workspace keeps one client or engagement's context separate from every other. This skill manages those workspaces.
 
 ## Subcommands
 
-- `/employment-legal:matter-workspace new <slug>` — create a new matter workspace, run a short intake, write `matter.md`
-- `/employment-legal:matter-workspace list` — list matters with status and active flag
-- `/employment-legal:matter-workspace switch <slug>` — set the active matter
-- `/employment-legal:matter-workspace close <slug>` — archive a matter (move to `~/.claude/plugins/config/claude-for-legal/employment-legal/matters/_archived/`, never delete)
-- `/employment-legal:matter-workspace none` — detach from any active matter, work at practice-level only
+- `matter-workspace new <slug>` — create a new matter workspace, run a short intake, write `matter.md`
+- `matter-workspace list` — list matters with status and active flag
+- `matter-workspace switch <slug>` — set the active matter
+- `matter-workspace close <slug>` — archive a matter (move to `~/.config/oscar/state/employment-legal/matters/_archived/`, never delete)
+- `matter-workspace none` — detach from any active matter, work at practice-level only
 
 ## Instructions
 
-1. Read `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md` — confirm the `## Matter workspaces` section is populated. If `Enabled` is `✗`, tell the user: "Matter workspaces are off — you're configured as an in-house practice with one client, so the plugin works from practice-level context automatically. If you actually work across multiple clients, re-run `/employment-legal:cold-start-interview --redo` and select a private-practice setting. Otherwise, you don't need `/matter-workspace` at all." Don't error — the disabled state is the expected one for in-house users.
+1. Read `~/.config/oscar/profile.json` — confirm the `## Matter workspaces` section is populated. If `Enabled` is `✗`, tell the user: "Matter workspaces are off — you're configured as an in-house practice with one client, so the plugin works from practice-level context automatically. If you actually work across multiple clients, re-run the Oscar GC onboarding from Settings and select a private-practice setting. Otherwise, you don't need `/matter-workspace` at all." Don't error — the disabled state is the expected one for in-house users.
 2. Use the subcommand logic below.
 3. Dispatch on the first token of `$ARGUMENTS`:
-   - `new` → run the intake interview, write `~/.claude/plugins/config/claude-for-legal/employment-legal/matters/<slug>/matter.md`, seed `history.md` and `notes.md`.
-   - `list` → enumerate `~/.claude/plugins/config/claude-for-legal/employment-legal/matters/*/matter.md`, print a table, mark the active matter.
+   - `new` → run the intake interview, write `~/.config/oscar/state/employment-legal/matters/<slug>/matter.md`, seed `history.md` and `notes.md`.
+   - `list` → enumerate `~/.config/oscar/state/employment-legal/matters/*/matter.md`, print a table, mark the active matter.
    - `switch` → update the `Active matter:` line in the practice-level CLAUDE.md.
-   - `close` → move `~/.claude/plugins/config/claude-for-legal/employment-legal/matters/<slug>/` to `~/.claude/plugins/config/claude-for-legal/employment-legal/matters/_archived/<slug>/`, log the close date in `history.md`.
+   - `close` → move `~/.config/oscar/state/employment-legal/matters/<slug>/` to `~/.config/oscar/state/employment-legal/matters/_archived/<slug>/`, log the close date in `history.md`.
    - `none` → set `Active matter:` to `none — practice-level context only`.
 4. Show the user what changed and confirm before writing.
 
@@ -45,14 +47,14 @@ Practitioners work across multiple clients and matters. A matter workspace keeps
 
 Multi-client practitioners (private practice — solo, small firm, large firm) work across many matters. Context from one must not leak into another. This skill is the thin file-management layer that makes that true.
 
-**Default state is off.** In-house users never see this — they run at practice-level only. Matter workspaces turn on at cold-start for private-practice users, or by editing `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗`, this skill does not run; instead it explains the disabled state and suggests `/employment-legal:cold-start-interview --redo` for users who actually need matter isolation.
+**Default state is off.** In-house users never see this — they run at practice-level only. Matter workspaces turn on at cold-start for private-practice users, or by editing `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗`, this skill does not run; instead it explains the disabled state and suggests the Oscar GC onboarding from Settings for users who actually need matter isolation.
 
 ## Storage layout
 
 All matter data lives under:
 
 ```
-~/.claude/plugins/config/claude-for-legal/employment-legal/
+~/.config/oscar/state/employment-legal/
 ├── CLAUDE.md                       # practice-level practice profile
 └── matters/
     ├── <slug>/
@@ -86,7 +88,7 @@ The `Active matter:` line under `## Matter workspaces` in the practice-level CLA
 3. Write `matters/<slug>/matter.md` using the template below.
 4. Seed `matters/<slug>/history.md` with a single "Opened" entry.
 5. Create an empty `matters/<slug>/notes.md`.
-6. Do **not** auto-switch to the new matter. Ask: "Want to switch to `<slug>` now? (`/employment-legal:matter-workspace switch <slug>`)"
+6. Do **not** auto-switch to the new matter. Ask: "Want to switch to `<slug>` now? (`matter-workspace switch <slug>`)"
 
 ### `list`
 
@@ -99,7 +101,7 @@ Mark the currently-active matter with `*`. Include `_archived/*` under a separat
 
 ### `switch <slug>`
 
-1. Confirm `matters/<slug>/matter.md` exists. If not, offer `/employment-legal:matter-workspace new <slug>`.
+1. Confirm `matters/<slug>/matter.md` exists. If not, offer `matter-workspace new <slug>`.
 2. Edit the `Active matter:` line in the practice-level CLAUDE.md to `Active matter: <slug>`.
 3. Show the user the matter.md summary so they can confirm they're on the right matter.
 

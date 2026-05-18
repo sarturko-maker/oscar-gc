@@ -3,16 +3,18 @@ name: ai-tool-handoff
 description: >
   Detects when Luminance, Kira, or a similar bulk-review tool is in use,
   hands off the high-volume clause extraction to it, and QAs its output
-  per the trust level in `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`. Use when user says "send to Luminance",
+  per the trust level in `~/.config/oscar/profile.json`. Use when user says "send to Luminance",
   "bulk review", "AI extraction", or when diligence-issue-extraction hits
   a high-volume category.
 ---
+
+<!-- Sourced from anthropics/claude-for-legal/corporate-legal @ 4d55f539; Apache 2.0 -->
 
 # AI Tool Handoff
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/corporate-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/corporate-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/corporate-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -22,17 +24,17 @@ Luminance and Kira are good at one thing: reading 500 contracts and finding ever
 
 This skill hands off the bulk extraction to the right tool, then runs the QA layer on what comes back.
 
-**Before you hand off:** try `tabular-review` first (`/corporate-legal:tabular-review`). For anything the user's environment can handle — a few hundred documents, a defined column schema — native tabular review is faster to set up, has no per-document cost, and keeps the work product local. Hand off to Luminance/Kira when the corpus is genuinely too large, the team already has a license and workflow, or the matter requires a tool with a validated provenance chain.
+**Before you hand off:** try `tabular-review` first (`tabular-review`). For anything the user's environment can handle — a few hundred documents, a defined column schema — native tabular review is faster to set up, has no per-document cost, and keeps the work product local. Hand off to Luminance/Kira when the corpus is genuinely too large, the team already has a license and workflow, or the matter requires a tool with a validated provenance chain.
 
 ## Load context
 
-`~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` → AI-assisted review:
+`~/.config/oscar/profile.json` → AI-assisted review:
 - Tool in use (Luminance / Kira / none)
 - What it's used for (which clause types)
 - Trust level (use as-is / spot-check / full re-review)
 - Handoff process (who loads, who QAs)
 
-If `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` says no AI tool → this skill is a no-op. Everything goes through diligence-issue-extraction directly.
+If `~/.config/oscar/profile.json` says no AI tool → this skill is a no-op. Everything goes through diligence-issue-extraction directly.
 
 ## When to hand off
 
@@ -51,12 +53,12 @@ Don't hand off:
 ### Step 1: Prepare the batch
 
 - Identify documents for the batch (from VDR inventory)
-- Specify extraction targets per `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` (which clause types)
+- Specify extraction targets per `~/.config/oscar/profile.json` (which clause types)
 - Note the materiality threshold so tool output can be filtered
 
 ### Step 2: Load (or instruct the loader)
 
-Per `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` — who loads. If it's you, generate the load instructions. If it's someone else, generate the request:
+Per `~/.config/oscar/profile.json` — who loads. If it's you, generate the load instructions. If it's someone else, generate the request:
 
 ```markdown
 ## [Tool] Load Request — [Deal code] — [Category]
@@ -66,7 +68,7 @@ Per `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` — wh
 **Extraction targets:**
 - Change of control / assignment
 - Exclusivity
-- [etc. per `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`]
+- [etc. per `~/.config/oscar/profile.json`]
 
 **Filter output:** Flag only where extraction target is present — no need for "no CoC clause found" for every doc.
 
@@ -77,7 +79,7 @@ Per `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` — wh
 
 When the tool returns results, apply the trust level:
 
-**"Use as-is":** Ingest directly into diligence findings. (Only if `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` says this — it's rare.)
+**"Use as-is":** Ingest directly into diligence findings. (Only if `~/.config/oscar/profile.json` says this — it's rare.)
 
 **"Spot-check X%":** Randomly sample X% of flagged documents. For each, read the actual clause and compare to the tool's extraction. If error rate is low, accept the batch. If errors found, widen the sample.
 
@@ -107,7 +109,7 @@ This is the part the tool can't do. Output goes to diligence findings in house f
 
 ### QA
 
-**Trust level:** [per `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`]
+**Trust level:** [per `~/.config/oscar/profile.json`]
 **Sample size:** [N] docs spot-checked
 **Error rate:** [X]% — [Accepted / Widened sample / Full re-review triggered]
 
@@ -129,5 +131,5 @@ End with the next-steps decision tree per CLAUDE.md `## Outputs`. Customize the 
 ## What this skill does not do
 
 - It doesn't run Luminance or Kira — it manages the handoff and QA. A human (or the tool's own interface) runs the extraction.
-- It doesn't replace the tool's output with its own judgment entirely — if `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` says spot-check 10%, check 10%, not 100%.
-- It doesn't decide the trust level — that's in `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`, set at cold-start based on the team's experience with the tool.
+- It doesn't replace the tool's output with its own judgment entirely — if `~/.config/oscar/profile.json` says spot-check 10%, check 10%, not 100%.
+- It doesn't decide the trust level — that's in `~/.config/oscar/profile.json`, set at cold-start based on the team's experience with the tool.

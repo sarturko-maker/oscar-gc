@@ -8,9 +8,11 @@ description: >
 argument-hint: "[PRD file | Drive link | tracker ticket ID]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/product-legal @ 4d55f539; Apache 2.0 -->
+
 # /launch-review
 
-1. Load `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` → framework + calibration. Stop if placeholders.
+1. Load `~/.config/oscar/profile.json` → framework + calibration. Stop if placeholders.
 2. Get PRD + related docs. If tracker connected, pull ticket and comments.
 3. Walk every framework category using the workflow below.
 4. Calibrate each finding against the table. Novel = flag explicitly.
@@ -18,14 +20,14 @@ argument-hint: "[PRD file | Drive link | tracker ticket ID]"
 6. Hand off: marketing-claims-review if substantial marketing; feature-risk-assessment if a finding needs depth.
 
 ```
-/product-legal:launch-review PROJ-1234
+launch-review PROJ-1234
 ```
 
 ---
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/product-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/product-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/product-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -35,11 +37,11 @@ Before producing output, check where it's going. If the user has named a destina
 
 ## Purpose
 
-Read the PRD, check every category in this team's framework, calibrate against what actually blocks here (per `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md`), and output a review in house format. Goal: a PM reads it and knows exactly what has to happen before they ship.
+Read the PRD, check every category in this team's framework, calibrate against what actually blocks here (per `~/.config/oscar/profile.json`), and output a review in house format. Goal: a PM reads it and knows exactly what has to happen before they ship.
 
 ## Load calibration
 
-Read `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md`:
+Read `~/.config/oscar/profile.json`:
 - `## Review framework` — the categories to check
 - `## Risk calibration` — what blocks vs. what's FYI *at this company*
 - `## Launch review process` — output format
@@ -75,13 +77,13 @@ recommendations, predictions. Look for this even if the PRD doesn't label it
 "AI" — words like "intelligent", "automated", "personalized", "generated",
 "suggested" are tells.
 
-If AI component detected → flag it, then run `/ai-governance-legal:use-case-triage [feature]`
+If AI component detected → flag it, then run `ai-governance-legal__use-case-triage [feature]`
 alongside the framework walk. Category 8 below handles the detail; this flag
 ensures it's never skipped even if the PRD is vague.
 
 ### Step 3: Walk the framework
 
-For each category in `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` → Review framework. If the team doesn't have one, use the 8-category default below. The categories are stable framing concepts; within each category, research the regulatory regimes applicable to the product's sector, audience, and jurisdictions before calibrating severity. What blocks in one jurisdiction or sector may be routine in another — `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` captures the team's calibration.
+For each category in `~/.config/oscar/profile.json` → Review framework. If the team doesn't have one, use the 8-category default below. The categories are stable framing concepts; within each category, research the regulatory regimes applicable to the product's sector, audience, and jurisdictions before calibrating severity. What blocks in one jurisdiction or sector may be routine in another — `~/.config/oscar/profile.json` captures the team's calibration.
 
 | # | Category | Key question | Auto-skip if |
 |---|---|---|---|
@@ -137,7 +139,7 @@ If a sector hint fires and no dedicated category in the base framework covers it
 
 ### Step 4: Calibrate severity
 
-For each finding, check against the calibration table in ~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md:
+For each finding, check against the calibration table in ~/.config/oscar/profile.json:
 
 - If it matches a "usually FYI" pattern → note it, don't block
 - If it matches "usually requires work" → specify the work, estimate timeline from the table
@@ -146,7 +148,7 @@ For each finding, check against the calibration table in ~/.claude/plugins/confi
 
 ### Step 5: Assemble the review
 
-Format per `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` → Launch review process → output format. Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`). If no house format is specified:
+Format per `~/.config/oscar/profile.json` → Launch review process → output format. Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`). If no house format is specified:
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs]
@@ -164,7 +166,7 @@ Format per `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` �
 
 **Call:** [Clear to ship | Ship with conditions | Blocked pending X | Needs escalation]
 
-> **Before emitting a "Clear to ship" or "Ship with conditions" call:** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md`. If the Role is Non-lawyer:
+> **Before emitting a "Clear to ship" or "Ship with conditions" call:** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is Non-lawyer:
 >
 > > Clearing a launch is a legal act — once the product ships, the company is committed to the legal posture documented here. Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 > >
@@ -213,7 +215,7 @@ Any cases, statutes, regulations, or enforcement actions referenced in this revi
 
 **Both of the following are REQUIRED outputs of this skill.** Neither is optional. Print them in the order below, with a clear divider between them so the user cannot miss the redacted block.
 
-**Output 1 — Privileged launch review memo.** The full analysis assembled in Step 5: work-product header, bottom line, findings by category with risk rationale, action items, escalations, notes for next time, citation check. This is internal legal work product. Keep it in your matter file (Drive, DMS, or wherever `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` says review docs go). Distribute only to people inside the privilege circle.
+**Output 1 — Privileged launch review memo.** The full analysis assembled in Step 5: work-product header, bottom line, findings by category with risk rationale, action items, escalations, notes for next time, citation check. This is internal legal work product. Keep it in your matter file (Drive, DMS, or wherever `~/.config/oscar/profile.json` says review docs go). Distribute only to people inside the privilege circle.
 
 **Output 2 — Redacted ticket-comment block — SAFE TO POST TO TRACKER.** After the memo, with a clear `---` divider and the header `## SAFE TO POST TO TRACKER (non-privileged)`, produce a short comment block containing ONLY:
 
@@ -245,8 +247,8 @@ Paste Output 2 (and only Output 2) to the tracker. Link Output 1 only to the peo
 
 - **To marketing-claims-review:** If there's a substantial marketing component, hand off the claims section.
 - **To feature-risk-assessment:** If a finding is complex enough to need its own doc (e.g., novel AI feature, children's product), spawn a deeper assessment.
-- **To privacy:** If the launch touches personal data, run `/privacy-legal:use-case-triage [feature]`. If triage returns PIA REQUIRED or DPIA MANDATORY, run `/privacy-legal:pia-generation [feature]`. Don't just note "PIA needed" — trigger it.
-- **To AI governance:** If an AI component was detected in Step 2, run `/ai-governance-legal:use-case-triage [feature]`. If triage returns CONDITIONAL, run `/ai-governance-legal:aia-generation [feature]`. If a new AI vendor is involved, run `/ai-governance-legal:vendor-ai-review [vendor agreement]`.
+- **To privacy:** If the launch touches personal data, run `privacy-legal__use-case-triage [feature]`. If triage returns PIA REQUIRED or DPIA MANDATORY, run `pia-generation [feature]`. Don't just note "PIA needed" — trigger it.
+- **To AI governance:** If an AI component was detected in Step 2, run `ai-governance-legal__use-case-triage [feature]`. If triage returns CONDITIONAL, run `aia-generation [feature]`. If a new AI vendor is involved, run `vendor-ai-review [vendor agreement]`.
 
 ## Close with the next-steps decision tree
 
@@ -256,4 +258,4 @@ End with the next-steps decision tree per CLAUDE.md `## Outputs`. Customize the 
 
 - It doesn't replace a conversation with the PM. Often the PRD is wrong or out of date — the review surfaces questions, a human asks them.
 - It doesn't approve the launch. It informs the approval.
-- It doesn't retroactively calibrate. If this launch turns out fine (or badly) in a way that should update the calibration table, a human updates ~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md.
+- It doesn't retroactively calibrate. If this launch turns out fine (or badly) in a way that should update the calibration table, a human updates ~/.config/oscar/profile.json.

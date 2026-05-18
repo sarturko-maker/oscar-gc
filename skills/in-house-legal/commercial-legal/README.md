@@ -17,31 +17,31 @@ In-house commercial contracts workflows: vendor agreement review, NDA triage, Sa
 
 On first use, the plugin interviews you — ten minutes, conversational — to learn how your team actually works. It asks about your playbook positions, your escalation rules, and the thing that makes you groan when it hits your desk. Then it asks for 5-10 recent signed agreements (more is better, 20 gives a clearer pattern) so it can see your positions in the wild.
 
-It writes what it learns to `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` — a plain-English document about your team that every other skill reads before doing anything. You edit the document, not a config file.
+It writes what it learns to `~/.config/oscar/profile.json` — a plain-English document about your team that every other skill reads before doing anything. You edit the document, not a config file.
 
 ```
-/commercial-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
-**Playbook side.** Early in setup, you'll be asked whether to build a **sales-side** playbook (you sell your product/service; you're the vendor; usually your paper), a **purchasing-side** playbook (you buy from vendors; you're the customer; usually their paper), or both. The answer flips nearly every playbook position — liability caps, indemnity direction, termination rights, IP ownership — so it matters up front. If you pick both, setup builds sales-side first; run `/commercial-legal:cold-start-interview --side purchasing` afterward to build the other. Your configuration holds both in parallel, and review skills check which side applies before reading the playbook.
+**Playbook side.** Early in setup, you'll be asked whether to build a **sales-side** playbook (you sell your product/service; you're the vendor; usually your paper), a **purchasing-side** playbook (you buy from vendors; you're the customer; usually their paper), or both. The answer flips nearly every playbook position — liability caps, indemnity direction, termination rights, IP ownership — so it matters up front. If you pick both, setup builds sales-side first; run `Oscar GC onboarding --side purchasing` afterward to build the other. Your configuration holds both in parallel, and review skills check which side applies before reading the playbook.
 
 ## Commands
 
 | Command | Does |
 |---|---|
-| `/commercial-legal:cold-start-interview` | Run (or re-run) the cold-start interview |
-| `/commercial-legal:review [file]` | Review a vendor agreement, NDA, or SaaS subscription against your playbook |
-| `/commercial-legal:renewal-tracker` | What's renewing in the next 90 days and when the cancel-by deadlines are |
-| `/commercial-legal:escalation-flagger` | Route an issue to the right approver and draft the ask |
-| `/commercial-legal:amendment-history [file(s)]` | Trace how a contract has changed across its base agreement and all amendments |
-| `/commercial-legal:review-proposals` | Step through pending playbook update proposals from the monitor agent |
-| `/commercial-legal:matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
+| Oscar GC onboarding | Run (or re-run) the cold-start interview |
+| `review [file]` | Review a vendor agreement, NDA, or SaaS subscription against your playbook |
+| `renewal-tracker` | What's renewing in the next 90 days and when the cancel-by deadlines are |
+| `escalation-flagger` | Route an issue to the right approver and draft the ask |
+| `amendment-history [file(s)]` | Trace how a contract has changed across its base agreement and all amendments |
+| `review-proposals` | Step through pending playbook update proposals from the monitor agent |
+| `matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
 
 ## Skills
 
 | Skill | Purpose |
 |---|---|
-| **cold-start-interview** | First-run interview that writes `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` |
+| **Oscar GC onboarding** | First-run interview that writes `~/.config/oscar/profile.json` |
 | **vendor-agreement-review** | Full playbook-vs-contract deviation analysis with redlines |
 | **nda-review** | Fast GREEN/YELLOW/RED triage so legal only reads the NDAs that need it |
 | **saas-msa-review** | Subscription-specific overlay: auto-renewal, price escalation, data exit, SLAs |
@@ -82,17 +82,17 @@ With DocuSign connected: track signature status, route envelopes in approver ord
 ### 1. Get interviewed
 
 ```
-/commercial-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
 Ten minutes. Have 5-10 recent signed agreements ready to share (more is better, 20 gives a clearer pattern).
 
-Your configuration is stored at `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` and survives plugin updates.
+Your configuration is stored at `~/.config/oscar/profile.json` and survives plugin updates.
 
 ### 2. Review a contract
 
 ```
-/commercial-legal:review vendor-msa.pdf
+review vendor-msa.pdf
 ```
 
 Output: deviation-by-deviation memo against your playbook, with specific redline language and named approver.
@@ -100,14 +100,14 @@ Output: deviation-by-deviation memo against your playbook, with specific redline
 ### 3. See what's renewing
 
 ```
-/commercial-legal:renewal-tracker
+renewal-tracker
 ```
 
 Output: everything with a cancel-by deadline in the next 90 days, grouped by urgency.
 
 ## How it learns
 
-Your practice profile at `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. The `playbook-monitor` agent proposes updates when your practice diverges from your playbook. You can re-run setup, edit the file directly, or tell a skill to record a new position.
+Your practice profile at `~/.config/oscar/profile.json` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. The `playbook-monitor` agent proposes updates when your practice diverges from your playbook. You can re-run setup, edit the file directly, or tell a skill to record a new position.
 
 ## File structure
 
@@ -122,7 +122,7 @@ commercial-legal/
 │   ├── deal-debrief.md
 │   └── playbook-monitor.md
 ├── skills/
-│   ├── cold-start-interview/
+│   ├── Oscar GC onboarding/
 │   ├── review/
 │   ├── review-proposals/
 │   ├── vendor-agreement-review/

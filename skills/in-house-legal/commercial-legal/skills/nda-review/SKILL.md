@@ -3,15 +3,17 @@ name: nda-review
 description: >
   Reference: fast triage of inbound NDAs into GREEN / YELLOW / RED so the team only
   spends lawyer time on the ones that need it. Built for sales and BD to self-serve
-  before pinging legal. Loaded by /commercial-legal:review when an NDA is detected.
+  before pinging legal. Loaded by review when an NDA is detected.
 user-invocable: false
 ---
+
+<!-- Sourced from anthropics/claude-for-legal/commercial-legal @ 4d55f539; Apache 2.0 -->
 
 # NDA Review
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/commercial-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/commercial-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/commercial-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -27,15 +29,15 @@ Most inbound NDAs are fine. A few have landmines. This skill sorts them in under
 
 ## Load the playbook first
 
-**Which side?** Before applying the playbook, determine which side the company is on for this NDA. Usually obvious from the context: if the counterparty is a vendor or partner evaluating your product, you're sales-side; if you're evaluating theirs, you're purchasing-side. Mutual NDAs still have a side — whose paper is it, and which direction is the evaluation running. If it's not obvious, ask. Read the matching playbook section (`### Sales-side playbook` or `### Purchasing-side playbook`) from the config. Note which side in the output so the reviewer knows which playbook was applied. If the matching side is `[Not configured]`, stop and tell the user to run `/commercial-legal:cold-start-interview --side <side>` before this triage can proceed.
+**Which side?** Before applying the playbook, determine which side the company is on for this NDA. Usually obvious from the context: if the counterparty is a vendor or partner evaluating your product, you're sales-side; if you're evaluating theirs, you're purchasing-side. Mutual NDAs still have a side — whose paper is it, and which direction is the evaluation running. If it's not obvious, ask. Read the matching playbook section (`### Sales-side playbook` or `### Purchasing-side playbook`) from the config. Note which side in the output so the reviewer knows which playbook was applied. If the matching side is `[Not configured]`, stop and tell the user to run `Oscar GC onboarding --side <side>` before this triage can proceed.
 
-**Before triaging anything, read `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → `## Playbook` → the matching side → `NDA triage positions`.** That section is the source of truth for what makes an NDA GREEN, YELLOW, or RED for *this* team on *this* side. This skill does not ship with default positions on NDA terms — the law, the market, and each team's risk tolerance vary too much for hardcoded defaults to be safe.
+**Before triaging anything, read `~/.config/oscar/profile.json` → `## Playbook` → the matching side → `NDA triage positions`.** That section is the source of truth for what makes an NDA GREEN, YELLOW, or RED for *this* team on *this* side. This skill does not ship with default positions on NDA terms — the law, the market, and each team's risk tolerance vary too much for hardcoded defaults to be safe.
 
-If `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` doesn't have an `NDA triage positions` section yet, or it's silent on a term that comes up in the NDA you're reviewing, ask the user:
+If `~/.config/oscar/profile.json` doesn't have an `NDA triage positions` section yet, or it's silent on a term that comes up in the NDA you're reviewing, ask the user:
 
-> Your playbook doesn't cover [term — e.g., "residuals clauses," "survival period," "one-way NDAs where you're the receiver"]. What's your default position — when should this be GREEN, when YELLOW, when RED? I'll add it to `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` so the next review is consistent.
+> Your playbook doesn't cover [term — e.g., "residuals clauses," "survival period," "one-way NDAs where you're the receiver"]. What's your default position — when should this be GREEN, when YELLOW, when RED? I'll add it to `~/.config/oscar/profile.json` so the next review is consistent.
 
-Then record the answer in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` and proceed with the triage using the new position.
+Then record the answer in `~/.config/oscar/profile.json` and proceed with the triage using the new position.
 
 ## Scope check
 
@@ -49,21 +51,21 @@ Do not silently push a document labeled "NDA" through NDA triage when the substa
 
 ## The triage
 
-Classify the NDA into one of three buckets by applying the positions from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. The bucket definitions below are stable; the *criteria* that fill each bucket come from the playbook.
+Classify the NDA into one of three buckets by applying the positions from `~/.config/oscar/profile.json`. The bucket definitions below are stable; the *criteria* that fill each bucket come from the playbook.
 
 ### GREEN — route to signature
 
-The NDA satisfies every position in the team's playbook, and no term triggers a RED flag per the playbook. Examples of checks the playbook typically covers: mutuality, term length, survival period, carveouts, governing law, restrictive covenants, fee-shifting. Confirm each one against `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` before calling GREEN.
+The NDA satisfies every position in the team's playbook, and no term triggers a RED flag per the playbook. Examples of checks the playbook typically covers: mutuality, term length, survival period, carveouts, governing law, restrictive covenants, fee-shifting. Confirm each one against `~/.config/oscar/profile.json` before calling GREEN.
 
 **GREEN requires attorney-reviewed playbook positions.** GREEN is the only path to signature without lawyer review. It cannot be issued against default or absent positions. Before issuing GREEN, check: does the practice profile have an attorney-reviewed `## NDA triage positions` section? If not:
 
-> I can't issue GREEN without attorney-reviewed NDA positions in your practice profile. Run `/commercial-legal:cold-start-interview --full` with your commercial counsel to set them, or route this NDA for attorney review. Issuing GREEN against defaults means a non-lawyer set the positions the next non-lawyer relies on.
+> I can't issue GREEN without attorney-reviewed NDA positions in your practice profile. Run `Oscar GC onboarding --full` with your commercial counsel to set them, or route this NDA for attorney review. Issuing GREEN against defaults means a non-lawyer set the positions the next non-lawyer relies on.
 
 Do not route to signature on defaults. YELLOW is the right call when positions are missing — it surfaces the NDA to a human who can decide.
 
 **Output:**
 
-Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
+Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`).
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs]
@@ -78,12 +80,12 @@ No red flags identified under the playbook. Route for signature per standard pro
 
 | Check | Status | Playbook reference |
 |---|---|---|
-| [Each playbook check] | [pass/fail] | [`~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` section] |
+| [Each playbook check] | [pass/fail] | [`~/.config/oscar/profile.json` section] |
 
-**Next step:** [Submit to [CLM] standard NDA workflow | Send to [approver from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`] for signature]
+**Next step:** [Submit to [CLM] standard NDA workflow | Send to [approver from `~/.config/oscar/profile.json`] for signature]
 ```
 
-**Before proceeding past GREEN to signature:** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the Role is Non-lawyer:
+**Before proceeding past GREEN to signature:** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is Non-lawyer:
 
 > This step has legal consequences (countersigning an NDA binds the company). Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 >
@@ -99,14 +101,14 @@ One or more terms deviate from the playbook but aren't categorical deal-breakers
 
 **Output:**
 
-Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
+Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`).
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs]
 
 ## NDA Triage: [Counterparty]
 
-YELLOW — flag for [approver name from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`]
+YELLOW — flag for [approver name from `~/.config/oscar/profile.json`]
 
 ### Executive Summary
 
@@ -127,7 +129,7 @@ YELLOW — flag for [approver name from `~/.claude/plugins/config/claude-for-leg
 
 | Check | Status | Playbook reference |
 |---|---|---|
-| [playbook checks that passed] | pass | [`~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` section] |
+| [playbook checks that passed] | pass | [`~/.config/oscar/profile.json` section] |
 
 **Next step:** Ask [approver] about the flagged items, then route to signature if they're okay with it.
 ```
@@ -138,7 +140,7 @@ The NDA hits a position on the playbook's "never accept" list, or the structure 
 
 **Output:**
 
-Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
+Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`).
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs]
@@ -160,7 +162,7 @@ RED — do not submit, talk to legal first
    **Legal risk:** [🔴/🟠/🟡/🟢] | **Business friction:** [🔴 Blocks deals / 🟠 Slows deals / 🟡 Confuses customers / 🟢 Invisible]
    Recommended response: [use our paper instead | push back with specific language | walk]
 
-**Next step:** Send this triage to [GC or named escalation person from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`]. Do not send to [CLM or approvals workflow]. Do not tell the counterparty we'll sign.
+**Next step:** Send this triage to [GC or named escalation person from `~/.config/oscar/profile.json`]. Do not send to [CLM or approvals workflow]. Do not tell the counterparty we'll sign.
 ```
 
 ## Redline granularity
@@ -178,7 +180,7 @@ When in doubt, smaller. A client who receives a surgical redline trusts that you
 
 ## Jurisdiction assumption
 
-This triage applies the governing-law and restrictive-covenant positions recorded in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. Legal rules (enforceability of non-competes, non-solicits, fee-shifting, choice of law) vary materially by jurisdiction. If the NDA involves a jurisdiction outside the team's configured posture, flag it in the output and note that the triage may not transfer as written.
+This triage applies the governing-law and restrictive-covenant positions recorded in `~/.config/oscar/profile.json`. Legal rules (enforceability of non-competes, non-solicits, fee-shifting, choice of law) vary materially by jurisdiction. If the NDA involves a jurisdiction outside the team's configured posture, flag it in the output and note that the triage may not transfer as written.
 
 ## Output rules
 
@@ -197,11 +199,11 @@ Do not produce a lengthy report for a clean NDA.
 
 ## Detailed check reference
 
-For each check below, the bucket (GREEN/YELLOW/RED) is determined by `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. This skill lists the *categories* to check; it does not hardcode thresholds.
+For each check below, the bucket (GREEN/YELLOW/RED) is determined by `~/.config/oscar/profile.json`. This skill lists the *categories* to check; it does not hardcode thresholds.
 
 ### Mutuality
 
-Is the NDA mutual or one-way? Apply the team's position from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook doesn't address one-way NDAs for this context, run the one-way questionnaire below and surface the result for a human.
+Is the NDA mutual or one-way? Apply the team's position from `~/.config/oscar/profile.json`. If the playbook doesn't address one-way NDAs for this context, run the one-way questionnaire below and surface the result for a human.
 
 **One-way NDA questionnaire**
 
@@ -218,11 +220,11 @@ When the NDA is unilateral (one party discloses, the other only receives), do no
 > 3. Is this related to M&A, employment, or investment? (If yes, stop —
 >    this skill is for commercial MNDAs only. Route to Legal.)
 
-Use the answers plus the `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` position to decide GREEN/YELLOW/RED. If `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` doesn't take a position on this fact pattern, flag YELLOW and surface the questionnaire answers for the approver.
+Use the answers plus the `~/.config/oscar/profile.json` position to decide GREEN/YELLOW/RED. If `~/.config/oscar/profile.json` doesn't take a position on this fact pattern, flag YELLOW and surface the questionnaire answers for the approver.
 
 ### Definition of Confidential Information
 
-Check scope (marked-only vs. everything-disclosed), marking requirements, and oral-disclosure confirmation windows. Apply the team's position from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook is silent on any of these, ask.
+Check scope (marked-only vs. everything-disclosed), marking requirements, and oral-disclosure confirmation windows. Apply the team's position from `~/.config/oscar/profile.json`. If the playbook is silent on any of these, ask.
 
 ### Carveouts
 
@@ -234,31 +236,31 @@ The five carveouts typically present in an NDA:
 4. Information received from a third party without restriction
 5. Information required to be disclosed by law or court order (with notice to discloser where legally permitted)
 
-Which carveouts the team requires, and how strictly, is a playbook question. Check `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` for the team's position on required carveouts, acceptable variations in wording, and what happens when one is missing.
+Which carveouts the team requires, and how strictly, is a playbook question. Check `~/.config/oscar/profile.json` for the team's position on required carveouts, acceptable variations in wording, and what happens when one is missing.
 
 ### Residuals
 
-A residuals clause lets the receiving party use information retained in unaided memory. Whether this is acceptable — and under what conditions (e.g., narrow "unaided memory" wording vs. broader scope covering notes or copies) — is a playbook question. Apply `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook doesn't address residuals, ask.
+A residuals clause lets the receiving party use information retained in unaided memory. Whether this is acceptable — and under what conditions (e.g., narrow "unaided memory" wording vs. broader scope covering notes or copies) — is a playbook question. Apply `~/.config/oscar/profile.json`. If the playbook doesn't address residuals, ask.
 
 ### Term and survival
 
-Check the initial term length, the post-term survival period for confidentiality obligations, and whether trade secrets are carved out with longer protection. Apply the team's position from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook doesn't cover one of these, ask.
+Check the initial term length, the post-term survival period for confidentiality obligations, and whether trade secrets are carved out with longer protection. Apply the team's position from `~/.config/oscar/profile.json`. If the playbook doesn't cover one of these, ask.
 
 ### Restrictive covenants
 
-Check for non-solicits (employee, customer), non-competes, exclusivity, and any restriction on who else the receiving party can engage with. Apply `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the playbook is silent, ask — restrictive covenants are jurisdiction-sensitive and the team's posture matters.
+Check for non-solicits (employee, customer), non-competes, exclusivity, and any restriction on who else the receiving party can engage with. Apply `~/.config/oscar/profile.json`. If the playbook is silent, ask — restrictive covenants are jurisdiction-sensitive and the team's posture matters.
 
 ### Attorneys' fees
 
-Check for fee-shifting provisions and whether they are mutual, one-sided, or prevailing-party. Apply `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`.
+Check for fee-shifting provisions and whether they are mutual, one-sided, or prevailing-party. Apply `~/.config/oscar/profile.json`.
 
 ### Backup and archival carveout
 
-Check whether the destruction/return clause includes an exception for standard backup and archival retention systems. Apply the team's position from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` — some teams require this carveout and will push to add it; others accept an NDA without it. If the playbook doesn't address this, ask.
+Check whether the destruction/return clause includes an exception for standard backup and archival retention systems. Apply the team's position from `~/.config/oscar/profile.json` — some teams require this carveout and will push to add it; others accept an NDA without it. If the playbook doesn't address this, ask.
 
 ### Governing law
 
-Per `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Playbook` → `Governing law and venue`.
+Per `~/.config/oscar/profile.json` `## Playbook` → `Governing law and venue`.
 
 ## Counterparty context
 
@@ -278,11 +280,11 @@ If connected:
 - It does not negotiate. It sorts.
 - It does not draft an NDA. If the answer is "use our paper," the user pulls our form from [CLM or document system].
 - It does not make the call on YELLOW items. It surfaces them for a human.
-- It does not state a position on any NDA term. Positions live in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`.
+- It does not state a position on any NDA term. Positions live in `~/.config/oscar/profile.json`.
 
 ## Closing action
 
-Read `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → `## NDA triage preferences` → `closing_action`.
+Read `~/.config/oscar/profile.json` → `## NDA triage preferences` → `closing_action`.
 
 If configured, append the closing action verbatim at the end of every
 output. Example configurations:
@@ -299,7 +301,7 @@ closing_action: "Forward this output and the NDA to your contracts
 manager."
 ```
 
-If `closing_action` is not configured in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`, append:
+If `closing_action` is not configured in `~/.config/oscar/profile.json`, append:
 "Route final NDA through your standard approval process."
 
 The cold-start interview asks: "When someone finishes an NDA

@@ -4,14 +4,16 @@ description: Close a matter — capture outcome, final exposure, and lessons, th
 argument-hint: "[slug]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/litigation-legal @ 4d55f539; Apache 2.0 -->
+
 # /matter-close
 
 1. Follow the workflow and reference below.
 2. Confirm slug and current status.
 3. Capture outcome: resolution type (settled, dismissed, judgment for/against, withdrawn, consolidated), date, final exposure/cost, lessons.
 4. Update `_log.yaml`: `status: closed`, add `closed: YYYY-MM-DD` and `outcome:` fields.
-5. Append final entry to `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/history.md`.
-6. Matter stays in `_log.yaml` and `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/` — not deleted. `/portfolio-status` filters it from active rollups.
+5. Append final entry to `~/.config/oscar/state/litigation-legal/matters/[slug]/history.md`.
+6. Matter stays in `_log.yaml` and `~/.config/oscar/state/litigation-legal/matters/[slug]/` — not deleted. `/portfolio-status` filters it from active rollups.
 
 ---
 
@@ -23,13 +25,13 @@ Matters end. The outcome is the single most valuable data point the portfolio ge
 
 ## Load context
 
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/_log.yaml` — find the row
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/matter.md` — reference (intake context)
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/history.md` — append target
+- `~/.config/oscar/state/litigation-legal/matters/_log.yaml` — find the row
+- `~/.config/oscar/state/litigation-legal/matters/[slug]/matter.md` — reference (intake context)
+- `~/.config/oscar/state/litigation-legal/matters/[slug]/history.md` — append target
 
 **Conflicts gate — unbypassable.** Before closing, check `_log.yaml` for the matter slug. If the matter is not in `_log.yaml`, refuse and route:
 
-> "I don't see [matter slug] in the matter log. Nothing to close — either the slug is wrong or the matter was never intaken through `/litigation-legal:matter-intake`. Check the slug first; if it genuinely was never intaken, there's no row to update and no file structure to close."
+> "I don't see [matter slug] in the matter log. Nothing to close — either the slug is wrong or the matter was never intaken through `matter-intake`. Check the slug first; if it genuinely was never intaken, there's no row to update and no file structure to close."
 
 ## Input
 
@@ -69,7 +71,7 @@ Settlement agreement, final order, dismissal — path if available. Not required
 
 ## Writing
 
-**Before closing the matter (the consequential act — the matter is archived and active tracking ends):** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md`. If the Role is Non-lawyer:
+**Before closing the matter (the consequential act — the matter is archived and active tracking ends):** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is Non-lawyer:
 
 > Closing a matter has legal consequences — it ends active tracking, may affect any associated legal hold (run `/legal-hold --release` separately if appropriate), and establishes the final record the company relies on. Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 >
@@ -79,7 +81,7 @@ Settlement agreement, final order, dismissal — path if available. Not required
 
 Do not write the close fields or append the close entry without an explicit yes.
 
-### Update `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/_log.yaml`
+### Update `~/.config/oscar/state/litigation-legal/matters/_log.yaml`
 
 ```yaml
 status: closed
@@ -91,7 +93,7 @@ last_updated: [today]   # close is the last touch; record it
 
 Retain all existing fields. Do not delete the row.
 
-### Append final entry to `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/history.md`
+### Append final entry to `~/.config/oscar/state/litigation-legal/matters/[slug]/history.md`
 
 ```markdown
 ## [YYYY-MM-DD] — Matter closed: [resolution-type]
@@ -107,7 +109,7 @@ Retain all existing fields. Do not delete the row.
 **Related doc:** [settlement agreement / final order / etc., if provided]
 ```
 
-### Touch `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/[slug]/matter.md`
+### Touch `~/.config/oscar/state/litigation-legal/matters/[slug]/matter.md`
 
 Add a closing block at the end (don't modify earlier sections — they're the historical intake):
 

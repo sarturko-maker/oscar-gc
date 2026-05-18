@@ -17,30 +17,30 @@ In-house corporate counsel workflows across four practice areas: M&A deals, boar
 ## First run
 
 ```
-/corporate-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
-Walks through module selection, then a short targeted interview for each active area. Writes a modular `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` with only the relevant sections. Your configuration is stored at that path and survives plugin updates.
+Walks through module selection, then a short targeted interview for each active area. Writes a modular `~/.config/oscar/profile.json` with only the relevant sections. Your configuration is stored at that path and survives plugin updates.
 
 Per-deal setup (M&A module only):
 
 ```
-/corporate-legal:cold-start-interview --new-deal
+Oscar GC onboarding --new-deal
 ```
 
 ## Commands
 
 | Command | Does |
 |---|---|
-| `/corporate-legal:cold-start-interview` | Modular cold-start, or `--new-deal` / `--module [m&a \| board \| public \| entities]` |
-| `/corporate-legal:diligence-issue-extraction [folder]` | Read VDR docs, extract issues in house format |
-| `/corporate-legal:tabular-review` | Tabular review — one row per document, one column per data point, every cell cited to source, Excel output |
-| `/corporate-legal:material-contract-schedule` | Material contracts disclosure schedule from diligence findings |
-| `/corporate-legal:closing-checklist` | Closing checklist — what's blocking, critical path |
-| `/corporate-legal:written-consent` | Unanimous written consent — precedent-matched draft + signatory tracker |
-| `/corporate-legal:entity-compliance` | Entity compliance tracker — init, report, update, audit, export |
-| `/corporate-legal:integration-management` | Post-closing integration workplan, consents tracker, contract assignment, status reports |
-| `/corporate-legal:matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
+| Oscar GC onboarding | Modular cold-start, or `--new-deal` / `--module [m&a \| board \| public \| entities]` |
+| `diligence-issue-extraction [folder]` | Read VDR docs, extract issues in house format |
+| `tabular-review` | Tabular review — one row per document, one column per data point, every cell cited to source, Excel output |
+| `material-contract-schedule` | Material contracts disclosure schedule from diligence findings |
+| `closing-checklist` | Closing checklist — what's blocking, critical path |
+| `written-consent` | Unanimous written consent — precedent-matched draft + signatory tracker |
+| `entity-compliance` | Entity compliance tracker — init, report, update, audit, export |
+| `integration-management` | Post-closing integration workplan, consents tracker, contract assignment, status reports |
+| `matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ Configure MCP servers in `.mcp.json` at the repo or user level. Skills and agent
 
 | Skill | Module | Purpose |
 |---|---|---|
-| **cold-start-interview** | All | Modular interview — activates only relevant sections |
+| **Oscar GC onboarding** | All | Modular interview — activates only relevant sections |
 | **diligence-issue-extraction** | M&A | VDR docs → issues in house format, by category |
 | **tabular-review** | M&A | Review a document set against a typed column schema; cited cells; `.xlsx` / `.csv` / markdown output; feeds material-contract-schedule |
 | **deal-team-summary** | M&A | Tiered briefs: exec / deal lead / working team |
@@ -89,11 +89,11 @@ Intralinks, Datasite, and other VDR connectors can be added to `.mcp.json` when 
 
 ## How it learns
 
-Your practice profile at `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. You can re-run setup, edit the file directly, or tell a skill to record a new position.
+Your practice profile at `~/.config/oscar/profile.json` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. You can re-run setup, edit the file directly, or tell a skill to record a new position.
 
 ## M&A notes
 
 - Issue extraction applies materiality thresholds — does not read every document if threshold says top N by value.
 - Buy-side and sell-side are both supported. Practice Profile captures which side applies to this deal; skills adjust posture accordingly.
-- AI tool handoff (Luminance/Kira) is optional. If `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` says no tool, all extraction runs through the direct skill.
+- AI tool handoff (Luminance/Kira) is optional. If `~/.config/oscar/profile.json` says no tool, all extraction runs through the direct skill.
 - Closing checklist initializes from the purchase agreement, then self-updates as diligence surfaces consents required.

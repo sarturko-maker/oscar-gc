@@ -1,0 +1,4 @@
+[
+  {"id": "product-portfolio-launch-cadence", "prompt": "What does your company ship and how do launches reach legal? Cover: what the product is (consumer / B2B / both, any regulated sector), who uses it, and the launch path to your desk — tracker (Jira / Linear / Asana / informal), lead time you usually get, and whether legal sign-off is a formal gate or advisory.", "priority": 1},
+  {"id": "risk-axes-and-calibration", "prompt": "Which product-risk regimes fire at your company, and where do you draw the P0-vs-FYI line? Cover the axes that touch your launches — privacy / data, AI governance, children or minors, financial / fintech, health, IP, marketing-claims substantiation — and give one concrete example of something you blocked and one example of something that looked scary but you shipped.", "priority": 1}
+]

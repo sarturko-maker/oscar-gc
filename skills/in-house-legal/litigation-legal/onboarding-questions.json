@@ -1,0 +1,4 @@
+[
+  {"id": "portfolio-shape-and-risk-calibration", "prompt": "Roughly how many active disputes does your team carry at one time across this practice area, what's the typical exposure range (smallest matter to largest), and what counts as a 'critical' matter for you — the kind that goes to the GC or board immediately? Severity bands, settlement-authority ladders, and reserve / disclosure thresholds all read from this.", "priority": 1},
+  {"id": "outside-counsel-engagement-model", "prompt": "How do you work with outside counsel on disputes in this area — do you have a standing roster of firms by matter type, do you assign per-matter, or do you handle most things in-house? What's your default cadence and format for status updates from them (weekly email, monthly call, ad-hoc), and your budget posture (fixed fee, monthly cap, on-request)? OC status drafts, directive style, and budget-variance flagging read from this.", "priority": 1}
+]

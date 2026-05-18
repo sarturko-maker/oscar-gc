@@ -4,14 +4,16 @@ description: Pre-drafting context gathering for a demand letter — parties, fac
 argument-hint: "[title] [--full]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/litigation-legal @ 4d55f539; Apache 2.0 -->
+
 # /demand-intake
 
-1. Load `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` → demand-letter practice, landscape, risk calibration.
+1. Load `~/.config/oscar/profile.json` → demand-letter practice, landscape, risk calibration.
 2. Follow the workflow and reference below.
 3. Run the adaptive intake (core 8 always; strategic block if material or `--full`).
 4. Generate slug from title + counterparty + year-month.
-5. Write `~/.claude/plugins/config/claude-for-legal/litigation-legal/demand-letters/[slug]/intake.md`.
-6. Confirm with user: "Intake saved. Run `/litigation-legal:demand-draft [slug]` when ready."
+5. Write `~/.config/oscar/state/litigation-legal/demand-letters/[slug]/intake.md`.
+6. Confirm with user: "Intake saved. Run `demand-draft [slug]` when ready."
 
 ---
 
@@ -23,7 +25,7 @@ The drafting is downstream. The value is in the pre-writing — forcing the ques
 
 ## Load context
 
-- `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` → Demand-letter practice (insurance-tender timing, materiality threshold for matter creation, any seed-doc templates), landscape (counterparty type, repeat-adversary patterns), risk calibration (to pre-estimate materiality), house style. **Tone, compliance period, marking, signer are NOT practice-level defaults — they are set per matter in the `## Posture for this matter` step below.**
+- `~/.config/oscar/profile.json` → Demand-letter practice (insurance-tender timing, materiality threshold for matter creation, any seed-doc templates), landscape (counterparty type, repeat-adversary patterns), risk calibration (to pre-estimate materiality), house style. **Tone, compliance period, marking, signer are NOT practice-level defaults — they are set per matter in the `## Posture for this matter` step below.**
 
 ## Flags
 
@@ -87,8 +89,8 @@ Record the answers in the intake under a `## Posture` section before `## Parties
 Materiality heuristic: ask the strategic block if any of the following are true.
 
 - Demand type is `cease-desist`, `breach-cure`, `employment-separation`, or `preservation`
-- Desired outcome dollar value ≥ the medium-severity band from `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` risk calibration
-- Counterparty is a customer, competitor, or frequent adversary per `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` landscape
+- Desired outcome dollar value ≥ the medium-severity band from `~/.config/oscar/profile.json` risk calibration
+- Counterparty is a customer, competitor, or frequent adversary per `~/.config/oscar/profile.json` landscape
 - User ran with `--full`
 
 **Explicit skip option.** When the strategic block is triggered, the user can decline to answer it. Ask plainly:
@@ -139,9 +141,9 @@ The draft skill honors the skip — pre-draft gate runs regardless, but sections
 
 ### Slug
 
-`[type]-[counterparty-short]-[yyyy-mm]`. Confirm uniqueness in `~/.claude/plugins/config/claude-for-legal/litigation-legal/demand-letters/`.
+`[type]-[counterparty-short]-[yyyy-mm]`. Confirm uniqueness in `~/.config/oscar/state/litigation-legal/demand-letters/`.
 
-### `~/.claude/plugins/config/claude-for-legal/litigation-legal/demand-letters/[slug]/intake.md`
+### `~/.config/oscar/state/litigation-legal/demand-letters/[slug]/intake.md`
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs — differs by role; see `## Who's using this`]
@@ -258,7 +260,7 @@ Show the user the draft intake. Flag anything thin:
 ## Handoff to drafting
 
 End with:
-> Intake saved. When ready: `/litigation-legal:demand-draft [slug]`
+> Intake saved. When ready: `demand-draft [slug]`
 
 ## Close with the next-steps decision tree
 
@@ -268,4 +270,4 @@ End with the next-steps decision tree per CLAUDE.md `## Outputs`. Customize the 
 
 - Draft the letter. That's `demand-draft` — the two steps are intentionally separate so counsel can pause for business input, outside counsel consult, or insurance tender before drafting.
 - Decide whether to send the letter. Some intake sessions end with "actually, don't send — let's negotiate directly." That's a valid outcome; the intake record still has value.
-- Run the conflicts check. If the counterparty is a customer or known entity, flag that this should clear conflicts (per `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md`) before sending — but the check itself lives in the matter-intake workflow or outside this skill.
+- Run the conflicts check. If the counterparty is a customer or known entity, flag that this should clear conflicts (per `~/.config/oscar/profile.json`) before sending — but the check itself lives in the matter-intake workflow or outside this skill.

@@ -2,20 +2,22 @@
 name: escalation-flagger
 description: >
   Route a contract issue to the right approver per the escalation matrix in
-  `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`, and draft the ask. Use when the user
+  `~/.config/oscar/profile.json`, and draft the ask. Use when the user
   says "who needs to approve this", "escalate this", "does this need GC sign-off",
   "route this for approval", or when another skill finds an issue that exceeds the
   reviewer's authority.
 argument-hint: "[describe the issue, or reference a review memo]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/commercial-legal @ 4d55f539; Apache 2.0 -->
+
 # /escalation-flagger
 
-Names the approver for a contract issue per the `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` escalation matrix and drafts the message so you're not writing "hey got a sec" at 5pm.
+Names the approver for a contract issue per the `~/.config/oscar/profile.json` escalation matrix and drafts the message so you're not writing "hey got a sec" at 5pm.
 
 ## Instructions
 
-1. **Load `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`** → Escalation section. If missing, say so — the practice profile needs editing.
+1. **Load `~/.config/oscar/profile.json`** → Escalation section. If missing, say so — the practice profile needs editing.
 
 2. **Characterize the issue:** dollar threshold / term deviation / automatic trigger / business decision.
 
@@ -28,12 +30,12 @@ Names the approver for a contract issue per the `~/.claude/plugins/config/claude
 ## Examples
 
 ```
-/commercial-legal:escalation-flagger
+escalation-flagger
 The Acme MSA has uncapped liability — who approves and what do I say?
 ```
 
 ```
-/commercial-legal:escalation-flagger
+escalation-flagger
 Reference: acme-review-memo.md
 Issue: §8.2 indemnity carveouts
 ```
@@ -42,19 +44,19 @@ Issue: §8.2 indemnity carveouts
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/commercial-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/commercial-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/commercial-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
 ## Purpose
 
-Every contracts team has an escalation matrix, written or not. This skill reads the written one (in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`), matches a contract issue against it, names the approver, and drafts the ask so the lawyer isn't writing "hey do you have a sec" messages at 5pm.
+Every contracts team has an escalation matrix, written or not. This skill reads the written one (in `~/.config/oscar/profile.json`), matches a contract issue against it, names the approver, and drafts the ask so the lawyer isn't writing "hey do you have a sec" messages at 5pm.
 
 ## Load the matrix
 
 **Which side?** Before matching to the matrix, determine which side the company is on for the contract whose issue is being escalated. Usually obvious: if the counterparty is a vendor/supplier providing goods or services, you're purchasing-side. If the counterparty is a customer buying your product/service, you're sales-side. If it's not obvious, ask. Read the matching playbook section (`### Sales-side playbook` or `### Purchasing-side playbook`) to evaluate whether the term is inside fallbacks or triggers an automatic escalation — a term that's fine on one side can be a hard-no on the other. Note which side in the drafted ask so the approver knows which playbook was applied.
 
-Read `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → `## Escalation`. If it's missing or vague, say so — the cold-start interview should have captured this, and if it didn't, the practice profile needs editing.
+Read `~/.config/oscar/profile.json` → `## Escalation`. If it's missing or vague, say so — the cold-start interview should have captured this, and if it didn't, the practice profile needs editing.
 
 Expected structure:
 
@@ -77,7 +79,7 @@ What's being escalated?
 - **Automatic trigger:** One of the always-escalate items is present
 - **Business decision:** Not a legal call — needs the business owner, not legal leadership
 
-Don't escalate things that are actually fine. If the term is within the fallbacks in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`, it doesn't need to go up.
+Don't escalate things that are actually fine. If the term is within the fallbacks in `~/.config/oscar/profile.json`, it doesn't need to go up.
 
 ### Step 2: Match to the matrix
 
@@ -97,7 +99,7 @@ Is the term deviation outside all documented fallbacks?
 
 ### Step 3: Name the approver
 
-Be specific. Not "escalate to legal leadership" — name the person or role from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`. If the matrix doesn't name anyone for this situation, say so: "The escalation matrix doesn't cover [situation]. Suggest asking [GC name] who owns this."
+Be specific. Not "escalate to legal leadership" — name the person or role from `~/.config/oscar/profile.json`. If the matrix doesn't name anyone for this situation, say so: "The escalation matrix doesn't cover [situation]. Suggest asking [GC name] who owns this."
 
 ### Step 4: Draft the ask
 
@@ -105,7 +107,7 @@ The approver should be able to decide from the message alone — no "let me pull
 
 ```markdown
 **Escalating to:** [name]
-**Via:** [Slack #channel / email / meeting — per `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`]
+**Via:** [Slack #channel / email / meeting — per `~/.config/oscar/profile.json`]
 **Urgency:** [deadline if there is one]
 
 ---
@@ -120,7 +122,7 @@ our standard, what the risk actually is.]
 **What the contract says:**
 > "[exact quote]"
 
-**What our playbook says:** [quote from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`]
+**What our playbook says:** [quote from `~/.config/oscar/profile.json`]
 
 **Options:**
 1. **Accept** — [one line on why this might be okay]
@@ -142,7 +144,7 @@ If this team uses a ticket system or [CLM] approval workflows, log it. If not, n
 
 The cost of an unnecessary escalation is ~30 seconds of the approver's time — they read, say "fine, proceed," and the record shows they saw it. The cost of a missed escalation is signing an unapproved term, which is a one-way door. The costs are not symmetric. **When in doubt, escalate.**
 
-The calibration for what warrants escalation lives in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md`, not in this skill. Check the playbook's stated position, its fallbacks, and its "automatic escalation regardless of dollar value" list:
+The calibration for what warrants escalation lives in `~/.config/oscar/profile.json`, not in this skill. Check the playbook's stated position, its fallbacks, and its "automatic escalation regardless of dollar value" list:
 
 - **Clearly inside the fallback range:** no escalation needed.
 - **Clearly outside the range, or on the automatic-escalation list:** escalate.
@@ -150,7 +152,7 @@ The calibration for what warrants escalation lives in `~/.claude/plugins/config/
 
 Do not suppress an escalation because over-escalation might train approvers to skim. That's an approver-experience problem the attorney solves by adjusting thresholds in the playbook, not a problem the skill solves by making its own subjective call on a term it's uncertain about.
 
-If a term comes up that the playbook doesn't address, don't guess the threshold — ask the reviewing attorney whether this class of issue should escalate, and offer to record the answer in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` so future reviews are consistent.
+If a term comes up that the playbook doesn't address, don't guess the threshold — ask the reviewing attorney whether this class of issue should escalate, and offer to record the answer in `~/.config/oscar/profile.json` so future reviews are consistent.
 
 ## What this skill does not do
 

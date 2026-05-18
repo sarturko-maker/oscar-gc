@@ -20,7 +20,7 @@ It does not replace a docketing system and it does not replace the lawyer who re
 
 ## Schedule
 
-Per `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` → Landscape → Frequent fora and the per-matter cadence in `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/_log.yaml`.
+Per `~/.config/oscar/profile.json` → Landscape → Frequent fora and the per-matter cadence in `~/.config/oscar/state/litigation-legal/matters/_log.yaml`.
 
 - **Default:** weekly sweep of every matter in `_log.yaml` with `status` not in `closed`.
 - **Daily:** matters with an upcoming hearing inside 14 days, matters in `trial` or late `discovery`, or any matter flagged `risk: critical`.
@@ -29,7 +29,7 @@ The schedule is the floor, not the ceiling. Big filings land on Friday afternoon
 
 ## What it does
 
-1. Read `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` for house style, escalation rules, and the frequent-fora list. Read `~/.claude/plugins/config/claude-for-legal/litigation-legal/matters/_log.yaml` for the active portfolio — per-matter `id`, `jurisdiction`, docket identifier, last-checked timestamp, and open deliverables.
+1. Read `~/.config/oscar/profile.json` for house style, escalation rules, and the frequent-fora list. Read `~/.config/oscar/state/litigation-legal/matters/_log.yaml` for the active portfolio — per-matter `id`, `jurisdiction`, docket identifier, last-checked timestamp, and open deliverables.
 2. For each active matter with a docket identifier, pull new entries since the last check via Trellis (state trial courts) or CourtListener / PACER (federal courts). Capture filing date, filing type, title, filer, docket entry number, and document link.
 3. Map filing types to candidate deadline rules. Federal rules (FRCP, FRAP, local rules where known) are straightforward; state trial-court practice varies; standing orders override local rules; some judges set every schedule by individual case management order. Flag every computed deadline as a lead that requires human verification.
 4. Cross-reference against each matter's `history.md` and open deliverables. Surface posture changes (motion decided, status conference set, discovery cutoff ordered, trial date moved) and deliverables that slipped past their internal deadline.

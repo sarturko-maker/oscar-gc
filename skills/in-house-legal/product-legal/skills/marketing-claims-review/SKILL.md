@@ -8,16 +8,18 @@ description: >
 argument-hint: "[paste copy, or file path]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/product-legal @ 4d55f539; Apache 2.0 -->
+
 # /marketing-claims-review
 
-1. Load `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` → Marketing claims standards.
+1. Load `~/.config/oscar/profile.json` → Marketing claims standards.
 2. Apply the claim taxonomy and review workflow below.
 3. Extract every claim. Classify: puffery / factual / comparative / implied / absolute.
 4. For each non-puffery claim: substantiation check, suggested fix.
 5. Output: claim-by-claim with calls, suggested revision if short enough.
 
 ```
-/product-legal:marketing-claims-review
+marketing-claims-review
 [paste landing page copy]
 ```
 
@@ -25,7 +27,7 @@ argument-hint: "[paste copy, or file path]"
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/product-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/product-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/product-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -35,7 +37,7 @@ Marketing wants to say the product is the best. Legal needs it to be true, or at
 
 ## Load standards
 
-Read `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` → `## Marketing claims`:
+Read `~/.config/oscar/profile.json` → `## Marketing claims`:
 - Comparative claims policy (allowed with substantiation / discouraged / never)
 - Substantiation standard (what's required before a claim ships)
 - Common rejected claims (learn from history)
@@ -92,7 +94,7 @@ Naming a competitor or implying one. Research the applicable rules for comparati
 | "The only platform that does X" | False if anyone else does X — "The first platform to..." (if true) or drop "only" |
 | "[Competitor] can't do this" | Show your feature. Let the viewer compare. |
 
-Per `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` — if comparative claims are "never," flag all of them. If "allowed with substantiation," check for the substantiation.
+Per `~/.config/oscar/profile.json` — if comparative claims are "never," flag all of them. If "allowed with substantiation," check for the substantiation.
 
 ### Implied claims
 
@@ -142,7 +144,7 @@ Common drift: marketing copy written from an early spec, product changed, nobody
 
 ### Step 4: Output
 
-Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
+Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`).
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs]
@@ -160,7 +162,7 @@ Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/
 
 **Ready to ship:** [Yes | With changes below | No — rewrite needed]
 
-> **Before emitting "Ready to ship: Yes" (i.e., approving a claim for external use / publication):** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md`. If the Role is Non-lawyer:
+> **Before emitting "Ready to ship: Yes" (i.e., approving a claim for external use / publication):** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is Non-lawyer:
 >
 > > Approving a marketing claim for publication is a legal act — once published, substantiation gaps and comparative-claim exposure become enforcement or competitor-challenge risk. Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 > >

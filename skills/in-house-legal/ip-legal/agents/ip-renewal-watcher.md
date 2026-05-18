@@ -3,7 +3,7 @@ name: ip-renewal-watcher
 description: >
   Scheduled agent that reads the IP portfolio register, computes what's due,
   and posts a ranked deadline report. Runs weekly by default. Posts to the
-  channel named in `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md`
+  channel named in `~/.config/oscar/profile.json`
   → Renewal alerts. Trigger phrases: "what's renewing", "IP deadlines",
   "portfolio check", "IP renewal report", or on schedule.
 model: sonnet
@@ -28,7 +28,7 @@ for grace/lapsed items happen regardless of schedule.
 
 ## What it does
 
-1. Read `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` to
+1. Read `~/.config/oscar/profile.json` to
    get the alert destination (Slack channel, email list, or inline) and
    the work-product header rules.
 
@@ -108,7 +108,7 @@ each item on this week's action list against the registry before acting.
 - Decide whether to renew. That's a business and legal call — the agent
   surfaces the deadline, the surcharge clock, and the owner.
 - Modify the register. It reads and reports; additions come from
-  `/ip-legal:portfolio --add`, updates come from `--update`, sync comes
+  `portfolio --add`, updates come from `--update`, sync comes
   from the IP management system.
 - Ping business owners directly. The channel post tags them; they
   decide what to do.

@@ -9,9 +9,11 @@ description: >
 argument-hint: "[describe the termination, or attach documentation]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /termination-review
 
-1. Load `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md` → termination review triggers, high-risk flags, severance practice, jurisdiction rules.
+1. Load `~/.config/oscar/profile.json` → termination review triggers, high-risk flags, severance practice, jurisdiction rules.
 2. Use the workflow below.
 3. Walk the checklist. Check every high-risk flag.
 4. Final pay timing per employee's jurisdiction. Severance + release if applicable.
@@ -21,7 +23,7 @@ argument-hint: "[describe the termination, or attach documentation]"
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/employment-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/employment-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/employment-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -34,12 +36,12 @@ release-period requirement is researched and cited at the time of review.
 
 ## Load context
 
-`~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md` → termination review triggers, high-risk flags, standard severance,
+`~/.config/oscar/profile.json` → termination review triggers, high-risk flags, standard severance,
 jurisdiction table.
 
 ## Output header
 
-Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md` → `## Outputs` (it differs by user role — see `## Who's using this`). Match the memo format from seed term memos referenced in that config where one exists. The work-product header is always first.
+Prepend the work-product header from `~/.config/oscar/profile.json` → `## Outputs` (it differs by user role — see `## Who's using this`). Match the memo format from seed term memos referenced in that config where one exists. The work-product header is always first.
 
 ## Workflow
 
@@ -56,7 +58,7 @@ Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/
 
 ### Step 2: High-risk flag scan
 
-This is the most important step. Check every flag from `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md`. Default
+This is the most important step. Check every flag from `~/.config/oscar/profile.json`. Default
 set:
 
 | Flag | Why it's high-risk | Check |
@@ -75,7 +77,7 @@ following are true:
 
 1. The employee works in a state with a high exempt salary threshold — **CA,
    NY, WA, CO, AK** (and any other state listed in
-   `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md` →
+   `~/.config/oscar/profile.json` →
    `## Wage & hour` → Known classification risk areas as a high-threshold
    state) — **AND**
 2. The employee is classified **exempt** (salaried, no overtime) — **AND**
@@ -88,7 +90,7 @@ When all three fire, emit:
 > 🔴 **Potential exempt misclassification** — [title] earning $[X] in
 > [state]. The exempt salary threshold in [state] is approximately $[Y]
 > `[model knowledge — verify]`. Before termination, route to
-> `/employment-legal:wage-hour-qa` for a classification check — a misclassified
+> `wage-hour-qa` for a classification check — a misclassified
 > employee who's terminated has a ready-made FLSA and state-wage claim with
 > liquidated damages, attorneys' fees, and (in CA) PAGA exposure, which
 > the separation agreement may not be able to release cleanly. A terminated
@@ -97,7 +99,7 @@ When all three fire, emit:
 
 Do not suppress this flag because the title "looks managerial" — the whole
 premise of the misclassification claim is that titles lie. Route to
-`/employment-legal:wage-hour-qa` for the actual duties-and-salary test.
+`wage-hour-qa` for the actual duties-and-salary test.
 
 **If a back-pay number is being computed as part of this review (severance
 modeling, settlement posture, exposure estimate), do NOT compute it in this
@@ -110,7 +112,7 @@ carries `[verify — consult wage-and-hour counsel before asserting or
 paying]`. A clean-looking wrong number here is the specific failure mode
 this scaffold prevents.
 
-**Any flag fires → escalate per `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md` before the term proceeds.** Not
+**Any flag fires → escalate per `~/.config/oscar/profile.json` before the term proceeds.** Not
 after. Before.
 
 ### Step 3: Jurisdiction-specific requirements
@@ -138,7 +140,7 @@ after. Before.
 
 ### Step 4: Severance and release
 
-Per `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md` → standard severance:
+Per `~/.config/oscar/profile.json` → standard severance:
 
 - Is severance being offered? Per formula or discretionary?
 - Release required? (Usually yes if paying severance — that's the
@@ -179,9 +181,9 @@ what changed? The answer should be documented.
 
 > **Research-connector pre-flight.** Before emitting the memo, check whether a legal research connector is reachable for this session — Westlaw, CourtListener, or any firm-configured research MCP. Collect this into the reviewer note per CLAUDE.md `## Outputs`: if no connector returns results in Step 3 (or none is configured at run time), record it in the **Sources:** line of the reviewer note — e.g., `not connected — cites from training knowledge; the highest-fabrication topics in termination-law memos are final-pay timing, OWBPA group/individual distinctions, state-specific NDA / non-disparagement rules (e.g., CA SB 331), and NLRB positions (e.g., McLaren Macomb) — spot-check those first`. Per-citation `[model knowledge — verify]` tags remain inline. Do not emit a standalone banner above the memo.
 
-> **Jurisdiction assumption.** This review assumes the employee's jurisdiction as stated in Step 1 and any defaults from `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md` → Jurisdictional footprint. Employment rules, final-pay timing, release requirements, and notice obligations vary materially by jurisdiction. If the employee works in a different state or country, or if choice-of-law is contested, this analysis may not apply as written.
+> **Jurisdiction assumption.** This review assumes the employee's jurisdiction as stated in Step 1 and any defaults from `~/.config/oscar/profile.json` → Jurisdictional footprint. Employment rules, final-pay timing, release requirements, and notice obligations vary materially by jurisdiction. If the employee works in a different state or country, or if choice-of-law is contested, this analysis may not apply as written.
 
-Match the memo format from seed term memos referenced in `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md`. If none:
+Match the memo format from seed term memos referenced in `~/.config/oscar/profile.json`. If none:
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs — differs by role; see `## Who's using this`]
@@ -252,7 +254,7 @@ Match the memo format from seed term memos referenced in `~/.claude/plugins/conf
 
 ## Consequential-action gate (terminate an employee)
 
-**Before producing a "Go" recommendation or a term-day checklist marked ready:** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md`. If the Role is **Non-lawyer**:
+**Before producing a "Go" recommendation or a term-day checklist marked ready:** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is **Non-lawyer**:
 
 > Terminating an employee has legal consequences — wrongful-termination, discrimination, retaliation, and wage-law claims all trace back to how this decision is structured. Have you reviewed this termination with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 >

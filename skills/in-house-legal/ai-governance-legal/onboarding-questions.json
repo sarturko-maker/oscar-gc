@@ -1,0 +1,4 @@
+[
+  {"id": "ai-footprint-and-eu-nexus", "prompt": "How does AI touch your company today — are you mostly deploying third-party tools, building or fine-tuning your own models, or some of both, and does any of it reach people in the EU/EEA?", "priority": 1},
+  {"id": "ai-use-case-red-lines", "prompt": "What are the AI use cases that are an automatic no at your company — the ones someone could propose and you'd stop them immediately without needing to think about it?", "priority": 1}
+]

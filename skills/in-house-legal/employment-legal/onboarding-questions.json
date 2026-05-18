@@ -1,0 +1,4 @@
+[
+  {"id": "employment-jurisdictions", "prompt": "Which US states and countries do you currently employ people in, and which is the largest by headcount?", "priority": 1},
+  {"id": "employment-hiring-posture", "prompt": "What's your hiring posture over the next 12 months — net new headcount, replacement-only, or in a hiring freeze?", "priority": 1}
+]

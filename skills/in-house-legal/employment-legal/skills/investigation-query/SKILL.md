@@ -8,6 +8,8 @@ description: >
 argument-hint: "[matter name] [question]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /investigation-query
 
 Answers questions against the investigation log — what witnesses said,
@@ -25,17 +27,17 @@ on each issue.
 ## Examples
 
 ```
-/employment-legal:investigation-query [matter name]
+investigation-query [matter name]
 What did the respondent say about the December team dinner?
 ```
 
 ```
-/employment-legal:investigation-query [matter name]
+investigation-query [matter name]
 Where do the complainant's and respondent's accounts conflict?
 ```
 
 ```
-/employment-legal:investigation-query [matter name]
+investigation-query [matter name]
 What do we still need?
 ```
 

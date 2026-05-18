@@ -9,6 +9,8 @@ description: >
 argument-hint: "[file(s) | [CLM ID (coming soon)] | [repository link (coming soon)]] [--provision <clause name>]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/commercial-legal @ 4d55f539; Apache 2.0 -->
+
 # /amendment-history
 
 Loads a base agreement and all amendments, then either summarizes what
@@ -37,15 +39,15 @@ controlling language.
 ## Examples
 
 ```
-/commercial-legal:amendment-history acme-msa.pdf amendment-1.pdf amendment-2.pdf
+amendment-history acme-msa.pdf amendment-1.pdf amendment-2.pdf
 ```
 
 ```
-/commercial-legal:amendment-history --provision indemnity
+amendment-history --provision indemnity
 ```
 
 ```
-/commercial-legal:amendment-history
+amendment-history
 [paste agreement and amendment text]
 ```
 
@@ -53,7 +55,7 @@ controlling language.
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/commercial-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/commercial-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/commercial-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -143,7 +145,7 @@ top of the output only where uncertain:
 
 ## Privilege inheritance
 
-This skill reads the base agreement and amendments — often privileged or confidential in their own right, and typically used for privileged analysis. The output inherits the source's privilege and confidentiality status. Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Outputs` to every output below, distribute only within the privilege circle, and store it where privileged materials live. Strip the header before any external delivery.
+This skill reads the base agreement and amendments — often privileged or confidential in their own right, and typically used for privileged analysis. The output inherits the source's privilege and confidentiality status. Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` to every output below, distribute only within the privilege circle, and store it where privileged materials live. Strip the header before any external delivery.
 
 ## Step 2: Read and index
 
@@ -292,7 +294,7 @@ End with the next-steps decision tree per CLAUDE.md `## Outputs`. Customize the 
   conflict between the base agreement and an amendment — that is a
   legal interpretation question. It flags conflicts and routes to Legal.
 - It does not draft new amendments.
-- It does not compare against the playbook in `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` — that is the
+- It does not compare against the playbook in `~/.config/oscar/profile.json` — that is the
   vendor-agreement-review skill's job. This skill is purely historical.
 - It does not infer what an amendment means if the language is
   ambiguous — it quotes exactly and flags ambiguity for Legal.

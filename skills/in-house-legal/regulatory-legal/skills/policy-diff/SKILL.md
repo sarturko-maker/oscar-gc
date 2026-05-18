@@ -4,9 +4,11 @@ description: Diff a specific regulatory change against the indexed policy librar
 argument-hint: "[reg name, or paste reg text/summary]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/regulatory-legal @ 4d55f539; Apache 2.0 -->
+
 # /policy-diff
 
-1. Load `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md` → policy library index.
+1. Load `~/.config/oscar/profile.json` → policy library index.
 2. Use the workflow below.
 3. Extract requirements from the reg. Match to indexed policies.
 4. Output: per-requirement gap analysis, which policy needs updating.
@@ -15,7 +17,7 @@ argument-hint: "[reg name, or paste reg text/summary]"
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/regulatory-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/regulatory-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/regulatory-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -25,7 +27,7 @@ A reg changed. You have policies. This skill finds which policies the change tou
 
 ## Load context
 
-`~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md` → policy library index (policies, locations, owners).
+`~/.config/oscar/profile.json` → policy library index (policies, locations, owners).
 
 ## Scope integrity
 
@@ -120,7 +122,7 @@ If the regulatory input is an ANPR or RFI (no imposed requirements), do NOT run 
 
 - Name the policies that will likely need to change once a final rule issues (not today).
 - Flag whether any of the ANPR's issue areas intersect with the company's practice in a way that warrants a comment letter.
-- Note the comment deadline and the team's comment-decision owner from `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md`.
+- Note the comment deadline and the team's comment-decision owner from `~/.config/oscar/profile.json`.
 - Do NOT produce per-requirement "no gap" rows for an ANPR — there are no requirements to diff against. Produce one paragraph naming the future exposure and the policies it would touch.
 
 ### Negative-finding branch (final rule / NPRM diffed against a policy that isn't the right target)
@@ -132,7 +134,7 @@ If every requirement in the extracted list comes out as "no gap against [the nam
 
 [REGULATION] doesn't appear to require a change to [POLICY NAME]. [POLICY NAME]
 §[X] already covers [Y]. The policies this regulation actually touches are
-[other-policy-1] and [other-policy-2] — rerun `/regulatory-legal:policy-diff` against those.
+[other-policy-1] and [other-policy-2] — rerun `policy-diff` against those.
 
 Review on [next cycle — e.g., "at the next annual policy review"] or if
 [trigger — e.g., "the rule is finalized or amended"].
@@ -184,10 +186,10 @@ Full per-requirement analysis as specified below. The detailed diff format is fo
 
 ## Config-dependent fallbacks
 
-This skill reads the policy library index from `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md`. When the index is empty or still `[PLACEHOLDER]`:
+This skill reads the policy library index from `~/.config/oscar/profile.json`. When the index is empty or still `[PLACEHOLDER]`:
 
-- **Policy library empty:** flag every requirement as "no policy match" by default and append to the output: "The policy library in your configuration is empty, so every requirement is flagged as a new-policy gap. If you have policies that address these requirements, add them to the library with `/regulatory-legal:cold-start-interview --redo` or by editing `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md`, then re-run the diff."
-- **Owner missing for a matched policy:** leave the Owner cell blank in the summary and append: "Policy owners aren't set for [list]. Assign them with `/regulatory-legal:cold-start-interview --redo` or by editing the policy library in `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md` so gap-surfacer can route."
+- **Policy library empty:** flag every requirement as "no policy match" by default and append to the output: "The policy library in your configuration is empty, so every requirement is flagged as a new-policy gap. If you have policies that address these requirements, add them to the library with the Oscar GC onboarding from Settings or by editing `~/.config/oscar/profile.json`, then re-run the diff."
+- **Owner missing for a matched policy:** leave the Owner cell blank in the summary and append: "Policy owners aren't set for [list]. Assign them with the Oscar GC onboarding from Settings or by editing the policy library in `~/.config/oscar/profile.json` so gap-surfacer can route."
 
 Say nothing about config when the library is populated and owners are set.
 

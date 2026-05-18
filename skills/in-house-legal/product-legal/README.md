@@ -17,27 +17,27 @@ Product legal workflows: launch review, marketing claims review, feature risk as
 
 Connects to your launch tracker (Jira/Linear), reads ten of your past launch reviews, learns what you actually block vs. what you wave through. Builds a risk calibration table that every other skill reads from.
 
-Your configuration is stored at `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` and survives plugin updates.
+Your configuration is stored at `~/.config/oscar/profile.json` and survives plugin updates.
 
 ```
-/product-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
 ## Commands
 
 | Command | Does |
 |---|---|
-| `/product-legal:cold-start-interview` | Cold-start interview |
-| `/product-legal:launch-review [PRD or ticket]` | Full launch review against your framework |
-| `/product-legal:marketing-claims-review [copy]` | Marketing claims review |
-| `/product-legal:is-this-a-problem [question]` | Fast "is this a problem?" answer |
-| `/product-legal:matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
+| Oscar GC onboarding | Cold-start interview |
+| `launch-review [PRD or ticket]` | Full launch review against your framework |
+| `marketing-claims-review [copy]` | Marketing claims review |
+| `is-this-a-problem [question]` | Fast "is this a problem?" answer |
+| `matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
 
 ## Skills
 
 | Skill | Purpose |
 |---|---|
-| **cold-start-interview** | Writes ~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md from interview + past launch reviews |
+| **Oscar GC onboarding** | Writes ~/.config/oscar/profile.json from interview + past launch reviews |
 | **launch-review** | Category-by-category review, calibrated to your company |
 | **marketing-claims-review** | Claims taxonomy: puffery/factual/comparative/implied/absolute |
 | **feature-risk-assessment** | Deep dive on one issue when launch review isn't enough |
@@ -69,26 +69,26 @@ With a tracker connected: cold-start pulls launch history, launch-review pulls t
 ## Quick start
 
 ```
-/product-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
 Then:
 
 ```
-/product-legal:is-this-a-problem "Can we A/B test the pricing page?"
+is-this-a-problem "Can we A/B test the pricing page?"
 ```
 
 → Same-minute answer calibrated to your risk table.
 
 ```
-/product-legal:launch-review PROJ-1234
+launch-review PROJ-1234
 ```
 
 → Full review, category-by-category, with action items.
 
 ## How it learns
 
-Your practice profile at `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. You can re-run setup, edit the file directly, or tell a skill to record a new position.
+Your practice profile at `~/.config/oscar/profile.json` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. You can re-run setup, edit the file directly, or tell a skill to record a new position.
 
 ## Notes
 
@@ -98,8 +98,8 @@ Your practice profile at `~/.claude/plugins/config/claude-for-legal/product-lega
 
 ## Prerequisites
 
-Some features reference external integrations (document management, launch trackers, eDiscovery, case management, regulatory feeds). These are not bundled — if you have an MCP server for one of these in your environment, the relevant features will use it. Without one, the plugin falls back to file upload and manual workflows. Run `/product-legal:cold-start-interview --check-integrations` to see what's available in your environment.
+Some features reference external integrations (document management, launch trackers, eDiscovery, case management, regulatory feeds). These are not bundled — if you have an MCP server for one of these in your environment, the relevant features will use it. Without one, the plugin falls back to file upload and manual workflows. Run `Oscar GC onboarding --check-integrations` to see what's available in your environment.
 
 ## Configuration
 
-Your configuration is stored at `~/.claude/plugins/config/claude-for-legal/product-legal/CLAUDE.md` and survives plugin updates — you only run setup once.
+Your configuration is stored at `~/.config/oscar/profile.json` and survives plugin updates — you only run setup once.

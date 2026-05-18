@@ -9,6 +9,8 @@ description: >
 argument-hint: "[matter name or slug, then paste or attach data]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /investigation-add
 
 Adds data to an open investigation log. Processes document batches using
@@ -17,7 +19,7 @@ reviewed for coverage verification.
 
 ## Instructions
 
-1. Load `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md`.
+1. Load `~/.config/oscar/profile.json`.
 2. Load the `internal-investigation` reference skill and run Mode 2 (Add data).
 3. After processing, show the surface ratio and list of surfaced items.
 4. Prompt to update the sources checklist if the data covers a checklist item.
@@ -25,12 +27,12 @@ reviewed for coverage verification.
 ## Examples
 
 ```
-/employment-legal:investigation-add [matter name]
+investigation-add [matter name]
 [paste interview notes]
 ```
 
 ```
-/employment-legal:investigation-add [matter name]
+investigation-add [matter name]
 [attach email export]
 ```
 

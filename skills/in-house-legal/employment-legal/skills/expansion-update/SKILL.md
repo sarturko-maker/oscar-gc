@@ -8,6 +8,8 @@ description: >
 argument-hint: "[country name]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /expansion-update
 
 Returns to an open expansion tracker and updates item status based on what
@@ -16,11 +18,11 @@ flags anything overdue, and surfaces the next priorities.
 
 ## Instructions
 
-1. Load `~/.claude/plugins/config/claude-for-legal/employment-legal/CLAUDE.md`.
+1. Load `~/.config/oscar/profile.json`.
 
-2. Identify the tracker file: `~/.claude/plugins/config/claude-for-legal/employment-legal/expansion-[slug].yaml`. If it doesn't
+2. Identify the tracker file: `~/.config/oscar/state/employment-legal/expansion-[slug].yaml`. If it doesn't
    exist, respond: "No expansion tracker found for [country]. Run
-   `/employment-legal:expansion-kickoff [country]` to start one."
+   `expansion-kickoff [country]` to start one."
 
 3. Read the tracker. Show the current state:
 
@@ -61,11 +63,11 @@ Next priority: [top open item].
 ## Examples
 
 ```
-/employment-legal:expansion-update Germany
+expansion-update Germany
 ```
 
 ```
-/employment-legal:expansion-update
+expansion-update
 (will ask which country if multiple trackers exist)
 ```
 

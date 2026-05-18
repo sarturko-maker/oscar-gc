@@ -1,0 +1,4 @@
+[
+  {"id": "regulatory-footprint", "prompt": "Which privacy regimes actually apply to your processing — GDPR, UK GDPR, CCPA/CPRA and other US state laws, HIPAA, GLBA, COPPA, FERPA, PIPEDA, LGPD, sector-specific? List only what reaches your data; don't list aspirational coverage.", "priority": 1},
+  {"id": "controller-processor-posture", "prompt": "Are you primarily a controller (your own users, your purposes), a processor (customers' data, their purposes), or both — and with respect to whose data? This determines which half of the DPA playbook every review runs against.", "priority": 1}
+]

@@ -7,6 +7,8 @@ description: >
 argument-hint: "[matter name]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /investigation-memo
 
 Drafts the first cut of the privileged investigation memo from the log,
@@ -23,11 +25,11 @@ or updates an existing draft when new data has been added.
 ## Examples
 
 ```
-/employment-legal:investigation-memo [matter name]
+investigation-memo [matter name]
 ```
 
 ```
-/employment-legal:investigation-memo [matter name]
+investigation-memo [matter name]
 (updates existing memo if one exists)
 ```
 

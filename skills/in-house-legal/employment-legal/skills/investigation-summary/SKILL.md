@@ -8,6 +8,8 @@ description: >
 argument-hint: "[matter name] [audience: hr / leadership / outside-counsel]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /investigation-summary
 
 Drafts a stripped-down, audience-appropriate summary from the privileged
@@ -24,15 +26,15 @@ summaries are high-level. Outside counsel briefings include full context.
 ## Examples
 
 ```
-/employment-legal:investigation-summary [matter name] hr
+investigation-summary [matter name] hr
 ```
 
 ```
-/employment-legal:investigation-summary [matter name] leadership
+investigation-summary [matter name] leadership
 ```
 
 ```
-/employment-legal:investigation-summary [matter name] outside-counsel
+investigation-summary [matter name] outside-counsel
 ```
 
 > Detailed audience-stripping rules and summary templates live in the

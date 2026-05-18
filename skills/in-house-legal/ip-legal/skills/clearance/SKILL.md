@@ -9,6 +9,8 @@ description: >
 argument-hint: "[describe the proposed mark, goods/services, and jurisdictions — or just the mark and I'll ask]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/ip-legal @ 4d55f539; Apache 2.0 -->
+
 # /clearance
 
 **This is a triage, not a clearance opinion.** A trademark clearance opinion
@@ -19,8 +21,8 @@ sued over marks that passed a knockout search.
 
 ## Instructions
 
-1. Read `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md`. If it
-   contains `[PLACEHOLDER]`, stop and direct to `/ip-legal:cold-start-interview`.
+1. Read `~/.config/oscar/profile.json`. If it
+   contains `[PLACEHOLDER]`, stop and direct to Oscar GC onboarding.
 2. Follow the workflow below.
 3. Run intake (mark, goods/services, classes, jurisdictions, visual/stylization).
 4. Knockout check for intrinsic bars — generic, descriptive, deceptive,
@@ -40,11 +42,11 @@ decides.
 ## Examples
 
 ```
-/ip-legal:clearance "APEXLEAF for an outdoor apparel line, planned launch US + EU"
+clearance "APEXLEAF for an outdoor apparel line, planned launch US + EU"
 ```
 
 ```
-/ip-legal:clearance
+clearance
 ```
 
 (And the skill will ask for the mark, goods, classes, and jurisdictions.)
@@ -74,32 +76,32 @@ the list in review. Stay on the two-way door side.
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/ip-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/ip-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/ip-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
 ## Load the practice profile first
 
-Before running clearance, read `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md`. Pull:
+Before running clearance, read `~/.config/oscar/profile.json`. Pull:
 
 - **Role** from `## Who's using this` (lawyer vs. non-lawyer changes the work-product header and the non-lawyer gate below).
 - **Registered in** and **enforce where** from `## IP practice profile` and `## Enforcement posture` (default jurisdictions if the user doesn't specify).
 - **Integrations** from `## Available integrations` (CourtListener / Solve Intelligence / Descrybe — each determines what searches are available to run, what the fallback is, and what gets attributed in the output).
 - **Decision posture** from `## Decision posture on subjective legal calls` — this skill never concludes "not confusingly similar."
 
-If `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` contains `[PLACEHOLDER]` or `[Your Company Name]`, surface this bounce:
+If `~/.config/oscar/profile.json` contains `[PLACEHOLDER]` or `[Your Company Name]`, surface this bounce:
 
 > I notice you haven't configured your practice profile yet — that's how I tailor posture, jurisdictions, and approval chain to your practice.
 >
 > **Two choices:**
-> - Run `/ip-legal:cold-start-interview` (2 minutes) to configure your profile, then I'll run this tailored to YOUR practice.
+> - Run Oscar GC onboarding (2 minutes) to configure your profile, then I'll run this tailored to YOUR practice.
 > - Say **"provisional"** and I'll run this against generic defaults — US jurisdiction, middle risk appetite, lawyer role, no playbook — and tag every output `[PROVISIONAL — configure your profile for tailored output]` so you can see what I do before committing.
 
 ### Provisional mode
 
 If the user says "provisional," run the clearance normally using these generic defaults: middle risk appetite, lawyer role, US jurisdiction (USPTO + common-law), no playbook (do the full analysis rather than matching against a position list). Tag the reviewer note and every finding block with `[PROVISIONAL]`. At the end of the output, append:
 
-> "That was a generic run against default assumptions. Run `/ip-legal:cold-start-interview` to get output calibrated to YOUR practice — your playbook, your jurisdiction, your risk appetite. 2 minutes."
+> "That was a generic run against default assumptions. Run Oscar GC onboarding to get output calibrated to YOUR practice — your playbook, your jurisdiction, your risk appetite. 2 minutes."
 
 ---
 
@@ -155,7 +157,7 @@ to decide whether confusion is likely. That is the attorney's call.
 
 ### What the user has connected
 
-Read `## Available integrations` from `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md`:
+Read `## Available integrations` from `~/.config/oscar/profile.json`:
 
 - **If a trademark search connector is available** (Solve Intelligence,
   Descrybe — or any MCP exposing TM-registry search): run a preliminary search
@@ -298,7 +300,7 @@ cuts each way and where the uncertainty is:
 - **Likelihood of expansion** (bridge-the-gap). Whether the senior user is
   likely to expand into the junior's lane, and vice versa.
 
-Per the decision posture in `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md`:
+Per the decision posture in `~/.config/oscar/profile.json`:
 
 - **Never conclude "not confusingly similar."**
 - If uncertain, write: "Similar marks found — confusion assessment required
@@ -332,7 +334,7 @@ triage found:
 
 ## Output format
 
-Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` `## Outputs`.
+Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs`.
 
 ```markdown
 [WORK-PRODUCT HEADER]
@@ -419,7 +421,7 @@ each way.
   in Class 25 if the intent is to proceed"]
 - [specific next step 3 — e.g., "Reframe the mark — current form is descriptive
   and will require secondary meaning"]
-- [routing per `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` —
+- [routing per `~/.config/oscar/profile.json` —
   trademark OC or in-house IP counsel named in the practice profile]
 
 ## Citation verification
@@ -458,9 +460,9 @@ Deliver the full triage memo alongside the brief. Do not withhold the analysis.
 ## Output location
 
 If matter workspaces are enabled and a matter is active, write the output to
-`~/.claude/plugins/config/claude-for-legal/ip-legal/matters/<matter-slug>/outputs/clearance-<mark-slug>-YYYY-MM-DD.md`.
+`~/.config/oscar/state/ip-legal/matters/<matter-slug>/outputs/clearance-<mark-slug>-YYYY-MM-DD.md`.
 Otherwise write to
-`~/.claude/plugins/config/claude-for-legal/ip-legal/outputs/clearance-<mark-slug>-YYYY-MM-DD.md`
+`~/.config/oscar/state/ip-legal/outputs/clearance-<mark-slug>-YYYY-MM-DD.md`
 and surface the path to the user.
 
 Append a one-line entry to the matter's `history.md` if a matter is active.

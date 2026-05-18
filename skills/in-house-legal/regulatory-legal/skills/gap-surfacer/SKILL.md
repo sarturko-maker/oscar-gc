@@ -1,13 +1,15 @@
 ---
 name: gap-surfacer
 description: >
-  Reference: shared gap- and comment-tracker framework backing /regulatory-legal:gaps
-  and /regulatory-legal:comments. Tracks open policy gaps with remediation status,
+  Reference: shared gap- and comment-tracker framework backing gaps
+  and comments. Tracks open policy gaps with remediation status,
   ingests gaps from policy-diff, surfaces what's open and aging, routes to owners,
   and notifies gap owners via Slack with per-send confirmation. Loaded by the gaps
   and comments skills before doing substantive work.
 user-invocable: false
 ---
+
+<!-- Sourced from anthropics/claude-for-legal/regulatory-legal @ 4d55f539; Apache 2.0 -->
 
 # Gap Surfacer
 
@@ -26,7 +28,7 @@ Auto-send without confirmation is the most irreversible action in this plugin, s
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/regulatory-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/regulatory-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/regulatory-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -37,9 +39,9 @@ and notifies the people responsible for closing them.
 
 ## The tracker
 
-Lives at `~/.claude/plugins/config/claude-for-legal/regulatory-legal/gap-tracker.yaml`:
+Lives at `~/.config/oscar/state/regulatory-legal/gap-tracker.yaml`:
 
-> **Note on comment-tracker.yaml:** `~/.claude/plugins/config/claude-for-legal/regulatory-legal/comment-tracker.yaml` is a sibling file owned by the comments skill. It is written to by reg-feed-watcher (which logs NPRMs automatically) and the comments skill (which tracks user-initiated comment decisions). This skill does not read or cross-reference it. If you modify the comment-tracker schema, update both actual consumers.
+> **Note on comment-tracker.yaml:** `~/.config/oscar/state/regulatory-legal/comment-tracker.yaml` is a sibling file owned by the comments skill. It is written to by reg-feed-watcher (which logs NPRMs automatically) and the comments skill (which tracks user-initiated comment decisions). This skill does not read or cross-reference it. If you modify the comment-tracker schema, update both actual consumers.
 
 ```yaml
 gaps:
@@ -94,7 +96,7 @@ Regulation: [name + link]
 Policy affected: [policy name or "new policy needed"]
 Due: [reg effective date]
 
-View full gap tracker: /regulatory-legal:gaps
+View full gap tracker: gaps
 ```
 
 Set `notified: true` in the tracker entry after sending.
@@ -151,7 +153,7 @@ only real compliance deadlines.]
 
 ---
 
-**Next step for each open gap:** `/regulatory-legal:policy-redraft` produces a marked-up policy redraft with `[verify]` tags and a change summary. It's a proposal for the policy owner's review — not a direct edit to source documents.
+**Next step for each open gap:** `policy-redraft` produces a marked-up policy redraft with `[verify]` tags and a change summary. It's a proposal for the policy owner's review — not a direct edit to source documents.
 
 ---
 
@@ -160,11 +162,11 @@ only real compliance deadlines.]
 
 ## Config-dependent fallbacks
 
-This skill reads gap-response owners and the escalation path from `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md`. When a value it needs is empty or still `[PLACEHOLDER]`:
+This skill reads gap-response owners and the escalation path from `~/.config/oscar/profile.json`. When a value it needs is empty or still `[PLACEHOLDER]`:
 
-- **Gap-response triager missing:** leave assignment open and append to the output: "No triager is set in `## Gap response process`. Assign one with `/regulatory-legal:cold-start-interview --redo` or by editing `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md` so new gaps get routed."
+- **Gap-response triager missing:** leave assignment open and append to the output: "No triager is set in `## Gap response process`. Assign one with the Oscar GC onboarding from Settings or by editing `~/.config/oscar/profile.json` so new gaps get routed."
 - **Owner unknown for a newly-ingested gap (no owner in policy library):** log the gap with `owner: [unassigned]` and append: "[N] gaps were ingested without an owner because the policy library doesn't name one for the affected policy. Fill in the Owner column in the policy library to route them."
-- **Escalation path missing for an overdue material gap:** still report it as overdue, and append: "No escalation path is set for material overdue gaps. Configure it with `/regulatory-legal:cold-start-interview --redo` or by editing `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md`."
+- **Escalation path missing for an overdue material gap:** still report it as overdue, and append: "No escalation path is set for material overdue gaps. Configure it with the Oscar GC onboarding from Settings or by editing `~/.config/oscar/profile.json`."
 
 Say nothing about config when the values are populated.
 
@@ -183,7 +185,7 @@ For each gap with status "open" or "in-progress":
 
 ### Consequential-action gate (certify compliance)
 
-**Before closing a gap as resolved, or producing any output that certifies compliance with a regulatory requirement (internal attestation, board report, audit response, regulator response):** Read `## Who's using this` in ~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md. If the Role is **Non-lawyer**:
+**Before closing a gap as resolved, or producing any output that certifies compliance with a regulatory requirement (internal attestation, board report, audit response, regulator response):** Read `## Who's using this` in ~/.config/oscar/profile.json. If the Role is **Non-lawyer**:
 
 > Certifying compliance — or closing a gap as resolved — has legal consequences. The certification can be used against the company if it's later shown to be wrong, and premature closure leaves exposure unaddressed. Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 >
@@ -201,7 +203,7 @@ Do not mark a gap closed or produce a compliance certification past this gate wi
 ### Mode 3: Close a gap
 
 ```
-/regulatory-legal:gaps --close GAP-001
+gaps --close GAP-001
 Resolution: "Policy updated v2.3, approved [date]"
 ```
 
@@ -213,7 +215,7 @@ Sometimes the answer is "we're not going to fix this." That's a valid decision
 — but it should be documented.
 
 ```
-/regulatory-legal:gaps --accept GAP-002
+gaps --accept GAP-002
 Rationale: "Requirement applies only to [condition we don't meet]. Revisit if [trigger]."
 Accepted by: [name with authority]
 ```

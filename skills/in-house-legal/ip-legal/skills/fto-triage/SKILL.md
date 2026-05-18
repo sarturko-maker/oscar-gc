@@ -10,6 +10,8 @@ description: >
 argument-hint: "[describe the product / process / feature and jurisdictions — or just the subject and I'll ask]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/ip-legal @ 4d55f539; Apache 2.0 -->
+
 # /fto-triage
 
 **This is not a freedom-to-operate opinion.** A formal FTO opinion requires a
@@ -21,8 +23,8 @@ not mean the product is clear.
 
 ## Instructions
 
-1. Read `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md`. If it
-   contains `[PLACEHOLDER]`, stop and direct to `/ip-legal:cold-start-interview`.
+1. Read `~/.config/oscar/profile.json`. If it
+   contains `[PLACEHOLDER]`, stop and direct to Oscar GC onboarding.
 2. Follow the workflow below.
 3. Run intake (product/process, technical detail, jurisdictions, known patents,
    timing).
@@ -47,11 +49,11 @@ flag — patent counsel decides.
 ## Examples
 
 ```
-/ip-legal:fto-triage "an on-device speech recognition model for consumer wearables, US launch first"
+fto-triage "an on-device speech recognition model for consumer wearables, US launch first"
 ```
 
 ```
-/ip-legal:fto-triage
+fto-triage
 ```
 
 ---
@@ -92,7 +94,7 @@ privileged channels.
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/ip-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/ip-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/ip-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 Patent FTO matters are particularly common candidates for **clean-team** or
 **heightened** confidentiality at matter-open. Respect the matter's confidentiality
@@ -102,7 +104,7 @@ marking from `matter.md`.
 
 ## Load the practice profile first
 
-Before running triage, read `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md`. Pull:
+Before running triage, read `~/.config/oscar/profile.json`. Pull:
 
 - **Role** from `## Who's using this` (lawyer vs. non-lawyer changes the
   work-product header and the non-lawyer gate below).
@@ -117,19 +119,19 @@ Before running triage, read `~/.claude/plugins/config/claude-for-legal/ip-legal/
 - **Decision posture** from `## Decision posture on subjective legal calls` —
   this skill never concludes "does not infringe."
 
-If `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` contains `[PLACEHOLDER]` or `[Your Company Name]`, surface this bounce:
+If `~/.config/oscar/profile.json` contains `[PLACEHOLDER]` or `[Your Company Name]`, surface this bounce:
 
 > I notice you haven't configured your practice profile yet — that's how I tailor posture, jurisdictions, and approval chain to your practice.
 >
 > **Two choices:**
-> - Run `/ip-legal:cold-start-interview` (2 minutes) to configure your profile, then I'll run this tailored to YOUR practice.
+> - Run Oscar GC onboarding (2 minutes) to configure your profile, then I'll run this tailored to YOUR practice.
 > - Say **"provisional"** and I'll run this against generic defaults — US jurisdiction, middle risk appetite, lawyer role, no playbook — and tag every output `[PROVISIONAL — configure your profile for tailored output]` so you can see what I do before committing.
 
 ### Provisional mode
 
 If the user says "provisional," run the FTO triage normally using these generic defaults: middle risk appetite, lawyer role, US jurisdiction, no playbook (do the full analysis rather than matching against a position list). Tag the reviewer note and every finding block with `[PROVISIONAL]`. At the end of the output, append:
 
-> "That was a generic run against default assumptions. Run `/ip-legal:cold-start-interview` to get output calibrated to YOUR practice — your playbook, your jurisdiction, your risk appetite. 2 minutes."
+> "That was a generic run against default assumptions. Run Oscar GC onboarding to get output calibrated to YOUR practice — your playbook, your jurisdiction, your risk appetite. 2 minutes."
 
 ---
 
@@ -357,7 +359,7 @@ Bucket by what the triage found:
 
 ## Output format
 
-Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` `## Outputs`. Mark the document as privileged if the role is lawyer; see the non-lawyer gate below if not.
+Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs`. Mark the document as privileged if the role is lawyer; see the non-lawyer gate below if not.
 
 ```markdown
 [WORK-PRODUCT HEADER]
@@ -445,7 +447,7 @@ required]
   search found nothing and comprehensive search already ran]
 - [design-around options if a literal read was found]
 - [license / IPR / PGR / at-risk analysis as counsel directs]
-- [routing per `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` —
+- [routing per `~/.config/oscar/profile.json` —
   patent OC named in the practice profile]
 
 ## Willfulness note
@@ -498,9 +500,9 @@ be forwarded to non-attorney third parties.
 ## Output location
 
 If matter workspaces are enabled and a matter is active, write the output to
-`~/.claude/plugins/config/claude-for-legal/ip-legal/matters/<matter-slug>/outputs/fto-triage-<subject-slug>-YYYY-MM-DD.md`.
+`~/.config/oscar/state/ip-legal/matters/<matter-slug>/outputs/fto-triage-<subject-slug>-YYYY-MM-DD.md`.
 Otherwise write to
-`~/.claude/plugins/config/claude-for-legal/ip-legal/outputs/fto-triage-<subject-slug>-YYYY-MM-DD.md`
+`~/.config/oscar/state/ip-legal/outputs/fto-triage-<subject-slug>-YYYY-MM-DD.md`
 and surface the path.
 
 Append a one-line entry to the matter's `history.md` if a matter is active.
@@ -521,7 +523,7 @@ End with the next-steps decision tree per CLAUDE.md `## Outputs`. Customize the 
 - **Draft patent claims.** This plugin does not go there; route to prosecution
   counsel.
 - **Assess damages exposure.** Damages modeling is an expert's job.
-- **Handle trade-secret or trademark analysis** — use `/ip-legal:infringement-triage`
+- **Handle trade-secret or trademark analysis** — use `infringement-triage`
   with the right mode.
 - **Quote outputs to counterparties or non-privileged audiences.** This is a
   privileged research document.

@@ -17,20 +17,20 @@ Watches regulatory feeds, diffs new regulations against your policy library, sur
 Asks which regulators you watch, connects your policy document folder, learns what "material" means to you. Builds a watchlist and indexes your policy library.
 
 ```
-/regulatory-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
 ## Skills
 
 | Skill | Does |
 |---|---|
-| `/regulatory-legal:cold-start-interview` | Cold-start: watchlist + policy index + materiality threshold |
-| `/regulatory-legal:reg-feed-watcher` | Check feeds now, report what's new |
-| `/regulatory-legal:policy-diff [reg]` | Diff a specific reg change against policy library |
-| `/regulatory-legal:gaps` | Open gaps tracker — what's been flagged and not yet closed |
-| `/regulatory-legal:comments` | Review open NPRM comment periods, log decisions, track deadlines |
-| `/regulatory-legal:policy-redraft` | Proposed marked-up policy redraft that closes a gap — a first draft for internal review, not a direct edit to source documents |
-| `/regulatory-legal:matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
+| Oscar GC onboarding | Cold-start: watchlist + policy index + materiality threshold |
+| `reg-feed-watcher` | Check feeds now, report what's new |
+| `policy-diff [reg]` | Diff a specific reg change against policy library |
+| `gaps` | Open gaps tracker — what's been flagged and not yet closed |
+| `comments` | Review open NPRM comment periods, log decisions, track deadlines |
+| `policy-redraft` | Proposed marked-up policy redraft that closes a gap — a first draft for internal review, not a direct edit to source documents |
+| `matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
 | **gap-surfacer** *(reference)* | Shared gap- and comment-tracker framework loaded by `/gaps` and `/comments` |
 
 ## Interactive skills vs. scheduled agents
@@ -62,7 +62,7 @@ Owner notifications (gap assignments, due-date reminders, NPRM alerts) require a
 
 ## How it learns
 
-Your practice profile at `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. The `reg-change-monitor` agent watches the regulatory feeds and flags changes against your policy library. You can re-run setup, edit the file directly, or tell a skill to record a new position.
+Your practice profile at `~/.config/oscar/profile.json` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. The `reg-change-monitor` agent watches the regulatory feeds and flags changes against your policy library. You can re-run setup, edit the file directly, or tell a skill to record a new position.
 
 ## Notes
 
@@ -72,4 +72,4 @@ Your practice profile at `~/.claude/plugins/config/claude-for-legal/regulatory-l
 
 ## Configuration
 
-Your configuration is stored at `~/.claude/plugins/config/claude-for-legal/regulatory-legal/CLAUDE.md` and survives plugin updates — you only run setup once.
+Your configuration is stored at `~/.config/oscar/profile.json` and survives plugin updates — you only run setup once.

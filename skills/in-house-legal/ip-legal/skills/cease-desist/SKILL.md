@@ -8,18 +8,20 @@ description: >
 argument-hint: "<--send | --receive> [context, counterparty, or path to incoming letter]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/ip-legal @ 4d55f539; Apache 2.0 -->
+
 # /cease-desist
 
 Two modes. Pick one:
 
-- `/ip-legal:cease-desist --send` — draft a cease-and-desist letter calibrated to your enforcement posture. Loud gate runs before delivery.
-- `/ip-legal:cease-desist --receive` — triage a C&D someone sent you. Produces an options memo with a recommendation.
+- `cease-desist --send` — draft a cease-and-desist letter calibrated to your enforcement posture. Loud gate runs before delivery.
+- `cease-desist --receive` — triage a C&D someone sent you. Produces an options memo with a recommendation.
 
 ## Instructions
 
-1. **Read the practice profile.** Load `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md`. If it contains `[PLACEHOLDER]` markers or does not exist, stop and say: "This plugin needs setup before it can give you useful output. Run `/ip-legal:cold-start-interview` — the C&D skill depends on your enforcement posture, approval matrix, and practice-area mix, none of which are configured yet."
+1. **Read the practice profile.** Load `~/.config/oscar/profile.json`. If it contains `[PLACEHOLDER]` markers or does not exist, stop and say: "This plugin needs setup before it can give you useful output. Run Oscar GC onboarding — the C&D skill depends on your enforcement posture, approval matrix, and practice-area mix, none of which are configured yet."
 
-2. **Check matter workspaces.** Per `## Matter workspaces`: if `Enabled` is `✗`, skip — skills use practice-level context. If enabled and there is no active matter, ask: "Which matter is this for? Run `/ip-legal:matter-workspace switch <slug>` or say `practice-level`."
+2. **Check matter workspaces.** Per `## Matter workspaces`: if `Enabled` is `✗`, skip — skills use practice-level context. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`."
 
 3. **Dispatch on `$ARGUMENTS`:**
    - If `--send` is present: run send mode (below). Walk through identify-the-right, identify-the-conduct, identify-the-relationship, identify-the-demand, calibrate-to-posture, draft, and the pre-delivery gate.
@@ -30,14 +32,14 @@ Two modes. Pick one:
 
 5. **Respect the approval matrix.** Pull the approver for the C&D row from `## Enforcement posture → Approval matrix`. Pull automatic escalations. Surface both in the gate; do not smother them.
 
-6. **Hand off where appropriate.** In receive mode, if the recommendation is to respond firmly, offer to chain into `/ip-legal:cease-desist --send` pre-populated with the response context. If the recommendation is to pre-empt with a DJ action or TTAB cancellation, escalate to outside counsel per the practice profile's IP litigation row — do not draft.
+6. **Hand off where appropriate.** In receive mode, if the recommendation is to respond firmly, offer to chain into `cease-desist --send` pre-populated with the response context. If the recommendation is to pre-empt with a DJ action or TTAB cancellation, escalate to outside counsel per the practice profile's IP litigation row — do not draft.
 
 ## Examples
 
 ```
-/ip-legal:cease-desist --send
-/ip-legal:cease-desist --receive ~/Downloads/incoming-cd-acme.pdf
-/ip-legal:cease-desist
+cease-desist --send
+cease-desist --receive ~/Downloads/incoming-cd-acme.pdf
+cease-desist
 ```
 
 ## Notes
@@ -68,9 +70,9 @@ Trademark rights are territorial — a US registration does not travel. Copyrigh
 
 ## Load context
 
-- `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` → `## Enforcement posture` (posture, C&D triggers, soft-letter criteria, approval matrix, automatic escalations), `## IP practice profile` (practice area mix, registered jurisdictions, outside counsel roster), `## Outputs` (work-product header, role), `## Who's using this` (role — lawyer vs. non-lawyer)
+- `~/.config/oscar/profile.json` → `## Enforcement posture` (posture, C&D triggers, soft-letter criteria, approval matrix, automatic escalations), `## IP practice profile` (practice area mix, registered jurisdictions, outside counsel roster), `## Outputs` (work-product header, role), `## Who's using this` (role — lawyer vs. non-lawyer)
 - Any C&D template or enforcement playbook referenced in the practice profile's seed documents — read it, match the structure
-- **Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip matter machinery — skills use practice-level context. If enabled and there is no active matter, ask: "Which matter is this for? Run `/ip-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific overrides (e.g., posture override, approver override). Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/ip-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+- **Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip matter machinery — skills use practice-level context. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific overrides (e.g., posture override, approver override). Write outputs to the matter folder at `~/.config/oscar/state/ip-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ## Send mode — drafting the C&D
 
@@ -342,7 +344,7 @@ Present 4-5 options with tradeoffs:
 **C — Respond firmly (reject)**
 - When: their claim is weak, overbroad, or factually wrong; we want to close this down without litigating
 - Tradeoff: locks in a position; if the claim is in fact colorable, our response becomes an exhibit
-- Next step: draft a response letter — consider running it through `/ip-legal:cease-desist --send` reframed as a response
+- Next step: draft a response letter — consider running it through `cease-desist --send` reframed as a response
 
 **D — Ignore (and preserve)**
 - When: the claim is frivolous, the sender has no apparent capacity to sue, the deadline has no legal consequence
@@ -481,10 +483,10 @@ If the user is a non-lawyer, add the "find-an-attorney" routing paragraph from s
 
 Based on the recommendation and user confirmation:
 
-- Respond firmly → hand off to `/ip-legal:cease-desist --send` with context pre-populated as a response letter (this triggers the send-mode gate anew).
+- Respond firmly → hand off to `cease-desist --send` with context pre-populated as a response letter (this triggers the send-mode gate anew).
 - Negotiate → start a holding letter / negotiation track in the matter.
 - Pre-empt or file to cancel → escalate to outside counsel per the practice profile's IP litigation row; do not draft.
-- Matter creation → if there isn't one and the matter is material, offer `/ip-legal:matter-workspace new <slug>` pre-populated.
+- Matter creation → if there isn't one and the matter is material, offer `matter-workspace new <slug>` pre-populated.
 - Comply / ignore → log the decision in the matter history; issue or confirm the legal hold; close the triage record.
 
 ## Decision posture

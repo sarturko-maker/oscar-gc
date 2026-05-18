@@ -34,35 +34,35 @@ The cold-start interview writes the *house* practice profile — persistent acro
 It offers sensible defaults at each step (e.g., a 3×3 severity-likelihood grid) and keeps everything freeform-editable. If you don't have a written framework yet, this is the thing that forces the articulation.
 
 ```
-/litigation-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
-Your configuration is stored at `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` and survives plugin updates.
+Your configuration is stored at `~/.config/oscar/profile.json` and survives plugin updates.
 
 ## Commands
 
 | Command | Does |
 |---|---|
-| `/litigation-legal:cold-start-interview` | Cold-start → writes house `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` |
-| `/litigation-legal:matter-intake` | Uniform intake → writes `matters/[slug]/` + appends to `_log.yaml` |
-| `/litigation-legal:portfolio-status` | Portfolio rollup — risk distribution, upcoming deadlines, stale matters |
-| `/litigation-legal:matter-briefing [slug]` | Deep briefing on one matter — read-ready before a GC or outside counsel call |
-| `/litigation-legal:matter-update [slug]` | Append a dated event to a matter's history; refresh the log's `last_updated` |
-| `/litigation-legal:matter-close [slug]` | Archive a matter out of the active portfolio (retained, not deleted) |
-| `/litigation-legal:demand-intake [title]` | Pre-drafting context gathering for a demand letter (payment / breach / C&D / employment separation / preservation) |
-| `/litigation-legal:demand-draft [slug]` | Draft the letter from intake — runs FRE 408 / privilege gate, outputs `.docx`, writes post-send checklist |
-| `/litigation-legal:demand-received [path]` | Triage an inbound demand letter — options analysis, portfolio cross-check, hand off to matter/demand-intake |
-| `/litigation-legal:subpoena-triage [path]` | Triage a subpoena — classify, scope/burden/privilege, objections framework, compliance plan |
-| `/litigation-legal:legal-hold [slug] [--issue/--refresh/--release/--status]` | Issue, refresh, release, or report holds — writes `.docx` + updates log |
-| `/litigation-legal:chronology [slug]` | Build or update a chronology from declared doc sources + uploads — tagged by significance per matter theory |
-| `/litigation-legal:oc-status` | Draft weekly OC status-request emails across the portfolio; Gmail drafts if MCP available |
-| `/litigation-legal:claim-chart` | Build or review an element chart — patent claim chart (infringement / invalidity / review) or civil element chart (any cause of action or defense) with gap detection |
+| Oscar GC onboarding | Cold-start → writes house `~/.config/oscar/profile.json` |
+| `matter-intake` | Uniform intake → writes `matters/[slug]/` + appends to `_log.yaml` |
+| `portfolio-status` | Portfolio rollup — risk distribution, upcoming deadlines, stale matters |
+| `matter-briefing [slug]` | Deep briefing on one matter — read-ready before a GC or outside counsel call |
+| `matter-update [slug]` | Append a dated event to a matter's history; refresh the log's `last_updated` |
+| `matter-close [slug]` | Archive a matter out of the active portfolio (retained, not deleted) |
+| `demand-intake [title]` | Pre-drafting context gathering for a demand letter (payment / breach / C&D / employment separation / preservation) |
+| `demand-draft [slug]` | Draft the letter from intake — runs FRE 408 / privilege gate, outputs `.docx`, writes post-send checklist |
+| `demand-received [path]` | Triage an inbound demand letter — options analysis, portfolio cross-check, hand off to matter/demand-intake |
+| `subpoena-triage [path]` | Triage a subpoena — classify, scope/burden/privilege, objections framework, compliance plan |
+| `legal-hold [slug] [--issue/--refresh/--release/--status]` | Issue, refresh, release, or report holds — writes `.docx` + updates log |
+| `chronology [slug]` | Build or update a chronology from declared doc sources + uploads — tagged by significance per matter theory |
+| `oc-status` | Draft weekly OC status-request emails across the portfolio; Gmail drafts if MCP available |
+| `claim-chart` | Build or review an element chart — patent claim chart (infringement / invalidity / review) or civil element chart (any cause of action or defense) with gap detection |
 
 ## Skills
 
 | Skill | Purpose |
 |---|---|
-| **cold-start-interview** | House practice profile — risk calibration, landscape, style |
+| **Oscar GC onboarding** | House practice profile — risk calibration, landscape, style |
 | **matter-intake** | Uniform intake questions; writes matter file + log row |
 | **portfolio-status** | Rollup across the log — risk, deadlines, staleness |
 | **matter-briefing** | Deep read of one matter from its file + history |
@@ -134,12 +134,12 @@ Designed to be useful with nothing connected. If/when you want to pull from Rela
 
 ## How it learns
 
-Your practice profile at `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. You can re-run setup, edit the file directly, or tell a skill to record a new position.
+Your practice profile at `~/.config/oscar/profile.json` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. You can re-run setup, edit the file directly, or tell a skill to record a new position.
 
 ## Notes
 
-- Every skill reads from `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` first. If your risk appetite changes or you bring on new outside counsel, update it — don't paper over it in individual matters.
-- `## Company profile` is the first section of `~/.claude/plugins/config/claude-for-legal/litigation-legal/CLAUDE.md` by convention. If you run other `-legal` plugins, you can copy it across rather than re-entering the same context.
+- Every skill reads from `~/.config/oscar/profile.json` first. If your risk appetite changes or you bring on new outside counsel, update it — don't paper over it in individual matters.
+- `## Company profile` is the first section of `~/.config/oscar/profile.json` by convention. If you run other `-legal` plugins, you can copy it across rather than re-entering the same context.
 - `_log.yaml` is the source of truth for portfolio state. Keep it clean.
 - Matter history is append-only. If something was wrong, note the correction as a new entry — don't edit the past.
 - Closed matters stay in `_log.yaml` (searchable history). `/portfolio-status` filters them out of active rollups by default.

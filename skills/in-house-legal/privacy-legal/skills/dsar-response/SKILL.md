@@ -10,9 +10,11 @@ description: >
 argument-hint: "[paste the request, or describe it]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/privacy-legal @ 4d55f539; Apache 2.0 -->
+
 # /dsar-response
 
-1. Load `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → DSAR process (systems list, verification method, SLA).
+1. Load `~/.config/oscar/profile.json` → DSAR process (systems list, verification method, SLA).
 2. Run the workflow below.
 3. Classify request type. Check escalation triggers — if any fire, route before proceeding.
 4. Walk through: verify identity → walk systems list → exemption analysis → draft.
@@ -22,7 +24,7 @@ argument-hint: "[paste the request, or describe it]"
 **Before pasting the request:** the request will contain the data subject's PII. Confirm your session and output storage meet your data-handling requirements. Redact anything you don't need (ID attachments, unrelated email threads). Do not store the subject's name in filenames.
 
 ```
-/privacy-legal:dsar-response
+dsar-response
 [paste the request email]
 ```
 
@@ -32,7 +34,7 @@ argument-hint: "[paste the request, or describe it]"
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/privacy-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/privacy-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/privacy-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -46,7 +48,7 @@ This analysis assumes the jurisdictional scope specified in your configuration. 
 
 ## Load the process
 
-Read `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → `## DSAR process`. That section has:
+Read `~/.config/oscar/profile.json` → `## DSAR process`. That section has:
 - The systems list (every place user data lives)
 - Identity verification method
 - Response SLA
@@ -84,7 +86,7 @@ Some requests are combinations — "delete my account and send me my data first"
 
 ### Step 2: Verify identity
 
-Per the method in `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md`. Common approaches:
+Per the method in `~/.config/oscar/profile.json`. Common approaches:
 
 - **Logged-in verification:** Request came from within an authenticated session → identity confirmed
 - **Email match:** Request came from an email on file → usually sufficient for low-risk requests
@@ -104,7 +106,7 @@ This pauses the clock (arguably) but don't sit on it — respond to say you need
 
 ### Step 3: Locate the data
 
-Walk the systems list from `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md`. For each system:
+Walk the systems list from `~/.config/oscar/profile.json`. For each system:
 
 | System | Queried? | Data found? | What |
 |---|---|---|---|
@@ -145,7 +147,7 @@ Most regimes expect (or require) a prompt acknowledgment separate from the subst
 - **Step 5a — Acknowledgment letter.** Sent within days of receipt (target: same-day to 3–5 days, always well inside the regime's statutory window). Confirms receipt, states what the controller understands the request to be, states the response clock and the target date, asks for any identity-verification material still outstanding. Does NOT contain the substantive disclosure. A prompt acknowledgment is the first regulator-visible signal that the DSAR process is working; it also reduces the risk of a duplicate request or an early complaint.
 - **Step 5b — Substantive response letter.** The actual disclosure, deletion confirmation, or portability export. Goes out by the statutory deadline (or the internal SLA if tighter). Only after identity verification is complete and the Step 3 / Step 4 data location + exemption analysis is done.
 
-**Before proceeding to send either letter to the data subject:** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md`. If the Role is Non-lawyer:
+**Before proceeding to send either letter to the data subject:** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is Non-lawyer:
 
 > Sending a DSAR response has legal consequences — the content, the exemptions claimed, and the omissions are all reviewable by a regulator, and misstatements become enforcement exposure. Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 >
@@ -155,7 +157,7 @@ Most regimes expect (or require) a prompt acknowledgment separate from the subst
 
 Do not proceed past this gate without an explicit yes.
 
-> **Note:** Both DSAR letters are externally-facing deliverables sent to the data subject. Do **not** include the work-product header from `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` `## Outputs` on either letter. Internal notes, logs, and exemption analyses that accompany the letters are attorney work product — keep those separate and prepend the work-product header per `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` `## Outputs` (which differs by user role — see `## Who's using this`).
+> **Note:** Both DSAR letters are externally-facing deliverables sent to the data subject. Do **not** include the work-product header from `~/.config/oscar/profile.json` `## Outputs` on either letter. Internal notes, logs, and exemption analyses that accompany the letters are attorney work product — keep those separate and prepend the work-product header per `~/.config/oscar/profile.json` `## Outputs` (which differs by user role — see `## Who's using this`).
 
 > **Before sending either letter:** This is a draft for attorney review, not a response to send. Sending commits the controller to a position, may waive exemptions, and may start a regulator's clock. A licensed attorney reviews, edits, and approves before either letter goes to the data subject. Do not send unreviewed.
 
@@ -263,7 +265,7 @@ If your team uses a DSAR tracking tool, create the record there. If not, a log f
 
 ## Escalation triggers
 
-Per `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → Escalation table, escalate when:
+Per `~/.config/oscar/profile.json` → Escalation table, escalate when:
 
 - Requester is (or might be) a plaintiff, opposing counsel, or journalist
 - Request scope is unusual ("all data including internal communications about me")
@@ -277,7 +279,7 @@ Per `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → Esca
 
 **Research the currently operative response deadline for the specific right invoked and the applicable jurisdictions.** Check whether an extension mechanism exists, how much extra time it buys, and what notice the data subject must receive to invoke it. Identify when the clock starts (receipt vs. verification vs. some other trigger — default rule is receipt; verify per regime). Cite the controlling statute or regulation with pinpoint references. Note effective dates — data protection response timelines are amended frequently and new state laws introduce their own clocks.
 
-If `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → `## DSAR process` records an internal SLA that is tighter than the legal deadline, use the internal SLA and note the legal backstop.
+If `~/.config/oscar/profile.json` → `## DSAR process` records an internal SLA that is tighter than the legal deadline, use the internal SLA and note the legal backstop.
 
 If you're going to need an extension, send the "we need more time" notice well before the first deadline. Day-of extensions look bad.
 

@@ -1,0 +1,4 @@
+[
+  {"id": "commercial-side", "prompt": "On commercial contracts, are you usually selling (vendor, your paper) or buying (customer, their paper) — or both in roughly equal measure?", "priority": 1},
+  {"id": "commercial-deal-breaker", "prompt": "Which single term, if it shows up in a contract, you want escalated to you regardless of deal size — your one-thing deal-breaker?", "priority": 1}
+]

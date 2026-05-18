@@ -10,11 +10,13 @@ description: >
   an upcoming board or committee event.
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/corporate-legal @ 4d55f539; Apache 2.0 -->
+
 # Board Minutes
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/corporate-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/corporate-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/corporate-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -24,12 +26,12 @@ Board minutes are a legal record. They need to be accurate, complete, and in a f
 
 ## Load context
 
-- `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` → `## Board & Secretary` section:
+- `~/.config/oscar/profile.json` → `## Board & Secretary` section:
   - Minutes format (long-form narrative / action minutes / hybrid)
   - Minutes template extracted from seed documents (structure, resolution language, header format)
   - Board composition and committees
   - Written consents — what they're used for and any limits
-- If `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` has no minutes format: run cold-start first. Do not proceed with a generic format.
+- If `~/.config/oscar/profile.json` has no minutes format: run cold-start first. Do not proceed with a generic format.
 
 ---
 
@@ -70,7 +72,7 @@ Once the meeting is identified, confirm or fill in:
 Ask for the attendee list, or offer to pull from the calendar invite if the connector is authorized.
 
 **Directors present:**
-- Pull from board composition in `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` as the starting point
+- Pull from board composition in `~/.config/oscar/profile.json` as the starting point
 - Ask who was actually present, who was absent, and whether any absent directors had advance notice
 
 **Management present:**
@@ -113,7 +115,7 @@ Ask for the meeting materials. These are the source for the agenda items and any
 
 ## Step 4: Draft the minutes
 
-Use the house format from `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`. Do not default to a generic format. The seed minutes are the template — replicate the structure, the header, the resolution language, the level of discussion detail.
+Use the house format from `~/.config/oscar/profile.json`. Do not default to a generic format. The seed minutes are the template — replicate the structure, the header, the resolution language, the level of discussion detail.
 
 ### Standard structure (adapt to house format)
 
@@ -139,7 +141,7 @@ OF [COMPANY NAME]
 - Also present: [management, outside counsel, guests — with roles]
 
 **Previous minutes:**
-Standard language: approval of minutes from prior meeting. Pull date of prior meeting from `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` board calendar if available, otherwise leave as [DATE OF PRIOR MEETING].
+Standard language: approval of minutes from prior meeting. Pull date of prior meeting from `~/.config/oscar/profile.json` board calendar if available, otherwise leave as [DATE OF PRIOR MEETING].
 
 **Agenda items — one section per item:**
 
@@ -153,7 +155,7 @@ Standard language: approval of minutes from prior meeting. Pull date of prior me
 [If resolution follows:]
 Upon motion duly made and seconded, the following resolution was adopted [by unanimous vote / by a vote of N for, N against, N abstaining]:
 
-RESOLVED, that [resolution text in house language from `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`].
+RESOLVED, that [resolution text in house language from `~/.config/oscar/profile.json`].
 ```
 
 **Adjournment:**
@@ -184,7 +186,7 @@ When no materials: insert `[PLACEHOLDER — summarize discussion here]` and flag
 
 ## Step 4.5: Consequential-action gate (adopt minutes)
 
-**Before adopting minutes as final:** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md`. If the Role is **Non-lawyer**:
+**Before adopting minutes as final:** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is **Non-lawyer**:
 
 > Adopting minutes makes them the official record of what the board decided — they're the primary evidence of authorization for the actions taken at the meeting. Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 >
@@ -202,7 +204,7 @@ Do not produce the final adoption-ready version past this gate without an explic
 
 ## Step 5: Output and review prompts
 
-Produce the full draft. The minutes themselves are a corporate record, not privileged; do not apply the work-product header to the minutes as circulated. The drafting notes, placeholder flags, and review checklist below are work product — prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/corporate-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`):
+Produce the full draft. The minutes themselves are a corporate record, not privileged; do not apply the work-product header to the minutes as circulated. The drafting notes, placeholder flags, and review checklist below are work product — prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`):
 
 ```
 [WORK-PRODUCT HEADER — per plugin config ## Outputs — differs by role; see `## Who's using this`]
@@ -236,7 +238,7 @@ Add as a final pre-adoption note on the draft, stripped before adoption:
 
 ## Written consents
 
-For drafting written consents in lieu of a meeting, use `/corporate-legal:written-consent`. That skill handles precedent search, state-law confirmation, and the scope warning for major one-off actions.
+For drafting written consents in lieu of a meeting, use `written-consent`. That skill handles precedent search, state-law confirmation, and the scope warning for major one-off actions.
 
 ---
 

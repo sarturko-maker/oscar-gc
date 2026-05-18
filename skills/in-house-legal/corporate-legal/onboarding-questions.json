@@ -1,0 +1,4 @@
+[
+  {"id": "entity-portfolio", "prompt": "What legal entities does your team manage? Share an entity list, org chart, or describe roughly: how many entities, what types (Corp / LLC / LP / Ltd / branch), and the key jurisdictions of formation and qualification.", "priority": 1},
+  {"id": "active-workstreams", "prompt": "Which of these areas are part of your regular work? Pick any combination: (1) M&A deals — buying, selling, investing, or divesting; (2) Board and corporate secretary — board prep, minutes, written consents, committee management; (3) Entity management — subsidiary filings, registered agents, annual reports; (4) Public company — SEC reporting, §16 filings, insider trading.", "priority": 1}
+]

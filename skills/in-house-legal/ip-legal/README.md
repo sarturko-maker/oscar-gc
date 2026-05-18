@@ -21,10 +21,10 @@ This plugin does **not** draft patent claims. Patent prosecution with claim stra
 
 On first use, the plugin interviews you — ten to fifteen minutes, conversational — to learn how your practice actually works. It asks about your practice area mix, your jurisdiction footprint, your enforcement posture, your approval matrix, and your escalation triggers. Then it asks for your portfolio list, brand guidelines, C&D templates, enforcement playbook, and OSS policy — whatever you have — so it can extract rather than making you re-type.
 
-It writes what it learns to `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` — a plain-English document about your practice that every other skill reads before doing anything. You edit the document, not a config file.
+It writes what it learns to `~/.config/oscar/profile.json` — a plain-English document about your practice that every other skill reads before doing anything. You edit the document, not a config file.
 
 ```
-/ip-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
 **Practice area mix.** Early in setup, you'll be asked which IP areas you actually work in — trademark, patent, copyright, trade secret, open source, or all. The plugin skips questions in areas you don't practice. Your configuration can hold multiple areas in parallel, and each skill asks which area applies when it's not obvious from what you paste.
@@ -35,23 +35,23 @@ It writes what it learns to `~/.claude/plugins/config/claude-for-legal/ip-legal/
 
 | Command | Does |
 |---|---|
-| `/ip-legal:cold-start-interview` | Run (or re-run) the cold-start interview |
-| `/ip-legal:cease-desist [context]` | Cease-and-desist — send, or triage an inbound one, with the approval routing your CLAUDE.md requires |
-| `/ip-legal:takedown [context]` | DMCA takedown — send, respond to a received notice, or draft a counter-notice |
-| `/ip-legal:clearance [mark]` | First-pass trademark clearance — knockout + confusion analysis, attorney still signs off |
-| `/ip-legal:fto-triage [product / claim scope]` | Freedom-to-operate triage — surfaces blocking references for attorney review |
-| `/ip-legal:invention-intake [disclosure]` | Invention disclosure first-pass screen — novelty, obviousness, §101, bar dates, detectability, strategic value |
-| `/ip-legal:infringement-triage [context]` | Infringement triage — is this worth pursuing, and how |
-| `/ip-legal:ip-clause-review [file]` | Review IP clauses in an agreement — assignment, license grant, IP indemnity, OSS reps |
-| `/ip-legal:oss-review [repo / file list]` | Open source license compliance check — copyleft obligations, attribution, license compatibility |
-| `/ip-legal:portfolio` | Registration and renewal tracker — what's due, what's filed, what needs action |
-| `/ip-legal:matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
+| Oscar GC onboarding | Run (or re-run) the cold-start interview |
+| `cease-desist [context]` | Cease-and-desist — send, or triage an inbound one, with the approval routing your CLAUDE.md requires |
+| `takedown [context]` | DMCA takedown — send, respond to a received notice, or draft a counter-notice |
+| `clearance [mark]` | First-pass trademark clearance — knockout + confusion analysis, attorney still signs off |
+| `fto-triage [product / claim scope]` | Freedom-to-operate triage — surfaces blocking references for attorney review |
+| `invention-intake [disclosure]` | Invention disclosure first-pass screen — novelty, obviousness, §101, bar dates, detectability, strategic value |
+| `infringement-triage [context]` | Infringement triage — is this worth pursuing, and how |
+| `ip-clause-review [file]` | Review IP clauses in an agreement — assignment, license grant, IP indemnity, OSS reps |
+| `oss-review [repo / file list]` | Open source license compliance check — copyleft obligations, attribution, license compatibility |
+| `portfolio` | Registration and renewal tracker — what's due, what's filed, what needs action |
+| `matter-workspace` | Manage matter workspaces (multi-client private practice only) — new, list, switch, close, none |
 
 ## Skills
 
 | Skill | Purpose |
 |---|---|
-| **cold-start-interview** | First-run interview that writes `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` |
+| **Oscar GC onboarding** | First-run interview that writes `~/.config/oscar/profile.json` |
 | **cease-desist** | Draft or triage a C&D; routes through the approval matrix before sending |
 | **takedown** | DMCA notice, response to a received takedown, or counter-notice |
 | **clearance** | Knockout search + likelihood-of-confusion first pass for a proposed mark |
@@ -98,17 +98,17 @@ With Drive or Slack connected: portfolio exports, C&D templates, and enforcement
 ### 1. Get interviewed
 
 ```
-/ip-legal:cold-start-interview
+Oscar GC onboarding
 ```
 
 Ten to fifteen minutes. Have your portfolio list, brand guidelines (if any), a C&D template (if any), and your OSS policy (if any) ready to share.
 
-Your configuration is stored at `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` and survives plugin updates.
+Your configuration is stored at `~/.config/oscar/profile.json` and survives plugin updates.
 
 ### 2. Clear a mark
 
 ```
-/ip-legal:clearance "APEXLEAF"
+clearance "APEXLEAF"
 ```
 
 Output: knockout-hit list, likelihood-of-confusion factor analysis, flags for attorney review. Not a go/no-go.
@@ -116,7 +116,7 @@ Output: knockout-hit list, likelihood-of-confusion factor analysis, flags for at
 ### 3. See what's due
 
 ```
-/ip-legal:portfolio
+portfolio
 ```
 
 Output: registrations with renewal, affidavit, or maintenance deadlines in the next 90 days, grouped by urgency.
@@ -132,7 +132,7 @@ ip-legal/
 ├── agents/
 │   └── ip-renewal-watcher.md
 ├── skills/
-│   ├── cold-start-interview/
+│   ├── Oscar GC onboarding/
 │   ├── cease-desist/
 │   ├── takedown/
 │   ├── clearance/
@@ -151,19 +151,19 @@ ip-legal/
 The plugin reads user-specific configuration from:
 
 ```
-~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md
+~/.config/oscar/profile.json
 ```
 
 This path survives plugin updates. The `CLAUDE.md` that ships with the plugin is a template — it is replaced every upgrade. The cold-start interview writes your populated version to the config path above; from then on, edit that file directly when something changes.
 
 ## How it learns
 
-Your practice profile at `~/.claude/plugins/config/claude-for-legal/ip-legal/CLAUDE.md` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. The `ip-renewal-watcher` agent tracks the portfolio register and surfaces upcoming renewal deadlines at your cadence. You can re-run setup, edit the file directly, or tell a skill to record a new position.
+Your practice profile at `~/.config/oscar/profile.json` isn't static — it improves as you use the plugin. Skills tell you when an output used a default you should tune. The `ip-renewal-watcher` agent tracks the portfolio register and surfaces upcoming renewal deadlines at your cadence. You can re-run setup, edit the file directly, or tell a skill to record a new position.
 
 ## Notes
 
-- Every skill reads the practice profile first. If it finds placeholders, it stops and tells you to run `/ip-legal:cold-start-interview`. There's no generic fallback — a generic IP posture is worse than no posture.
-- Sending a C&D starts a fight. The `/ip-legal:cease-desist` skill will not send anything itself; it drafts, surfaces the approval matrix entry, and waits for the approver.
-- `/ip-legal:clearance` and `/ip-legal:fto-triage` are **first-pass** triage. The output is a research package for an attorney, not a clearance opinion. The skill says so on every run.
-- `/ip-legal:oss-review` flags license obligations and incompatibilities. It does not bless a commercial-use decision — engineering and legal decide that together.
+- Every skill reads the practice profile first. If it finds placeholders, it stops and tells you to run Oscar GC onboarding. There's no generic fallback — a generic IP posture is worse than no posture.
+- Sending a C&D starts a fight. The `cease-desist` skill will not send anything itself; it drafts, surfaces the approval matrix entry, and waits for the approver.
+- `clearance` and `fto-triage` are **first-pass** triage. The output is a research package for an attorney, not a clearance opinion. The skill says so on every run.
+- `oss-review` flags license obligations and incompatibilities. It does not bless a commercial-use decision — engineering and legal decide that together.
 - Patent claim drafting is intentionally out of scope. This plugin plays well alongside a patent prosecution specialist; it does not replace one.

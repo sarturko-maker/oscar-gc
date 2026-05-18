@@ -10,9 +10,11 @@ description: >
 argument-hint: "[optional — scope hint, e.g. 'firm-wide', 'legal team only', 'update existing']"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/ai-governance-legal @ 4d55f539; Apache 2.0 -->
+
 # /policy-starter
 
-1. Read `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`. If the practice profile is unpopulated, stop and direct to `/ai-governance-legal:cold-start-interview`.
+1. Read `~/.config/oscar/profile.json`. If the practice profile is unpopulated, stop and direct to Oscar GC onboarding.
 2. Use the framework below.
 3. Run the scope interview — which sections does the policy need to cover, who's the audience, what's the deployment context. Do not skip to drafting.
 4. Web search for the current published model policies and guidance relevant to the deployment context (ABA, state bars, ILTA, CLOC, NIST, peer-firm / peer-company policies, current state AI laws, EU AI Act, sector regulators as applicable).
@@ -21,16 +23,16 @@ argument-hint: "[optional — scope hint, e.g. 'firm-wide', 'legal team only', '
 7. Close with the next-steps decision tree.
 
 ```
-/ai-governance-legal:policy-starter
-/ai-governance-legal:policy-starter "we need an AI policy for our 30-lawyer firm"
-/ai-governance-legal:policy-starter "update our existing policy for the 2026 state AI laws"
+policy-starter
+policy-starter "we need an AI policy for our 30-lawyer firm"
+policy-starter "update our existing policy for the 2026 state AI laws"
 ```
 
 ---
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/ai-governance-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/ai-governance-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -63,7 +65,7 @@ The discipline of this skill:
 This skill does NOT finalize, distribute, publish, or even recommend a specific
 position on the hard calls. It produces a draft and surfaces the choices.
 
-## Read `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md` first
+## Read `~/.config/oscar/profile.json` first
 
 Before drafting, always read the practice profile. The sections that drive the
 draft:
@@ -251,9 +253,9 @@ profile. The most common next steps:
    them with the attorney; the skill re-runs with the decisions baked in.
 2. **Stakeholder summary** — produce a one-page version for the board or
    executive committee explaining what the policy does and doesn't do.
-3. **Training materials** — once the policy is adopted, `/ai-governance-legal:aia-generation` can be used to produce per-use-case training notes.
-4. **Vendor sweep** — once the policy is adopted, `/ai-governance-legal:vendor-ai-review` should be run against the vendors the policy references to check conformance.
-5. **Gap check against new regulation** — pair with `/ai-governance-legal:reg-gap-analysis` to test the draft against a specific regulation or guidance before adoption.
+3. **Training materials** — once the policy is adopted, `aia-generation` can be used to produce per-use-case training notes.
+4. **Vendor sweep** — once the policy is adopted, `vendor-ai-review` should be run against the vendors the policy references to check conformance.
+5. **Gap check against new regulation** — pair with `ai-governance-legal__reg-gap-analysis` to test the draft against a specific regulation or guidance before adoption.
 
 ## Output scope reminder
 

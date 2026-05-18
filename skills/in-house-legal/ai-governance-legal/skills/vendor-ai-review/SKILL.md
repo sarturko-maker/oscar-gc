@@ -9,25 +9,27 @@ description: >
 argument-hint: "[vendor name, or attach the contract]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/ai-governance-legal @ 4d55f539; Apache 2.0 -->
+
 # /vendor-ai-review
 
-1. Read `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`. Confirm vendor governance positions are populated — if not, stop and direct to setup.
+1. Read `~/.config/oscar/profile.json`. Confirm vendor governance positions are populated — if not, stop and direct to setup.
 2. Use the framework below.
 3. Confirm document type (AI addendum / main agreement AI provisions / ToS). If only an AUP was provided, ask for the full terms.
 4. Term-by-term review: training on data, confidentiality of inputs, model changes, output IP, liability, incident notification, human review rights, use restrictions, audit rights.
 5. AI addendum gap check if DPA exists but no AI addendum.
-6. AI policy consistency diff vs. `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`.
+6. AI policy consistency diff vs. `~/.config/oscar/profile.json`.
 7. Output: bottom line, term-by-term, recommended redlines, if-they-won't-move routing.
 
 ```
-/ai-governance-legal:vendor-ai-review openai-enterprise-agreement.pdf
+vendor-ai-review openai-enterprise-agreement.pdf
 ```
 
 ---
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/ai-governance-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/ai-governance-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -57,23 +59,23 @@ model-specific rights and risks. Both need to be reviewed.
 
 ## Load the playbook
 
-Read `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md` → `## Vendor AI governance`. Also read `## AI policy commitments`
+Read `~/.config/oscar/profile.json` → `## Vendor AI governance`. Also read `## AI policy commitments`
 — vendor terms can't be consistent with a use restriction our own policy imposes if
 we've agreed to something different.
 
-If `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md` contains `[PLACEHOLDER]`, surface this bounce:
+If `~/.config/oscar/profile.json` contains `[PLACEHOLDER]`, surface this bounce:
 
 > I notice you haven't configured your practice profile yet — that's how I tailor vendor governance positions to your practice.
 >
 > **Two choices:**
-> - Run `/ai-governance-legal:cold-start-interview` (2 minutes) to configure your profile, then I'll review tailored to YOUR positions.
+> - Run Oscar GC onboarding (2 minutes) to configure your profile, then I'll review tailored to YOUR positions.
 > - Say **"provisional"** and I'll review against generic defaults — US jurisdiction, middle risk appetite, lawyer role, no playbook — and tag every output `[PROVISIONAL — configure your profile for tailored output]` so you can see what I do before committing.
 
 ### Provisional mode
 
 If the user says "provisional," run the vendor AI review normally using these generic defaults: middle risk appetite, lawyer role, US jurisdiction, no playbook (flag all common vendor-AI risks from first principles rather than matching to configured positions). Tag the reviewer note and every finding block with `[PROVISIONAL]`. At the end of the output, append:
 
-> "That was a generic run against default assumptions. Run `/ai-governance-legal:cold-start-interview` to get output calibrated to YOUR practice — your vendor governance positions, your jurisdiction, your risk appetite. 2 minutes."
+> "That was a generic run against default assumptions. Run Oscar GC onboarding to get output calibrated to YOUR practice — your vendor governance positions, your jurisdiction, your risk appetite. 2 minutes."
 
 ---
 
@@ -99,7 +101,7 @@ If they share an acceptable use policy only:
 
 ### Core AI-specific terms (check every vendor AI agreement)
 
-Review each term below. For each, extract what the vendor's contract actually says and compare it against the position in `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md` → `## Vendor AI governance` (standard / acceptable fallback / automatic no). The default positions come from the team's playbook, not from this skill.
+Review each term below. For each, extract what the vendor's contract actually says and compare it against the position in `~/.config/oscar/profile.json` → `## Vendor AI governance` (standard / acceptable fallback / automatic no). The default positions come from the team's playbook, not from this skill.
 
 | Term | What to look for |
 |---|---|
@@ -117,29 +119,29 @@ Review each term below. For each, extract what the vendor's contract actually sa
 | **Term and termination** | What happens to our data when we terminate? Deletion timelines? |
 | **Stacked-vendor accountability** | Is this vendor the model provider (e.g., Anthropic, OpenAI, Google, Meta), or are they a deployer of someone else's model (e.g., a SaaS wrapper of Claude, ChatGPT, or Gemini) or a reseller of infrastructure-hosted foundation models (Anthropic-on-Bedrock, Claude-on-Vertex, OpenAI-on-Azure)? If the latter: there are TWO vendors' terms in play — the one you're reviewing, plus the upstream model provider's terms. Identify (a) whose terms govern training on inputs, retention, and safety, (b) who is contractually liable for model behavior, and (c) whether each upstream commitment (e.g., "no training on inputs") is flowed down to you, or remains between the vendor and the upstream provider only. Flag any clause where one party disclaims responsibility for the other (e.g., "Anthropic is not responsible for Bedrock or any other services it receives from AWS"; "Azure disclaims responsibility for OpenAI model outputs") and whether the counter-party's contract closes the gap. Do not review the two contracts in isolation. |
 
-If `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md` doesn't define a position for a term on this list, ask: "Your playbook doesn't cover [term]. What's your default position, your acceptable fallback, and your automatic no? I'll add it to `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md` so the next review is consistent."
+If `~/.config/oscar/profile.json` doesn't define a position for a term on this list, ask: "Your playbook doesn't cover [term]. What's your default position, your acceptable fallback, and your automatic no? I'll add it to `~/.config/oscar/profile.json` so the next review is consistent."
 
 ---
 
 ## Playbook comparison
 
-For each term above, compare what we found to the positions in `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`.
+For each term above, compare what we found to the positions in `~/.config/oscar/profile.json`.
 
 **Output format for each term:**
 
 > **[Term name]**
 > 🟢 / 🟡 / 🟠 / 🔴
 > **Vendor says:** [summary of what the contract actually says]
-> **Our position:** [from `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`]
+> **Our position:** [from `~/.config/oscar/profile.json`]
 > **Gap:** [specific delta — or "Aligned"]
 > **Proposed fix:** [specific redline language, or "escalate — outside fallback"]
 
-Use the severity ratings consistently (calibrated against `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md` positions):
+Use the severity ratings consistently (calibrated against `~/.config/oscar/profile.json` positions):
 
 - 🟢 **Aligned** — at or better than the standard position in the playbook.
 - 🟡 **Note** — within fallback but worse than standard; flag for awareness, not a blocker.
 - 🟠 **Significant** — outside standard position but within fallback; needs redline before signing.
-- 🔴 **Critical** — outside fallback; deployment should not proceed without resolution. Escalate per `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`.
+- 🔴 **Critical** — outside fallback; deployment should not proceed without resolution. Escalate per `~/.config/oscar/profile.json`.
 
 ---
 
@@ -166,7 +168,7 @@ Use the severity ratings consistently (calibrated against `~/.claude/plugins/con
 
 ## AI policy consistency check
 
-Cross-check the vendor's terms against our AI policy commitments in `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`.
+Cross-check the vendor's terms against our AI policy commitments in `~/.config/oscar/profile.json`.
 
 Common conflicts:
 - Our policy prohibits vendor training on our data — the vendor's terms permit it by
@@ -196,7 +198,7 @@ When in doubt, smaller. A client who receives a surgical redline trusts that you
 
 ## Output
 
-**Before recommending signature of a vendor AI agreement (the version the company will execute):** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`. If the Role is Non-lawyer:
+**Before recommending signature of a vendor AI agreement (the version the company will execute):** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is Non-lawyer:
 
 > Signing this vendor AI agreement has legal consequences. Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 >
@@ -255,7 +257,7 @@ issues where no fallback exists, flag for escalation rather than proposing langu
 
 ## If they won't move
 
-[For each 🔴 and 🟠: the fallback from `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`, or "escalate — outside fallback"
+[For each 🔴 and 🟠: the fallback from `~/.config/oscar/profile.json`, or "escalate — outside fallback"
 and routing per escalation table]
 ```
 
@@ -316,8 +318,8 @@ End with the next-steps decision tree per CLAUDE.md `## Outputs`. Customize the 
 ## What this skill does not do
 
 - It doesn't review the DPA provisions of the same agreement — run
-  `/privacy-legal:dpa-review`, if the plugin is installed, for that.
+  `dpa-review`, if the plugin is installed, for that.
 - It doesn't decide whether to accept terms outside the fallbacks. It routes those
-  per the escalation table in `~/.claude/plugins/config/claude-for-legal/ai-governance-legal/CLAUDE.md`.
+  per the escalation table in `~/.config/oscar/profile.json`.
 - It doesn't evaluate vendor security posture beyond what's in the agreement —
   that's a security team function.

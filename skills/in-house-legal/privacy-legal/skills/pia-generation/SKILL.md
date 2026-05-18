@@ -9,9 +9,11 @@ description: >
 argument-hint: "[feature name or description]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/privacy-legal @ 4d55f539; Apache 2.0 -->
+
 # /pia-generation
 
-1. Load `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → PIA house style (trigger, structure, depth, sign-off).
+1. Load `~/.config/oscar/profile.json` → PIA house style (trigger, structure, depth, sign-off).
 2. Run the workflow below.
 3. Check: is a PIA actually needed? (House trigger + research the mandatory-assessment triggers for each applicable regime — cite primary sources, verify currency.)
 4. Intake: ask the product-team questions. Can pull from PRD if provided.
@@ -19,11 +21,11 @@ argument-hint: "[feature name or description]"
 6. Output with conditions list and named owners. Route for sign-off.
 
 ```
-/privacy-legal:pia-generation "Location sharing feature"
+pia-generation "Location sharing feature"
 ```
 
 ```
-/privacy-legal:pia-generation
+pia-generation
 PRD: [Drive link]
 ```
 
@@ -33,7 +35,7 @@ PRD: [Drive link]
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/privacy-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/privacy-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/privacy-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -51,7 +53,7 @@ This assessment assumes the jurisdictional scope specified in your configuration
 
 ## Load prior context on this feature / activity
 
-Before writing a new PIA, check the outputs folder for prior work on the same feature, processing activity, or counterparty. Read `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → `## Outputs` for the path. Scan for:
+Before writing a new PIA, check the outputs folder for prior work on the same feature, processing activity, or counterparty. Read `~/.config/oscar/profile.json` → `## Outputs` for the path. Scan for:
 
 - **Prior `use-case-triage` results** covering this activity — the triage's risk rating, mandatory conditions, and called-out concerns are the entry point for the PIA.
 - **Prior `pia-generation` outputs** for the same or an overlapping activity — a superseding PIA should reconcile (what changed, what carried over). A PIA that silently produces different conclusions than a prior PIA on the same activity is a contradiction a reviewing attorney cannot see.
@@ -64,13 +66,13 @@ If a prior output is found, cite it in the PIA:
 If a prior PIA exists:
 > "This PIA supersedes the [date] PIA because [reason — scope change, new data category, vendor change, regulatory change]. Conclusions carried over: [X]. Conclusions revised: [Y, because Z]."
 
-**Carry severity from upstream as a floor** per the cross-skill severity floor rule in `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → `## Shared guardrails`. A use-case-triage that rated the activity high-risk cannot become a PIA that concludes low-risk without stating why and what changed.
+**Carry severity from upstream as a floor** per the cross-skill severity floor rule in `~/.config/oscar/profile.json` → `## Shared guardrails`. A use-case-triage that rated the activity high-risk cannot become a PIA that concludes low-risk without stating why and what changed.
 
 If no prior output is found, say so explicitly — "No prior triage or PIA on this activity in outputs folder; this is a cold start" — so the reviewing attorney knows the check ran and didn't find anything to reconcile.
 
 ## Load house style
 
-Read `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → `## PIA house style`. That has:
+Read `~/.config/oscar/profile.json` → `## PIA house style`. That has:
 - What triggers a PIA here (may not match regulatory DPIA triggers — some teams PIA everything, some only high-risk)
 - The structure template extracted from the seed PIA
 - Typical depth
@@ -80,7 +82,7 @@ If the seed PIA structure is in the config CLAUDE.md, **use it**. The point is t
 
 ## Step 0: Is a PIA needed?
 
-Check the trigger criteria in `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md`. That is the team's house answer.
+Check the trigger criteria in `~/.config/oscar/profile.json`. That is the team's house answer.
 
 In addition, **research the currently operative mandatory-assessment triggers** for each regime in the regulatory footprint (GDPR/UK GDPR DPIA triggers, CCPA/CPRA risk-assessment triggers, other US state data-protection assessment triggers, sectoral regimes). Cite the controlling statute, regulation, or regulator guidance with pinpoint references. Verify currency — assessment thresholds and definitions shift through new state laws, rulemaking, and enforcement guidance. Flag uncertainty rather than guess.
 
@@ -136,7 +138,7 @@ Verify currency; statutory definitions and bases are amended often. Flag uncerta
 
 ## Writing the PIA
 
-**Use the seed PIA structure from the config CLAUDE.md.** If none was captured, use this default. Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
+**Use the seed PIA structure from the config CLAUDE.md.** If none was captured, use this default. Prepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`).
 
 ```markdown
 [WORK-PRODUCT HEADER — per plugin config ## Outputs]
@@ -243,7 +245,7 @@ Aim for 2-5 real risks, not 15 padded ones.
 
 ## Privacy policy diff
 
-Every PIA should cross-check against the privacy policy commitments in `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md`. The common drift:
+Every PIA should cross-check against the privacy policy commitments in `~/.config/oscar/profile.json`. The common drift:
 
 - Policy says "we collect X, Y, Z" — new feature collects W. Policy needs updating, or stop collecting W.
 - Policy says "we don't sell data" — new feature shares with an ad partner. That might be a CCPA sale.
@@ -255,13 +257,13 @@ Flag every mismatch. One of them has to change before launch.
 
 - **To product team:** Conditions list with owners and deadlines. Not "improve security" — "add audit logging to the admin panel's location lookup, owner: [eng lead], before launch."
 - **To reg-gap-analysis skill:** If the PIA uncovered a policy inconsistency, that skill tracks the policy update.
-- **To the sign-off process:** Per `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md` → who approves PIAs.
+- **To the sign-off process:** Per `~/.config/oscar/profile.json` → who approves PIAs.
 
 ## Gate: submitting a DPIA to a regulator
 
 Producing an internal PIA is research and documentation. *Submitting a DPIA to a supervisory authority* — or voluntarily disclosing one to a regulator in response to an inquiry — is the consequential act.
 
-**Before proceeding to submit a DPIA (or any equivalent impact assessment) to a regulator, supervisory authority, or enforcement body:** Read `## Who's using this` in `~/.claude/plugins/config/claude-for-legal/privacy-legal/CLAUDE.md`. If the Role is Non-lawyer:
+**Before proceeding to submit a DPIA (or any equivalent impact assessment) to a regulator, supervisory authority, or enforcement body:** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is Non-lawyer:
 
 > Submitting to a regulator has legal consequences — the document becomes part of the supervisory record and any material omission or error becomes enforcement exposure. Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:
 >

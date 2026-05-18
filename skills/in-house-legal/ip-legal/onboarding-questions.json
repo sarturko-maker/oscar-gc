@@ -1,0 +1,4 @@
+[
+  {"id": "ip-portfolio-mix", "prompt": "What's the shape of your IP portfolio — roughly how does it split across trademarks, patents, copyrights, trade secrets, and open-source obligations? Be specific about which you actually work in day-to-day vs. which sit dormant; I'll skip skills for areas you don't practice.", "priority": 1},
+  {"id": "ip-risk-surface", "prompt": "What does the company build, and where does the IP risk concentrate — the products or tech that drive your FTO exposure, the brands carrying real commercial weight, and the engineering areas where OSS or trade-secret questions land on your desk most often?", "priority": 1}
+]

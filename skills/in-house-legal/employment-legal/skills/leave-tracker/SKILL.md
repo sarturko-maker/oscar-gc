@@ -8,6 +8,8 @@ description: >
 argument-hint: "[no arguments — works from HRIS or leave-register.yaml]"
 ---
 
+<!-- Sourced from anthropics/claude-for-legal/employment-legal @ 4d55f539; Apache 2.0 -->
+
 # /leave-tracker
 
 Checks all open leaves with hard legal deadlines and surfaces only the ones
@@ -18,19 +20,19 @@ to do and why.
 
 1. Load the `leave-tracker` agent and run the full workflow.
 
-2. If no HRIS is connected and no `~/.claude/plugins/config/claude-for-legal/employment-legal/leave-register.yaml` exists, prompt
+2. If no HRIS is connected and no `~/.config/oscar/state/employment-legal/leave-register.yaml` exists, prompt
    the attorney to upload a leave spreadsheet or use
-   `/employment-legal:log-leave` to add entries.
+   `log-leave` to add entries.
 
 3. Alerts only for leaves requiring action. Clean leaves summarized one line each.
 
 ## Examples
 
 ```
-/employment-legal:leave-tracker
+leave-tracker
 ```
 
 Run this weekly — set a Monday-morning reminder to invoke
-`/employment-legal:leave-tracker`. Automated scheduling requires a separate
+`leave-tracker`. Automated scheduling requires a separate
 integration (calendar reminder, cron job, etc.); Claude Code agents do not
 self-schedule.

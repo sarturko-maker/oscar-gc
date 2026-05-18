@@ -1,6 +1,6 @@
 # Comment Period Tracker
 # Populated automatically by reg-feed-watcher when NPRMs are detected.
-# Managed via /regulatory-legal:comments
+# Managed via comments
 
 comments:
   - id: CMT-001
