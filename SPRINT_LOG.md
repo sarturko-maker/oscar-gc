@@ -544,3 +544,121 @@ The foundational scope is complete. The roadmap opens up after Sprint 9.
 **Cross-repo SHAs**: only `sarturko-maker/goose` touched this sprint (adeu is upstream — not a sibling repo we author). Sprint 9 commits: `d8aa529ec` (Phase 0-2 ADRs + RUNBOOK + schema), `39de117ba` (Phase 4 Commercial), `533e04e2b` (Phase 6 dogfood harness), `397bcc26e` (Phase 7 dogfood + verification), plus this close-out commit. No sibling-MCP repo changed.
 
 **Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.
+
+---
+
+### Sprint 10 — One-step Crostini deliverable (closed 2026-05-18)
+
+**Goal**: ship Oscar GC as a single installable `.deb` published to a GitHub Release on `sarturko-maker/goose`, fully bundled (adeu Python venv, Node + sibling MCPs, every runtime dep), so the user (Arturs) installs in one step on his Chromebook Crostini container and runs the four-item flow without dev intervention. CLAUDE.md "Distribution shape" doctrine. PROJECT.md had estimated this for Sprint 12-15; pulled forward because Sprint 9 closed the four-item short-term goal and dogfood of the packaged product became the highest-value next step. Plan at `/root/.claude/plans/sprint-10-deliverable-purrfect-harbor.md`.
+
+**Built**
+
+Phased commits on `main` (no feature branches):
+
+- **Phase 1** (`331011765`) — ADRs 021-024 at decision time, before implementing code.
+  - **ADR-021** Sprint 10 distribution shape: Debian 12 `.deb` only, Docker build host, local `gh release create`.
+  - **ADR-022** Python runtime bundling: `python-build-standalone` + offline `adeu==1.6.9` wheels in `extraResource`; postinst hook creates the venv at install location from the bundled wheels.
+  - **ADR-023** Node + MCP bundling: standalone Node 24.10.0 binary + esbuild dist outputs for `oscar-onboarding-mcp` and `oscar-memory-mcp`.
+  - **ADR-024** Resource path resolution: preload `contextBridge` exposes `oscarResourcesRoot`; recipes become factory functions consuming it; dev fallback follows the `findGoosedBinaryPath` precedent.
+
+- **Phase 2** (`abc3ca8bb`) — Recipe factory + preload bridge.
+  - `commercialRecipe.ts` + `onboardingRecipe.ts` converted from exported constants to `buildXRecipe(resourcesRoot)` factory functions.
+  - `OscarCommercialView.tsx` + `OscarOnboardingView.tsx` call sites updated to pass `window.electron.oscarResourcesRoot` through.
+  - **(Bug — fixed in Phase 8d, see below)**: the resourcesRoot probe was placed inside `preload.ts` using `node:fs.existsSync`. Preload runs sandboxed and cannot import Node built-ins. Caused the renderer-paint blocker that took two visible iterations to root-cause.
+
+- **Phase 3-4** (`50a74e091`) — Bundle prep + electron-forge integration.
+  - `ui/desktop/scripts/prepare-oscar-bundle.js` downloads python-build-standalone CPython 3.12.5+20240814 (linux-x86_64-install_only), pip-downloads adeu==1.6.9 wheels via the bundled Python (offline-installable later), fetches Node v24.10.0 linux-x64, and esbuild-bundles both sibling MCPs from `src/index.ts` into single-file CJS outputs. Writes a `BUNDLE.json` provenance summary. Idempotent via `.oscar-bundle-cache/`.
+  - `forge.config.ts` extends `extraResource` to `['src/bin', 'src/images', 'src/resources/python', 'src/resources/node', 'src/resources/mcps']`. Both `maker-deb` and `maker-rpm` renamed from `'Oscar GC'` (space) to `'oscar-gc'` (kebab-case). `maker-deb.scripts.postinst` wired to `./scripts/postinst.sh`. Silently-ignored `prefix: '/opt'` removed (actual install location is `/usr/lib/oscar-gc/` per electron-installer-debian defaults).
+  - `scripts/postinst.sh` creates `/usr/lib/oscar-gc/resources/python/adeu-venv` on `configure` via the bundled Python + offline wheels (`pip install --no-index --find-links=<wheels>`). Idempotent across reinstalls.
+  - `forge.{deb,rpm}.desktop` Exec= → `/usr/lib/oscar-gc/oscar-gc`; Icon= → `/usr/share/pixmaps/oscar-gc.png` (Debian convention).
+  - `package.json` gains `bundle:oscar-linux` script chaining `prepare-oscar-bundle.js` + `i18n:compile` + `electron-forge make --targets=maker-deb`.
+  - `.gitignore` excludes `.oscar-bundle-cache/` and `src/resources/`.
+
+- **Phase 5** (`bf56f8202` + `a475855b0`) — Debian 12 Docker builder + docs.
+  - `docker/Dockerfile.deb12-builder`: Debian 12 bookworm + Rust 1.92 (rustup, matching `rust-toolchain.toml`) + standard libxcb/protobuf/glslc/vulkan/libxml/libxslt/cmake/ninja-build deps. First-attempt build failed with `llama-cpp-sys-2` panicking "is `cmake` not installed?"; `cmake` + `ninja-build` added (Debian 12's `build-essential` doesn't ship cmake).
+  - `scripts/build-oscar-deb.sh` two-phase orchestrator: (1) Docker build the image + run `cargo build --release -p goose-server` inside Debian 12 with `CARGO_TARGET_DIR=target-debian12` and a named volume `oscar-gc-cargo-cache` for the cargo registry; stage the produced `goosed` into `ui/desktop/src/bin/` + glibc-sanity audit. (2) On host, `source bin/activate-hermit` + `pnpm run bundle:oscar-linux`. Output: `ui/desktop/out/make/deb/x64/oscar-gc_<v>_amd64.deb`. First run ~15 min, incremental ~3 min.
+  - `docs/INSTALL_CROSTINI.md`: user-facing one-page install (download, double-click, complete onboarding, run a redline) + Troubleshooting (log file location, terminal flag set, keyring-missing workaround).
+  - `RUNBOOK.md` §"Sprint 10": two-phase build, bundled artefact table, postinst behaviour, verification commands (dpkg -I/-c, glibc audit, clean-container install), host state added, `gh release create` upload command, provider-key first-launch risk.
+
+- **Phase 6** — End-to-end verification in clean Debian 12 container (no commit; verification only).
+  - `dpkg -I` — `Depends:` list contains no Ubuntu-`*-t64` library names (would have failed to resolve on Crostini). Build host ABI compatibility confirmed.
+  - `dpkg-deb -c` — confirmed bundle layout under `/usr/lib/oscar-gc/`.
+  - `docker run --rm -v <debs>:/debs:ro debian:bookworm apt install ./oscar-gc_*.deb` — exits 0; postinst creates venv from offline wheels; `adeu module loadable: 1.6.9`; bundled Node + esbuild-bundled MCPs start cleanly (`oscar-memory-mcp ready` observed).
+  - glibc-symbol audit on extracted binaries (host objdump): max symbols `oscar-gc=GLIBC_2.25`, `goosed=GLIBC_2.34`, `node=GLIBC_2.28`, `python3.12=GLIBC_2.2.5`. All ≤ Debian 12 ceiling (2.36).
+
+- **Phase 8** (`a475855b0` + `09b083a8a` + `394ce943b` + `f1fa8e594`) — Iterative Crostini renderer debug (four iterations).
+  - **8a (`a475855b0`)** — Initial draft release via `gh release create oscar-gc-sprint10 --draft`. Tag deliberately non-`v1.*` so upstream's `release.yml` doesn't fire on it.
+  - **8b (`09b083a8a`)** — User's first Crostini install: app launches, renderer fails with Gtk widget assertion under both Wayland and X11 ozone backends; no GPU acceleration available on this Chromebook. **ADR-025** records the inline-flag fix: `.desktop` Exec= wraps with `env LIBGL_ALWAYS_SOFTWARE=1` and appends `--ozone-platform=x11 --disable-gpu --disable-software-rasterizer`.
+  - **8c (`394ce943b`)** — Second iteration still failed silently (no renderer log to read). **ADR-026** moves to a wrapper-script approach (the path ADR-025 already anticipated): postinst-installed `/usr/lib/oscar-gc/oscar-gc-launcher.sh` adds `--enable-logging=stderr --v=1` and redirects both stdout and stderr to `~/.cache/oscar-gc/launch.log` per launch (with header line for grep-ability). Also: env-redactor extended for `_TOKEN` (Arturs flagged `CLAUDE_CODE_OAUTH_TOKEN` leaking to every spawn-options dump).
+  - **8d (`f1fa8e594`)** — Renderer log finally captured the actual error: `Unable to load preload script ... Error: module not found: node:fs`, cascading to `Cannot read properties of undefined (reading 'logInfo')`. Root cause: Phase 2 placed the resourcesRoot probe inside preload, but preload runs sandboxed and cannot import Node built-ins. **ADR-027** moves the probe to `main.ts` (Node-privileged); result flows through `additionalArguments` JSON to preload. Renderer paints on next install.
+
+- **Phase 9** (`767c8f264`) — Close-out patch from Arturs's brief after renderer started painting.
+  - `goosed.ts` env redactor extended to `_PASSWORD`.
+  - `utils/autoUpdater.ts` + `utils/githubUpdater.ts` owner default `'block'` → `'sarturko-maker'`.
+  - **ADR-028** TelemetryConsentPrompt removed (import + render in `App.tsx`; `TELEMETRY_UI_ENABLED=false`; `setTelemetryEnabled(false)` hardcoded at renderer init). First application of CLAUDE.md "inverting upstream UX defaults" doctrine.
+  - **ADR-029** Trust-a-recipe dialog bypassed in preload for recipes with `title` prefix `"Oscar GC"`. Bundled recipes (Onboarding + Commercial) never see the dialog; deeplink-installed recipes still gate normally.
+  - **ADR-030** In-product LQ branding: `GooseLogo` body replaced with inline LQ-mark SVG (cream + Cormorant L + copper italic Q + copper rule). All sites rendering `GooseLogo` (`LoadingGoose`, `suspense-loader`, `RecipeActivities`) inherit the swap. `OscarSidebar` gains a Settings affordance in a footer with utility-styled link (mono caps, hairline rule, copper hover/active).
+  - App-icon raster swap (`.png/.ico/.icns`) deferred to Sprint 11 — `apt-install librsvg2-bin` was blocked by the auto mode classifier; no SVG→PNG converter available on the build host.
+
+**Closure verification against Arturs's exit-criteria brief**
+
+| Criterion | Status |
+|---|---|
+| Renderer paints on Crostini | ✓ (ADR-027 fix) |
+| ADR for the Crostini renderer fix | ✓ (ADRs 025, 026, 027) |
+| No telemetry prompt | ✓ (ADR-028) |
+| No trust-a-recipe dialog (bundled recipes) | ✓ (ADR-029) |
+| No top-right goose mascot | **✗ — carry-forward** (BaseChat.tsx:411 + SessionsInsights.tsx:155,248 + OnboardingGuard.tsx:157,190 import `<Goose>` directly from `components/icons/Goose`, bypassing the `GooseLogo` swap) |
+| LQ icon visible in launcher | **✗ — carry-forward** (.png/.ico/.icns raster swap blocked; SVG-only swap landed) |
+| Settings icon reachable | ✓ (OscarSidebar footer, ADR-030) |
+| `main.log` no sensitive credentials | ✓ (`_KEY`/`_SECRET`/`_TOKEN`/`_PASSWORD` all redacted) |
+| Auto-updater queries the fork | ✓ (`sarturko-maker/goose` is the default in both `autoUpdater.ts` and `githubUpdater.ts`) |
+| SPRINT_LOG closed with dogfood log | ✓ (this entry) |
+| PROJECT.md Sprint Index row 10 marked complete | ✓ (companion commit) |
+
+**Dogfood log (user, on Crostini)**
+
+| Iteration | What happened |
+|---|---|
+| #1 (after 8a) | `.deb` installs cleanly. App launches but renderer fails with Gtk widget assertion under both Wayland and X11 ozone backends, with and without GPU. ChromeOS GPU-acceleration toggle absent on this Chromebook. User flag: Sprint 10 packaging should sanitize sensitive env vars (`CLAUDE_CODE_OAUTH_TOKEN` leaking to spawn-options dump). User flag: auto-updater feed still points at `block/goose`. |
+| #2 (after 8b) | Re-install. Same failure; no diagnostic surface to capture renderer stderr. |
+| #3 (after 8c) | Re-install. Log captured at `~/.cache/oscar-gc/launch.log` reveals the actual error: preload script fails to load with `Error: module not found: node:fs`. Cascade: `window.electron` undefined → renderer's `window.electron.logInfo` throws → React tree fails to mount → Chromium draws a destroyed surface → Gtk widget assertion. The two prior iterations' Crostini-flag work was useful hygiene but did not address the root cause. |
+| #4 (after 8d) | "Reinstall successful. Goose renders and works." Renderer mounts. Onboarding reachable. |
+| #5 (after 9) | Telemetry prompt gone ✓. Trust dialog gone ✓. Settings affordance works ✓. **Top-right Goose still visible** (carry-forward, see above). **Launcher icon still upstream Goose** (carry-forward, raster pipeline). **Commercial chat doesn't load on click; chat history surface missing** (functional carry-forward — hypothesis: ADR-029's `recordRecipeHash` short-circuit may break a session-state dependency in `BaseChat.tsx:218`, or unrelated regression; Sprint 11 investigates). **MCP tool calls render too large in chat surface** (UX carry-forward). |
+
+**Closes**
+
+- **Sprint 10's primary deliverable**: one-step Crostini install via published GitHub Release. `oscar-gc_1.34.0_amd64.deb` at https://github.com/sarturko-maker/goose/releases tag `oscar-gc-sprint10` (draft as of close; promote to published when ready).
+- **First Python component bundled** into the desktop distribution. The Sprint 12-15 bundling estimate in PROJECT.md is now historical.
+- **First-application of the CLAUDE.md "inverting upstream UX defaults" doctrine** to three concrete surfaces (telemetry, recipe-trust, branding chrome).
+- **Distribution-shape rules** preserved per PROJECT.md: no system-level deps (all runtime bundled), no daemon registration, single .deb that double-clicks to install on Crostini.
+
+**Deferred / out-of-scope (per Arturs's brief)**
+
+- Markdown rendering issues in onboarding — Sprint 11 (folds into the unified-onboarding extension).
+- Pacing of onboarding-to-practice-areas transition — Sprint 11.
+- Conversation history clarity / matters / Forge meta-agent — Sprint 12.
+- Adeu's "doesn't redline like a lawyer" finding — Arturs has a fix to share.
+
+**Carry-forwards for Sprint 11**
+
+- **Top-right Goose mascot removal — round 2.** `GooseLogo` swap (ADR-030) caught the LoadingGoose / suspense / RecipeActivities call sites. Three additional surfaces import `<Goose>` directly from `components/icons/Goose.tsx`: `BaseChat.tsx:411`, `SessionsInsights.tsx:155,248`, `OnboardingGuard.tsx:157,190`. Sprint 11 either neutralizes the `Goose` icon component itself OR replaces these call sites individually.
+- **App-icon raster pipeline.** `.png` / `.ico` / `.icns` regeneration from the LQ mark needs an SVG→PNG converter on the build host. Options: authorize `apt install librsvg2-bin`, wire in npm `sharp`, or use Python `cairosvg` from the bundled adeu venv's Python.
+- **Commercial chat doesn't load on click; chat history surface missing.** Functional regression observed in #5 dogfood. Hypothesis: ADR-029's `recordRecipeHash` synchronous short-circuit may interact with `BaseChat.tsx:218`'s await in an unexpected way, OR unrelated regression. Investigate via the renderer log first (`~/.cache/oscar-gc/launch.log`).
+- **MCP tool-call rendering in chat is too large.** Visual fix; touches the upstream tool-rendering component.
+- **Settings audit for any user-facing telemetry toggle.** ADR-028 killed the prompt + hardcoded the init; if `SettingsView` exposes a re-enable path, hide or disable it.
+- **postinst orphan-on-uninstall cleanup.** `/usr/lib/oscar-gc/oscar-gc-launcher.sh` is written by postinst (not tracked by dpkg). Add `prerm` / `postrm` to remove on uninstall.
+- **Sprint 11 (`claude-for-legal repackage`)** is the next sprint per Arturs's brief. Sprint 12 introduces the Forge meta-agent + Matters/Projects scoped containers; Plan-mode should keep practice-area data structures and Forge's invocation surface cleanly separated.
+
+**Carry-forwards from prior sprints, still open**
+
+- Sprint 9 P1/P2 system-prompt polish (Markdown emphasis, defined-term capitalisation, Clause 8 mutuality reminder) — Sprint 11.
+- `oscar-memory` recipe wiring into the desktop Commercial agent — Sprint 11+. Bundled into the .deb; not yet wired into `commercialRecipe.ts`.
+- Sprint 15+: migrate ADR-029's title-prefix short-circuit to a proper `recipe.metadata.bundled` flag when community recipes open.
+- `goose://` URL scheme rebrand, system prompt's self-identification, document.title runtime overwrite — branding follow-ups from PROJECT.md still open.
+
+**ADRs**: 021 (distribution shape), 022 (Python bundling), 023 (Node + MCP bundling), 024 (resource path resolution), 025 (Crostini launch flags), 026 (launcher wrapper for logs), 027 (resourcesRoot probe moves to main), 028 (no telemetry prompt), 029 (bypass trust dialog for bundled recipes), 030 (in-product LQ branding). Ten ADRs, all at decision time, before implementing code (CLAUDE.md mandate). ADR-021 supersedes PROJECT.md's Sprint 12-15 timing estimate; ADR-022 supersedes ADR-016's bundling-deferred clause; ADR-026 extends ADR-025; ADR-027 supersedes ADR-024's preload-side detection.
+
+**Cross-repo SHAs**: only `sarturko-maker/goose` touched this sprint. Sibling MCPs (`oscar-onboarding-mcp`, `oscar-memory-mcp`) consumed as build inputs but not modified. Sprint 10 commits: `331011765` (P1 ADRs), `abc3ca8bb` (P2 recipe factory), `50a74e091` (P3-4 bundle + electron-forge), `bf56f8202` (P5 fix cmake), `a475855b0` (P5 + docs), `09b083a8a` (P8b Crostini flags + ADR-025), `394ce943b` (P8c wrapper + log capture + ADR-026), `f1fa8e594` (P8d preload sandbox fix + ADR-027), `bb5c8e8e3` (CLAUDE.md inverted-defaults doctrine), `767c8f264` (P9 close-out + ADRs 028/029/030), plus this close-out commit.
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read due 2026-05-25.

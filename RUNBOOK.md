@@ -831,6 +831,10 @@ Goose's stock OnboardingGuard expects either `MINIMAX_API_KEY` in the env or a k
 
 ## Pending
 
+- **Sprint 11 carry-forwards** — see `BACKLOG.md` for full list. Top items: top-right Goose mascot round-2, Commercial chat regression (doesn't load on click), app-icon raster pipeline, postinst prerm/postrm, MCP tool-card sizing.
+- **GitHub Release `oscar-gc-sprint10`** — draft at `sarturko-maker/goose`. Promote to published when Arturs confirms install instructions are clean.
+- **next weekly upstream read** — due 2026-05-25. Decide skip / merge / wait per upstream release notes.
+
 ## Corrections
 
 - 2026-05-17 — The "Remotes" line above originally claimed both were SSH ("SSH after reset-url"). That was wrong when written: `gh repo fork` set HTTPS and the reset-url note was never applied. The conversion to SSH actually happened during housekeeping on 2026-05-17; the line above has been replaced with the real current state.
