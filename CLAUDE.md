@@ -53,6 +53,12 @@ We are a custom distribution of Goose per upstream's `CUSTOM_DISTROS.md`, not a 
 - **Track upstream weekly.** Read the release notes, decide whether to merge, document the decision (skip / merge / wait) in a one-line ADR addition or SPRINT_LOG note.
 - **Branding metadata** lives in `ui/desktop/package.json` (productName, description). Don't sprinkle product names through source — keep them resolvable from one place.
 
+## Reuse over rebuild — Goose
+
+Default: reuse what Goose provides — agents, MCP, chat surfaces, providers, sessions, memory, skills, hooks, recipes. Theme or extend; don't rebuild stripped-down variants. Parallel implementations double maintenance and fragment the product.
+
+Rebuild only with ADR-justified necessity. "We don't need feature X here" is not sufficient — those features earn their keep elsewhere.
+
 ## Rust discipline (the inherited Goose core)
 
 - We mostly don't touch the core. When we do:
