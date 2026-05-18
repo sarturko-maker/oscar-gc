@@ -723,6 +723,25 @@ const getServerSecret = (settings: Settings): string => {
   return GENERATED_SECRET;
 };
 
+// Sprint 10 (ADR-024): resolve the Oscar bundled-resources root in the main
+// process (which has unrestricted Node access). preload.js runs in a sandbox
+// and cannot import node:fs/node:path, so detection must happen here and be
+// passed through to the renderer via process.argv config below.
+const resolveOscarResourcesRoot = (): string | null => {
+  const override = process.env.OSCAR_RESOURCES_OVERRIDE;
+  if (override && fsSync.existsSync(override)) {
+    return override;
+  }
+  const resourcesPath = process.resourcesPath;
+  if (
+    resourcesPath &&
+    fsSync.existsSync(path.join(resourcesPath, 'python', 'cpython', 'bin', 'python3'))
+  ) {
+    return resourcesPath;
+  }
+  return null;
+};
+
 let appConfig = {
   GOOSE_DEFAULT_PROVIDER: defaultProvider,
   GOOSE_DEFAULT_MODEL: defaultModel,
@@ -735,6 +754,7 @@ let appConfig = {
   GOOSE_LOCALE: process.env.GOOSE_LOCALE || undefined,
   // If GOOSE_ALLOWLIST_WARNING env var is not set, defaults to false (strict blocking mode)
   GOOSE_ALLOWLIST_WARNING: process.env.GOOSE_ALLOWLIST_WARNING === 'true',
+  OSCAR_RESOURCES_ROOT: resolveOscarResourcesRoot() as string | null,
 };
 
 const windowMap = new Map<number, BrowserWindow>();

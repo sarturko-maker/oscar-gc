@@ -1,6 +1,4 @@
 import Electron, { contextBridge, ipcRenderer, webUtils } from 'electron';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { Recipe } from './recipe';
 import { GooseApp } from './api';
 import type { Settings, SettingKey } from './utils/settings';
@@ -86,27 +84,11 @@ interface FileResponse {
 
 const config = JSON.parse(process.argv.find((arg) => arg.startsWith('{')) || '{}');
 
-// Resolve the Oscar bundled-resources root (Sprint 10, ADR-024). Returns the
-// absolute path when the packaged .deb has the bundled CPython tree present,
-// or null in dev (renderer falls back to /srv/projects/... paths). The
-// OSCAR_RESOURCES_OVERRIDE env var is the documented escape hatch for testing
-// a packaged build against an unpacked dev tree.
-function resolveOscarResourcesRoot(): string | null {
-  const override = process.env.OSCAR_RESOURCES_OVERRIDE;
-  if (override && existsSync(override)) {
-    return override;
-  }
-  const resourcesPath = process.resourcesPath;
-  if (
-    resourcesPath &&
-    existsSync(join(resourcesPath, 'python', 'cpython', 'bin', 'python3'))
-  ) {
-    return resourcesPath;
-  }
-  return null;
-}
-
-const oscarResourcesRoot = resolveOscarResourcesRoot();
+// Sprint 10 (ADR-024): the bundled-resources root is detected in the main
+// process (preload runs sandboxed and can't import node:fs / node:path) and
+// flows through here via the additionalArguments config JSON above.
+const oscarResourcesRoot: string | null =
+  (config.OSCAR_RESOURCES_ROOT as string | null | undefined) ?? null;
 
 interface UpdaterEvent {
   event: string;
