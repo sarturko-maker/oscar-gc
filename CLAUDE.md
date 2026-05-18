@@ -1,18 +1,17 @@
 # [Goose] Operating Rules
 
-These rules govern HOW to write code in this project. `PROJECT.md` and `GOOSE_FORK.md` govern WHAT to build.
+These rules govern HOW to write code in this project. `PROJECT.md` governs WHAT to build (the one goal, the fork strategy, the sprint index).
 
 ## Cold-start reading order
 
-1. `PROJECT.md` — what this project is + Sprint Index
-2. `GOOSE_FORK.md` — fork strategy, upstream-tracking, customization boundaries
-3. `CLAUDE.md` — this file
-4. `SPRINT_LOG.md` — most recent entry, then prior entries by Sprint Index relevance
-5. `RUNBOOK.md` — host-state and gotchas
-6. Relevant ADRs in `docs/adr/`
-7. `DEV_SETUP.md` — *if* you need to bootstrap or reproduce the dev environment. Reference material, not mandatory cold-start reading.
-8. `AGENTS.md` — upstream Goose's contributor guidance. Read once for context on upstream's conventions; our CLAUDE.md takes precedence for project-specific rules.
-9. `/srv/projects/LQdesign/` — design reference. Visual system (colour, type, spacing, components), HTML mockups, two CSS files. Read once per fresh session. Note: contains "LQ" branding from a sibling project; for Oscar GC we use the design language but not the LQ wordmark.
+1. `PROJECT.md` — what this project is, fork strategy, Sprint Index
+2. `CLAUDE.md` — this file
+3. `SPRINT_LOG.md` — most recent entry, then prior entries by Sprint Index relevance
+4. `RUNBOOK.md` — host-state and gotchas
+5. Relevant ADRs in `docs/adr/`
+6. `DEV_SETUP.md` — *if* you need to bootstrap or reproduce the dev environment. Reference material, not mandatory cold-start reading.
+7. `AGENTS.md` — upstream Goose's contributor guidance. Read once for context on upstream's conventions; our CLAUDE.md takes precedence for project-specific rules.
+8. `/srv/projects/LQdesign/` — design reference. Visual system (colour, type, spacing, components), HTML mockups, two CSS files. Read once per fresh session. Note: contains "LQ" branding from a sibling project; for Oscar GC we use the design language but not the LQ wordmark.
 
 ## The one goal (short-term, load-bearing)
 
@@ -29,7 +28,7 @@ Plain English. Define jargon on first use (MCP, SKILL.md, Tauri, scrypt, SSE —
 ## Sprint discipline
 
 ### Plan-mode-then-execute
-Every fresh sprint starts with a clean session that reads PROJECT.md, GOOSE_FORK.md, this CLAUDE.md, the most recent SPRINT_LOG.md entry, RUNBOOK.md, and relevant ADRs before producing a plan. The plan goes to Arturs for review. Execution follows approval. Bias toward smaller sprints — accumulation beats heroics.
+Every fresh sprint starts with a clean session that reads PROJECT.md, this CLAUDE.md, the most recent SPRINT_LOG.md entry, RUNBOOK.md, and relevant ADRs before producing a plan. The plan goes to Arturs for review. Execution follows approval. Bias toward smaller sprints — accumulation beats heroics.
 
 ### Sprint log
 Append-only at SPRINT_LOG.md. Every sprint closes with an entry covering goal, what was built, what was deferred, and carry-forwards. PROJECT.md carries a Sprint Index — one-line summary per sprint, chronological — that points into SPRINT_LOG.md.
