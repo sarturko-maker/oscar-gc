@@ -32,6 +32,24 @@ We are a custom distribution of Block's Goose (now AAIF / Linux Foundation) per 
 
 Capture the per-release decision as a one-line note in `SPRINT_LOG.md` under the active sprint, or as an ADR if the decision is structural (e.g., declining a breaking change because we have a competing customization).
 
+## Distribution shape
+
+Oscar GC ships as a single installable binary — `.dmg`, `.exe`, `.AppImage`. The user downloads one file, double-clicks, it runs. No "also run this service," no "install this dependency."
+
+The sibling MCP server repos (`oscar-memory-mcp`, `oscar-onboarding-mcp`, future MCP servers) exist as separate repos for development convenience — fork hygiene against upstream Goose, per-stack build cleanliness, independent lifecycle. **They are not separate at distribution.** Each MCP server's built output gets bundled into the Electron package at packaging time, copied into the resources directory alongside `goosed`. At runtime, the desktop agent spawns them as embedded subprocesses, transparent to the user.
+
+Pattern mirrors how Goose already handles `goosed` — separation in development, bundling at build, single binary at distribution.
+
+Three rules to preserve this option as MCP servers grow:
+
+1. **No system-level dependencies.** No "this requires Postgres" or "this needs a Python interpreter." Embed SQLite if you need persistence; use Node built-ins for HTTP. Anything that survives bundling (esbuild single-file output, `pkg`/Bun-compiled native binaries) is fine; anything that needs OS-level install isn't.
+
+2. **Small, self-contained.** Each MCP server is a few hundred lines, minimal dependencies, no heavy native modules. Bundle-shaped from the start.
+
+3. **No cross-MCP runtime coupling.** Servers don't assume other servers' versions, schemas, or presence at runtime. Each is independent. Cross-MCP coordination happens through the agent that calls them, not through direct server-to-server channels.
+
+Bundling itself becomes a sprint when there are enough MCP servers and a clear "we're ready to ship" trigger — likely Sprint 12-15 range, after the four-item short-term goal completes. Until then, dev separation is right; the rules above keep the door open.
+
 ## Sprint Index
 
 | Sprint | Goal | Status |

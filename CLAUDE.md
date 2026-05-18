@@ -59,6 +59,12 @@ Default: reuse what Goose provides — agents, MCP, chat surfaces, providers, se
 
 Rebuild only with ADR-justified necessity. "We don't need feature X here" is not sufficient — those features earn their keep elsewhere.
 
+## Distribution shape
+
+Oscar GC ships as a single installable binary. Sibling MCP servers (memory, onboarding, future) are bundled into the Electron package at build time, spawned as subprocesses at runtime, invisible to the user. Dev-time separation across repos is a development pattern, not the distribution shape.
+
+Implication: MCP servers stay small, self-contained, free of system-level dependencies. See PROJECT.md "Distribution shape" for the rules.
+
 ## Rust discipline (the inherited Goose core)
 
 - We mostly don't touch the core. When we do:
