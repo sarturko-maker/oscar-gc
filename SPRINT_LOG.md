@@ -662,3 +662,71 @@ Phased commits on `main` (no feature branches):
 **Cross-repo SHAs**: only `sarturko-maker/goose` touched this sprint. Sibling MCPs (`oscar-onboarding-mcp`, `oscar-memory-mcp`) consumed as build inputs but not modified. Sprint 10 commits: `331011765` (P1 ADRs), `abc3ca8bb` (P2 recipe factory), `50a74e091` (P3-4 bundle + electron-forge), `bf56f8202` (P5 fix cmake), `a475855b0` (P5 + docs), `09b083a8a` (P8b Crostini flags + ADR-025), `394ce943b` (P8c wrapper + log capture + ADR-026), `f1fa8e594` (P8d preload sandbox fix + ADR-027), `bb5c8e8e3` (CLAUDE.md inverted-defaults doctrine), `767c8f264` (P9 close-out + ADRs 028/029/030), plus this close-out commit.
 
 **Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read due 2026-05-25.
+
+---
+
+### Sprint 11 — claude-for-legal repackaged as bundled in-house skill library (closed 2026-05-19)
+
+**Goal**: repackage Anthropic's open-source `claude-for-legal` (Apache 2.0, https://github.com/anthropics/claude-for-legal) into Oscar GC as a single bundled in-house skill library. A user installs Oscar GC, runs the existing unified onboarding once, ends up with Anthropic's skills loaded for the practice areas they selected. No per-plugin install. No per-plugin onboarding. In-house assumed throughout. Two Sprint 10 close-out carry-forwards fold in because they live in the same UX area: markdown not rendering in onboarding (`OscarChatMessage.tsx`) and "jumps to practice areas too soon" pacing complaint. Plan at `/root/.claude/plans/brief-sprint-11-ancient-wadler.md`.
+
+**Built**
+
+Phased commits on `main` (no feature branches):
+
+- **Phase 1** (`aa9551dfd`) — ADRs 031–035 at decision time, before code.
+  - **ADR-031** Practice-area → upstream-plugin mapping: 9 plugins vendored verbatim under `skills/in-house-legal/<plugin>/`; new `bundled_skill_sources: readonly string[]` field on PracticeArea; mapping table (commercial → commercial-legal; commercial-disputes → commercial-legal + litigation-legal; cosec → corporate-legal weak-fit; etc.). Drops: law-student, legal-clinic, legal-builder-hub, external_plugins/cocounsel-legal, managed-agent-cookbooks.
+  - **ADR-032** Onboarding schema v2 + P3.5 per-area mini-interviews: PracticeArea gains `area_profile: Record<string,string>|null`. Question templates colocate with the plugin at `skills/in-house-legal/<plugin>/onboarding-questions.json`; new MCP tool `list_area_questions(plugin_id)` reads from `OSCAR_RESOURCES_ROOT`; 2-question hard cap per area; pacing reshape with explicit completion line before P4. Markdown rendering fix wired in `OscarChatMessage.tsx`.
+  - **ADR-033** In-house gating strip policy: deterministic regex on firm-branch headings; default-keep; borderlines via MANIFEST. Invocation-reference fixes (per-plugin practice profile → unified profile; output paths → ADR-034; neutral identifier for trademark).
+  - **ADR-034** Output-path convention (supersedes ADR-019 narrow case): `~/Documents/Oscar/<Practice Area Name>/<Output Type>/<file>`; canonical Output Type vocabulary at `skills/in-house-legal/OUTPUT_TYPES.md`; no file migration (legacy `~/Documents/Oscar Redlines/` stays).
+  - **ADR-035** Apache 2.0 NOTICE + attribution: two NOTICE files (repo root + bundled-skills root); per-file provenance comment at top of every kept SKILL.md; identifier discipline (`in-house-legal` neutral; `bundled_skill_sources` field name) for Apache §6 trademark.
+
+- **Phase 2** (`806967b73`) — Vendor + NOTICE. Cloned `https://github.com/anthropics/claude-for-legal` at HEAD (`4d55f539...`, 2026-05-15). Copied the 9 in-house plugins into `skills/in-house-legal/`. Wrote `/NOTICE` (repo root) and `skills/in-house-legal/NOTICE` (per-plugin attribution). Bundle stats: 111 SKILL.md files, 3.4 MB before policy pass.
+
+- **Phase 3** (per-plugin agents; outputs committed in Phase 4) — Dispatched 9 general-purpose subagents in parallel, one per kept plugin. Each agent applied ADR-033 to its plugin and produced two artefacts: `<plugin>/MANIFEST.md` (kept/dropped/keep-borderline per skill with reasoning) and `<plugin>/onboarding-questions.json` (exactly 2 priority-1 questions extracted from upstream cold-start-interview content per ADR-032). Aggregate finding: **no skill in any plugin contained firm-vs-in-house branches matching the ADR-033 strip regex** — upstream is already in-house-coded by design. The work reduces to drops + invocation-reference fixes + attribution. Per-plugin verdicts as recorded in MANIFESTs.
+
+- **Phase 4** (`506f585f3`) — Policy pass + drops + collision rename. Three skill names appeared in all 9 plugins (`matter-workspace`, `cold-start-interview`, `customize`) and would have collided; orchestrator policy: drop `cold-start-interview` × 9 (content extracted to JSON), drop `customize` × 9 (replaced by Oscar Settings/profile editor per ADR-030), drop per-plugin `CLAUDE.md` × 9 (replaced by unified profile per ADR-031). `matter-workspace` kept as 9 inert stubs (self-disables for in-house default; 51 kept skills reference its `## Matter context` paragraph; Sprint 12 Matters layer supersedes). Three cross-plugin name collisions detected (`policy-monitor`, `reg-gap-analysis`, `use-case-triage` — each in both ai-governance-legal and privacy-legal); ADR-031 detect-and-prefix strategy applied (renamed to `<plugin>__<skill>`; frontmatter `name:` updated; cross-refs rewritten). Mechanical edits applied across 153 files: 503 slash-command rewrites (`/<plugin>:<skill>` → bare or prefixed skill name), path swaps for `~/.claude/plugins/config/claude-for-legal/<plugin>/CLAUDE.md` → `~/.config/oscar/profile.json` and state-file paths → `~/.config/oscar/state/<plugin>/`, 101 rewrites of orphaned `cold-start-interview` refs → "Oscar GC onboarding from Settings", 93 attribution comments added to top of each kept SKILL.md body. Verification: 0 dangling slash-command refs, 0 dangling `~/.claude/plugins/config` refs, 0 dangling `cold-start-interview` refs, 93 attribution comments present, all SKILL.md files have valid frontmatter.
+
+- **Phase 5** (`9cafd4e71`) — Orchestrator outputs. `COLLISIONS.md` documents the 3 detected name collisions + 3 pre-empted collisions (drops). `OUTPUT_TYPES.md` enumerates the canonical per-area Output Type vocabulary (Redlines, NDA Reviews, MSA Reviews, DPAs, FTO Opinions, Board Minutes, etc.) and flags 2 outside-counsel-leaning Output Types for Sprint 11 dogfood (Brief Sections, Deposition Prep Memos).
+
+- **Phase 6** — Sibling-repo `oscar-onboarding-mcp` v0.2.0 (`31987a9` at `sarturko-maker/oscar-onboarding-mcp`). Schema v2 in `src/schema.ts` (`PracticeArea` + `area_profile`); read-time v1→v2 migration in `src/store.ts`; new tool `list_area_questions` in `src/server.ts` reading `${OSCAR_RESOURCES_ROOT}/skills/in-house-legal/<plugin>/onboarding-questions.json`; smoke test updated to cover both tools, v2 finalize, list_area_questions resolution against the goose sibling repo, and graceful fallback for unknown plugins. Sibling-repo ADR-004 cross-references the goose-repo ADR-032. `tsc` clean; `pnpm run smoke` OK.
+
+- **Phase 7** (`5b6df39a1`) — Desktop wiring on the goose side. Practice areas extended with `bundled_skill_sources` (per ADR-031 mapping table). `useOscarProfile.ts` type widened to `schema_version: 1 | 2` + optional `area_profile`. `systemPrompt.ts`: P3.5 inserted between P3 and P4 with 2-question hard cap; pacing reshape; `seedAreasJson` now embeds `bundled_skill_sources`; profile object shape updated to `schema_version: 2`. `OscarChatMessage.tsx`: agent-variant turns render through `MarkdownContent` (Sprint 7 carry-forward closed). `onboardingRecipe.ts` passes `OSCAR_RESOURCES_ROOT` through to the MCP via the recipe extension `envs`. `forge.config.ts` extraResource gains `src/resources/skills`. `prepare-oscar-bundle.js` adds a `prepareSkills()` step copying `/srv/projects/goose/skills/in-house-legal/` → `ui/desktop/src/resources/skills/in-house-legal/` (93 SKILL.md files); `BUNDLE.json` gains a `skills` provenance entry. `main.ts` adds `ensureBundledSkillsLink()` — idempotent symlink `~/.agents/skills/in-house-legal/` → resources path (production) or `/srv/projects/goose/skills/in-house-legal/` (dev fallback), called inline after `resolveOscarResourcesRoot()` so the symlink exists before any session spawns. Commercial recipe system prompt updated to ADR-034 output convention (`~/Documents/Oscar/Commercial/Redlines/`). `tsc --noEmit` clean.
+
+**Closes**
+
+Sprint 11's primary deliverable: bundled in-house skill library present in the goose repo at `skills/in-house-legal/`, wired into the .deb pipeline via `forge.config.ts` + `prepare-oscar-bundle.js`, discoverable at runtime via Goose's `all_skill_dirs()` walker through the `ensureBundledSkillsLink()` symlink. Onboarding extended to P3.5 with per-area mini-interviews sourced from upstream cold-start-interview content. Two Sprint 10 carry-forwards closed: markdown rendering in onboarding (`OscarChatMessage.tsx` uses `MarkdownContent`) and onboarding→practice-area pacing (P3.5 closes with explicit completion line before P4). Five ADRs at decision time, before code (CLAUDE.md mandate).
+
+**Deferred / out-of-scope per Arturs's brief**
+
+- Voice/dictation on onboarding (deferred until Goose ChatInput reuse lands).
+- Managed-agent cookbooks (Sprint 12+).
+- Community-skills installer / builder hub (Sprint 15+).
+- Rewriting Anthropic skill bodies beyond gating-strip + invocation-reference fixes.
+- The Forge meta-agent and Matters/Projects scoped containers (Sprint 12).
+- Adeu's "doesn't redline like a lawyer" finding (Arturs has a fix to share).
+
+**Carry-forwards for Sprint 12**
+
+- **Dogfood install (deferred to Arturs's Chromebook).** This sprint did all the changes on `lq-vps` but cannot perform the end-to-end install verification. Steps for dogfood:
+  1. Rebuild .deb via `bash /srv/projects/goose/scripts/build-oscar-deb.sh`.
+  2. Install on Crostini (replace prior install).
+  3. Launch Oscar GC. Confirm: `~/.agents/skills/in-house-legal/` symlink created on first boot; resolves to `/usr/lib/oscar-gc/resources/skills/in-house-legal/` (check `ls -la ~/.agents/skills/`).
+  4. Run unified onboarding end-to-end. Confirm: markdown renders in interview turns; P3 practice-areas selection works; P3.5 fires per selected area with ≤2 questions each; total turn count ≤ ~25 (with 3-4 areas selected, expect 15-18); `~/.config/oscar/profile.json` has `schema_version: 2` and `area_profile` populated.
+  5. From an agent chat in a selected practice area, invoke `load_skill(name: "<a skill from the bundled library>")` (e.g. `nda-review` for commercial). Confirm: skill loads with body + supporting files.
+  6. Trigger one Commercial redline. Confirm: output writes to `~/Documents/Oscar/Commercial/Redlines/<stem>_redlined_<ts>.docx` (legacy `~/Documents/Oscar Redlines/` files untouched).
+  7. Verify one skill per kept practice area can be invoked.
+- **Sprint 10 BACKLOG items not closed by this sprint** stay open: top-right Goose mascot round 2 (`BaseChat.tsx:411`, `SessionsInsights.tsx:155,248`, `OnboardingGuard.tsx:157,190` direct Goose imports); app-icon raster pipeline; Settings telemetry toggle audit; postinst orphan-on-uninstall; commercial-chat-doesn't-load-on-click regression; MCP tool-call cards too large; `oscar-memory` recipe wiring; commercial system-prompt polish (Markdown emphasis, defined-term capitalisation, Clause 8 mutuality reminder).
+- **Matter-workspace stubs** in the bundled library (9 stubs, currently inert for in-house users). Sprint 12 Matters/Projects supersedes; the orchestrator's MANIFESTs already capture this as a planned retirement target.
+- **Future re-vendoring**: when Anthropic ships new claude-for-legal content, re-run the per-plugin agent dispatch + orchestrator pass. The MANIFESTs become regression baselines (a skill that suddenly fails the ADR-033 policy on a new pull is a signal worth investigating).
+
+**Carry-forwards from prior sprints, still open**
+
+- Sprint 9 P1/P2 system-prompt polish — still open; Sprint 12 candidate.
+- `goose://` URL scheme rebrand; system-prompt self-identification; `document.title` runtime overwrite — branding follow-ups still open.
+- Sprint 15+: migrate ADR-029's title-prefix short-circuit to a proper `recipe.metadata.bundled` flag.
+
+**ADRs**: 031 (practice-area → plugin mapping), 032 (onboarding schema v2 + P3.5 per-area mini-interviews), 033 (in-house gating strip policy), 034 (output-path convention, supersedes ADR-019), 035 (Apache 2.0 NOTICE + attribution). Five ADRs, all at decision time, before implementing code (CLAUDE.md mandate). Sibling-repo `oscar-onboarding-mcp` ADR-004 cross-references ADR-032. ADR-034 supersedes ADR-019's narrow Redlines convention.
+
+**Cross-repo SHAs**: `sarturko-maker/goose` and `sarturko-maker/oscar-onboarding-mcp` touched this sprint. `sarturko-maker/oscar-memory-mcp` not touched. Sprint 11 commits on `goose`: `aa9551dfd` (ADRs), `806967b73` (vendor + NOTICE), `506f585f3` (policy pass + drops + rename + reference fixes + attribution), `9cafd4e71` (orchestrator outputs), `5b6df39a1` (desktop wiring), plus this close-out commit. On `oscar-onboarding-mcp`: `31987a9` (schema v2 + list_area_questions tool). Pushes pending; SHAs above are local-only until pushed.
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.

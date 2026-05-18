@@ -829,10 +829,56 @@ Draft until Arturs reviews; promote to published once install instructions read 
 
 Goose's stock OnboardingGuard expects either `MINIMAX_API_KEY` in the env or a keyring-stored secret. Crostini's default container ships without a keyring daemon. If Goose's file fallback also fails, first-launch breaks. `docs/INSTALL_CROSTINI.md` "Troubleshooting" surfaces the `~/.profile` workaround. If Sprint 10 dogfood confirms keyring breaks, write ADR-025 to formalise the pasted-key-via-config path forward.
 
+## Sprint 11 — Bundled in-house legal skill library (2026-05-19, lq-vps)
+
+Sprint 11 vendors Anthropic's `claude-for-legal` (Apache 2.0; upstream commit `4d55f539` of 2026-05-15) as a single bundled in-house skill library. Five ADRs (031–035) lead; 9 plugins vendored, 27 drops, 9 inert stubs, 6 collision renames, 93 kept SKILL.md files (3.4 MB before bundle).
+
+### On-disk layout
+
+| Path | Source | Purpose |
+|---|---|---|
+| `/srv/projects/goose/skills/in-house-legal/<plugin>/` | committed in repo | Source of truth; 9 plugin subdirs + MANIFEST.md + onboarding-questions.json per plugin; per-plugin NOTICE at `skills/in-house-legal/NOTICE`. |
+| `ui/desktop/src/resources/skills/in-house-legal/` | build-time copy (gitignored) | Bundle staging produced by `prepare-oscar-bundle.js` step `prepareSkills()`. |
+| `/usr/lib/oscar-gc/resources/skills/in-house-legal/` | inside the .deb | Production install location; rooted at `${process.resourcesPath}/skills/`. |
+| `~/.agents/skills/in-house-legal` | symlink, created at first boot | Points at the production path (or `/srv/projects/goose/skills/in-house-legal/` in dev). Goose's `all_skill_dirs()` walker (`crates/goose/src/skills/mod.rs:226-252`) walks `~/.agents/skills/` recursively. |
+
+The symlink is created by `ensureBundledSkillsLink()` in `ui/desktop/src/main.ts` (idempotent; falls back to the dev path if the production resources root is missing). Postinst does **not** create the symlink because it runs as root and doesn't know the user; Electron main runs as the user and knows the right home.
+
+### Output-path convention
+
+Per ADR-034 (supersedes ADR-019's narrow case): `~/Documents/Oscar/<Practice Area Name>/<Output Type>/<file>`. `<Practice Area Name>` is the Title Case sidebar label (`Commercial`, `Privacy`, `AI Governance`, `CoSec`). `<Output Type>` is from the canonical vocabulary at `skills/in-house-legal/OUTPUT_TYPES.md`.
+
+Sprint 9's `~/Documents/Oscar Redlines/` path is NOT migrated — pre-existing files stay; new redlines land at `~/Documents/Oscar/Commercial/Redlines/`. The commercial recipe at `ui/desktop/src/components/oscar/commercial/systemPrompt.ts:39` has been updated; adeu's Python source is untouched (recipe owns the path per ADR-019).
+
+### State files
+
+Per-plugin state files referenced inside skill bodies (e.g. `renewal-register.yaml`, `gap-tracker.yaml`, `leave-register.yaml`) live at `~/.config/oscar/state/<plugin>/<file>` (formerly `~/.claude/plugins/config/claude-for-legal/<plugin>/<file>` upstream). Skills create these on first use. Not user-facing artefacts — the agent reads/writes them as scratch.
+
+### Profile schema
+
+Profile schema v1 is still readable. `oscar-onboarding-mcp` v0.2.0 bumps to v2 with `practice_areas[i].area_profile: Record<string,string> | null` (free-text answers keyed by question id). v1 files migrate at read time via `migrateV1ToV2` in `src/store.ts`; disk is not rewritten until the next `finalize_profile`. Existing Sprint 10 dogfood profiles continue to work; no forced re-onboarding.
+
+### New MCP tool
+
+`list_area_questions(plugin_id)` exposed by `oscar-onboarding-mcp`. Reads `${OSCAR_RESOURCES_ROOT}/skills/in-house-legal/<plugin_id>/onboarding-questions.json`. Empty-array fallback when the env var is unset (dev mode the onboarding recipe currently leaves it unset for dev — the agent gets zero questions and proceeds; P3.5 says "moving on"). Production install sets `OSCAR_RESOURCES_ROOT` via the recipe extension `envs` map (per ADR-024 pattern).
+
+### Dogfood verification commands
+
+```bash
+# After installing the new .deb on Crostini:
+ls -la ~/.agents/skills/in-house-legal   # confirm symlink created
+ls /usr/lib/oscar-gc/resources/skills/in-house-legal | head  # confirm bundled
+find ~/.agents/skills/in-house-legal -name SKILL.md | wc -l  # expect 93
+
+# After onboarding completes:
+cat ~/.config/oscar/profile.json | python3 -c "import json,sys; p=json.load(sys.stdin); print('schema_version:', p['schema_version']); [print(a['id'], '->', list((a.get('area_profile') or {}).keys())) for a in p['practice_areas']]"
+```
+
 ## Pending
 
-- **Sprint 11 carry-forwards** — see `BACKLOG.md` for full list. Top items: top-right Goose mascot round-2, Commercial chat regression (doesn't load on click), app-icon raster pipeline, postinst prerm/postrm, MCP tool-card sizing.
-- **GitHub Release `oscar-gc-sprint10`** — draft at `sarturko-maker/goose`. Promote to published when Arturs confirms install instructions are clean.
+- **Sprint 11 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, run onboarding + practice-area selection + skill invocation + Commercial redline. SPRINT_LOG Sprint 11 entry has the step-by-step.
+- **Sprint 10 BACKLOG carry-forwards** still open — see `BACKLOG.md` for full list. Top items: top-right Goose mascot round-2, Commercial chat regression (doesn't load on click), app-icon raster pipeline, postinst prerm/postrm, MCP tool-card sizing, `oscar-memory` recipe wiring.
+- **GitHub Release `oscar-gc-sprint10`** — draft at `sarturko-maker/goose`. Promote to published when Arturs confirms install instructions are clean. (A Sprint 11 release will likely follow once dogfood lands.)
 - **next weekly upstream read** — due 2026-05-25. Decide skip / merge / wait per upstream release notes.
 
 ## Corrections
