@@ -15,7 +15,7 @@ Sprint 5 minimum viable. Single flat scope, JSON persistence, no semantic search
 | `store_note` | `{ scope_id: string, body: string }` | Append a note tagged with `scope_id`. Returns `{ ok: true, scope_id, created_at }`. |
 | `list_notes` | `{ scope_id: string }` | Returns all notes for `scope_id`, sorted by `created_at` ascending. |
 
-After Goose namespaces the extension, the LLM sees the tools as `oscar_memory__store_note` and `oscar_memory__list_notes`.
+After Goose namespaces the extension, the LLM sees the tools as `oscar-memory__store_note` and `oscar-memory__list_notes`.
 
 ## Persistence
 
