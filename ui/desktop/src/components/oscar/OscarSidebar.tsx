@@ -8,7 +8,10 @@ export function OscarSidebar() {
   return (
     <aside className="oscar-terminal oscar-terminal__sidebar flex flex-col w-full h-full min-h-0">
       <nav className="oscar-terminal__sidebar-list flex-1 overflow-y-auto">
-        {PRACTICE_AREAS.map((area) => {
+        <div className="oscar-terminal__eyebrow oscar-terminal__sidebar-eyebrow">
+          PRACTICE // AREAS
+        </div>
+        {PRACTICE_AREAS.map((area, idx) => {
           const path = `/practice/${area.id}`;
           const isActive = pathname === path;
           return (
@@ -20,6 +23,9 @@ export function OscarSidebar() {
                 isActive && 'oscar-terminal__sidebar-item--active'
               )}
             >
+              <span className="oscar-terminal__sidebar-item-num">
+                {String(idx + 1).padStart(2, '0')}
+              </span>
               {area.name}
             </Link>
           );
