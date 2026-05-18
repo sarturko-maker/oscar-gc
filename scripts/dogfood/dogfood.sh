@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 #
 # Dogfood entry point. Sets up MiniMax env + Xvfb, then delegates to the
-# Node driver. Subcommands: launch <session> | send <msg> | screenshot <label>
-#                          | read | status | quit
+# Node driver. Subcommands: launch <session> | send <msg> | click <selector>
+#                          | screenshot <label> | read | status | quit
+#
+# DOGFOOD_SCREENSHOT_BASE env var (repo-relative path) routes captures into
+# the active sprint's docs dir; defaults to docs/dogfood/sprint-7/screenshots.
 #
 # See RUNBOOK.md "Dogfood capture" section.
 set -euo pipefail

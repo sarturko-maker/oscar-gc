@@ -1,13 +1,15 @@
 /*
- * Sprint 7 dogfood driver. Subcommand-based REPL for driving the Oscar GC
- * onboarding chat over CDP from an external orchestrator (e.g. CC running
- * the dogfood). Pure clicks-and-types; no product surface changes.
+ * Dogfood driver. Subcommand-based REPL for driving the Oscar GC chat
+ * surface over CDP from an external orchestrator (e.g. CC running the
+ * dogfood). Pure clicks-and-types; no product surface changes.
  *
  * Subcommands:
  *   launch <session>     spawn the app, wait for chat input, capture
  *                        greeting + initial screenshot, log app PID
  *   send <text>          fill input, click send, wait for agent reply to
  *                        stabilise, screenshot, log the turn
+ *   click <selector>     click a CSS selector and screenshot the result
+ *                        (used for post-onboarding Hub-banner dismiss)
  *   screenshot <label>   capture a labelled screenshot without sending
  *   read                 print all chat turns currently in the DOM
  *   status               print app PID, profile-file presence, turn count
@@ -16,7 +18,8 @@
  * State files under /tmp/oscar-dogfood/:
  *   app.pid, screenshot-counter, turns.json, session-name
  *
- * Screenshots written to docs/dogfood/sprint-7/screenshots/<session>/NN-label.png
+ * Screenshot path: $DOGFOOD_SCREENSHOT_BASE (repo-relative) or default
+ *   docs/dogfood/sprint-7/screenshots/<session>/NN-label.png
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
@@ -39,7 +42,10 @@ const DEBUG_PORT = Number(process.env.DEBUG_PORT || 9223);
 const AGENT_TIMEOUT_MS = Number(process.env.AGENT_TIMEOUT_MS || 240000);
 const STABILITY_MS = Number(process.env.STABILITY_MS || 3500);
 const PROFILE_PATH = path.join(os.homedir(), '.config/oscar/profile.json');
-const SCREENSHOT_BASE = path.join(repoRoot, 'docs/dogfood/sprint-7/screenshots');
+const SCREENSHOT_BASE = path.join(
+  repoRoot,
+  process.env.DOGFOOD_SCREENSHOT_BASE || 'docs/dogfood/sprint-7/screenshots',
+);
 
 function ensureStateDir() {
   fs.mkdirSync(STATE_DIR, { recursive: true });
@@ -263,6 +269,23 @@ async function screenshot(label) {
   }
 }
 
+async function click(selector) {
+  if (!selector) throw new Error('empty selector');
+  const { browser, page } = await connect();
+  try {
+    await page.waitForSelector(selector, { timeout: 5000 });
+    await page.click(selector);
+    await page.waitForTimeout(300);
+    const labelSlug = selector
+      .replace(/[^A-Za-z0-9-]+/g, '-')
+      .toLowerCase()
+      .replace(/^-+|-+$/g, '');
+    await takeScreenshot(page, `click-${labelSlug || 'target'}`);
+  } finally {
+    await browser.close();
+  }
+}
+
 async function status() {
   const pid = fs.existsSync(PID_FILE) ? fs.readFileSync(PID_FILE, 'utf8').trim() : null;
   let alive = false;
@@ -307,6 +330,7 @@ const arg = process.argv.slice(3).join(' ');
 const action = {
   launch: () => launch(arg || 'primary'),
   send: () => sendMessage(arg),
+  click: () => click(arg),
   read: () => readState(),
   screenshot: () => screenshot(arg),
   status: () => status(),
@@ -314,7 +338,7 @@ const action = {
 }[cmd];
 
 if (!action) {
-  console.error('usage: launch <session> | send <text> | read | screenshot <label> | status | quit');
+  console.error('usage: launch <session> | send <text> | click <selector> | read | screenshot <label> | status | quit');
   process.exit(2);
 }
 
