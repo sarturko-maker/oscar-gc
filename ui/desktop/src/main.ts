@@ -1637,7 +1637,7 @@ ipcMain.handle('oscar:read-profile', async () => {
     const raw = await fs.readFile(oscarProfilePath, 'utf8');
     return JSON.parse(raw) as unknown;
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+    if ((err as { code?: string }).code === 'ENOENT') {
       return null;
     }
     log.warn('oscar:read-profile failed', { err: errorMessage(err, 'Unknown error') });
