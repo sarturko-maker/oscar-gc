@@ -121,4 +121,43 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
-(Sprint 4 entry lands when Sprint 4 closes.)
+### Sprint 4 — Practice-area navigation (closed 2026-05-18)
+
+**Goal**: replace Goose's upstream sidebar (NavigationPanel grid + sessions list) with an Oscar GC practice-area sidebar; route each entry to a shared placeholder page. First sprint to touch `AppLayout` under product control. Brief in chat; plan at `/root/.claude/plans/sprint-4-snazzy-matsumoto.md`.
+
+**Built**
+
+- `ui/desktop/src/components/oscar/` (new namespace, commit `5765ed09b`):
+  - `practiceAreas.ts` — 13-entry `as const` config with derived `PracticeAreaId`. Brief listed 10 (claude-for-legal's 9 + CoSec); at plan-time the generic "Litigation" entry was replaced by four area-scoped dispute sub-areas (Commercial / Employment / IP / Regulatory Disputes) — deliberate Arturs-approved deviation reflecting in-house reality.
+  - `OscarSidebar.tsx` — pure-render vertical list of `<Link>` items. Consumes only `useLocation`. Fills `w-full h-full` (honours `AppLayout.tsx:276-285` wrapper contract). Ignores `effectiveNavigationStyle` / `isCondensedIconOnly` / `isHorizontalNav` for Sprint 4 (single render style; documented in ADR-006).
+  - `PracticeAreaPlaceholder.tsx` — reads `:areaId`, looks up via `PRACTICE_AREAS.find`, renders `{name} — placeholder.` + per-area body inside `.oscar-terminal`. Per-area body copy is draft, grounded in the in-house profile/instruction/cross-element-fetch model Arturs described; refining is a one-line edit per entry.
+- `ui/desktop/src/styles/main.css` (commit `5765ed09b`) — appended seven BEM selectors inside the existing `.oscar-terminal` scope: `__sidebar`, `__sidebar-list`, `__sidebar-item(--active)`, `__placeholder-title`, `__placeholder-body`. Indigo-500 left-border + glow-txt label on active; night-rule hover. No Tailwind config or token-block touch.
+- `ui/desktop/src/components/Layout/AppLayout.tsx` (commit `5765ed09b`) — 3-line surgical edit. Line 10 import `Navigation` → `OscarSidebar`; both `<Navigation />` invocations (line 284 push + 305 overlay) swapped. Push/overlay animation, resize handle, Menu trigger, `NavigationProvider` chain all preserved. `NavigationProvider` stays mounted because `BaseChat:100-102`, four `settings/app/Navigation*Selector` components, and `AppSettingsSection` all consume `useNavigationContext()`.
+- `ui/desktop/src/App.tsx` (commit `5765ed09b`) — `<Route path="practice/:areaId" element={<PracticeAreaPlaceholder />} />` inside the existing `/` block as sibling of `skills`; plus the import. Hub remains at `/`.
+- `docs/adr/006-practice-area-nav-and-applayout-seam.md` (commit `5765ed09b`) — supersedes ADR-005. New seam: anything reachable via `<OscarSidebar />`, routes under `/practice/`, the `oscar/` component namespace, or the `.oscar-terminal` style scope is ours; everything else in `ui/desktop/src/` is upstream-tracked.
+- Build + verify: `pnpm run lint:check` clean (typecheck + eslint `--max-warnings 0` + i18n). `pnpm run make --targets=@electron-forge/maker-zip` produced `ui/desktop/out/make/zip/linux/x64/Oscar-GC-linux-x64-1.34.0.zip` (200M). `npx @electron/asar extract` → `/tmp/sprint4-asar`. Grep confirmed all 13 practice-area names in `App-31IiCtoy.js`, the `practice/` route segment in the same bundle, and all 6 new BEM selectors in `index-CPW342l2.css`.
+
+**Deferred**
+
+- Visual GUI smoke test — `lq-vps` headless (Sprint 3 carry-forward unresolved). Grep verification met the brief's exit criteria; clicking through each practice area in the dev server is still a future GUI-host task.
+- `JetBrains Mono` and `Cormorant Garamond` `@font-face` binaries — punted again (Sprint 3 deferral; no new consumer this sprint).
+- Optional sidebar header (Oscar GC wordmark / "Practice areas" eyebrow) — visual polish, no functional impact.
+- `/` redirect-to-default-practice-area — product-policy decision; needs explicit sign-off and probably user-pref scope.
+- Hub.tsx relocation to `components/oscar/Hub.tsx` for namespace consistency — Sprint 3 placement honoured; relocate when Hub is next touched substantively.
+- Orphan-file cleanup: `components/Layout/NavigationPanel.tsx`, `hooks/useNavigationItems.ts`, `hooks/useNavigationSessions.ts`, `components/Layout/navigation/` — no consumers after Sprint 4, intentionally not deleted; deletion is a separate ADR-tracked decision.
+- Per-area placeholder body refinement once primary-unit schema is real — Sprint 5+.
+- Configurable practice-area list (JSON / config-server / per-tenant) — explicitly out of Sprint 4 per brief.
+
+**Carry-forwards for Sprint 5**
+
+- Primary-unit schema (Customer / Vendor / Supplier / Entity / Stream — per-area variants) is the next product step. Placeholder pages can be replaced one-by-one as schemas land.
+- Decision: when to delete the orphan upstream nav files. Sooner is cleaner; later preserves the option to revive Goose chrome. Suggest folding into Sprint 5 or a focused cleanup sprint.
+- Decision: should `/` redirect to a chosen practice area, or stay as the Hub landing? Product-policy + maybe user-pref.
+
+**ADRs**: 006.
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read due 2026-05-25 (unchanged from Sprint 3 schedule).
+
+---
+
+(Sprint 5 entry lands when Sprint 5 closes.)
