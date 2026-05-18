@@ -605,6 +605,116 @@ The relaunch `launch` throws because `OscarOnboardingGuard` skipped onboarding (
 
 No new apt packages, no new system services. No new daemons. Driver and screenshot harness unchanged in shape; one env var and one subcommand added.
 
+## Sprint 9 — adeu redline MCP (Python runtime + stdio extension) (2026-05-18, lq-vps)
+
+First Python component in the project. `adeu==1.6.9` (Apache-style redline executor over OOXML; MIT-licensed; upstream at https://github.com/dealfluence/adeu) is registered as a stdio MCP extension exposing a redline capability to the Commercial practice area. adeu is upstream — not a sibling repo we own — so the discipline differs from Sprints 5/6 (those sibling MCPs are repos we authored).
+
+### Python interpreter and build deps
+
+System Python 3.12.3 (Ubuntu 24.04 default). One-shot apt install for venv + lxml/lxml-deps:
+
+```bash
+apt-get install -y python3-venv python3-dev libxslt1-dev
+# libxml2-dev + build-essential were already installed pre-Sprint 9
+```
+
+Pinned packages already on host pre-Sprint 9: `libxml2-dev`, `build-essential`. lxml's wheel ships prebuilt manylinux x86_64; libxslt1-dev pulled in just in case.
+
+### Runtime location
+
+```
+/srv/projects/oscar-runtime/python/adeu-venv/             # the venv
+/srv/projects/oscar-runtime/python/adeu-venv/bin/adeu-server   # entry binary
+```
+
+Rationale: sibling-style directory matches `oscar-memory-mcp/`, `oscar-onboarding-mcp/` placement. **Absolute path** — no PATH dependence (same rationale as Sprint 6's `/usr/bin/node` hardcode under ADR-008). For the Sprint 12-15 bundling phase, this directory is what gets relocated into the Electron resources tree.
+
+### Bootstrap order (matters on a fresh VPS)
+
+```bash
+mkdir -p /srv/projects/oscar-runtime/python
+cd /srv/projects/oscar-runtime/python
+python3 -m venv adeu-venv
+adeu-venv/bin/pip install --upgrade pip
+adeu-venv/bin/pip install adeu==1.6.9
+```
+
+Pulls in fastmcp 3.3.1, mcp 1.27.1, python-docx 1.2.0, lxml 6.1.0, diff-match-patch 20241021, and a long tail of transitive deps. `pip install` total ≈ 90 MB on disk.
+
+### Standalone verification (the Sprint 9 Phase 0 probe)
+
+`adeu-server` has no `--help`; it just starts the MCP server on stdio. To verify the tool schema without launching it through goosed, drive the official MCP client over stdio:
+
+```python
+# /tmp/mcp_probe.py — see docs/dogfood/sprint-9/adeu-tools-list.json for output
+import asyncio, json, sys
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+async def main():
+    params = StdioServerParameters(
+      command="/srv/projects/oscar-runtime/python/adeu-venv/bin/adeu-server", args=[])
+    async with stdio_client(params) as (read, write):
+        async with ClientSession(read, write) as session:
+            init = await session.initialize()
+            tools = await session.list_tools()
+            out = {"server_info": init.model_dump(mode="json"),
+                   "tools": [t.model_dump(mode="json") for t in tools.tools]}
+            print(json.dumps(out, indent=2, default=str))
+asyncio.run(main())
+```
+
+```bash
+/srv/projects/oscar-runtime/python/adeu-venv/bin/python /tmp/mcp_probe.py \
+  > /srv/projects/goose/docs/dogfood/sprint-9/adeu-tools-list.json
+```
+
+Pass criteria: `init.serverInfo.name == "Adeu Redlining Service"`, 11 tools listed. The committed `adeu-tools-list.json` is the canonical wire-level evidence.
+
+### Goose registration stanza
+
+Appended to `~/.config/goose/config.yaml` under `extensions:` (sibling of `oscar-memory`, `oscar-onboarding`):
+
+```yaml
+  redline:
+    enabled: true
+    type: stdio
+    name: redline
+    description: 'Redline tool for legal documents (.docx). Backed by adeu==1.6.9.'
+    cmd: /srv/projects/oscar-runtime/python/adeu-venv/bin/adeu-server
+    args: []
+    timeout: 300
+    available_tools:
+      - read_docx
+      - process_document_batch
+      - diff_docx_files
+```
+
+Three points worth noting:
+
+- **Extension name is `redline`, not `adeu`.** Per ADR-017, the extension name IS the capability seam (config-level DI). The agent sees `redline__process_document_batch`, `redline__read_docx`, `redline__diff_docx_files`. Tomorrow's swap of adeu for a different redline backend = edit `cmd:` (and `args:`).
+- **`available_tools` whitelist excludes** `open_local_file` (runs `xdg-open` — security/UX hazard inside the agent), `login_to_adeu_cloud`/`logout_of_adeu_cloud` (cloud features), email/validation tools (cloud features), `accept_all_changes` (not core to Sprint 9), `sanitize_docx` (counterparty-delivery workflow, future).
+- **300s timeout** generous to cover large-document `process_document_batch` calls (adeu's RedlineEngine can be CPU-intensive on big DOCX OOXML trees).
+
+### File egress convention (the Sprint 9 D4 decision)
+
+adeu's `process_document_batch` writes the modified `.docx` to `output_path` on disk and returns a text status. The recipe / system prompt prescribes the convention:
+
+```
+output_path = ~/Documents/Oscar Redlines/{stem}_redlined_{YYYYMMDD-HHmmss}.docx
+```
+
+The agent's reply names the path; the user opens via OS file manager. No UI affordance is added for binary tool outputs in Sprint 9. If dogfood reveals friction, a "Save copy / Open folder" affordance is a candidate for a later UI polish sprint.
+
+### Footprint after Sprint 9
+
+| Artefact | Footprint |
+|---|---|
+| `/srv/projects/oscar-runtime/python/adeu-venv/` | ~95 MB (Python + all transitive deps) |
+| `docs/dogfood/sprint-9/adeu-tools-list.json` | ~34 KB |
+| `~/Documents/Oscar Redlines/` (user-data; growth depends on usage) | starts empty; one `.docx` per redline operation |
+
+New apt packages: `python3-venv`, `python3-dev`, `libxslt1-dev`. No new system services or daemons. adeu-server is spawned by goosed at session start, like every other stdio MCP.
+
 ## Pending
 
 (none — Sprint 8 complete)

@@ -1,0 +1,946 @@
+{
+  "server_info": {
+    "meta": null,
+    "protocolVersion": "2025-11-25",
+    "capabilities": {
+      "experimental": {},
+      "logging": {},
+      "prompts": {
+        "listChanged": false
+      },
+      "resources": {
+        "subscribe": false,
+        "listChanged": false
+      },
+      "tools": {
+        "listChanged": true
+      },
+      "completions": null,
+      "tasks": null,
+      "extensions": {
+        "io.modelcontextprotocol/ui": {}
+      }
+    },
+    "serverInfo": {
+      "name": "Adeu Redlining Service",
+      "title": null,
+      "version": "3.3.1",
+      "websiteUrl": null,
+      "icons": [
+        {
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAMAUExURQAAAAAz/gAz/wEz/AEz+gEz+wAx8QAy9wAy9gIy8QEy8wA0/wAx9gEz/QUx7AEy+gAz/QEy9QMy7RAwvwAz/AEy+AMy8wIy9Akx2gEy+wA4/wIy8wYw3wQy7QEy+QEx9AIy9QMy8AEy/AAv/wIz9wEz+QEx9gA1/wQx7gIx8wMy8QEz9wAy/wEz+AMy7wIz9gIz9AAy/Qgz3wIy9wQw5QAy+AAz+wMy8gIz+BEwsAUw6gA5/wAw7wEz/wEz/QAz/wAz/wAz/gAz/QAz/gEz/AAz/wAz/QAz/wAy/QAz/QAz/gEz/QAz/wAz/wAz/QIy8wAz/QAz/wAz/wAz/gAz/gAz/wAz/gAz/gAz/gAz/gEz+QAz/gAz/wAz/QYw2wEz/AAz/QAz/gAz/gEy+QAz/AAz/gAz/gAz/wEz+wAz/QAz/gAz/wAz/wIy8wEz/AAz/QAz/gAz/wEy+gAz/QAz/gAz/wEz+wAz/QAz/gAz/wEy+gAz/QAz/gAz/gAz/wEz+wAz/QAz/gAz/wUx6gAz/AAz/QAz/gAz/wEy+AAz/AAz/gAz/wAz/wAz/gEy+QAz/QAz/gAz/gAz/gAz/QEz+wAz/QAz+wAz/gAz/gAz/QEz/AMy7wAz/AAz/gAz/wAz/gAz/QEz+wAz/wAz/wAz/wAz/gAz/AEz+gAz/AAz/gAz/wAz/gAz/QEz/AIz9gAz/QAz/wAz/gAz/QEz+wAz/gAz/gAz/AEz+QAz/QAz/wAz/gAz/QEz/AIy9AAz/gAz/QEz+wAz/QEy+AAz/gAz/QAz/gEz/AAz/QAz/wAz/QAz/QAz/wAz/wAz/wAz/gct0wEy+gAz/gAz/gAz/wAz/gAz/wAz/wAz/wAz/wAz/wAz/wAz/wAz/gAz/gAz/QAz/QAz/AAz/gAz/wAz/AEz/AAz/gEy+AEy9wAz/gAz/AAz/gAz/QEy+AAz/QEz+gAz/QAy/QEy+gAz/gAz/QAz/wAz/wEz/AAy+QAz/QAz/QAz/gAz/gAz/gEz/AAz/////6OiaCgAAAD+dFJOUwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARff8xjrFF/lK/VdZhEb64kcCIHJ1eM/qpop0Jw+n0zwBJnTJswk/luDcGF628d0DLX/R+w5IoOYeab/1BjaL2f4SU6vsASVzyPgKPpXg8s4MVrXlnUMQVDSw04AsAx9Y9LxjGl/u6KJIDSBG6deFMAQa9sBoHXrqTQ4h1dqKNAVpbCBnEN569i4n4V0/zufUOgEdcMHkn4F/gI3Y18hrCIKRLBgYDzeqCQViOOh4C5sSmlgLdTSb5RgEM36+5sc611rcZQAAAAFiS0dE/6UH8sUAAAAHdElNRQfqAx8JOiuyFbPrAAACnElEQVRIx2NgYGBgtLP/hw84ODoxMTEgAUIa/v1zdmEmTYOrGyNpGtw9hoEGT0YWkjT882JiZWNn5+Dkgmjw9iGkwdfPnxsImBh5wBoCAoNwguAQsI7QsHAgiIgExzgjLxMOwMjIFBWNbFNMLANOwMfELxAXn5CI6twkXMoFhViZklNS09A9k45VtbCIKDN3RmZWNqbvc7AoF+NmZczNyy8oxBZcmBpExVmZiopLSnGEL5oGCSZJAamy8opKnBGCokFahpWpqrqmtg5PDOYgeZRfgKm+obEJf5TDNMhyyzE2t7S2tRNKIxAN8rz8TB2dXd3Y1fT0hqJpUFAU6OufkI1d+cRJk6dM7UHRwKTENG06dre4z5g5azajyJxuZA0sAspz07Aqnzd/wUJuERVVgQBkDWpy6osWY1O+ZOmy5UysGgrCDAIrkDWoM61cham6bvWatesYWdQ1QX5E1SCwPhFD+YaNmzZzi6gKcELCHFUD9xZ05VvDtm1nYtXShscpqoYdO1Hdsmv3nr1MLDpaSEkGVcM+5FTs6rz/gLqILqseSpJE1TAdSX3owUNMrPqqwmgpHlXDYSQNR7j5lQ0wcxSqhqMI9U3HBASw5VhUDXVIUXVcQBuLekOBgBNIGlwRGgpPMsnpGKGrNzYROIVIfKcZziD54ey589iKswtJcBX2FxkuIcfC5StXr11HA9dugAvLVTdv3bp1+85dhnv/iAGu9x88fPTo0WNuRoYnS4jR8PSZACM3E5OAqRnD8xJiNLxggge4wMtXhNUDqyxzmAYLy9cOxGiABzML65u3JGlgEBF5956QHe4fkDRYMQl8/FSKXwNq08GKUcT685evdXg0OH8TQU4tNmZyAt9//Pz12xW78sI/f5lsYYoB4sim/FDb8oMAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDMtMzFUMDk6NTg6MTkrMDA6MDCc7tPdAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTAzLTMxVDA5OjU4OjE5KzAwOjAw7bNrYQAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wMy0zMVQwOTo1ODo0MyswMDowMFY2G5QAAAAASUVORK5CYII=",
+          "mimeType": "image/png",
+          "sizes": null
+        }
+      ]
+    },
+    "instructions": null
+  },
+  "tools": [
+    {
+      "name": "login_to_adeu_cloud",
+      "title": null,
+      "description": "Logs the user into the Adeu Cloud backend. Securely opens a browser window for authentication.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "x-fastmcp-wrap-result": true
+      },
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": null,
+        "destructiveHint": null,
+        "idempotentHint": null,
+        "openWorldHint": true
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "logout_of_adeu_cloud",
+      "title": null,
+      "description": "Logs out of the Adeu Cloud backend by clearing the local API key from the OS Keychain.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "x-fastmcp-wrap-result": true
+      },
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": null,
+        "destructiveHint": null,
+        "idempotentHint": null,
+        "openWorldHint": true
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "accept_all_changes",
+      "title": null,
+      "description": "Accepts all tracked changes and removes all comments in a single operation, producing a finalized clean document. Use this when a document review is entirely complete and you want to clear all redlines. For selective acceptance/rejection of specific changes, use `process_document_batch` instead.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "docx_path": {
+            "description": "Absolute path to the DOCX file.",
+            "type": "string"
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional output path."
+          }
+        },
+        "required": [
+          "docx_path"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "x-fastmcp-wrap-result": true
+      },
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": null,
+        "destructiveHint": true,
+        "idempotentHint": null,
+        "openWorldHint": null
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "diff_docx_files",
+      "title": null,
+      "description": "Compares two DOCX files and generates a text-based Unified Diff. Use this to see exactly what changed between two versions of a document. By default (compare_clean=True), it compares the 'Accepted' finalized states of both documents. Set compare_clean=False if you need to compare the raw underlying text including Tracked Change CriticMarkup.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "original_path": {
+            "description": "Path to the base document.",
+            "type": "string"
+          },
+          "modified_path": {
+            "description": "Path to the new document.",
+            "type": "string"
+          },
+          "compare_clean": {
+            "default": true,
+            "description": "If True, compares 'Accepted' state. If False, compares raw text.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "original_path",
+          "modified_path"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "x-fastmcp-wrap-result": true
+      },
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": true,
+        "destructiveHint": null,
+        "idempotentHint": null,
+        "openWorldHint": null
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "open_local_file",
+      "title": null,
+      "description": "Opens a local file in its native desktop application (e.g., Microsoft Word for DOCX files).",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "description": "Absolute path to the file to open.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_path"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "x-fastmcp-wrap-result": true
+      },
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": null,
+        "destructiveHint": null,
+        "idempotentHint": null,
+        "openWorldHint": true
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "process_document_batch",
+      "title": null,
+      "description": "Applies a batch of edits and review actions to a DOCX.\n\nAll changes evaluate against the ORIGINAL document state \u2014 do not chain dependent edits within one batch (e.g. rename X to Y, then modify Y). Apply the rename first, then send a second batch.\n\nEach item in `changes` must specify a `type`:\n1. 'modify': Search-and-replace. `target_text` must uniquely match \u2014 include surrounding context if the phrase is ambiguous. `new_text` supports Markdown: '# Heading 1' through '###### Heading 6', '**bold**', '_italic_', and '\\n\\n' to split into multiple paragraphs. Empty `new_text` deletes. Do NOT write CriticMarkup tags ({++, {--, {>>) manually \u2014 use the `comment` parameter for comments.\n2. 'accept' / 'reject': Finalize or revert a tracked change by `target_id` (e.g. 'Chg:12').\n3. 'reply': Reply to a comment by `target_id` (e.g. 'Com:5') with `text`.\n4. 'insert_row' / 'delete_row': Table edits. Disk mode only \u2014 not supported on Live Word canvas.\n\nID VOLATILITY: 'Chg:N' and 'Com:N' shift between document states. Always call `read_docx` immediately before any accept/reject/reply \u2014 do not reuse IDs from earlier in the conversation.\n\n`author_name` is used for attribution on all tracked changes and comments, in both disk and Live Word modes.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "original_docx_path": {
+            "description": "Absolute path to the source file.",
+            "type": "string"
+          },
+          "author_name": {
+            "description": "Name to appear in Track Changes (e.g., 'Reviewer AI').",
+            "type": "string"
+          },
+          "changes": {
+            "description": "List of changes to apply. Each change must specify 'type'.",
+            "items": {
+              "oneOf": [
+                {
+                  "properties": {
+                    "type": {
+                      "const": "accept",
+                      "default": "accept",
+                      "description": "Must be 'accept' to finalize a tracked change.",
+                      "type": "string"
+                    },
+                    "target_id": {
+                      "description": "The full ID string from the document text (e.g. 'Chg:12').",
+                      "type": "string"
+                    },
+                    "comment": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Optional rationale."
+                    }
+                  },
+                  "required": [
+                    "target_id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "reject",
+                      "default": "reject",
+                      "description": "Must be 'reject' to revert a tracked change.",
+                      "type": "string"
+                    },
+                    "target_id": {
+                      "description": "The full ID string from the document text (e.g. 'Chg:12').",
+                      "type": "string"
+                    },
+                    "comment": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Optional rationale."
+                    }
+                  },
+                  "required": [
+                    "target_id"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "reply",
+                      "default": "reply",
+                      "description": "Must be 'reply' to respond to a comment.",
+                      "type": "string"
+                    },
+                    "target_id": {
+                      "description": "The full ID string from the document text (e.g. 'Com:5').",
+                      "type": "string"
+                    },
+                    "text": {
+                      "description": "The content of the reply body.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "target_id",
+                    "text"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "description": "Represents a single atomic edit suggested by the LLM.\nThe engine treats this as a \"Search and Replace\" operation.",
+                  "properties": {
+                    "type": {
+                      "const": "modify",
+                      "default": "modify",
+                      "description": "Must be 'modify' for text replacements.",
+                      "type": "string"
+                    },
+                    "target_text": {
+                      "description": "Exact text to find. If the text appears multiple times (e.g. 'Fee'), include surrounding context. You can include CriticMarkup {==...==} in the target to match text inside existing markup.",
+                      "type": "string"
+                    },
+                    "new_text": {
+                      "description": "The desired text replacement. You may use Markdown formatting: '# Title' for headers, '**bold**' for bold, '_italic_' for italic. Do NOT manually write CriticMarkup tags ({++...++}, {--...--}, {>>...<<}, {==...==}). To add a comment, use the 'comment' parameter instead.",
+                      "type": "string"
+                    },
+                    "comment": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null,
+                      "description": "Text to appear in a comment bubble (Review Pane) linked to this edit."
+                    }
+                  },
+                  "required": [
+                    "target_text",
+                    "new_text"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "insert_row",
+                      "default": "insert_row",
+                      "type": "string"
+                    },
+                    "target_text": {
+                      "description": "Text inside an existing row to use as an anchor. The new row will be inserted relative to this row.",
+                      "type": "string"
+                    },
+                    "position": {
+                      "default": "below",
+                      "description": "Whether to insert the new row above or below the anchor row.",
+                      "enum": [
+                        "above",
+                        "below"
+                      ],
+                      "type": "string"
+                    },
+                    "cells": {
+                      "description": "A list of Markdown strings representing the contents of the new cells.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "target_text",
+                    "cells"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "properties": {
+                    "type": {
+                      "const": "delete_row",
+                      "default": "delete_row",
+                      "type": "string"
+                    },
+                    "target_text": {
+                      "description": "Text inside the row you wish to delete. The engine will delete the entire row containing this match.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "target_text"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional output path."
+          }
+        },
+        "required": [
+          "original_docx_path",
+          "author_name",
+          "changes"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "x-fastmcp-wrap-result": true
+      },
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": null,
+        "destructiveHint": true,
+        "idempotentHint": null,
+        "openWorldHint": null
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "read_docx",
+      "title": null,
+      "description": "Reads a DOCX file. Returns text with inline CriticMarkup for Tracked Changes and Comments: {++inserted++}, {--deleted--}, {==highlighted==}{>>comment<<}. Set clean_view=True for the finalized 'Accepted' text without markup.\n\nModes:\n- 'full' (default): paginated body content. Use page=N to navigate.\n- 'outline': heading map only \u2014 start here for large docs to plan targeted reads. Defaults to L1-L2 headings; pass outline_max_level=3-6 to see deeper structure.\n- 'appendix': defined terms, anchors, and cross-reference targets. Consult before editing legal/technical docs to avoid breaking references.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "description": "Absolute path to the DOCX file.",
+            "type": "string"
+          },
+          "clean_view": {
+            "default": false,
+            "description": "If False (default), returns the 'Raw' text with inline CriticMarkup. If True, returns 'Accepted' text.",
+            "type": "boolean"
+          },
+          "mode": {
+            "default": "full",
+            "description": "'full' returns body content (paginated for large docs). 'outline' returns a structural heading map with page numbers; body content is omitted.",
+            "enum": [
+              "full",
+              "outline"
+            ],
+            "type": "string"
+          },
+          "page": {
+            "default": 1,
+            "description": "Page number (1-indexed) for mode='full'. Defaults to 1. Ignored when mode='outline'.",
+            "type": "integer"
+          },
+          "outline_max_level": {
+            "default": 2,
+            "description": "For mode='outline' only: only show headings at this level or shallower (1-6). Default 2 keeps output usable on large documents. Raise to 3-6 to see deeper headings. Ignored when mode='full'.",
+            "type": "integer"
+          },
+          "outline_verbose": {
+            "default": false,
+            "description": "For mode='outline' only: when True, includes per-heading style name, table presence, and footnote IDs. Off by default to minimize payload size. Ignored when mode='full'.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "file_path"
+        ],
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": true,
+        "destructiveHint": null,
+        "idempotentHint": null,
+        "openWorldHint": null
+      },
+      "meta": {
+        "ui": {
+          "resourceUri": "ui://adeu/markdown-ui"
+        },
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "create_email_draft",
+      "title": null,
+      "description": "Creates an email draft in the user's native draft box (e.g., Outlook/Gmail). Can either start a NEW email, or REPLY to an existing thread. To REPLY, provide 'reply_to_email_id' (the short ID from search_and_fetch_emails). To start a NEW email, omit the ID but provide 'subject' and 'to_recipients'. Allows attaching local files (PDF/DOCX) by providing their absolute paths. The body should be formatted in Markdown.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "body_markdown": {
+            "description": "The body of the email in Markdown format. Will be converted to HTML.",
+            "type": "string"
+          },
+          "reply_to_email_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Provide the short email ID to reply to an existing thread."
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The subject line. Required if starting a NEW email."
+          },
+          "to_recipients": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "List of emails. Required if starting a NEW email."
+          },
+          "attachment_paths": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "List of absolute file paths on the local system to attach to the draft."
+          }
+        },
+        "required": [
+          "body_markdown"
+        ],
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": null,
+      "meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "search_and_fetch_emails",
+      "title": null,
+      "description": "Searches the user's live email inbox. By default, searches only the Inbox folder (matching what the user sees in their mail client) \u2014 this excludes deleted items, drafts, and spam. Use filters to find specific emails (e.g., 'is_unread=True' for new emails, 'days_ago=7' for last week, 'folder=sent' for sent items, 'folder=all' to search the entire mailbox including trash). It returns a list of lightweight email previews. To read the full email body, thread history, and automatically download attachments to local disk, call this tool again and provide the specific `email_id`. Emails often contain attachments. It is highly recommended to always provide the `working_directory` parameter so attachments are saved directly to the user's actual project folder. This directory path refers to the user's native operating system, not the LLM's sandbox environment.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "sender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filter by the sender's email address or name."
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filter by keywords in the subject line."
+          },
+          "has_attachments": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "If True, only returns emails that contain file attachments."
+          },
+          "attachment_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filter by a specific attachment filename."
+          },
+          "is_unread": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "If True, returns ONLY unread emails. If False, returns ONLY read emails. Leave empty for both."
+          },
+          "days_ago": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Filter emails received in the last N days (e.g., 7 for last week)."
+          },
+          "folder": {
+            "anyOf": [
+              {
+                "enum": [
+                  "inbox",
+                  "sent",
+                  "all"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The mailbox folder to search in. Defaults to 'inbox' when omitted, which matches what the user sees in their mail client and excludes deleted items, drafts, and spam. Use 'sent' to search sent items. Use 'all' ONLY when the user explicitly asks to search across the entire mailbox including trash/deleted items."
+          },
+          "limit": {
+            "default": 10,
+            "description": "Maximum number of emails to retrieve (default: 10).",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "description": "Pagination offset to skip the first N emails.",
+            "type": "integer"
+          },
+          "email_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "If provided, fetches the exact full email and downloads its attachments. Accepts short IDs from search results (e.g., 'msg_abc123') OR direct Adeu IDs (e.g., 'adeu_4052')."
+          },
+          "working_directory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional. The current working directory of the project or task. If provided, attachments will be saved here under an 'adeu_attachments' subfolder. If omitted, attachments are saved to the system temp directory."
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": true,
+        "destructiveHint": null,
+        "idempotentHint": null,
+        "openWorldHint": true
+      },
+      "meta": {
+        "ui": {
+          "resourceUri": "ui://adeu/email-ui"
+        },
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "sanitize_docx",
+      "title": null,
+      "description": "Sanitizes a DOCX file by stripping dangerous metadata (rsids, author names, template paths, DMS metadata, hidden text, orphaned content) and producing an audit report of everything removed. Use this before sending documents to external parties. Supports three modes: full scrub (for signing/closing), keep-markup (preserves your track changes and open comments), or baseline (recomputes your delta against the original document).",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_path": {
+            "description": "Absolute path to the DOCX file to sanitize.",
+            "type": "string"
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Output path for the sanitized file. Defaults to <stem>_sanitized.docx."
+          },
+          "keep_markup": {
+            "default": false,
+            "description": "Keep existing track changes and open comments. Strips resolved comments and all metadata. Use this when sending a redline to counterparty.",
+            "type": "boolean"
+          },
+          "baseline_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Path to the original/baseline document. When provided, the tool recomputes your changes as a clean delta against this baseline. Use when Track Changes was off, or to collapse multiple rounds of markup into a single clean redline."
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Replace all author names on track changes and comments with this value. Used with keep_markup or baseline_path."
+          },
+          "accept_all": {
+            "default": false,
+            "description": "Accept all unresolved track changes (full sanitize mode only). Required if the document contains unresolved changes. The report will list every change that was auto-accepted.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "file_path"
+        ],
+        "type": "object"
+      },
+      "outputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": null,
+        "destructiveHint": true,
+        "idempotentHint": null,
+        "openWorldHint": null
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    },
+    {
+      "name": "validate_documents",
+      "title": null,
+      "description": "Validates documents for inconsistencies, contradictions, and risk assessments. To START a new validation, provide 'file_paths' as a JSON-encoded string representing a list of file paths. This will immediately return a task_id. To CHECK the status of a validation, call this tool AGAIN and provide ONLY the 'task_id'. The checking process will poll for up to 50 seconds. If it times out, continue checking.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "file_paths": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "A JSON-encoded string of a list of absolute paths to documents (DOCX, PDF) OR directories to start a new job. Example: '[\"/path/to/doc1.pdf\", \"/path/to/doc2.docx\"]'"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "If resuming a pending check, provide the task ID here."
+          }
+        },
+        "type": "object"
+      },
+      "outputSchema": null,
+      "icons": null,
+      "annotations": {
+        "title": null,
+        "readOnlyHint": null,
+        "destructiveHint": null,
+        "idempotentHint": null,
+        "openWorldHint": true
+      },
+      "meta": {
+        "ui": {
+          "resourceUri": "ui://adeu/markdown-ui"
+        },
+        "fastmcp": {
+          "tags": []
+        }
+      },
+      "execution": null
+    }
+  ]
+}
