@@ -197,4 +197,68 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 4.5 — Visual fidelity audit and gap closure against LQdesign Terminal (closed 2026-05-18)
+
+**Goal**: bring Oscar GC's visible UI into actual visual alignment with LQdesign Terminal — "as close as possible to LegalQuants design." Sprint 4 verified design tokens via grep but the screenshots showed only Inter rendering, no mono treatment, a barely-visible sidebar active state, and no orb-glow brand-mark treatment. Close those gaps. Brief in chat; plan at `/root/.claude/plans/sprint-4-5-valiant-hippo.md`.
+
+**Audit findings — gap inventory**
+
+| Surface | LQdesign Terminal spec | Sprint 4 actual | Disposition |
+|---|---|---|---|
+| Inter `@font-face` | loaded (CDN) | loaded | unchanged |
+| JetBrains Mono `@font-face` | loaded | **missing** — silent fallback to Menlo | **closed** — added CDN `@font-face` |
+| Cormorant Garamond `@font-face` | loaded (Editorial use) | **missing** — silent fallback to Georgia | **closed (load)** — application deferred |
+| Hub hero | Inter 900 `clamp(48px, 8vw, 128px)` | matches | unchanged |
+| Hub eyebrow | `.tm-eyebrow` mono 12px / 0.3em / indigo-400 / uppercase | absent | **closed** — `OSCAR // GENERAL COUNSEL` |
+| Hub orb glow | `rgba(99,102,241,0.15)` blurred radial behind wordmark | absent | **closed** — CSS-only blurred radial behind title block |
+| Sidebar section header | mono eyebrow | absent | **closed** — `PRACTICE // AREAS` |
+| Sidebar numerics | mono prefix per item | absent | **closed** — `01`–`13` JetBrains Mono prefix |
+| Sidebar active state | indigo-tinted (per `.pill-on` style) | `--night-edge` bg sitting ~11 luminance points above `--night-raise` (too subtle) | **closed** — `rgba(99,102,241,0.10)` bg, `#fff` text, indigo-400 numeric |
+| Placeholder eyebrow | mono uppercase per-area | absent | **closed** — `// {AREA NAME}` |
+| Brand-mark element | LQ uses SVG wordmark | plain HTML text | **deferred** — no Oscar GC SVG mark; commissioning is a separate design task |
+| Copper accent | shared signature, rare in Terminal | token declared, unused | **deferred** — no surface needs it yet |
+| Pill / card / button classes | defined in LQ components | not implemented | **deferred** — no consumer in Sprint 4.5 |
+| Hub-as-Editorial (Cormorant display hero) | LQ has Editorial display surfaces | Terminal Inter 900 | **deferred** — separate ADR sprint per user decision |
+
+**Built**
+
+- `ui/desktop/src/styles/main.css` (commit `07ec54977`) — appended `@font-face` blocks for JetBrains Mono (variable 400–700, latin subset, Google Fonts CDN) and Cormorant Garamond (three normal weights 400/500/700 + 500-italic, latin subset, CDN). Mirrors Sprint 3's Inter precedent — no binary blobs in repo, no Vite-bundling step. The variable declarations at `main.css:974-975` already referenced these families; the Sprint 3 carry-forward "decide whether to vendor Inter locally" remains a future call (still pre-pilot; no offline guarantee needed).
+- `ui/desktop/src/styles/main.css` (commit `170649bc6`) — appended `.oscar-terminal__eyebrow`, `.oscar-terminal__sidebar-eyebrow`, `.oscar-terminal__sidebar-item-num`, `.oscar-terminal__title-glow` (+ `::before` orb pseudo-element); modified `.oscar-terminal__sidebar-item--active` to indigo-tinted treatment (`rgba(99,102,241,0.10)` bg, `#fff` text). Orb values match LQ's `brand-wordmark-terminal.html` orb verbatim (`rgba(99,102,241,0.15)`, `border-radius: 50%`, `filter: blur(80px)`). Orb is bounded to `max-width/height: 600px` and uses `pointer-events: none` to stay non-interactive.
+- TSX wiring (commit `ea03f6032`):
+  - `components/Hub.tsx` — wraps eyebrow + title + subtitle in `<div className="oscar-terminal__title-glow">`. Eyebrow text "OSCAR // GENERAL COUNSEL".
+  - `components/oscar/OscarSidebar.tsx` — adds `<div className="oscar-terminal__eyebrow oscar-terminal__sidebar-eyebrow">PRACTICE // AREAS</div>` at the top of `<nav>`; switches `.map((area) => …)` to `.map((area, idx) => …)`; renders a 2-digit `String(idx + 1).padStart(2, '0')` numeric prefix `<span>` inside each `<Link>`.
+  - `components/oscar/PracticeAreaPlaceholder.tsx` — adds `<span className="oscar-terminal__eyebrow">// {area.name.toUpperCase()}</span>` above the placeholder title.
+- Build + verify: `pnpm run i18n:compile` clean; `pnpm run make --targets=@electron-forge/maker-zip` produced `ui/desktop/out/make/zip/linux/x64/Oscar-GC-linux-x64-1.34.0.zip` (200M, ~50s); `npx tsc --noEmit` clean. `npx @electron/asar extract` → `/tmp/sprint-4.5-asar/`. Grep confirmed all four bundled @font-face blocks for Cormorant Garamond, the single JetBrains Mono `tDbv2o-…` URL, the four new BEM selectors, and the two literal eyebrow strings (`OSCAR // GENERAL COUNSEL`, `PRACTICE // AREAS`) in `index-BO_eAhwN.css` and the renderer JS bundle.
+- Screenshots (commit `9a1b66a53`) — re-captured under `docs/screenshots/sprint-4.5/` via `scripts/capture-oscar.sh`. Default three routes plus a second invocation for `/#/practice/cosec` to confirm numerics render at index 13 and the active treatment is identical at every list position.
+
+**Side-by-side**
+
+| Route | Sprint 4 | Sprint 4.5 | Change |
+|---|---|---|---|
+| `/` | `sprint-4/root.png` (44k) | `sprint-4.5/root.png` (112k) | Indigo orb glow behind title; `OSCAR // GENERAL COUNSEL` mono eyebrow above; sidebar has `PRACTICE // AREAS` eyebrow + `01`–`13` numerics. |
+| `/#/practice/commercial` | `sprint-4/practice-commercial.png` (46k) | `sprint-4.5/practice-commercial.png` (55k) | `// COMMERCIAL` eyebrow above title; active sidebar row 01 visibly indigo-tinted with `#fff` label + indigo-400 numeric. |
+| `/#/practice/commercial-disputes` | `sprint-4/practice-commercial-disputes.png` (46k) | `sprint-4.5/practice-commercial-disputes.png` (56k) | Same pattern, row 02 active. |
+| `/#/practice/cosec` | not captured | `sprint-4.5/practice-cosec.png` (54k) | Confirms `13` prefix and bottom-of-list active treatment. |
+
+**Deferred**
+
+- **Cormorant Garamond application** — Hub-as-Editorial display hero, or a narrower Editorial accent on placeholder titles. Both require a sibling ADR to ADR-004 ("Editorial typographic accents within Terminal structural shell"). Loaded the font; chose not to apply per Arturs-locked plan-mode decision.
+- **Oscar GC SVG wordmark** — the current HTML text + indigo orb is the closest Sprint 4.5 can get without a designed mark. PROJECT.md branding follow-up #4 (icons) is the adjacent task; a wordmark mark would slot alongside it.
+- **Copper accent application** — `--copper`/`--copper-light` declared, no consumer. The surface that needs the shared-signature accent determines the application.
+- **Pill / card / button component classes** — LQ defines them; we add when first consumer appears, not preemptively.
+- **Sidebar grouping** (litigation / transactional / operational) — 13 flat entries today. Grouping with sub-section eyebrows is a separate visual upgrade.
+- **Self-hosting fonts vs CDN** — Sprint 3 carry-forward still alive; Sprint 4.5 continued CDN. Revisit when offline guarantees become a pilot requirement.
+- **Hub-as-Editorial** — the brief's open question. Plan-mode decision: load only, defer application. Future sprint owns the ADR if Editorial accents land in Terminal.
+
+**Carry-forwards for Sprint 6**
+
+- Sprint 4.5 closes ADR-006's deferred font carry-forward and Sprint 4's "optional sidebar header" + "visual GUI smoke test" carry-forwards. The remaining Sprint 4 carry-forwards (orphan-file cleanup, `/`-redirect product policy, per-area body refinement, configurable practice-area list) are unchanged.
+- Sequencing note: Sprint 4.5 ran after Sprint 5 chronologically (Sprint 5 closed earlier on 2026-05-18) but slots between Sprint 4 and Sprint 5 numerically. PROJECT.md Sprint Index orders by number; SPRINT_LOG keeps execution order.
+
+**ADRs**: none. The Cormorant-application and Hub-as-Editorial decisions are deferred to a future sprint that will write the ADR at decision time per CLAUDE.md.
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.
+
+---
+
 (Sprint 6 entry lands when Sprint 6 closes.)
