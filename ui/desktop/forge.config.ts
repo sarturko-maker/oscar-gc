@@ -4,7 +4,13 @@ const { resolve } = require('path');
 
 let cfg = {
   asar: true,
-  extraResource: ['src/bin', 'src/images'],
+  extraResource: [
+    'src/bin',
+    'src/images',
+    'src/resources/python',
+    'src/resources/node',
+    'src/resources/mcps',
+  ],
   icon: 'src/images/icon',
   name: 'Oscar-GC',
   executableName: 'oscar-gc',
@@ -87,22 +93,24 @@ module.exports = {
     {
       name: '@electron-forge/maker-deb',
       config: {
-        name: 'Oscar GC',
+        name: 'oscar-gc',
         bin: 'oscar-gc',
         maintainer: 'AAIF (Agentic AI Foundation)',
         homepage: 'https://goose-docs.ai/',
         categories: ['Development'],
         desktopTemplate: './forge.deb.desktop',
+        scripts: {
+          postinst: './scripts/postinst.sh',
+        },
         options: {
           icon: 'src/images/icon.png',
-          prefix: '/opt',
         },
       },
     },
     {
       name: '@electron-forge/maker-rpm',
       config: {
-        name: 'Oscar GC',
+        name: 'oscar-gc',
         bin: 'oscar-gc',
         maintainer: 'AAIF (Agentic AI Foundation)',
         homepage: 'https://goose-docs.ai/',
@@ -110,7 +118,6 @@ module.exports = {
         desktopTemplate: './forge.rpm.desktop',
         options: {
           icon: 'src/images/icon.png',
-          prefix: '/opt',
           fpm: ['--rpm-rpmbuild-define', '_build_id_links none'],
         },
       },
