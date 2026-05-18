@@ -715,9 +715,121 @@ The agent's reply names the path; the user opens via OS file manager. No UI affo
 
 New apt packages: `python3-venv`, `python3-dev`, `libxslt1-dev`. No new system services or daemons. adeu-server is spawned by goosed at session start, like every other stdio MCP.
 
-## Pending
+## Sprint 10 — Bundled Linux release (2026-05-18, lq-vps)
 
-(none — Sprint 9 complete; the four-item short-term goal is closed)
+First user-facing distribution sprint. Oscar GC ships as a single `oscar-gc_<version>_amd64.deb` published to a GitHub Release on `sarturko-maker/goose`. The .deb bundles every runtime dep — Python+adeu, Node+MCPs, Electron — so a Crostini user installs once with no further commands. ADRs 021 (distribution shape), 022 (Python bundling), 023 (Node + MCP bundling), 024 (resource path resolution) committed before any implementing code.
+
+### Two-phase build
+
+Building on lq-vps (Ubuntu 24.04) produces a `goosed` binary linked against glibc 2.39, which Crostini's Debian 12 (glibc 2.36) cannot resolve. Only `goosed` is affected — Electron's bundled chromium, python-build-standalone, Node 24, and the esbuild-bundled MCPs are all ≤ glibc 2.28. So the build is two phases:
+
+1. **Debian 12 Docker container builds `goosed`.** Image at `docker/Dockerfile.deb12-builder` (Debian 12 bookworm + Rust 1.92 via rustup + standard libxcb/protobuf/glslc/vulkan build deps). The container runs `cargo build --release -p goose-server` with `CARGO_TARGET_DIR=target-debian12/`. Output: `target-debian12/release/goosed` (~270 MB, glibc 2.36-compatible).
+
+2. **Host runs `pnpm run bundle:oscar-linux`.** Copies the Debian-built goosed into `ui/desktop/src/bin/`, runs `scripts/prepare-oscar-bundle.js` (downloads python-build-standalone + adeu wheels + Node + esbuilds MCPs), then `electron-forge make --targets=maker-deb`. fpm/dpkg-deb run on the host but emit a portable `.deb` whose contents are all Debian-12-compatible. Output: `ui/desktop/out/make/deb/x64/oscar-gc_<version>_amd64.deb` (~250 MB compressed, ~1 GB installed).
+
+Orchestrator: `scripts/build-oscar-deb.sh`. One command:
+
+```bash
+bash /srv/projects/goose/scripts/build-oscar-deb.sh
+```
+
+First run: ~15 minutes (Docker image build ~5 min + cargo build inside Debian 12 ~10 min). Subsequent runs: ~3 minutes (Docker layers cached, cargo registry cached via named volume `oscar-gc-cargo-cache`, incremental Rust build).
+
+### Bundled artefacts (inside the .deb at `/usr/lib/oscar-gc/resources/`)
+
+| Path | Source | Size |
+|---|---|---|
+| `bin/goosed` | Rust crate built in Debian 12 container | ~270 MB |
+| `python/cpython/` | python-build-standalone CPython 3.12.5+20240814 linux-x86_64 install_only | ~246 MB |
+| `python/wheels/*.whl` | `pip download adeu==1.6.9` (79 wheels including fastmcp 3.3.1, lxml 6.1.0, pydantic, mcp, python-docx) | ~27 MB |
+| `node/` | Node v24.10.0 linux-x64 standalone | ~210 MB |
+| `mcps/oscar-onboarding/index.js` | esbuild bundle of oscar-onboarding-mcp/src/index.ts | ~1.1 MB |
+| `mcps/oscar-memory/index.js` | esbuild bundle of oscar-memory-mcp/src/index.ts | ~1.1 MB |
+| `BUNDLE.json` | provenance summary (versions, timestamp) | <1 KB |
+
+### Install-time behaviour
+
+The `.deb` postinst hook (`ui/desktop/scripts/postinst.sh`) runs on `configure`:
+
+```sh
+PY=/usr/lib/oscar-gc/resources/python/cpython/bin/python3
+VENV=/usr/lib/oscar-gc/resources/python/adeu-venv
+WHEELS=/usr/lib/oscar-gc/resources/python/wheels
+$PY -m venv $VENV
+$VENV/bin/pip install --no-index --find-links=$WHEELS adeu==1.6.9
+```
+
+Offline, idempotent, recoverable via `sudo dpkg --configure oscar-gc` if it ever fails. The venv lives at the install location so its shebangs resolve correctly.
+
+### Verification commands
+
+```bash
+# Build metadata
+dpkg -I ui/desktop/out/make/deb/x64/*.deb
+# File layout
+dpkg-deb -c ui/desktop/out/make/deb/x64/*.deb | grep -E "(opt|usr/lib|usr/bin|usr/share)" | head
+# Embedded postinst
+mkdir -p /tmp/deb-control && dpkg-deb -e ui/desktop/out/make/deb/x64/*.deb /tmp/deb-control
+cat /tmp/deb-control/postinst
+# glibc symbol audit (Crostini compatibility, glibc 2.36 ceiling)
+dpkg-deb -x ui/desktop/out/make/deb/x64/*.deb /tmp/deb-extract
+for bin in /tmp/deb-extract/usr/lib/oscar-gc/oscar-gc \
+           /tmp/deb-extract/usr/lib/oscar-gc/resources/bin/goosed \
+           /tmp/deb-extract/usr/lib/oscar-gc/resources/node/bin/node \
+           /tmp/deb-extract/usr/lib/oscar-gc/resources/python/cpython/bin/python3.12; do
+  echo "== $bin =="
+  objdump -T "$bin" 2>/dev/null | grep -oE 'GLIBC_[0-9.]+' | sort -V | tail -1
+done
+```
+
+All four binaries must report `GLIBC_2.36` or lower.
+
+### Clean-container install verification
+
+A Debian 12 throwaway container provides the closest analogue to Crostini:
+
+```bash
+docker run --rm -it \
+  -v /srv/projects/goose/ui/desktop/out/make/deb/x64:/debs:ro \
+  debian:bookworm bash
+# inside:
+apt update && apt install -y /debs/oscar-gc_*.deb
+ls /usr/lib/oscar-gc/resources/python/adeu-venv/bin/adeu-server  # exists if postinst worked
+/usr/lib/oscar-gc/resources/python/adeu-venv/bin/adeu-server &  # starts the MCP on stdio
+```
+
+(The container won't have an X server, so the desktop app can't render; this verifies install + venv + adeu binary launchability only.)
+
+### Host state added in Sprint 10
+
+| Artefact | Footprint | Notes |
+|---|---|---|
+| Docker image `oscar-gc-deb12-builder:latest` | ~1.4 GB | Cached layer for repeat builds |
+| Docker volume `oscar-gc-cargo-cache` | grows with crates touched, ~2 GB after first build | Cargo registry cache for Debian 12 build |
+| `/srv/projects/goose/target-debian12/` | ~6 GB | Rust target dir for the Debian 12 build |
+| `/srv/projects/goose/ui/desktop/.oscar-bundle-cache/` | ~80 MB | Downloaded tarballs (Python, Node) — gitignored |
+| `/srv/projects/goose/ui/desktop/src/resources/` | ~485 MB | Built bundle (Python+wheels+Node+MCP bundles) — gitignored |
+| `/srv/projects/goose/ui/desktop/out/make/deb/x64/*.deb` | ~250 MB per build | Release artefact |
+
+### Release upload
+
+```bash
+TAG="v1.34.0-oscar-gc-sprint10"
+gh release create "$TAG" \
+  ui/desktop/out/make/deb/x64/oscar-gc_*.deb \
+  --repo sarturko-maker/goose \
+  --title "Oscar GC — Sprint 10 dogfood" \
+  --notes-file docs/INSTALL_CROSTINI.md \
+  --draft
+```
+
+Draft until Arturs reviews; promote to published once install instructions read clean.
+
+### Provider-key first-launch (known risk)
+
+Goose's stock OnboardingGuard expects either `MINIMAX_API_KEY` in the env or a keyring-stored secret. Crostini's default container ships without a keyring daemon. If Goose's file fallback also fails, first-launch breaks. `docs/INSTALL_CROSTINI.md` "Troubleshooting" surfaces the `~/.profile` workaround. If Sprint 10 dogfood confirms keyring breaks, write ADR-025 to formalise the pasted-key-via-config path forward.
+
+## Pending
 
 ## Corrections
 

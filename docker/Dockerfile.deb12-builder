@@ -1,0 +1,45 @@
+# Sprint 10 (ADR-021): Debian 12 bookworm builder for goosed.
+#
+# Sprint 10's runtime target is Crostini (Debian 12 derivative, glibc 2.36).
+# The Rust goose-server binary built on Ubuntu 24.04 (glibc 2.39) links
+# against newer glibc symbols and won't run on Crostini. This image runs the
+# Rust build inside Debian 12 so the resulting goosed binary is ABI-compatible
+# with the target. All other bundled artefacts (Electron, python-build-standalone,
+# bundled Node 24, esbuild MCP dist outputs) are already glibc-2.28-or-older and
+# do not require this build host.
+
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH="/root/.cargo/bin:${PATH}"
+ENV CARGO_HOME=/root/.cargo
+ENV RUSTUP_HOME=/root/.rustup
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      ca-certificates \
+      clang \
+      curl \
+      dpkg-dev \
+      fakeroot \
+      git \
+      glslc \
+      libssl-dev \
+      libvulkan-dev \
+      libvulkan1 \
+      libxcb1-dev \
+      libxcb-util-dev \
+      libxml2-dev \
+      libxslt1-dev \
+      pkg-config \
+      protobuf-compiler \
+      xz-utils \
+      zip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pin Rust toolchain to match goose's rust-toolchain.toml (channel = "1.92").
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+      | sh -s -- -y --default-toolchain 1.92.0 --profile minimal \
+    && rustup target add x86_64-unknown-linux-gnu
+
+WORKDIR /workspace/goose
