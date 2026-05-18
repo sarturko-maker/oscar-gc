@@ -253,9 +253,106 @@ The wrapper sources `bin/activate-hermit` so node + pnpm resolve under the proje
 
 No persistent host-state beyond the apt install. Xvfb leaves no log artefacts after the trap fires; `/tmp/xvfb-99.log` is overwritten each run.
 
+## Sprint 5 — Memory MCP server (2026-05-18, lq-vps)
+
+First MCP extension we own. Server lives in a separate sibling repo, not in this repo. Goose-fork-side changes are limited to host config and these docs.
+
+### Sibling repo location
+
+```
+/srv/projects/oscar-memory-mcp/   # local clone
+git@github.com:sarturko-maker/oscar-memory-mcp.git   # SSH remote (same key as goose fork)
+```
+
+Initial commit: `0f17df00f`. SDK pinned to `@modelcontextprotocol/sdk@=1.29.0`. See the sibling repo's README and `docs/adr/` for the persistence / scope_id / licence decisions.
+
+### Bootstrap order (matters on a fresh VPS)
+
+```bash
+git clone git@github.com:sarturko-maker/oscar-memory-mcp.git /srv/projects/oscar-memory-mcp
+cd /srv/projects/oscar-memory-mcp
+source /srv/projects/goose/bin/activate-hermit   # pnpm + node from Goose's Hermit env
+pnpm install
+pnpm build                                       # produces dist/index.js (gitignored)
+pnpm smoke                                       # optional: programmatic MCP round-trip via the SDK client
+```
+
+`dist/index.js` is gitignored. If Goose tries to load the extension before `pnpm build` has run, it fails to spawn the child process (stderr warning, session continues without the extension — silent for the user).
+
+The absolute path `/srv/projects/oscar-memory-mcp/dist/index.js` is hard-coded in `~/.config/goose/config.yaml`. Cloning the sibling repo to a different parent path means editing that YAML.
+
+### Goose CLI registration
+
+Append to `~/.config/goose/config.yaml` under the existing `extensions:` map:
+
+```yaml
+  oscar-memory:
+    enabled: true
+    type: stdio
+    name: oscar-memory
+    description: 'In-house notes store, scoped by scope_id. Two tools: store_note and list_notes.'
+    cmd: node
+    args:
+      - /srv/projects/oscar-memory-mcp/dist/index.js
+    timeout: 30
+```
+
+`enabled: true` is the gatekeeper — extensions without it are silently skipped (`crates/goose/src/config/extensions.rs:140-145`). `cmd: node` resolves via the parent shell's `PATH` to `/usr/bin/node` v24.15.0 (system, not Hermit); the extension subprocess does not need Hermit activation.
+
+**YAML pitfall (hit this on first attempt)**: the `description:` value contains a colon (`Two tools:`), so it MUST be single-quoted. An unquoted description with an embedded `:` makes Goose silently drop the whole `extensions` map with a `WARN goose::config::base: Failed to deserialize value: mapping values are not allowed in this context` line in `~/.local/state/goose/logs/cli/<date>/*.log`. The agent then runs with only the bundled `type: platform` / `type: builtin` extensions and the new server appears to be missing.
+
+`goose configure` would write the same stanza via TUI — direct YAML edit is the canonical Sprint 5 mechanism because it's documentable, version-controllable, and side-effect-free.
+
+`Config::global()` is a per-process `OnceCell` (`crates/goose/src/config/base.rs:139`), so every `goose run` invocation re-reads `config.yaml` from disk. No daemon to bounce.
+
+### Data directory
+
+The server creates `~/.local/share/oscar-memory/notes.json` on the first successful `store_note` call. `OSCAR_MEMORY_PATH` env var overrides the default (used by the sibling repo's `pnpm smoke` to write to a tmpdir).
+
+```bash
+ls -la ~/.local/share/oscar-memory/notes.json
+cat ~/.local/share/oscar-memory/notes.json | python3 -m json.tool
+```
+
+### Verification recipe (the Sprint 5 exit-criteria run)
+
+```bash
+# Run 1: store a note
+set -a; . /srv/projects/lq-ai-agentic/.env; set +a
+GOOSE_PROVIDER=minimax GOOSE_MODEL=MiniMax-M2.5 \
+  /srv/projects/goose/target/release/goose run --debug --no-session \
+  --text "Use the oscar-memory__store_note tool to save a note. scope_id is acme-customer-001. body is: first call with acme, discussed pricing"
+
+# Run 2: retrieve notes (prompt does NOT include the body — proves the LLM had to call the tool)
+GOOSE_PROVIDER=minimax GOOSE_MODEL=MiniMax-M2.5 \
+  /srv/projects/goose/target/release/goose run --debug --no-session \
+  --text "Use the oscar-memory__list_notes tool with scope_id acme-customer-001. Then tell me what notes are in there, verbatim."
+
+# Run 3: independent ground truth (LLM-agnostic)
+cat ~/.local/share/oscar-memory/notes.json | python3 -m json.tool
+```
+
+Pass criteria (all three required):
+
+1. Run 1 transcript contains `▸ store_note oscar-memory` tool-call header (printed by `crates/goose-cli/src/session/output.rs:938-952`).
+2. Run 3 output shows the note with the expected `scope_id`, `body`, and ISO 8601 `created_at`.
+3. Run 2 transcript contains `▸ list_notes oscar-memory` tool-call header AND the agent's final response includes the body retrieved from the server.
+
+Explicit tool naming (`oscar-memory__store_note`) in the prompts matters: without it, MiniMax tends to invoke Goose's built-in `todo__todo_write` for "store a note" (semantic collision). For real product flows the desktop UI will write the tool call directly, so this isn't a product concern.
+
+### Footprint after Sprint 5
+
+| Artefact | Footprint |
+|---|---|
+| `/srv/projects/oscar-memory-mcp/` source + node_modules | ~30 MB |
+| `/srv/projects/oscar-memory-mcp/dist/` | ~5 KB |
+| `~/.local/share/oscar-memory/notes.json` | starts empty; grows linearly per `store_note` |
+
+No new apt packages, no new system services, no new daemons. Goose spawns the server fresh per invocation.
+
 ## Pending
 
-(none — Sprint 3 complete)
+(none — Sprint 5 complete)
 
 ## Corrections
 

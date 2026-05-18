@@ -40,6 +40,7 @@ Capture the per-release decision as a one-line note in `SPRINT_LOG.md` under the
 | 2 | Oscar GC rebrand (branding metadata only). First custom-distribution cycle. | Closed 2026-05-18 |
 | 3 | First `ui/desktop/src/` source change — Oscar GC landing placeholder. LQdesign Terminal default. | Closed 2026-05-18 |
 | 4 | Practice-area sidebar (13 entries) + placeholder routes. Seam moves to AppLayout. | Closed 2026-05-18 |
+| 5 | Minimal in-house memory MCP server. New sibling repo `sarturko-maker/oscar-memory-mcp`. Two-tool stdio extension registered with Goose CLI; verified end-to-end. | Closed 2026-05-18 |
 
 See `SPRINT_LOG.md` for entries. See `CLAUDE.md` for operating rules.
 

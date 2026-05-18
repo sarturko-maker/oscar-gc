@@ -160,4 +160,41 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
-(Sprint 5 entry lands when Sprint 5 closes.)
+### Sprint 5 — Minimal in-house memory MCP server (closed 2026-05-18)
+
+**Goal**: stand up a minimal in-house memory MCP server in a sibling repo, register it with the Goose CLI, and verify a Goose agent session can store and retrieve notes through it. No UI work, no semantic search, no per-user / team policy. Brief in chat; plan at `/root/.claude/plans/read-claude-md-and-the-wondrous-crayon.md`.
+
+**Built** (cross-project: this sprint creates a sibling repo and edits Goose-fork host config; no commits in this repo's source tree)
+
+- New sibling repo: `sarturko-maker/oscar-memory-mcp` at `/srv/projects/oscar-memory-mcp/`. Initial commit `0f17df00f` ("sprint(5): scaffold oscar-memory-mcp + two-tool MCP server"); README tool-name fix follow-up `aac60c5bb` ("docs: fix tool-name prefix (hyphen, not underscore)"). TypeScript MCP server, ~150 LoC across `src/{index,server,store}.ts`. Pinned dependencies: `@modelcontextprotocol/sdk@=1.29.0`, `zod@=4.4.3`, `typescript@=6.0.3`, `@types/node@=25.8.0`. Apache 2.0 licence. Standalone smoke test via `pnpm smoke` (uses the SDK's `Client` + `StdioClientTransport`).
+- Two MCP tools exposed: `store_note(scope_id, body)` and `list_notes(scope_id)`. Goose namespaces them as `oscar-memory__store_note` and `oscar-memory__list_notes` (literal extension-key prefix, hyphen preserved). Persistence: flat JSON file at `~/.local/share/oscar-memory/notes.json` with atomic write (tmp + fsync + rename).
+- Three ADRs in the sibling repo, all sibling-repo SHA `aac60c5bb`:
+  - [`docs/adr/001-persistence-json.md`](https://github.com/sarturko-maker/oscar-memory-mcp/blob/aac60c5bb/docs/adr/001-persistence-json.md) — flat JSON + atomic write; SQLite migration triggers documented.
+  - [`docs/adr/002-scope-id-a-class.md`](https://github.com/sarturko-maker/oscar-memory-mcp/blob/aac60c5bb/docs/adr/002-scope-id-a-class.md) — `scope_id` is A-class for Sprint 5 (LLM extracts from prompt); migrates to B-class when the desktop UI injects per-element context.
+  - [`docs/adr/003-licence-apache.md`](https://github.com/sarturko-maker/oscar-memory-mcp/blob/aac60c5bb/docs/adr/003-licence-apache.md) — Apache 2.0 to match upstream Goose.
+- Host-state changes captured in RUNBOOK Sprint 5 section: the new YAML stanza in `~/.config/goose/config.yaml`, the bootstrap order, the verification recipe, the YAML-colon gotcha.
+- End-to-end verification: two `goose run --debug --no-session` invocations against `MiniMax-M2.5`. Run 1 (`oscar-memory__store_note`): `▸ store_note oscar-memory` header printed, server returned `{"ok":true,"scope_id":"acme-customer-001","created_at":"2026-05-18T10:19:34.617Z"}`. Run 2 (`oscar-memory__list_notes`): `▸ list_notes oscar-memory` header printed, server returned the stored note, the agent reproduced the body in its final response. Independent file inspection of `~/.local/share/oscar-memory/notes.json` confirmed the persisted record matched what was stored — eliminates the LLM-hallucinated-success failure mode.
+
+**Deferred**
+
+- Semantic search / embedding retrieval — explicitly out of Sprint 5 scope; persistence ADR captures the migration trigger (~10k notes or first vector-search consumer).
+- Per-user vs team-shared memory policy — explicitly out of Sprint 5 scope; server is single-store, no scope hierarchy.
+- Authentication / multi-tenant concerns — explicitly out.
+- Wiring the memory server into the Oscar GC desktop binary's MCP registration — explicitly out; Sprint 5 only proves the server works against the CLI.
+- `scope_id` B-class migration — deferred to whenever the desktop UI starts injecting per-element context (Sprint 6 or later); ADR-002 in the sibling repo documents the migration path.
+- Visual GUI smoke test on the desktop binary — N/A this sprint (memory MCP is headless server work; no UI touched).
+
+**Carry-forwards for Sprint 6**
+
+- **Sprint 6 anchor decision** (deferred from the brief): pick one of (a) wire the Oscar GC desktop's MCP config to load `oscar-memory` automatically; (b) build the onboarding flow (per-user practice-area selection). Decision criteria: which surfaces more product value first. Both are unblocked by Sprint 5's completion.
+- The persistent extension entry in `~/.config/goose/config.yaml` is host-scoped and points at an absolute path under `/srv/projects/oscar-memory-mcp/`. Anyone cloning the sibling repo elsewhere must update the YAML — flagged in RUNBOOK.
+- `dist/index.js` is gitignored. A fresh `lq-vps` rebuild needs `pnpm install && pnpm build` in the sibling repo BEFORE Goose runs, otherwise the extension fails to spawn (with a tee'd stderr warning, not a hard error). Bootstrap order documented in RUNBOOK.
+- Tool naming includes a hyphen (`oscar-memory__store_note`) because Goose's tool prefix uses the literal extension key. If `oscar-memory` ever migrates to `oscar_memory` for consistency, every prompt or ADR referencing the hyphenated form needs a sweep.
+
+**ADRs**: none in this repo. The three Sprint 5 ADRs live in the sibling repo (cross-referenced above). This is intentional: the architectural decisions are entirely about the new server's shape, not about the Goose fork.
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read due 2026-05-25 (unchanged).
+
+---
+
+(Sprint 6 entry lands when Sprint 6 closes.)
