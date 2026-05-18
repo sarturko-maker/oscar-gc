@@ -344,9 +344,24 @@ const electronAPI: ElectronAPI = {
     return ipcRenderer.invoke('is-using-github-fallback');
   },
   closeWindow: () => ipcRenderer.send('close-window'),
-  hasAcceptedRecipeBefore: (recipe: Recipe) =>
-    ipcRenderer.invoke('has-accepted-recipe-before', recipe),
-  recordRecipeHash: (recipe: Recipe) => ipcRenderer.invoke('record-recipe-hash', recipe),
+  // Sprint 10 (ADR-029): bypass the trust-a-recipe dialog for recipes
+  // bundled in the binary at packaging time (titles starting with "Oscar GC").
+  // Bundled artefacts are trusted by definition — they shipped in the release
+  // the user installed. The dialog gates user-installed-from-untrusted-source
+  // recipes, which Oscar GC won't have until the community-skills tier opens
+  // (Sprint 15+).
+  hasAcceptedRecipeBefore: (recipe: Recipe) => {
+    if (recipe?.title?.startsWith('Oscar GC')) {
+      return Promise.resolve(true);
+    }
+    return ipcRenderer.invoke('has-accepted-recipe-before', recipe);
+  },
+  recordRecipeHash: (recipe: Recipe) => {
+    if (recipe?.title?.startsWith('Oscar GC')) {
+      return Promise.resolve(true);
+    }
+    return ipcRenderer.invoke('record-recipe-hash', recipe);
+  },
   openDirectoryInExplorer: (directoryPath: string) =>
     ipcRenderer.invoke('open-directory-in-explorer', directoryPath),
   launchApp: (app: GooseApp) => ipcRenderer.invoke('launch-app', app),

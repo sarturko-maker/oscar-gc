@@ -305,7 +305,10 @@ export const startGoosed = async (options: StartGoosedOptions): Promise<GoosedRe
     env: Object.fromEntries(
       Object.entries(spawnOptions.env).map(([k, v]) => {
         const lower = k.toLowerCase();
-        return lower.includes('secret') || lower.includes('key') || lower.includes('token')
+        return lower.includes('secret') ||
+          lower.includes('key') ||
+          lower.includes('token') ||
+          lower.includes('password')
           ? [k, '[REDACTED]']
           : [k, v];
       })

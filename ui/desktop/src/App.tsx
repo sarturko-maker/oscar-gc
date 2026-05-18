@@ -14,7 +14,9 @@ import { ErrorUI } from './components/ErrorBoundary';
 import { ExtensionInstallModal } from './components/ExtensionInstallModal';
 import { toast, ToastContainer } from 'react-toastify';
 import AnnouncementModal from './components/AnnouncementModal';
-import TelemetryConsentPrompt from './components/TelemetryConsentPrompt';
+// Sprint 10 (ADR-028): TelemetryConsentPrompt removed for Oscar GC per the
+// inverting-upstream-UX-defaults doctrine. In-house lawyers handle privileged
+// information; telemetry sharing is non-negotiable, so no opt-in surface.
 import OnboardingGuard from './components/onboarding/OnboardingGuard';
 import { createSession } from './sessions';
 
@@ -724,7 +726,7 @@ export default function App() {
             <AppInner />
           </HashRouter>
           <AnnouncementModal />
-          <TelemetryConsentPrompt />
+          {/* Sprint 10 (ADR-028): TelemetryConsentPrompt removed. */}
         </ModelAndProviderProvider>
       </FeaturesProvider>
     </ThemeProvider>

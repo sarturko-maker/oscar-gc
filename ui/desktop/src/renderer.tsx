@@ -35,15 +35,12 @@ const TELEMETRY_CONFIG_KEY = 'GOOSE_TELEMETRY_ENABLED';
       },
     });
 
-    try {
-      const telemetryResponse = await readConfig({
-        body: { key: TELEMETRY_CONFIG_KEY, is_secret: false },
-      });
-      const isTelemetryEnabled = telemetryResponse.data !== false;
-      setTelemetryEnabled(isTelemetryEnabled);
-    } catch (error) {
-      console.warn('[Analytics] Failed to initialize analytics:', error);
-    }
+    // Sprint 10 (ADR-028): telemetry hardcoded off — no consent prompt,
+    // no opt-in path, no network telemetry calls. In-house lawyers handle
+    // privileged information; data sharing is non-negotiable.
+    setTelemetryEnabled(false);
+    void TELEMETRY_CONFIG_KEY;
+    void readConfig;
   }
 
   const messages = await loadMessages(currentMessageLocale);

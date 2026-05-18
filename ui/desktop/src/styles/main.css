@@ -1253,6 +1253,34 @@ pre:has(> code.bg-inline-code) {
   min-width: 18px;
 }
 
+/* Sprint 10: sidebar footer hosts utility links (Settings) below the
+   practice-area list, separated by a hairline rule. */
+.oscar__sidebar-footer {
+  border-top: 1px solid var(--rule-light);
+  padding: 8px 0 16px;
+}
+
+.oscar__sidebar-item--utility {
+  color: var(--ink-light);
+  font-family: var(--mono-editorial);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding-left: 16px;
+}
+
+.oscar__sidebar-item--utility .oscar__sidebar-item-icon {
+  margin-right: 10px;
+  color: var(--ink-faint);
+  flex-shrink: 0;
+}
+
+.oscar__sidebar-item--utility:hover .oscar__sidebar-item-icon,
+.oscar__sidebar-item--active.oscar__sidebar-item--utility .oscar__sidebar-item-icon {
+  color: var(--copper);
+}
+
 /* ── Onboarding chat (Sprint 6, ADR-013) ───────────────────────────── */
 
 .oscar__chat-shell {

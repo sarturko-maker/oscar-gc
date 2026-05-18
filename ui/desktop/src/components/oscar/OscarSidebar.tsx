@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import { cn } from '../../utils';
 import { usePracticeAreas } from './hooks/usePracticeAreas';
 
@@ -30,6 +31,21 @@ export function OscarSidebar() {
           );
         })}
       </nav>
+      {/* Sprint 10: Settings affordance — upstream Goose's settings surface
+          was unrouted in the Oscar GC rebrand. Restore from the sidebar footer. */}
+      <div className="oscar__sidebar-footer">
+        <Link
+          to="/settings"
+          className={cn(
+            'oscar__sidebar-item oscar__sidebar-item--utility',
+            pathname.startsWith('/settings') && 'oscar__sidebar-item--active'
+          )}
+          aria-label="Settings"
+        >
+          <Settings className="oscar__sidebar-item-icon" size={16} />
+          Settings
+        </Link>
+      </div>
     </aside>
   );
 }

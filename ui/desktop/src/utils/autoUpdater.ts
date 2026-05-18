@@ -352,8 +352,8 @@ export function setupAutoUpdater(tray?: Tray) {
   // Set the feed URL for GitHub releases
   const feedConfig = {
     provider: 'github' as const,
-    owner: 'block',
-    repo: 'goose',
+    owner: process.env.GITHUB_OWNER || 'sarturko-maker',
+    repo: process.env.GITHUB_REPO || 'goose',
     releaseType: 'release' as const,
   };
 
