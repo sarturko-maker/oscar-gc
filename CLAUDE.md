@@ -59,6 +59,10 @@ Default: reuse what Goose provides — agents, MCP, chat surfaces, providers, se
 
 Rebuild only with ADR-justified necessity. "We don't need feature X here" is not sufficient — those features earn their keep elsewhere.
 
+## Inverting upstream UX defaults
+
+Upstream Goose's UX defaults assume a developer audience and untrusted skill ecosystem. Oscar GC's audience is in-house lawyers with a bundled trusted skill library. Where defaults conflict with this, Oscar GC inverts them — no telemetry prompts, no recipe-trust dialogs, no upstream branding surfaces — and the inversion is the default for every future Goose-derived UX element.
+
 ## Distribution shape
 
 Oscar GC ships as a single installable binary. Sibling MCP servers (memory, onboarding, future) are bundled into the Electron package at build time, spawned as subprocesses at runtime, invisible to the user. Dev-time separation across repos is a development pattern, not the distribution shape.
