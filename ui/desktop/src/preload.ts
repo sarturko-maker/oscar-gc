@@ -186,6 +186,9 @@ type ElectronAPI = {
   addRecentDir: (dir: string) => Promise<boolean>;
   listRecentDirs: () => Promise<string[]>;
   listGitWorktreeDirs: (dir: string) => Promise<string[]>;
+  // Oscar user profile (Sprint 6, ADR-011): reads ~/.config/oscar/profile.json,
+  // returns the parsed object or null if absent.
+  readOscarProfile: () => Promise<unknown | null>;
 };
 
 type AppConfigAPI = {
@@ -342,6 +345,7 @@ const electronAPI: ElectronAPI = {
   addRecentDir: (dir: string) => ipcRenderer.invoke('add-recent-dir', dir),
   listRecentDirs: () => ipcRenderer.invoke('list-recent-dirs'),
   listGitWorktreeDirs: (dir: string) => ipcRenderer.invoke('list-git-worktree-dirs', dir),
+  readOscarProfile: () => ipcRenderer.invoke('oscar:read-profile'),
 };
 
 const appConfigAPI: AppConfigAPI = {

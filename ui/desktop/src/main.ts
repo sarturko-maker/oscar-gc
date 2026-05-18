@@ -1624,6 +1624,27 @@ ipcMain.handle('get-goosed-host-port', async (event) => {
   return client.getConfig().baseUrl || null;
 });
 
+// Oscar user profile (Sprint 6, ADR-011).
+// Reads ~/.config/oscar/profile.json (overridable via OSCAR_PROFILE_PATH).
+// Returns the parsed object, or null if the file is absent.
+// Renderer guards/hooks poll this short-interval during onboarding.
+const oscarProfilePath =
+  process.env.OSCAR_PROFILE_PATH ||
+  path.join(os.homedir(), '.config', 'oscar', 'profile.json');
+
+ipcMain.handle('oscar:read-profile', async () => {
+  try {
+    const raw = await fs.readFile(oscarProfilePath, 'utf8');
+    return JSON.parse(raw) as unknown;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null;
+    }
+    log.warn('oscar:read-profile failed', { err: errorMessage(err, 'Unknown error') });
+    return null;
+  }
+});
+
 // Handle menu bar icon visibility
 ipcMain.handle('set-menu-bar-icon', async (_event, show: boolean) => {
   updateSettings((s) => {

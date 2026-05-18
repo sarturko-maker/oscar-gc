@@ -1,9 +1,10 @@
 import { useParams } from 'react-router-dom';
-import { PRACTICE_AREAS } from './practiceAreas';
+import { usePracticeAreas } from './hooks/usePracticeAreas';
 
 export default function PracticeAreaPlaceholder() {
   const { areaId } = useParams<{ areaId: string }>();
-  const area = PRACTICE_AREAS.find((a) => a.id === areaId);
+  const areas = usePracticeAreas();
+  const area = areas.find((a) => a.id === areaId);
 
   if (!area) {
     return (

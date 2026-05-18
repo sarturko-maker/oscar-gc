@@ -1,15 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../utils';
-import { PRACTICE_AREAS } from './practiceAreas';
+import { usePracticeAreas } from './hooks/usePracticeAreas';
 
 export function OscarSidebar() {
   const { pathname } = useLocation();
+  const areas = usePracticeAreas();
 
   return (
     <aside className="oscar oscar__sidebar flex flex-col w-full h-full min-h-0">
       <nav className="oscar__sidebar-list flex-1 overflow-y-auto">
         <div className="oscar__eyebrow oscar__sidebar-eyebrow">Practice Areas</div>
-        {PRACTICE_AREAS.map((area, idx) => {
+        {areas.map((area, idx) => {
           const path = `/practice/${area.id}`;
           const isActive = pathname === path;
           return (

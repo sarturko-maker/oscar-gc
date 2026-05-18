@@ -37,6 +37,7 @@ export function resumeSession(session: Session, setView: setViewType) {
 export async function createSession(
   workingDir: string,
   options?: {
+    recipe?: Recipe;
     recipeDeeplink?: string;
     recipeId?: string;
     extensionConfigs?: ExtensionConfig[];
@@ -52,7 +53,9 @@ export async function createSession(
     working_dir: workingDir,
   };
 
-  if (options?.recipeId) {
+  if (options?.recipe) {
+    body.recipe = options.recipe;
+  } else if (options?.recipeId) {
     body.recipe_id = options.recipeId;
   } else if (options?.recipeDeeplink) {
     body.recipe = await decodeRecipe(options.recipeDeeplink);

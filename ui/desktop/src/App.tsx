@@ -21,6 +21,7 @@ import { createSession } from './sessions';
 import { ChatType } from './types/chat';
 import Hub from './components/Hub';
 import PracticeAreaPlaceholder from './components/oscar/PracticeAreaPlaceholder';
+import OscarOnboardingGuard from './components/oscar/onboarding/OscarOnboardingGuard';
 import { UserInput } from './types/message';
 
 interface PairRouteState {
@@ -655,9 +656,11 @@ export function AppInner() {
               path="/"
               element={
                 <OnboardingGuard>
-                  <ChatProvider chat={chat} setChat={setChat} contextKey="hub">
-                    <AppLayout activeSessions={activeSessions} />
-                  </ChatProvider>
+                  <OscarOnboardingGuard>
+                    <ChatProvider chat={chat} setChat={setChat} contextKey="hub">
+                      <AppLayout activeSessions={activeSessions} />
+                    </ChatProvider>
+                  </OscarOnboardingGuard>
                 </OnboardingGuard>
               }
             >
