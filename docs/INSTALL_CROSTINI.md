@@ -56,6 +56,15 @@ Run `sudo apt --fix-broken install` to let APT resolve any pending system librar
 **The redline output doesn't open / Files app says "no application".**
 Crostini ships LibreOffice optionally; if you don't have it, install with `sudo apt install libreoffice`. Or use ChromeOS's built-in Office Editor by sharing the file out to Drive.
 
+**I want to launch from a terminal (e.g., to see logs) and `oscar-gc` crashes with a Gtk widget assertion.**
+The launcher in the ChromeOS App Drawer applies Crostini-specific flags automatically via the `.desktop` entry. From a terminal, run with the same flags:
+
+```sh
+env LIBGL_ALWAYS_SOFTWARE=1 oscar-gc --ozone-platform=x11 --disable-gpu --disable-software-rasterizer
+```
+
+ADR-025 in the repo (`docs/adr/025-crostini-launch-flags.md`) explains the flag choices.
+
 ## Uninstall
 
 Open Crostini Terminal and run:
