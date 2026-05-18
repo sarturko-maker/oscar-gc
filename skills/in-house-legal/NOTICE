@@ -1,0 +1,78 @@
+In-House Legal Skill Library — Attribution
+==========================================
+
+The contents of this directory are vendored from Anthropic's
+claude-for-legal open-source repository, licensed under the
+Apache License, Version 2.0.
+
+  Upstream:        https://github.com/anthropics/claude-for-legal
+  Upstream commit: 4d55f53962293ab0ec0dcfad84c51afb54535975
+  Upstream date:   2026-05-15
+  Vendored on:     2026-05-18 (Oscar GC Sprint 11)
+
+Per-plugin sources
+------------------
+
+| Directory              | Upstream path                                          |
+|------------------------|--------------------------------------------------------|
+| ai-governance-legal/   | anthropics/claude-for-legal/ai-governance-legal/       |
+| commercial-legal/      | anthropics/claude-for-legal/commercial-legal/          |
+| corporate-legal/       | anthropics/claude-for-legal/corporate-legal/           |
+| employment-legal/      | anthropics/claude-for-legal/employment-legal/          |
+| ip-legal/              | anthropics/claude-for-legal/ip-legal/                  |
+| litigation-legal/      | anthropics/claude-for-legal/litigation-legal/          |
+| privacy-legal/         | anthropics/claude-for-legal/privacy-legal/             |
+| product-legal/         | anthropics/claude-for-legal/product-legal/             |
+| regulatory-legal/      | anthropics/claude-for-legal/regulatory-legal/          |
+
+All nine plugins are Apache 2.0; per-file provenance comments appear at
+the top of each vendored SKILL.md.
+
+Sprint 11 changes to vendored content
+-------------------------------------
+
+Per ADR-033 (in-house gating strip policy) and ADR-034 (output-path
+convention), Sprint 11 applies two surgical transformations to vendored
+SKILL.md / agent files:
+
+  1. Strip firm-branch markdown sections; keep in-house path.
+  2. Rewrite invocation references: per-plugin practice profile →
+     unified `~/.config/oscar/profile.json`; output paths → ADR-034's
+     `~/Documents/Oscar/<Practice Area>/<Output Type>/` convention.
+
+Per-plugin MANIFEST.md files in each directory enumerate the verdicts
+(keep / drop / keep-borderline / rewrite) the orchestrator applied
+during repackage.
+
+Plugins not vendored from upstream
+----------------------------------
+
+Out of scope for Oscar GC's in-house-counsel audience or for Sprint 11
+specifically:
+
+  - law-student/        — educational; not in-house counsel.
+  - legal-clinic/       — law school clinic; not in-house counsel.
+  - legal-builder-hub/  — community-skills installer; Oscar GC is
+                          self-contained, no community-extension model
+                          (deferred to Sprint 15+).
+  - external_plugins/cocounsel-legal/ — depends on a paid Westlaw /
+                          CoCounsel subscription; cannot bundle in a
+                          self-contained install.
+  - managed-agent-cookbooks/ — scheduled-agent templates; deferred to
+                          Sprint 12+ alongside the Forge meta-agent.
+
+Trademark
+---------
+
+"Anthropic", "Claude", and "claude-for-legal" are trademarks of
+Anthropic, PBC. Apache License 2.0 §6 limits the use of these marks
+beyond attribution; Oscar GC restricts them to this NOTICE, the repo
+root NOTICE, per-file attribution comments, and source comments at the
+vendoring site. User-facing surfaces use the neutral term "in-house
+legal skill library".
+
+License copy
+------------
+
+The Apache License, Version 2.0 covering this content is included at
+the repository root (`/LICENSE`).

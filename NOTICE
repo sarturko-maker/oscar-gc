@@ -1,0 +1,53 @@
+Oscar GC
+========
+
+Oscar GC is a custom distribution of Goose, an open-source agent platform.
+See LICENSE for license terms (Apache License, Version 2.0).
+
+This product includes software developed by the following projects:
+
+----------------------------------------------------------------------------
+
+Goose
+Copyright 2024 Block, Inc.
+Licensed under the Apache License, Version 2.0.
+https://github.com/aaif-goose/goose (formerly https://github.com/block/goose)
+
+Oscar GC forks Goose as a custom distribution under upstream's
+CUSTOM_DISTROS.md. The Rust agent core remains substantially upstream;
+the desktop UI (`ui/desktop/src/`) and sibling MCP servers
+(`oscar-onboarding-mcp`, `oscar-memory-mcp`) are Oscar GC additions.
+
+----------------------------------------------------------------------------
+
+claude-for-legal
+Copyright Anthropic, PBC.
+Licensed under the Apache License, Version 2.0.
+https://github.com/anthropics/claude-for-legal
+
+The contents of `skills/in-house-legal/` are vendored from Anthropic's
+claude-for-legal open-source repository. Sprint 11 pulled at:
+
+  Upstream commit: 4d55f53962293ab0ec0dcfad84c51afb54535975
+  Upstream date:   2026-05-15
+  Pull date:       2026-05-18
+
+Nine in-house practice-area plugins are vendored:
+ai-governance-legal, commercial-legal, corporate-legal,
+employment-legal, ip-legal, litigation-legal, privacy-legal,
+product-legal, regulatory-legal.
+
+See `skills/in-house-legal/NOTICE` for per-plugin attribution detail.
+Per-file provenance comments appear at the top of each vendored
+SKILL.md (`<!-- Sourced from anthropics/claude-for-legal/<plugin> @
+<sha>; Apache 2.0 -->`).
+
+Trademark notice: "Anthropic", "Claude", and "claude-for-legal" are
+trademarks of Anthropic, PBC. Per Apache License 2.0 §6, this NOTICE
+file describes the origin of the vendored content; the marks are not
+used to brand or promote Oscar GC.
+
+----------------------------------------------------------------------------
+
+ADR-035 records the attribution scheme for this fork. Future Apache 2.0
+dependencies added to Oscar GC append entries here.
