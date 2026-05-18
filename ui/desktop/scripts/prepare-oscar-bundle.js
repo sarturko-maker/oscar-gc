@@ -31,6 +31,26 @@ const SIBLING_MCPS = {
   'oscar-memory': '/srv/projects/oscar-memory-mcp',
 };
 
+// Sprint 12 (ADR-040): npm-vendored MCPs. Each is bundled with esbuild from
+// the package's published entry point. Pinned exactly in package.json.
+const VENDORED_MCPS = {
+  'oscar-fs': {
+    pkg: '@modelcontextprotocol/server-filesystem',
+    entry: 'dist/index.js',
+  },
+};
+
+// Sprint 12 (ADR-042): build-time network audit patterns. Bundled MCP source
+// is scanned for outbound-call shapes. Expect zero unwaived matches; matches
+// become a P0 to investigate.
+const NETWORK_AUDIT_PATTERNS = [
+  { name: 'fetch_call', regex: /\bfetch\s*\(/g },
+  { name: 'axios', regex: /\baxios\b/g },
+  { name: 'https_request', regex: /\bhttps?\.request\s*\(/g },
+  { name: 'XMLHttpRequest', regex: /\bXMLHttpRequest\b/g },
+  { name: 'node_fetch', regex: /['"]node-fetch['"]/g },
+];
+
 // --- Paths --------------------------------------------------------------
 
 const UI_DESKTOP = path.resolve(__dirname, '..');
@@ -196,6 +216,76 @@ async function prepareMcps() {
   }
 }
 
+async function prepareVendoredMcps() {
+  console.log('--- prepareVendoredMcps ---');
+  const esbuild = require('esbuild');
+  ensureDir(MCPS_DIR);
+  for (const [name, { pkg, entry: entryRel }] of Object.entries(VENDORED_MCPS)) {
+    const pkgRoot = path.join(UI_DESKTOP, 'node_modules', pkg);
+    if (!fs.existsSync(pkgRoot)) {
+      throw new Error(
+        `Vendored MCP package not installed: ${pkg}. Run pnpm install in ui/desktop first.`,
+      );
+    }
+    const entry = path.join(pkgRoot, entryRel);
+    if (!fs.existsSync(entry)) {
+      throw new Error(`Vendored MCP entry not found at ${entry}`);
+    }
+    const destDir = path.join(MCPS_DIR, name);
+    fs.rmSync(destDir, { recursive: true, force: true });
+    ensureDir(destDir);
+    const outfile = path.join(destDir, 'index.js');
+    console.log(`[mcps] esbuild ${entry} → ${outfile}`);
+    await esbuild.build({
+      entryPoints: [entry],
+      bundle: true,
+      platform: 'node',
+      target: 'node24',
+      format: 'cjs',
+      outfile,
+      logLevel: 'warning',
+      absWorkingDir: UI_DESKTOP,
+      banner: { js: '#!/usr/bin/env node' },
+    });
+    const sz = fs.statSync(outfile).size;
+    console.log(`[mcps] ${name} bundle size: ${(sz / 1024).toFixed(1)} KB`);
+  }
+}
+
+function auditMcpNetworkSurface() {
+  console.log('--- auditMcpNetworkSurface (ADR-042) ---');
+  const allMcps = [
+    ...Object.keys(SIBLING_MCPS),
+    ...Object.keys(VENDORED_MCPS),
+  ];
+  const report = { summary: { matches: 0, mcps: allMcps.length }, by_mcp: {} };
+  for (const name of allMcps) {
+    const bundle = path.join(MCPS_DIR, name, 'index.js');
+    if (!fs.existsSync(bundle)) {
+      report.by_mcp[name] = { error: 'bundle not found' };
+      continue;
+    }
+    const src = fs.readFileSync(bundle, 'utf8');
+    const matches = [];
+    for (const { name: pat, regex } of NETWORK_AUDIT_PATTERNS) {
+      const found = src.match(regex);
+      if (found && found.length > 0) {
+        matches.push({ pattern: pat, count: found.length });
+      }
+    }
+    report.by_mcp[name] = { matches };
+    report.summary.matches += matches.reduce((a, m) => a + m.count, 0);
+    if (matches.length === 0) {
+      console.log(`[audit] ${name}: clean`);
+    } else {
+      console.log(
+        `[audit] ${name}: ${matches.length} pattern(s) matched — review BUNDLE.json#network_audit`,
+      );
+    }
+  }
+  return report;
+}
+
 async function prepareSkills() {
   console.log('--- prepareSkills ---');
   if (!fs.existsSync(SKILLS_SOURCE)) {
@@ -229,15 +319,18 @@ async function main() {
   await preparePython();
   await prepareNode();
   await prepareMcps();
+  await prepareVendoredMcps();
   const skills = await prepareSkills();
+  const networkAudit = auditMcpNetworkSurface();
   console.log('Oscar GC bundle prep complete.');
   // Hash summary for build provenance.
   const summary = {
     python: { release: PBS_RELEASE_DATE, version: PYTHON_VERSION },
     node: { version: NODE_VERSION },
     adeu: { version: ADEU_VERSION },
-    mcps: Object.keys(SIBLING_MCPS),
+    mcps: [...Object.keys(SIBLING_MCPS), ...Object.keys(VENDORED_MCPS)],
     skills: { 'in-house-legal': { skill_md_count: skills.skillCount } },
+    network_audit: networkAudit,
     timestamp: new Date().toISOString(),
   };
   fs.writeFileSync(path.join(RESOURCES, 'BUNDLE.json'), JSON.stringify(summary, null, 2));

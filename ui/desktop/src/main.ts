@@ -787,6 +787,28 @@ const ensureBundledSkillsLink = (resourcesRoot: string | null): void => {
 const oscarResourcesRoot = resolveOscarResourcesRoot();
 ensureBundledSkillsLink(oscarResourcesRoot);
 
+// Sprint 12 (ADR-044): Top of Mind matter-context file. Stable path under
+// ~/.config/oscar/; matters IPC writes/truncates it on matter open/close.
+// goosed's tom platform extension reads it on every turn via
+// GOOSE_MOIM_MESSAGE_FILE (crates/goose/src/agents/platform_extensions/tom.rs:72-78).
+const OSCAR_CONFIG_DIR = path.join(os.homedir(), '.config', 'oscar');
+const OSCAR_TOM_ACTIVE_MATTER_FILE = path.join(OSCAR_CONFIG_DIR, 'tom-active-matter.md');
+
+const ensureTomActiveMatterFile = (): void => {
+  try {
+    fsSync.mkdirSync(OSCAR_CONFIG_DIR, { recursive: true });
+    if (!fsSync.existsSync(OSCAR_TOM_ACTIVE_MATTER_FILE)) {
+      fsSync.writeFileSync(OSCAR_TOM_ACTIVE_MATTER_FILE, '', 'utf8');
+    }
+  } catch (err) {
+    log.warn('ensureTomActiveMatterFile: failed', {
+      err: errorMessage(err, 'Unknown error'),
+      path: OSCAR_TOM_ACTIVE_MATTER_FILE,
+    });
+  }
+};
+ensureTomActiveMatterFile();
+
 let appConfig = {
   GOOSE_DEFAULT_PROVIDER: defaultProvider,
   GOOSE_DEFAULT_MODEL: defaultModel,
@@ -860,6 +882,9 @@ const createChat = async (app: App, options: CreateChatOptions = {}) => {
     dir: dir || os.homedir(),
     env: {
       GOOSE_PATH_ROOT: appConfig.GOOSE_PATH_ROOT as string | undefined,
+      // Sprint 12 (ADR-044): point tom platform extension at the per-session
+      // active-matter file so matter context surfaces on every turn.
+      GOOSE_MOIM_MESSAGE_FILE: OSCAR_TOM_ACTIVE_MATTER_FILE,
     },
     externalGoosed: settings.externalGoosed,
     isPackaged: app.isPackaged,
