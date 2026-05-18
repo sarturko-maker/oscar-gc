@@ -41,6 +41,9 @@ If you find yourself making an architectural choice mid-task without writing an 
 ### RUNBOOK currency
 Every host-state change captured in RUNBOOK.md as it happens — every install, every config command, every key-file creation, every env-var lock, every daemon registration. **No retroactive writes** — capture as it happens or it didn't happen.
 
+### Visual verification (UI sprints)
+UI sprints commit screenshots to `docs/screenshots/sprint-N/` and reference them in the `SPRINT_LOG.md` entry. The capture command is in `RUNBOOK.md` under "Headless screenshot capture". Grep over `app.asar` proves a string is present in the bundle; only a PNG proves the screen renders the way Arturs expects.
+
 ## Fork hygiene (the load-bearing fork rule)
 
 We are a custom distribution of Goose per upstream's `CUSTOM_DISTROS.md`, not a hard fork. Discipline:
