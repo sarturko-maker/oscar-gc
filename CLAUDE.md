@@ -165,6 +165,26 @@ Internal types are checked at compile time. Don't add runtime checks for things 
 
 If a question requires reading source not yet read, read it before answering. Do not paper over the gap with educated guesses dressed up as fact.
 
+## Upstream Goose authoritative reference
+
+Goose has moved from Block to the Agentic AI Foundation (AAIF).
+Canonical sources:
+- Docs: https://goose-docs.ai/docs
+- Repo: https://github.com/aaif-goose/goose
+
+CC must consult `goose-docs.ai` when:
+- Touching MCP / extension / recipe configuration
+- Working on session, project, or context-preservation features
+  (relevant to Matters)
+- Working on security, sandboxing, allowlisting, or rate-limit features
+- Any time the question is "how does Goose intend X to work" rather than
+  "how is Oscar GC currently doing X"
+
+Do not consult before every action — only on the triggers above.
+Oscar GC's local CLAUDE.md, PROJECT.md, and ADRs are the canonical
+sources for Oscar GC's own decisions; goose-docs.ai is the upstream
+reference for behaviours that originate in Goose.
+
 ## CLAUDE.md hygiene (meta-rules)
 
 - This file should contain ONLY things the AI would get wrong without being told. Implementation details that live in the code (crate versions, file paths, function names) create context rot.
