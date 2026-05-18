@@ -994,3 +994,55 @@ pre:has(> code.bg-inline-code) {
   color: var(--glow-mute);
   margin-top: 16px;
 }
+
+.oscar-terminal__sidebar {
+  background: var(--night-raise);
+  border-right: 1px solid var(--night-rule);
+}
+
+.oscar-terminal__sidebar-list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.oscar-terminal__sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px 10px 13px;
+  border-left: 3px solid transparent;
+  color: var(--glow-mute);
+  font-family: var(--sans-product);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+.oscar-terminal__sidebar-item:hover {
+  color: var(--glow-txt);
+  background: var(--night-edge);
+}
+
+.oscar-terminal__sidebar-item--active {
+  color: var(--glow-txt);
+  background: var(--night-edge);
+  border-left-color: var(--indigo-500);
+}
+
+.oscar-terminal__placeholder-title {
+  font-family: var(--sans-product);
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.oscar-terminal__placeholder-body {
+  font-family: var(--sans-product);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--glow-mute);
+  margin-top: 16px;
+}

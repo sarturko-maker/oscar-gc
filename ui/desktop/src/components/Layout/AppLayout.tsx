@@ -7,7 +7,7 @@ import { Button } from '../ui/button';
 import ChatSessionsContainer from '../ChatSessionsContainer';
 import { useChatContext } from '../../contexts/ChatContext';
 import { NavigationProvider, useNavigationContext } from './NavigationContext';
-import { Navigation } from './NavigationPanel';
+import { OscarSidebar } from '../oscar/OscarSidebar';
 import { NAV_DIMENSIONS, Z_INDEX } from './constants';
 import { cn } from '../../utils';
 import { UserInput } from '../../types/message';
@@ -281,7 +281,7 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
                   : 'overflow-hidden'
               )}
             >
-              <Navigation />
+              <OscarSidebar />
             </div>
             {isResizable && (
               <div
@@ -302,7 +302,7 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
       </div>
 
       {/* Overlay mode navigation */}
-      {effectiveNavigationMode === 'overlay' && <Navigation />}
+      {effectiveNavigationMode === 'overlay' && <OscarSidebar />}
     </div>
   );
 };

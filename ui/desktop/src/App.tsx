@@ -20,6 +20,7 @@ import { createSession } from './sessions';
 
 import { ChatType } from './types/chat';
 import Hub from './components/Hub';
+import PracticeAreaPlaceholder from './components/oscar/PracticeAreaPlaceholder';
 import { UserInput } from './types/message';
 
 interface PairRouteState {
@@ -691,6 +692,7 @@ export function AppInner() {
               <Route path="schedules" element={<SchedulesRoute />} />
               <Route path="recipes" element={<RecipesRoute />} />
               <Route path="skills" element={<SkillsRoute />} />
+              <Route path="practice/:areaId" element={<PracticeAreaPlaceholder />} />
               <Route
                 path="shared-session"
                 element={
