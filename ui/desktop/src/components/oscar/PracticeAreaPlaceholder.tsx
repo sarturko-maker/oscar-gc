@@ -1,10 +1,15 @@
 import { useParams } from 'react-router-dom';
 import { usePracticeAreas } from './hooks/usePracticeAreas';
+import OscarCommercialView from './commercial/OscarCommercialView';
 
 export default function PracticeAreaPlaceholder() {
   const { areaId } = useParams<{ areaId: string }>();
   const areas = usePracticeAreas();
   const area = areas.find((a) => a.id === areaId);
+
+  if (areaId === 'commercial') {
+    return <OscarCommercialView />;
+  }
 
   if (!area) {
     return (
