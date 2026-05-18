@@ -1,0 +1,30 @@
+{
+  "name": "oscar-memory-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "In-house notes store exposed to Oscar GC as a stdio-transport MCP server. Two tools: store_note and list_notes, both keyed by a flat scope_id.",
+  "license": "Apache-2.0",
+  "author": "s-arturko",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oscar-memory-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "smoke": "node ./smoke.mjs",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@0.21.2 node ./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "=1.29.0",
+    "zod": "=4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "=25.8.0",
+    "typescript": "=6.0.3"
+  }
+}
