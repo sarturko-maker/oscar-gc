@@ -167,9 +167,41 @@ Verified pass criteria:
 
 `out/` footprint after Sprint 2: ~400M (Sprint 1's `Goose-linux-x64-1.34.0.zip` 200M still present alongside).
 
+## Sprint 3 — Oscar GC landing placeholder (2026-05-18, lq-vps)
+
+First `ui/desktop/src/` source change. Build command sequence unchanged from Sprint 2:
+
+```bash
+source bin/activate-hermit
+cd ui/desktop
+pnpm install                                       # 4.4s (cache warm)
+pnpm run i18n:compile
+pnpm run make --targets=@electron-forge/maker-zip  # ~10s on lq-vps (cache warm)
+```
+
+Artefact: `ui/desktop/out/make/zip/linux/x64/Oscar-GC-linux-x64-1.34.0.zip` (200M; same path as Sprint 2).
+
+### Verification: extract `app.asar` and grep
+
+```bash
+source bin/activate-hermit
+npx --yes @electron/asar extract \
+  ui/desktop/out/Oscar-GC-linux-x64/resources/app.asar /tmp/sprint3-asar
+grep -o "Oscar GC"                          /tmp/sprint3-asar/.vite/renderer/main_window/assets/*.js
+grep -o "In-house legal agent platform"     /tmp/sprint3-asar/.vite/renderer/main_window/assets/*.js
+grep -o "oscar-terminal__title"             /tmp/sprint3-asar/.vite/renderer/main_window/assets/*.css
+grep -o "fonts.gstatic.com/s/inter/v20[^)]*" /tmp/sprint3-asar/.vite/renderer/main_window/assets/*.css
+```
+
+All four greps return a match — verification pass.
+
+`npx @electron/asar` downloads `@electron/asar` (~60KB) on first run; cached afterwards. No new system package required. Renderer assets path inside the asar: `.vite/renderer/main_window/assets/{App-<hash>.js, index-<hash>.css, …}`. Hashes change per build.
+
+`out/` footprint after Sprint 3: ~400M (Sprint 1's `Goose-linux-x64-1.34.0.zip` + Sprint 3's `Oscar-GC-linux-x64-1.34.0.zip` both present; Sprint 2's was overwritten by Sprint 3 — `make` reuses the same filename).
+
 ## Pending
 
-(none — Sprint 2 complete)
+(none — Sprint 3 complete)
 
 ## Corrections
 

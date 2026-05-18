@@ -38,5 +38,16 @@ Capture the per-release decision as a one-line note in `SPRINT_LOG.md` under the
 |---|---|---|
 | 1 | Unmodified Goose builds + MiniMax round-trip on `lq-vps`. No product code. | Closed 2026-05-17 |
 | 2 | Oscar GC rebrand (branding metadata only). First custom-distribution cycle. | Closed 2026-05-18 |
+| 3 | First `ui/desktop/src/` source change — Oscar GC landing placeholder. LQdesign Terminal default. | Closed 2026-05-18 |
 
 See `SPRINT_LOG.md` for entries. See `CLAUDE.md` for operating rules.
+
+## Branding follow-ups
+
+Rebrand surface area Sprint 2 deferred and Sprint 3 chose not to expand. Each is a future sprint's anchor.
+
+1. **`goose://` URL scheme** — 14+ literals across `ui/desktop/src/` (sessions, recipes, extensions, scheduling). Per ADR-003 the scheme rewrite must be atomic: `forge.config.ts` `schemes:` + both `.desktop` `MimeType=` + every `src/` consumer in one commit. Also bundles the `OnboardingGuard` "Welcome to goose" string (a `src/` branded literal).
+2. **`document.title` runtime overwrite** — `index.html` already sets `<title>Oscar GC</title>`, but React resets the title to "Goose" after first render. Multiple call sites in `src/` (find with `grep -r "document.title" ui/desktop/src/`).
+3. **System prompt** at `crates/goose/src/prompts/system.md` — the agent introduces itself as Goose at runtime. First Rust-touch sprint; merits an ADR (the only legitimate `crates/` edit so far).
+4. **Icons** under `ui/desktop/src/images/` — `icon.png/.ico/.icns/.svg/-512.png` are all Goose's. Needs Oscar GC visual identity work before replacing.
+5. **`ui/desktop/scripts/goosey`** — invokes `goose-app` on PATH (no longer exists under the new brand); plus `ui/desktop/package.json` macOS bundle scripts default `${GOOSE_BUNDLE_NAME:-Goose}`. Defer until the first Linux PATH installer (.deb/.rpm) ships.
