@@ -65,6 +65,10 @@ Oscar GC ships as a single installable binary. Sibling MCP servers (memory, onbo
 
 Implication: MCP servers stay small, self-contained, free of system-level dependencies. See PROJECT.md "Distribution shape" for the rules.
 
+## Multi-repo discipline
+
+Working directory determines push target — `git remote -v` to verify before any push. Cross-repo sprints record every repo touched + its pushed SHA in SPRINT_LOG. PROJECT.md is the canonical register of sibling repos and their roles.
+
 ## Rust discipline (the inherited Goose core)
 
 - We mostly don't touch the core. When we do:
