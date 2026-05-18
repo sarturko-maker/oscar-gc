@@ -1003,7 +1003,9 @@ pre:has(> code.bg-inline-code) {
 .oscar-terminal__sidebar-list {
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
+  /* Top padding clears the absolutely-positioned Menu trigger in
+     AppLayout's chrome. */
+  padding: 56px 0 8px;
 }
 
 .oscar-terminal__sidebar-item {
