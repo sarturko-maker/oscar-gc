@@ -5,7 +5,7 @@ import { createSession } from '../../../sessions';
 import { getInitialWorkingDir } from '../../../utils/workingDir';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { GREETING } from './systemPrompt';
-import { ONBOARDING_RECIPE } from './onboardingRecipe';
+import { buildOnboardingRecipe } from './onboardingRecipe';
 import { OscarChatTurn, deriveTurnFromMessage } from './OscarChatMessage';
 import { OscarChatInput } from './OscarChatInput';
 
@@ -18,7 +18,7 @@ export default function OscarOnboardingView() {
     (async () => {
       try {
         const session = await createSession(getInitialWorkingDir(), {
-          recipe: ONBOARDING_RECIPE,
+          recipe: buildOnboardingRecipe(window.electron.oscarResourcesRoot),
         });
         if (mounted) setSessionId(session.id);
       } catch (err) {

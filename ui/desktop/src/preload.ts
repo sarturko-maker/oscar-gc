@@ -1,4 +1,6 @@
 import Electron, { contextBridge, ipcRenderer, webUtils } from 'electron';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { Recipe } from './recipe';
 import { GooseApp } from './api';
 import type { Settings, SettingKey } from './utils/settings';
@@ -83,6 +85,28 @@ interface FileResponse {
 }
 
 const config = JSON.parse(process.argv.find((arg) => arg.startsWith('{')) || '{}');
+
+// Resolve the Oscar bundled-resources root (Sprint 10, ADR-024). Returns the
+// absolute path when the packaged .deb has the bundled CPython tree present,
+// or null in dev (renderer falls back to /srv/projects/... paths). The
+// OSCAR_RESOURCES_OVERRIDE env var is the documented escape hatch for testing
+// a packaged build against an unpacked dev tree.
+function resolveOscarResourcesRoot(): string | null {
+  const override = process.env.OSCAR_RESOURCES_OVERRIDE;
+  if (override && existsSync(override)) {
+    return override;
+  }
+  const resourcesPath = process.resourcesPath;
+  if (
+    resourcesPath &&
+    existsSync(join(resourcesPath, 'python', 'cpython', 'bin', 'python3'))
+  ) {
+    return resourcesPath;
+  }
+  return null;
+}
+
+const oscarResourcesRoot = resolveOscarResourcesRoot();
 
 interface UpdaterEvent {
   event: string;
@@ -189,6 +213,10 @@ type ElectronAPI = {
   // Oscar user profile (Sprint 6, ADR-011): reads ~/.config/oscar/profile.json,
   // returns the parsed object or null if absent.
   readOscarProfile: () => Promise<unknown | null>;
+  // Oscar bundled-resources root (Sprint 10, ADR-024): absolute path to the
+  // packaged resources dir when the app is installed (e.g. /opt/oscar-gc/resources),
+  // null when running in dev. Recipe factories use this to resolve adeu/node/MCP paths.
+  oscarResourcesRoot: string | null;
 };
 
 type AppConfigAPI = {
@@ -346,6 +374,7 @@ const electronAPI: ElectronAPI = {
   listRecentDirs: () => ipcRenderer.invoke('list-recent-dirs'),
   listGitWorktreeDirs: (dir: string) => ipcRenderer.invoke('list-git-worktree-dirs', dir),
   readOscarProfile: () => ipcRenderer.invoke('oscar:read-profile'),
+  oscarResourcesRoot,
 };
 
 const appConfigAPI: AppConfigAPI = {

@@ -4,7 +4,7 @@ import { createSession } from '../../../sessions';
 import { getInitialWorkingDir } from '../../../utils/workingDir';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { AppEvents } from '../../../constants/events';
-import { COMMERCIAL_RECIPE } from './commercialRecipe';
+import { buildCommercialRecipe } from './commercialRecipe';
 
 export default function OscarCommercialView() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export default function OscarCommercialView() {
     (async () => {
       try {
         const session = await createSession(getInitialWorkingDir(), {
-          recipe: COMMERCIAL_RECIPE,
+          recipe: buildCommercialRecipe(window.electron.oscarResourcesRoot),
         });
         if (cancelled) return;
         window.dispatchEvent(
