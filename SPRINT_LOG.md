@@ -472,3 +472,75 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 **ADRs**: 015 (extends ADR-014; does not supersede).
 
 **Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.
+
+---
+
+### Sprint 9 — adeu redline MCP wired; fourth item of four-item short-term goal closed (closed 2026-05-18)
+
+**Goal**: wire `adeu==1.6.9` (Python stdio MCP, MIT) into the Oscar GC desktop binary as the redline backend for the Commercial practice area; first end-to-end redline round-trip via real MiniMax. Sprint 9 addendum raised the bar from byte-level round-trip to lawyer-quality reasoning + OOXML-verified output. Brief in chat (initial sprint + addendum); plan at `/root/.claude/plans/sprint-9-first-fizzy-raven.md`.
+
+**Built**
+
+- **Python runtime + adeu install** (commit `d8aa529ec`). First Python component in the project. apt-installed `python3-venv`, `python3-dev`, `libxslt1-dev`; `libxml2-dev` and `build-essential` already present. Managed venv at `/srv/projects/oscar-runtime/python/adeu-venv/` with `adeu==1.6.9` and ~95 MB of transitive deps (fastmcp 3.3.1, mcp 1.27.1, python-docx 1.2.0, lxml 6.1.0, diff-match-patch 20241021, etc.). RUNBOOK §"Sprint 9 — adeu redline MCP" captures bootstrap, registration stanza, egress convention, footprint.
+- **Phase 0 schema verification** (commit `d8aa529ec`) — wire-level probe via the official `mcp` Python SDK over stdio. 11 tools surfaced; `adeu-tools-list.json` + `adeu-schema.md` committed at `docs/dogfood/sprint-9/`. **Critical schema delta from the original plan**: `process_document_batch` returns `{result: string}` text and writes the modified `.docx` to `output_path` on disk — no binary `resource` content block. Phase 5 of the original plan (UI Download button on `resource` blocks) was dropped; egress became a disk-write convention. Delta documented in `adeu-schema.md` and propagated into ADR-019.
+- **Five ADRs at decision time, before code** (commit `d8aa529ec`):
+  - **ADR-016** Python runtime location: `/srv/projects/oscar-runtime/python/adeu-venv/`, sibling-style, absolute path in `cmd:`; bundling deferred to Sprint 12-15.
+  - **ADR-017** Capability binding via extension-name namespacing — config-level DI. Extension `name: redline`; agent sees `redline__*`. Swap procedure: edit `cmd:`/`args:`/`available_tools:` in `~/.config/goose/config.yaml`. Router-MCP built later if a future replacement's inner tool names differ.
+  - **ADR-018** File ingress: path-as-text from chat surface + system-prompt nudge; no bridge MCP.
+  - **ADR-019** File egress: adeu writes to `~/Documents/Oscar Redlines/{stem}_redlined_{YYYYMMDD-HHmmss}.docx`; agent surfaces the path in chat; user opens via OS file manager. No UI affordance ships this sprint.
+  - **ADR-020** Commercial chat: recipe-scoped system prompt encoding the five-step lawyer-reasoning doctrine (intent → interacting clauses → coordinated plan → batch → coherence check).
+- **adeu registration** in `~/.config/goose/config.yaml` (host state; stanza captured in RUNBOOK). `redline` extension entry with `cmd: /srv/projects/oscar-runtime/python/adeu-venv/bin/adeu-server`, `available_tools: [read_docx, process_document_batch, diff_docx_files]`, timeout 300s. Excluded from whitelist: `open_local_file` (xdg-open security/UX hazard), cloud auth, email, validation. **CLI verification**: `goose run --no-session --text "List ONLY the tool names that start with 'redline__'"` reply enumerated exactly the 3 whitelisted tools — config-level DI working end-to-end.
+- **Commercial recipe + system prompt** (commit `39de117ba`) at `ui/desktop/src/components/oscar/commercial/`:
+  - `systemPrompt.ts` — encodes ADR-020's five-step doctrine; documents the `redline__*` tool surface; the `process_document_batch.changes` typed-batch shape; the `~/Documents/Oscar Redlines/{stem}_redlined_{YYYYMMDD-HHmmss}.docx` output convention; "things you never do" guardrails including never declaring success without coherence verification.
+  - `commercialRecipe.ts` — Sprint 6 onboardingRecipe mirror; binds system prompt + redline extension (whitelisted), provider minimax/MiniMax-M2.5.
+  - `OscarCommercialView.tsx` — bootstraps a recipe-scoped session via `createSession`, dispatches `ADD_ACTIVE_SESSION` event, navigates to `/pair?resumeSessionId=<id>` so Goose's existing `BaseChat` handles attachments + tool rendering + streaming (D6 reuse-BaseChat).
+  - `PracticeAreaPlaceholder.tsx` branches on `areaId === 'commercial'` → `OscarCommercialView`; other practice areas keep the Sprint 4 placeholder.
+- **Dogfood harness extensions** (commit `533e04e2b`) — added `goto <hash-route>`, `pair-send <text>`, `pair-read` subcommands to `ui/desktop/scripts/dogfood-driver.mjs`. D9's synthetic-drop `attach` subcommand was dropped: Phase 0 schema verification confirmed adeu takes a file path as a plain string argument, so the path-in-text contract is equivalent to drag-drop for the agent. Future UI sprints can add the synthetic-drop if needed.
+- **Substantive fixture + provenance** (commit `397bcc26e`) at `docs/dogfood/sprint-9/fixtures/`. `unilateral-nda.docx` is a 1-2 page hand-drafted commercial unilateral NDA (English law). 24× "Party A" vs 18× "Party B" + 1× "Receiving Party" marker asymmetry; 7-8 coordinated edits required for "make it mutual." `PROVENANCE.md` records source (synthesised from public-domain NDA conventions); reproducer at `/tmp/build_nda_fixture.py`.
+- **Round-trip dogfood + verification** (commit `397bcc26e`) at `docs/dogfood/sprint-9/`:
+  - `cli-transcript.txt` — full goose CLI session against real MiniMax-M2.5, exit 0, wall-clock ~2 minutes. Agent followed the five-step doctrine: read intent → `read_docx` (outline then full) → enumerate 9-item plan → `process_document_batch` (first attempt missing `type` field, recovered via retry with `type: modify`) → `read_docx clean_view: true` to verify. **Agent proactively surfaced** that Clause 8 (No Licence) is still asymmetric and asked the lawyer whether to extend mutuality — the load-bearing "surface uncertainty" behaviour from ADR-020.
+  - `output-cli-verify.docx` — copy of the redlined output from `/root/Documents/Oscar Redlines/`.
+  - `verification.sh` — re-runnable byte-level + structural checks. All pass: md5 differs; mutual-coded markers input 2 → output 32 (+30); track-changes markup present (8 `<w:ins>` + 7 `<w:del>`); output parses as valid DOCX.
+  - `verification-ooxml.md` — change-by-change catalogue of all 8 typed-modify operations against the lawyer-shaped intent each served, plus an explicit table of clauses the agent did not modify (and why each).
+  - `verification-comprehension.md` — side-by-side of agent output vs CC's lawyer-shaped reference; findings P1 (system prompt allows Markdown emphasis → agent bolded substantive contract language → counterparty issue), P2 (defined-term capitalization inconsistency), P2 (Clause 8 not auto-handled; agent flagged transparently), P3 (Purpose recital subject-matter narrowness; judgment call).
+  - `screenshots/01-hub.png` and `02-commercial-session-loading.png` — desktop UI confirmation that the Commercial sidebar entry routes into a recipe-scoped `BaseChat` session.
+
+**Closure verification against the Sprint 9 addendum's standard** (substantive fixture + OOXML walk + lawyer-quality comparison + system-prompt-shape ADR + source-verified adeu multi-edit claim):
+
+- ✅ **Substantive fixture, not trivial** — 1-2 page real-shape commercial NDA; 7-8 coordinated edits required.
+- ✅ **OOXML-level verification (not just byte hash)** — `verification-ooxml.md` walks every change against intent; `verification.sh` is the re-runnable check.
+- ✅ **Lawyer-quality comparison artifact** — `verification-comprehension.md` with side-by-side and P1/P2/P3 findings.
+- ✅ **System-prompt-shape ADR** — ADR-020 captures the five-step doctrine.
+- ✅ **adeu source-verified about multi-edit** — `adeu-schema.md` + the live MCP probe confirm `process_document_batch` natively handles coordinated multi-edit via the `changes` array. `diff-match-patch` is a transitive dep of adeu used internally by adeu's `RedlineEngine`, not bolted on by us.
+
+**Closes the fourth (and final) item of the four-item short-term goal.** Per `PROJECT.md` §"The one goal", the four items were:
+1. Fork Goose (closed Sprint 1).
+2. Replace UI layer with in-house-legal UI (closed across Sprint 3–8: branding, sidebar, onboarding, Hub banner).
+3. Replace memory layer with scoped MCP server (closed Sprint 5).
+4. Wire adeu as MCP server for Commercial — **closed by Sprint 9.**
+
+The foundational scope is complete. The roadmap opens up after Sprint 9.
+
+**Deferred**
+
+- **P1 (verification-comprehension)** — tighten system prompt to discourage Markdown emphasis in substantive `new_text`. Sprint 10 candidate.
+- **P2 (verification-comprehension)** — defined-term capitalization consistency in the system prompt's worked example. Sprint 10 candidate.
+- **P2 (verification-comprehension)** — scope-of-mutuality reminder in the system prompt (extend to clauses naming one Party asymmetrically; cover the Clause 8 / "No Licence" gap proactively). Sprint 10 candidate.
+- **UI download / "Open output folder" affordance** — Phase 5 of the original plan dropped (adeu writes to disk directly). A future UI polish sprint can add a "Save copy" / "Reveal in Files" affordance for tool-output paths if dogfood ever reveals friction.
+- **Practice-area-scoped tool exposure** (Commercial gets `redline`, others don't via per-area gating) — Sprint 9 enables globally; per-area gating is a future memory/practice-area concretization sprint.
+- **Memory MCP wiring into the desktop binary** (Sprint 5 carry-forward, still pending). `oscar-memory-mcp` registered globally but the Commercial agent doesn't call it from the desktop yet. Candidate Sprint 10 anchor.
+- **Editorial-styled Commercial chat surface** — Sprint 9 reuses Goose's `BaseChat`. A future UI sprint can apply the Oscar Editorial styling.
+- **Sprint 8 carry-forward P1-B** (system-prompt phrasing on onboarding P3 example sentence) — still pending; not coupled to Sprint 9.
+- **Push `oscar-onboarding-mcp` to GitHub** (Sprint 6 carry-forward) — admin hygiene; not adeu-bearing.
+- **Bundling adeu's Python runtime into the installer** — Sprint 12-15 distribution work.
+
+**Carry-forwards for Sprint 10**
+
+- **Pick Sprint 10 anchor**: either (a) the P1/P2 system-prompt iteration + re-dogfood (small, focused), (b) memory MCP wiring into the desktop binary (the remaining four-item short-term goal item, no — actually the four-item short-term goal is now fully closed; (b) is general roadmap), or (c) practice-area scoping for redline. Brief at Sprint 10 open will choose.
+- **The render-deterministic pattern + the verify-don't-assume pattern** are precedents now. Sprint 9's Phase 0 gating (live MCP probe before any wiring, with explicit "plan said X, reality is Y" delta) is the discipline going forward whenever a sprint depends on an external tool's schema.
+
+**ADRs**: 016, 017, 018, 019, 020. All five at decision time, before implementing code (CLAUDE.md mandate).
+
+**Cross-repo SHAs**: only `sarturko-maker/goose` touched this sprint (adeu is upstream — not a sibling repo we author). Sprint 9 commits: `d8aa529ec` (Phase 0-2 ADRs + RUNBOOK + schema), `39de117ba` (Phase 4 Commercial), `533e04e2b` (Phase 6 dogfood harness), `397bcc26e` (Phase 7 dogfood + verification), plus this close-out commit. No sibling-MCP repo changed.
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25.

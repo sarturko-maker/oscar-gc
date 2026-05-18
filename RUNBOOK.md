@@ -717,7 +717,7 @@ New apt packages: `python3-venv`, `python3-dev`, `libxslt1-dev`. No new system s
 
 ## Pending
 
-(none — Sprint 8 complete)
+(none — Sprint 9 complete; the four-item short-term goal is closed)
 
 ## Corrections
 
