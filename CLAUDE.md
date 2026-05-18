@@ -12,6 +12,7 @@ These rules govern HOW to write code in this project. `PROJECT.md` and `GOOSE_FO
 6. Relevant ADRs in `docs/adr/`
 7. `DEV_SETUP.md` — *if* you need to bootstrap or reproduce the dev environment. Reference material, not mandatory cold-start reading.
 8. `AGENTS.md` — upstream Goose's contributor guidance. Read once for context on upstream's conventions; our CLAUDE.md takes precedence for project-specific rules.
+9. `/srv/projects/LQdesign/` — design reference. Visual system (colour, type, spacing, components), HTML mockups, two CSS files. Read once per fresh session. Note: contains "LQ" branding from a sibling project; for Oscar GC we use the design language but not the LQ wordmark.
 
 ## The one goal (short-term, load-bearing)
 

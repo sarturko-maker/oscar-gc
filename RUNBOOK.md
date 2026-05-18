@@ -12,6 +12,10 @@ Capture every host-state change as it happens. No retroactive writes. Goal: a fr
 - `gh` CLI: installed + authenticated on VPS.
 - `/srv/projects/lq-ai-mirror.git` — pre-existing bare mirror from LQ-AI's manual-fork workaround. Not part of [Goose]; flagged in case anything scans `/srv/projects/` wholesale.
 
+## Captured (2026-05-18)
+
+- LQdesign reference repo cloned at `/srv/projects/LQdesign/` — separate clone, not a submodule.
+
 ## Build deps installed (Sprint 1, 2026-05-17)
 
 System libs per `BUILDING_LINUX.md` (Ubuntu 24.04):
