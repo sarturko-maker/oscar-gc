@@ -41,6 +41,10 @@ const PY_WHEELS_DIR = path.join(PY_DIR, 'wheels');
 const NODE_DIR = path.join(RESOURCES, 'node');
 const NODE_BIN = path.join(NODE_DIR, 'bin', 'node');
 const MCPS_DIR = path.join(RESOURCES, 'mcps');
+const SKILLS_DIR = path.join(RESOURCES, 'skills');
+// Sprint 11 (ADR-031, ADR-035): the curated in-house legal skill library
+// vendored from Anthropic's claude-for-legal lives at this repo path.
+const SKILLS_SOURCE = path.resolve(__dirname, '..', '..', '..', 'skills', 'in-house-legal');
 const CACHE_DIR = path.join(UI_DESKTOP, '.oscar-bundle-cache');
 
 // --- Helpers ------------------------------------------------------------
@@ -192,6 +196,31 @@ async function prepareMcps() {
   }
 }
 
+async function prepareSkills() {
+  console.log('--- prepareSkills ---');
+  if (!fs.existsSync(SKILLS_SOURCE)) {
+    throw new Error(`Bundled-skills source not found at ${SKILLS_SOURCE}`);
+  }
+  ensureDir(SKILLS_DIR);
+  const destLegal = path.join(SKILLS_DIR, 'in-house-legal');
+  fs.rmSync(destLegal, { recursive: true, force: true });
+  fs.cpSync(SKILLS_SOURCE, destLegal, { recursive: true });
+  // Count for provenance + visibility.
+  const skillCount = countSkillMd(destLegal);
+  console.log(`[skills] copied in-house-legal → ${destLegal} (SKILL.md count: ${skillCount})`);
+  return { destLegal, skillCount };
+}
+
+function countSkillMd(dir) {
+  let n = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) n += countSkillMd(p);
+    else if (entry.isFile() && entry.name === 'SKILL.md') n += 1;
+  }
+  return n;
+}
+
 // --- Main ---------------------------------------------------------------
 
 async function main() {
@@ -200,6 +229,7 @@ async function main() {
   await preparePython();
   await prepareNode();
   await prepareMcps();
+  const skills = await prepareSkills();
   console.log('Oscar GC bundle prep complete.');
   // Hash summary for build provenance.
   const summary = {
@@ -207,6 +237,7 @@ async function main() {
     node: { version: NODE_VERSION },
     adeu: { version: ADEU_VERSION },
     mcps: Object.keys(SIBLING_MCPS),
+    skills: { 'in-house-legal': { skill_md_count: skills.skillCount } },
     timestamp: new Date().toISOString(),
   };
   fs.writeFileSync(path.join(RESOURCES, 'BUNDLE.json'), JSON.stringify(summary, null, 2));

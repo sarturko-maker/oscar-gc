@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PracticeArea } from '../practiceAreas';
 
+export interface OscarUserProfilePracticeArea extends PracticeArea {
+  area_profile?: Record<string, string> | null;
+}
+
 export interface OscarUserProfile {
-  schema_version: 1;
+  schema_version: 1 | 2;
   completed_at: string;
   user: {
     name: string | null;
@@ -14,7 +18,7 @@ export interface OscarUserProfile {
     industry: string | null;
     size_band: string | null;
   };
-  practice_areas: PracticeArea[];
+  practice_areas: OscarUserProfilePracticeArea[];
   provider: {
     kind: string;
     model: string;

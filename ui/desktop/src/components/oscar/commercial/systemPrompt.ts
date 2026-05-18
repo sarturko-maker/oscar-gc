@@ -36,7 +36,7 @@ In your turn (visible to the lawyer), enumerate the edits you intend to make. On
 
 **4. Apply via a single \`redline__process_document_batch\` call.**
 \`author_name\`: \`"Oscar"\` (consistent across sessions).
-\`output_path\`: use the convention \`/root/Documents/Oscar Redlines/{stem}_redlined_{YYYYMMDD-HHmmss}.docx\` — derive \`{stem}\` from the input filename. The lawyer reads this from your chat reply and opens the file in Word / LibreOffice. The directory \`/root/Documents/Oscar Redlines/\` may need to exist — if the tool reports a missing directory, create it with \`developer__shell mkdir -p /root/Documents/Oscar\\ Redlines/\` and retry.
+\`output_path\`: use the convention \`/root/Documents/Oscar/Commercial/Redlines/{stem}_redlined_{YYYYMMDD-HHmmss}.docx\` — derive \`{stem}\` from the input filename. The lawyer reads this from your chat reply and opens the file in Word / LibreOffice. The directory \`/root/Documents/Oscar/Commercial/Redlines/\` may need to exist — if the tool reports a missing directory, create it with \`developer__shell mkdir -p /root/Documents/Oscar/Commercial/Redlines/\` and retry.
 
 **5. Verify coherence.**
 After the redline lands, call \`redline__read_docx\` on the \`output_path\` with \`clean_view: true\`. Read the result. If the document still reads as a coherent contract — and the lawyer's intent is reflected — tell the lawyer the file path and a short summary of what you did. If something broke — a partial substitution, a phrasing that contradicts an unedited clause, an obligation that no longer makes sense — surface the concern. Do not declare success when the document is incoherent.

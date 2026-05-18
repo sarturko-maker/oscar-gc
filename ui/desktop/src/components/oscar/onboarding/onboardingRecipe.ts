@@ -19,6 +19,10 @@ function resolveOnboardingMcp(resourcesRoot: string | null): string {
 }
 
 export function buildOnboardingRecipe(resourcesRoot: string | null): Recipe {
+  const envs: Record<string, string> = {};
+  if (resourcesRoot) {
+    envs.OSCAR_RESOURCES_ROOT = resourcesRoot;
+  }
   return {
     version: '1.0.0',
     title: 'Oscar GC Onboarding',
@@ -29,9 +33,11 @@ export function buildOnboardingRecipe(resourcesRoot: string | null): Recipe {
       {
         type: 'stdio',
         name: 'oscar-onboarding',
-        description: 'First-launch onboarding profile writer. One tool: finalize_profile.',
+        description:
+          'First-launch onboarding profile writer. Tools: finalize_profile, list_area_questions.',
         cmd: resolveNodeCmd(resourcesRoot),
         args: [resolveOnboardingMcp(resourcesRoot)],
+        envs,
         timeout: 30,
       },
     ],

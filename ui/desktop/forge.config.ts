@@ -10,6 +10,7 @@ let cfg = {
     'src/resources/python',
     'src/resources/node',
     'src/resources/mcps',
+    'src/resources/skills',
   ],
   icon: 'src/images/icon',
   name: 'Oscar-GC',

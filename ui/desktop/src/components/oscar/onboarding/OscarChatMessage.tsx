@@ -1,5 +1,6 @@
 import type { Message } from '../../../api';
 import { getTextAndImageContent } from '../../../types/message';
+import MarkdownContent from '../../MarkdownContent';
 
 interface Props {
   label: string;
@@ -19,7 +20,11 @@ export function OscarChatTurn({ label, body, variant, showCursor }: Props) {
     >
       <div className="oscar__chat-turn-label">{label}</div>
       <div className="oscar__chat-turn-body">
-        {body}
+        {variant === 'agent' ? (
+          <MarkdownContent content={body} className="oscar__chat-turn-markdown" />
+        ) : (
+          body
+        )}
         {showCursor && <span className="oscar__chat-cursor" aria-hidden="true" />}
       </div>
     </div>

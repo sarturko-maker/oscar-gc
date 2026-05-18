@@ -742,6 +742,51 @@ const resolveOscarResourcesRoot = (): string | null => {
   return null;
 };
 
+// Sprint 11 (ADR-031): expose the bundled in-house-legal skill library to
+// Goose's recursive skill walker at `~/.agents/skills/`. Done at app boot
+// because the postinst hook runs as root and doesn't know which user will
+// launch Oscar GC.
+const ensureBundledSkillsLink = (resourcesRoot: string | null): void => {
+  const source = resourcesRoot
+    ? path.join(resourcesRoot, 'skills', 'in-house-legal')
+    : '/srv/projects/goose/skills/in-house-legal';
+  if (!fsSync.existsSync(source)) {
+    log.warn('ensureBundledSkillsLink: source missing; skipping', { source });
+    return;
+  }
+  const targetParent = path.join(os.homedir(), '.agents', 'skills');
+  const target = path.join(targetParent, 'in-house-legal');
+  try {
+    fsSync.mkdirSync(targetParent, { recursive: true });
+    const existing = fsSync.lstatSync(target, { throwIfNoEntry: false });
+    if (existing) {
+      if (existing.isSymbolicLink() && fsSync.readlinkSync(target) === source) {
+        return;
+      }
+      if (existing.isSymbolicLink()) {
+        fsSync.unlinkSync(target);
+      } else {
+        log.warn(
+          'ensureBundledSkillsLink: target exists as non-symlink; leaving alone',
+          { target },
+        );
+        return;
+      }
+    }
+    fsSync.symlinkSync(source, target, 'dir');
+    log.info('ensureBundledSkillsLink: symlink created', { source, target });
+  } catch (err) {
+    log.warn('ensureBundledSkillsLink: failed', {
+      err: errorMessage(err, 'Unknown error'),
+      source,
+      target,
+    });
+  }
+};
+
+const oscarResourcesRoot = resolveOscarResourcesRoot();
+ensureBundledSkillsLink(oscarResourcesRoot);
+
 let appConfig = {
   GOOSE_DEFAULT_PROVIDER: defaultProvider,
   GOOSE_DEFAULT_MODEL: defaultModel,
@@ -754,7 +799,7 @@ let appConfig = {
   GOOSE_LOCALE: process.env.GOOSE_LOCALE || undefined,
   // If GOOSE_ALLOWLIST_WARNING env var is not set, defaults to false (strict blocking mode)
   GOOSE_ALLOWLIST_WARNING: process.env.GOOSE_ALLOWLIST_WARNING === 'true',
-  OSCAR_RESOURCES_ROOT: resolveOscarResourcesRoot() as string | null,
+  OSCAR_RESOURCES_ROOT: oscarResourcesRoot,
 };
 
 const windowMap = new Map<number, BrowserWindow>();
