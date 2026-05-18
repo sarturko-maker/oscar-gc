@@ -357,11 +357,11 @@ Second sibling MCP server, first recipe-scoped agent invocation from the desktop
 ### Sibling repo location
 
 ```
-/srv/projects/oscar-onboarding-mcp/   # local clone
-git@github.com:sarturko-maker/oscar-onboarding-mcp.git   # SSH remote — PUSH PENDING (see "Push pending" below)
+/srv/projects/oscar-onboarding-mcp/                       # local clone
+git@github.com:sarturko-maker/oscar-onboarding-mcp.git    # SSH remote (same key as goose fork)
 ```
 
-Local initial commit: `82266afce`. SDK pinned to `@modelcontextprotocol/sdk@=1.29.0`. Three sibling-repo ADRs (persistence-JSON, all-args-A-class, Apache 2.0) mirror the Sprint 5 sibling pattern.
+Initial commit: `82266afce`. Repo created public/Apache-2.0 via `gh repo create --public --source --remote=origin --push` at sprint close. Default remote was HTTPS; converted to SSH via `git remote set-url origin git@…` to match Sprint 5's sibling. SDK pinned to `@modelcontextprotocol/sdk@=1.29.0`. Three sibling-repo ADRs (persistence-JSON, all-args-A-class, Apache 2.0) mirror the Sprint 5 sibling pattern.
 
 ### Bootstrap order (matters on a fresh VPS)
 
@@ -462,28 +462,9 @@ kill $XVFB_PID
 
 No new apt packages, no new system services, no new daemons.
 
-### Push pending (one-shot action)
-
-Initial sibling-repo commit landed locally only. The classifier blocked `gh repo create sarturko-maker/oscar-onboarding-mcp --public --license apache-2.0` as a public-surface action without explicit per-invocation authorization. To push:
-
-```bash
-# 1. Create the public Apache-2.0 repo (one-shot, requires user approval).
-gh repo create sarturko-maker/oscar-onboarding-mcp \
-  --public \
-  --description "First-launch onboarding interview server. Writes Oscar GC's user profile JSON via a single finalize_profile MCP tool. Sibling of sarturko-maker/goose." \
-  --license apache-2.0
-
-# 2. Wire the remote and push.
-cd /srv/projects/oscar-onboarding-mcp
-git remote add origin git@github.com:sarturko-maker/oscar-onboarding-mcp.git
-git push -u origin main
-```
-
-The local repo is otherwise functional — desktop launches, recipe loads, tool is callable. Push is a discoverability + audit-trail concern; the dev VPS does not need it for the desktop binary to work.
-
 ## Pending
 
-- Push `oscar-onboarding-mcp` to GitHub (see "Push pending" above).
+(none — Sprint 6 complete)
 
 ## Corrections
 
