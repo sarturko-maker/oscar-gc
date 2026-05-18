@@ -8,8 +8,18 @@
  *                        greeting + initial screenshot, log app PID
  *   send <text>          fill input, click send, wait for agent reply to
  *                        stabilise, screenshot, log the turn
+ *                        (targets the onboarding Editorial chat selectors:
+ *                         .oscar__chat-input + .oscar__chat-send)
  *   click <selector>     click a CSS selector and screenshot the result
  *                        (used for post-onboarding Hub-banner dismiss)
+ *   goto <hash-route>    navigate the app to a hash route (e.g.
+ *                        '/practice/commercial'); screenshot after settle.
+ *                        Used to jump from Hub into a practice-area session
+ *                        without sidebar clicking.
+ *   pair-send <text>     same as send but targets BaseChat (post-onboarding)
+ *                        — [data-testid="chat-input"] + Enter. Waits for the
+ *                        assistant turn(s) to settle, screenshots.
+ *   pair-read            print BaseChat turns currently in the DOM
  *   screenshot <label>   capture a labelled screenshot without sending
  *   read                 print all chat turns currently in the DOM
  *   status               print app PID, profile-file presence, turn count
@@ -286,6 +296,94 @@ async function click(selector) {
   }
 }
 
+async function readPairTurns(page) {
+  try {
+    return await page.locator('[data-testid="message-container"]').allInnerTexts();
+  } catch {
+    return [];
+  }
+}
+
+async function goto(route) {
+  if (!route) throw new Error('empty route');
+  const normalized = route.startsWith('/') ? route : `/${route}`;
+  const { browser, page } = await connect();
+  try {
+    await page.evaluate((r) => {
+      window.location.hash = r;
+    }, normalized);
+    await page.waitForTimeout(1500);
+    const labelSlug = normalized
+      .replace(/[^A-Za-z0-9-]+/g, '-')
+      .toLowerCase()
+      .replace(/^-+|-+$/g, '');
+    await takeScreenshot(page, `goto-${labelSlug || 'route'}`);
+    console.log(`[goto] hash=${normalized} url=${page.url()}`);
+  } finally {
+    await browser.close();
+  }
+}
+
+async function pairSend(msg) {
+  if (!msg) throw new Error('empty message');
+  const { browser, page } = await connect();
+  try {
+    await page.waitForSelector('[data-testid="chat-input"]', { timeout: 10000 });
+    const before = await readPairTurns(page);
+
+    await page.fill('[data-testid="chat-input"]', msg);
+    await page.keyboard.press('Enter');
+    appendTurn('user', msg);
+
+    const startTs = Date.now();
+    let prev = { count: -1, lastLen: -1 };
+    let stableSince = Date.now();
+    while (Date.now() - startTs < AGENT_TIMEOUT_MS) {
+      await page.waitForTimeout(700);
+      const turns = await readPairTurns(page);
+      const count = turns.length;
+      const lastLen = count > 0 ? turns[count - 1].length : 0;
+      const changed = count !== prev.count || lastLen !== prev.lastLen;
+      if (changed) {
+        prev = { count, lastLen };
+        stableSince = Date.now();
+        continue;
+      }
+      const reachedReply = count >= before.length + 2;
+      if (reachedReply && Date.now() - stableSince >= STABILITY_MS) break;
+    }
+    await page.waitForTimeout(400);
+
+    const after = await readPairTurns(page);
+    const newAgent = after.slice(before.length + 1);
+    for (const t of newAgent) appendTurn('agent', t);
+
+    console.log('=== agent reply ===');
+    console.log(after[after.length - 1] || '(empty)');
+    console.log('=== end ===');
+    if (newAgent.length > 1) {
+      console.log(`[pair-send] note: ${newAgent.length} new agent turns captured`);
+    }
+    await takeScreenshot(page, 'pair-turn');
+  } finally {
+    await browser.close();
+  }
+}
+
+async function pairRead() {
+  const { browser, page } = await connect();
+  try {
+    const turns = await readPairTurns(page);
+    console.log(`[pair-state] turns=${turns.length}`);
+    for (let i = 0; i < turns.length; i++) {
+      console.log(`--- turn ${i + 1} ---`);
+      console.log(turns[i]);
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
 async function status() {
   const pid = fs.existsSync(PID_FILE) ? fs.readFileSync(PID_FILE, 'utf8').trim() : null;
   let alive = false;
@@ -331,6 +429,9 @@ const action = {
   launch: () => launch(arg || 'primary'),
   send: () => sendMessage(arg),
   click: () => click(arg),
+  goto: () => goto(arg),
+  'pair-send': () => pairSend(arg),
+  'pair-read': () => pairRead(),
   read: () => readState(),
   screenshot: () => screenshot(arg),
   status: () => status(),
@@ -338,7 +439,7 @@ const action = {
 }[cmd];
 
 if (!action) {
-  console.error('usage: launch <session> | send <text> | click <selector> | read | screenshot <label> | status | quit');
+  console.error('usage: launch <session> | send <text> | click <selector> | goto <route> | pair-send <text> | pair-read | read | screenshot <label> | status | quit');
   process.exit(2);
 }
 
