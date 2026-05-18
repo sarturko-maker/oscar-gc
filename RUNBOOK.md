@@ -462,9 +462,85 @@ kill $XVFB_PID
 
 No new apt packages, no new system services, no new daemons.
 
+## Sprint 7 — Dogfood capture (2026-05-18, lq-vps)
+
+End-to-end harness for the "CC as the user" pattern. Drives the packaged Oscar GC binary on Xvfb through Playwright/CDP, types persona answers turn-by-turn, screenshots after every agent reply, persists a JSON sidecar of all turns, and lets the canonical transcript come from goosed's session DB after the fact.
+
+### Entry points
+
+- `scripts/dogfood/dogfood.sh` — bash wrapper. Sources `MINIMAX_API_KEY` from `/srv/projects/lq-ai-agentic/.env`, exports `GOOSE_PROVIDER=minimax GOOSE_MODEL=MiniMax-M2.5 GOOSE_DISABLE_KEYRING=1`, ensures Xvfb is up on `:99`, then delegates to the Node driver.
+- `ui/desktop/scripts/dogfood-driver.mjs` — Node driver. Lives under `ui/desktop/scripts/` (not `scripts/dogfood/`) so ESM `import 'playwright'` resolves through `ui/node_modules/`.
+
+### Subcommands
+
+| Subcommand | What it does |
+|---|---|
+| `dogfood.sh launch <session>` | Reset state dir, spawn the packaged binary with `ENABLE_PLAYWRIGHT=true PLAYWRIGHT_DEBUG_PORT=9223`, wait for chat input, capture greeting screenshot, log app pid. |
+| `dogfood.sh send "<text>"` | Fill the input, click send, poll for response stabilisation, append turns to `/tmp/oscar-dogfood/turns.json`, screenshot. Detects chat unmounting (session-complete signal). |
+| `dogfood.sh screenshot <label>` | Take a labelled screenshot without sending. |
+| `dogfood.sh read` | Print every chat turn currently in the DOM. |
+| `dogfood.sh status` | Print app pid, profile-file presence, turn count, next screenshot number. |
+| `dogfood.sh quit` | Take a final-state screenshot, SIGTERM the app. |
+
+### State files (under `/tmp/oscar-dogfood/`)
+
+- `app.pid` — current spawned binary's pid
+- `screenshot-counter` — next screenshot number (per session)
+- `session-name` — current session label
+- `turns.json` — accumulated `{role, text, ts}` turns (DOM-side; backup transcript)
+- `app.log`, `app.err.log` — captured stdout/stderr of the spawned binary
+
+Screenshots land in `docs/dogfood/sprint-N/screenshots/<session>/NN-label.png`.
+
+### Reset between sessions
+
+```
+# profile reset (re-triggers onboarding on next launch)
+rm -f ~/.config/oscar/profile.json
+```
+
+The goosed session DB at `~/.local/share/goose/sessions/sessions.db` can be left alone — each new conversation gets a fresh row. Identify the dogfood session post-hoc by `created_at` or by the auto-generated `name`.
+
+### Extracting the canonical transcript
+
+The DOM-side `turns.json` is a backup; the source of truth is the goosed session DB (includes the LLM's emitted closing message even when the UI didn't render it, plus thinking traces and tool blocks). Use a one-shot Python script:
+
+```python
+import sqlite3, json
+conn = sqlite3.connect('/root/.local/share/goose/sessions/sessions.db')
+c = conn.cursor()
+c.execute("SELECT id, name FROM sessions ORDER BY created_at DESC LIMIT 5")
+print(c.fetchall())                       # identify your session id
+c.execute("SELECT role, content_json, timestamp FROM messages "
+          "WHERE session_id=? ORDER BY id", ('20260518_11',))
+for role, content_json, ts in c.fetchall():
+    print(role, ts, json.loads(content_json))
+```
+
+`content_json` is a JSON array of content blocks: `{type:"text"}`, `{type:"thinking"}`, `{type:"toolRequest"}`, `{type:"toolResponse"}`. Skip thinking blocks when rendering for humans.
+
+### Greeting note
+
+The onboarding view's greeting is rendered client-side from `systemPrompt.ts:GREETING` and is never sent through goosed. The session DB therefore starts at the user's first reply. Prepend the hardcoded greeting manually when producing report transcripts.
+
+### Cold-relaunch test
+
+After `finalize_profile` writes the profile, quit the app and call `launch <label>` again with a fresh label. The driver will fail waiting for `.oscar__chat-input` (timeout 30 s) — that timeout *is* the success signal: chat is gone because onboarding correctly did not re-trigger. Verify with `dogfood.sh screenshot <label>` and `dogfood.sh read` (which will report `chatInput=false turns=0`).
+
+### Footprint after Sprint 7
+
+| Artefact | Footprint |
+|---|---|
+| `scripts/dogfood/dogfood.sh` | <1 KB |
+| `ui/desktop/scripts/dogfood-driver.mjs` | ~11 KB |
+| `docs/dogfood/sprint-7/` (report + transcripts + 22 PNGs) | ~10 MB |
+| `/tmp/oscar-dogfood/` (state, ephemeral) | <1 MB |
+
+No new apt packages, no new system services. Playwright reused from the existing `ui/node_modules/`.
+
 ## Pending
 
-(none — Sprint 6 complete)
+(none — Sprint 7 complete)
 
 ## Corrections
 

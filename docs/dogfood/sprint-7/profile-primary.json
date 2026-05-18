@@ -1,0 +1,56 @@
+{
+  "completed_at": "2026-05-18T14:41:00Z",
+  "corporate": {
+    "industry": "Industrial electrical and automation components distribution",
+    "name": "Meridian Power Components",
+    "size_band": "201-1000"
+  },
+  "practice_areas": [
+    {
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "id": "commercial",
+      "name": "Commercial",
+      "source": "default"
+    },
+    {
+      "body": "Counterparty profiles, claims, and dispute memory live here. Pulls contract context from Commercial.",
+      "id": "commercial-disputes",
+      "name": "Commercial Disputes",
+      "source": "default"
+    },
+    {
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "id": "employment",
+      "name": "Employment",
+      "source": "default"
+    },
+    {
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "id": "privacy",
+      "name": "Privacy",
+      "source": "default"
+    },
+    {
+      "body": "Regulators, obligations, and compliance memory live here. Instructions pull obligation detail and search filings.",
+      "id": "regulatory",
+      "name": "Regulatory",
+      "source": "default"
+    },
+    {
+      "body": "Channel partners, reseller agreements, and partner memory live here. Instructions pull partner detail and search templates and approval paths.",
+      "id": "channel-reseller",
+      "name": "Channel & Reseller",
+      "source": "user-added"
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  },
+  "schema_version": 1,
+  "user": {
+    "name": "Daniel",
+    "role": "counsel",
+    "role_label": "Commercial Counsel"
+  }
+}

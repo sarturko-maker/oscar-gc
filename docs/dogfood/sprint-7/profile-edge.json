@@ -1,0 +1,98 @@
+{
+  "completed_at": "2026-05-18T14:48:00Z",
+  "corporate": {
+    "industry": null,
+    "name": null,
+    "size_band": null
+  },
+  "practice_areas": [
+    {
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "id": "commercial",
+      "name": "Commercial",
+      "source": "default"
+    },
+    {
+      "body": "Counterparty profiles, claims, and dispute memory live here. Pulls contract context from Commercial.",
+      "id": "commercial-disputes",
+      "name": "Commercial Disputes",
+      "source": "default"
+    },
+    {
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "id": "corporate",
+      "name": "Corporate",
+      "source": "default"
+    },
+    {
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "id": "employment",
+      "name": "Employment",
+      "source": "default"
+    },
+    {
+      "body": "Employee parties, grievances, and tribunal memory live here. Pulls employment context from Employment.",
+      "id": "employment-disputes",
+      "name": "Employment Disputes",
+      "source": "default"
+    },
+    {
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "id": "privacy",
+      "name": "Privacy",
+      "source": "default"
+    },
+    {
+      "body": "Inventors, marks, and IP-portfolio memory live here. Instructions pull profile detail and search filings.",
+      "id": "ip",
+      "name": "IP",
+      "source": "default"
+    },
+    {
+      "body": "Counterparty profiles, infringement claims, and IP-litigation memory live here. Pulls portfolio context from IP.",
+      "id": "ip-disputes",
+      "name": "IP Disputes",
+      "source": "default"
+    },
+    {
+      "body": "Regulators, obligations, and compliance memory live here. Instructions pull obligation detail and search filings.",
+      "id": "regulatory",
+      "name": "Regulatory",
+      "source": "default"
+    },
+    {
+      "body": "Regulator parties, enforcement actions, and regulatory-dispute memory live here. Pulls obligation context from Regulatory.",
+      "id": "regulatory-disputes",
+      "name": "Regulatory Disputes",
+      "source": "default"
+    },
+    {
+      "body": "Products, releases, and product-agreement memory live here. Instructions pull product detail and search related contracts.",
+      "id": "product",
+      "name": "Product",
+      "source": "default"
+    },
+    {
+      "body": "Models, datasets, and AI-governance memory live here. Instructions pull model detail and search risk artefacts.",
+      "id": "ai-governance",
+      "name": "AI Governance",
+      "source": "default"
+    },
+    {
+      "body": "Entities, board records, and statutory-filing memory live here. Instructions pull entity detail and search minutes and resolutions.",
+      "id": "cosec",
+      "name": "CoSec",
+      "source": "default"
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  },
+  "schema_version": 1,
+  "user": {
+    "name": null,
+    "role": "other",
+    "role_label": "lawyer"
+  }
+}
