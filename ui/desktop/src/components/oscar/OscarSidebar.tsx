@@ -6,11 +6,9 @@ export function OscarSidebar() {
   const { pathname } = useLocation();
 
   return (
-    <aside className="oscar-terminal oscar-terminal__sidebar flex flex-col w-full h-full min-h-0">
-      <nav className="oscar-terminal__sidebar-list flex-1 overflow-y-auto">
-        <div className="oscar-terminal__eyebrow oscar-terminal__sidebar-eyebrow">
-          PRACTICE // AREAS
-        </div>
+    <aside className="oscar oscar__sidebar flex flex-col w-full h-full min-h-0">
+      <nav className="oscar__sidebar-list flex-1 overflow-y-auto">
+        <div className="oscar__eyebrow oscar__sidebar-eyebrow">Practice Areas</div>
         {PRACTICE_AREAS.map((area, idx) => {
           const path = `/practice/${area.id}`;
           const isActive = pathname === path;
@@ -19,11 +17,11 @@ export function OscarSidebar() {
               key={area.id}
               to={path}
               className={cn(
-                'oscar-terminal__sidebar-item',
-                isActive && 'oscar-terminal__sidebar-item--active'
+                'oscar__sidebar-item',
+                isActive && 'oscar__sidebar-item--active'
               )}
             >
-              <span className="oscar-terminal__sidebar-item-num">
+              <span className="oscar__sidebar-item-num">
                 {String(idx + 1).padStart(2, '0')}
               </span>
               {area.name}

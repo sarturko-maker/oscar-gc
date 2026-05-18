@@ -7,17 +7,24 @@ export default function PracticeAreaPlaceholder() {
 
   if (!area) {
     return (
-      <div className="oscar-terminal flex flex-col items-center justify-center h-full min-h-0 px-8 text-center">
-        <p className="oscar-terminal__placeholder-body">Unknown practice area: {areaId}</p>
+      <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
+        <div className="flex flex-col max-w-3xl flex-1 justify-center">
+          <p className="oscar__placeholder-body">Unknown practice area: {areaId}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="oscar-terminal flex flex-col items-center justify-center h-full min-h-0 px-8 text-center">
-      <span className="oscar-terminal__eyebrow">// {area.name.toUpperCase()}</span>
-      <h1 className="oscar-terminal__placeholder-title">{area.name} — placeholder.</h1>
-      <p className="oscar-terminal__placeholder-body max-w-2xl">{area.body}</p>
+    <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
+      <div className="flex flex-col max-w-3xl flex-1 justify-center">
+        <div className="oscar__eyebrow">{area.name}</div>
+        <h1 className="oscar__placeholder-title">
+          {area.name}{' '}
+          <span className="oscar__placeholder-title-em">— placeholder.</span>
+        </h1>
+        <p className="oscar__placeholder-body">{area.body}</p>
+      </div>
     </div>
   );
 }

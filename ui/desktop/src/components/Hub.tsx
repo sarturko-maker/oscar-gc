@@ -6,11 +6,17 @@ export default function Hub({
   setView: (view: View, viewOptions?: ViewOptions) => void;
 }) {
   return (
-    <div className="oscar-terminal flex flex-col items-center justify-center h-full min-h-0">
-      <div className="oscar-terminal__title-glow">
-        <span className="oscar-terminal__eyebrow">OSCAR // GENERAL COUNSEL</span>
-        <h1 className="oscar-terminal__title">Oscar GC</h1>
-        <p className="oscar-terminal__subtitle">In-house legal agent platform</p>
+    <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
+      <div className="flex flex-col max-w-2xl flex-1 justify-center">
+        <div className="oscar__eyebrow">Office of the General Counsel</div>
+        <h1 className="oscar__hero">
+          Oscar <span className="oscar__hero-em">GC.</span>
+        </h1>
+        <hr className="oscar__rule" />
+        <p className="oscar__subtitle">
+          In-house legal agent platform. Practice areas as primary units,
+          memory as the spine.
+        </p>
       </div>
     </div>
   );
