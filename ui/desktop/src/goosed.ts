@@ -303,11 +303,12 @@ export const startGoosed = async (options: StartGoosedOptions): Promise<GoosedRe
   const safeSpawnOptions = {
     ...spawnOptions,
     env: Object.fromEntries(
-      Object.entries(spawnOptions.env).map(([k, v]) =>
-        k.toLowerCase().includes('secret') || k.toLowerCase().includes('key')
+      Object.entries(spawnOptions.env).map(([k, v]) => {
+        const lower = k.toLowerCase();
+        return lower.includes('secret') || lower.includes('key') || lower.includes('token')
           ? [k, '[REDACTED]']
-          : [k, v]
-      )
+          : [k, v];
+      })
     ),
   };
   logger.info('Spawn options:', JSON.stringify(safeSpawnOptions, null, 2));

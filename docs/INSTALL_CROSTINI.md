@@ -56,14 +56,42 @@ Run `sudo apt --fix-broken install` to let APT resolve any pending system librar
 **The redline output doesn't open / Files app says "no application".**
 Crostini ships LibreOffice optionally; if you don't have it, install with `sudo apt install libreoffice`. Or use ChromeOS's built-in Office Editor by sharing the file out to Drive.
 
-**I want to launch from a terminal (e.g., to see logs) and `oscar-gc` crashes with a Gtk widget assertion.**
-The launcher in the ChromeOS App Drawer applies Crostini-specific flags automatically via the `.desktop` entry. From a terminal, run with the same flags:
+**The app crashed — where can I read the renderer logs?**
+The ChromeOS App Drawer launcher writes both stdout and stderr (including Chromium's renderer/GPU/main-process diagnostics) to:
 
-```sh
-env LIBGL_ALWAYS_SOFTWARE=1 oscar-gc --ozone-platform=x11 --disable-gpu --disable-software-rasterizer
+```
+~/.cache/oscar-gc/launch.log
 ```
 
-ADR-025 in the repo (`docs/adr/025-crostini-launch-flags.md`) explains the flag choices.
+Open the Terminal app and:
+
+```sh
+cat ~/.cache/oscar-gc/launch.log
+```
+
+Each launch starts with a `=== <timestamp> launch ===` header so you can find the most recent one. Share the lines around any `Gtk`, `Ozone`, `gpu`, `sandbox`, or `panic` message when reporting an issue.
+
+To redirect logs elsewhere, set `OSCAR_GC_LOG_DIR` in your environment (e.g., `~/.profile`) before launching.
+
+**I want to launch from a terminal directly (without going through the App Drawer launcher).**
+The launcher wrapper at `/usr/lib/oscar-gc/oscar-gc-launcher.sh` is what the App Drawer invokes. To run it directly:
+
+```sh
+/usr/lib/oscar-gc/oscar-gc-launcher.sh
+```
+
+If you'd rather invoke the bare binary (e.g., to override flags), the equivalent incantation is:
+
+```sh
+env LIBGL_ALWAYS_SOFTWARE=1 oscar-gc \
+  --ozone-platform=x11 \
+  --disable-gpu \
+  --disable-software-rasterizer \
+  --enable-logging=stderr --v=1 \
+  2>&1 | tee /tmp/oscar-gc-manual.log
+```
+
+ADR-025 and ADR-026 in the repo (`docs/adr/`) explain the flag choices and the launcher wrapper.
 
 ## Uninstall
 

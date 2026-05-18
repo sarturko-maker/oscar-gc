@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Oscar GC
-Exec=env LIBGL_ALWAYS_SOFTWARE=1 /usr/lib/oscar-gc/oscar-gc --ozone-platform=x11 --disable-gpu --disable-software-rasterizer %U
+Exec=/usr/lib/oscar-gc/oscar-gc-launcher.sh %U
 Icon=/usr/share/pixmaps/oscar-gc.png
 Terminal=false
 Type=Application
