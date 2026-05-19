@@ -2,28 +2,36 @@
 
 Append-only. Format: `- **Topic** (origin sprint, optional target sprint) — one-line description.` Move to `SPRINT_LOG.md` when picked up.
 
-## Sprint 14 candidates (anchor decisions)
+## Sprint 14 — shipped, see SPRINT_LOG.md
 
-- **Per-area NewMatterDialog (in-house framing)** (Sprint 13 dogfood P2-B, P2-E) — the current dialog assumes external-counsel framing (Client / Counterparty / Matter type). For in-house Commercial, "Client" defaults to the lawyer's own company and the relevant party is a supplier / vendor / consumer / BU. For Privacy it's data subject / vendor / regulator / internal product. Each of the 13 areas needs its own field set, labels, and matter_type enum. The `client` / `counterparty` / `matter_type` fields are currently LLM-context only (no analytics consumer), so the schema is free to change. Load-bearing Sprint 14 anchor. Full discussion: `docs/dogfood/sprint-13/findings.md` §P2-B.
-- **Matter-list re-access affordance** (Sprint 13 dogfood P2-C) — no back-button / breadcrumb / "All matters" link in the chat surface; the only re-entry is clicking the practice area in the sidebar a second time. Add `← All matters` to the chat header (mirroring `BackButton.tsx` pattern).
-- **Higher-level grouping above matter** (Sprint 13 dogfood P2-D) — real in-house workload has multiple matters per counterparty / vendor / BU. Decide: separate "stakeholder" level above matter (more structure) vs. tag on matter + UI grouping (less). Recommend tag-and-group first.
-- **Forge sidebar slot alignment** (Sprint 13 dogfood P2-A) — Forge clashes with the three-dashes element above the practice-area list. CSS spacing fix in `OscarSidebar.tsx` header zone.
+Closed by Sprint 14 (commits `214bc10e6` Unit 1 + `0ebe0d238` Unit 2):
+- Per-area NewMatterDialog (P2-B, P2-E) — ADR-047 schema v2 + practiceAreaShapes.ts + config-driven dialog.
+- Matter-list re-access (P2-C) — MatterBackButton wraps existing BackButton, mounted in BaseChat.
+- Higher-level grouping (P2-D) — stakeholder tag-and-group via case-insensitive header in MattersLanding.
+- Forge sidebar alignment (P2-A) — 56px Menu-trigger clearance moved from list to header.
+- Bundled-MCP spawn-boot smoke test (P0-A lesson) — ADR-049 smokeTestBundledMcps in prepare-oscar-bundle.js.
+
+## Sprint 15 candidates (anchor decisions)
+
+- **Adeu MCP App diff preview** (Sprint 12 plan deferral; unblocked by Sprint 13 ADR-045; Sprint 14 plan-mode design captured at `/root/.claude/plans/brief-sprint-14-immutable-diffie.md` §"5. Adeu MCP App diff preview" — deferred from Sprint 14 due to scope reality). Bounded work: author `docs/redline/adeu-1.6.9-redline-preview-ui.patch` adding `commit: bool = False` to `process_document_batch` + new `commit_document_batch` tool + new `redline_preview_ui` Jinja resource (mirrors existing `markdown_ui.py` pattern adeu already ships); wire postinst.sh + prepare-oscar-bundle.js; add `commit_document_batch` to `commercialRecipe.ts` available_tools; reserved ADR-048. Brief-vs-reality flag from Sprint 14 plan-mode: the `goose-cowork-comparison` / gotoHuman cowork pattern reference doesn't exist in the codebase — design grounded in adeu's existing native MCP-Apps implementation instead.
 - **Audit-log infrastructure** (Sprint 12, ADR-043 hand-off) — `privileged: boolean` is the load-bearing field; audit log reads it, agents don't condition on it. Log shape, retention, integrity-verification surface need an ADR.
 - **SECURITY.md / threat-model writeup** (Sprint 12 plan deferral) — formalises what ADRs 029/042 imply. Targets in-house lawyer audience.
-- **Adeu MCP App diff preview** (Sprint 12 plan deferral; **unblocked by Sprint 13 ADR-045; promoted into Sprint 14 brief**) — render proposed redlines in chat with Apply/Edit/Reject affordances; disk write happens on Apply, not on tool execute. Per `goose-cowork-comparison` gotoHuman pattern. Now that adeu produces word-shape OOXML, the diff-preview pattern is meaningful — pre-Sprint-13 wholesale wraps would have made review unusable.
-- **Bundled-MCP spawn-boot smoke test** (Sprint 13 P0-A lesson) — the duplicate-shebang regression survived the bundle audit (which only greps for outbound-call shapes) and only surfaced in user dogfood. Add a Sprint 14 pre-publish step: spawn every bundled MCP under the bundled Node, expect the MCP-stdio handshake line on stderr, timeout-and-pass after a few seconds.
 - **Bespoke Commercial Disputes recipe** (Sprint 12 plan deferral) — Sprint 12 ships Disputes via the generic builder (oscar-fs only). Need decision: redline-like tool for disputes work, or different substantive scope?
 - **"## Matter workspaces" boilerplate cleanup** (Sprint 12 Phase 6 deferral) — 48 substantive bundled skills carry rotted Sprint-11-stub-era prose. Top of Mind injection compensates behaviourally, but a clean orchestrator pass updates the boilerplate to assume always-on matter mode for in-house.
 - **Per-plugin state-file references in 16 skills** (Sprint 12 Phase 6 deferral) — references to `~/.config/oscar/state/<plugin>/matters/_log.yaml`, `gap-tracker.yaml`, `comment-tracker.yaml` etc. These are practice-level (not matter-scoped) state files. Decide: implement the state files, or rewrite the skills.
 - **Sprint 9 P1/P2 commercial system-prompt polish — partially closed by Sprint 13** (Sprint 9 carry) — Markdown emphasis discipline still relies on the existing "Things you never do" rule (Sprint 9 baseline); defined-term capitalisation + Clause 8 mutuality reminder remain open. Sprint 13's preserve discipline (ADR-046) is the structural pickup; the specific defined-term + mutuality polish is unaddressed.
 - **Pre-Sprint-12 session migration** (Sprint 12 plan deferral) — only if Arturs's pre-Sprint-12 dogfood sessions need surfacing as matters. Explicit non-goal in Sprint 12.
 - **adeu upstream PR follow-through** (Sprint 13 ADR-045 deletion criterion) — file the word-diff-on-batch-path change against adeu's repo, recommending an opt-in `granularity: 'word' | 'span'` parameter. When merged + released, repin `ADEU_VERSION` in `prepare-oscar-bundle.js`, delete the patch-copy/apply steps + the `.patch` file.
-- **TypeScript `window.electron` type drift cleanup** (Sprint 13 incidental finding) — `pnpm run typecheck` surfaces 202 pre-existing TS errors caused by partial type override of `window.electron` since Sprint 12's matters IPC work. Properties like `startMesh`, `stopMesh`, `getSetting`, `setSetting`, `openExternal`, `getPathForFile`, etc. exist on the runtime object but are missing from the type def. Run lint cleanly before next Sprint touches preload.ts.
+- **TypeScript `window.electron` type drift cleanup** (Sprint 13 incidental finding — partially closed Sprint 14) — Sprint 14 removed the shadow `declare global` in `useMatters.ts` that was hiding the canonical preload `ElectronAPI` shape, and typed the matters IPC return values properly. `pnpm exec tsc --noEmit` is now clean. The drift was self-inflicted by useMatters.ts redeclaring `window.electron` as a sub-type; preload.ts is now the single source of truth. Closed.
 
-## Sprint 15 candidates
+## Sprint 15+ candidates
 
 - **Anthropic claude-for-legal managed-agent-cookbooks** (Sprint 11 deferral) — scheduled background agents. Re-vendoring pattern from Sprint 11 likely applies.
 - **Multi-provider Inference Gateway** (Sprint 12 plan deferral) — when Oscar GC goes beyond MiniMax. LQ-AI gateway pattern banked.
+- **Per-area kind vocabulary sanity-check** (Sprint 14 plan-mode open item) — `practiceAreaShapes.ts` ships best-guesses for the 13 area kind enums. Phase 7 dogfood is where Arturs reviews each list and we iterate. Config-only edits — no schema change.
+- **Counterparty role list refinement per area** (Sprint 14 plan-mode open item) — likewise; the 6-role Commercial set, the 4-role Disputes set, etc. are first-draft.
+- **Privileged-by-default kinds confirmation** (Sprint 14 plan-mode open item) — Sprint 14 defaults `privileged: true` for grievance/investigation/disciplinary/exit, breach, regulator inquiry, FTO opinions, all `-disputes` areas. Confirm during dogfood.
+- **First-class stakeholder entity** (Sprint 14 plan-mode deferral) — Sprint 14 ships tag-and-group; promote to first-class entity with profile document if the stakeholder-level memory ("Acme is high-risk; always escalate") becomes load-bearing across multi-matter stakeholder relationships.
 
 ## Sprint 15+ structural revisits
 

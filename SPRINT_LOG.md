@@ -14,6 +14,50 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 14 — In-house framing for matters (closed 2026-05-19, commit `0ebe0d238`)
+
+**Goal**: redesign the matter-create flow so opening it in any of the 13 practice areas asks the questions an in-house lawyer would expect, in their vocabulary. Plus four adjacent items the Sprint 13 Crostini dogfood surfaced. Plan at `/root/.claude/plans/brief-sprint-14-immutable-diffie.md` (full plan-mode design including the deferred Workstream 5 captured there).
+
+**Built** — two landable units on `main`, three ADRs at decision time, six exit criteria met:
+
+- **Unit 1** (`214bc10e6`) — Forge sidebar alignment fix (P2-A) + bundled-MCP spawn-boot smoke test (P0-A class lesson, ADR-049). The header now carries the 56px Menu-trigger clearance that previously sat on the practice-area list (Sprint 13 dogfood: "Forge sits just below the three dashes at the top and clashes" — before/after screenshots in `docs/screenshots/sprint-14/forge-{before,after}.png`). `smokeTestBundledMcps` in `prepare-oscar-bundle.js` spawns each bundled MCP under the bundled Node, watches stderr for a per-MCP ready-line regex (oscar-fs / oscar-memory / oscar-onboarding), 3-second timeout, throws from `main()` on failure — Sprint 13's duplicate-shebang regression would now fail the .deb build before electron-forge make. Failure path verified by synthetic break: `process exited before ready line (code=1, signal=null)` with `SyntaxError` in `stderr_tail`. Smoke results live in `BUNDLE.json#smoke_test` for provenance.
+
+- **Unit 2** (`0ebe0d238`) — Matter schema v2 (ADR-047, load-bearing anchor): closes Sprint 13 dogfood findings P2-B (Client/Counterparty assumes external-counsel framing), P2-C (no matter-list back-affordance from chat), P2-D (no higher-level grouping above matter), P2-E (Privacy dialog mental-model mismatch — folded into P2-B).
+  - **Schema reshape**. `client` / `counterparty` / `matter_type` dropped; replaced by `subject {type, label}` (15 typed subject types), `counterparty {role, name} | null` with typed PartyRole enum (21 roles), area-typed `kind` (free-form at schema layer, narrowed per area at intake), sparse `extras` map (≤32 string keys; bounded kind-conditional fields), `stakeholder: string | null` grouping tag, explicit `area_id` and `working_dir`. Bumped to `schema_version: 2`; v1 registries renamed to `matters.v1.json.bak` on first read and treated as empty (pre-pilot license per brief). Zod-validated at IPC boundary in `oscar:matters:create`, replacing the hand-rolled `typeof` checks from Sprint 12.
+  - **Per-area config, one renderer**. New `practiceAreaShapes.ts` declares a `PracticeAreaShape` per area id (all 13 keyed). Five family templates emerge from the data (Contract / Person / Regulator-Obligation / Internal-asset / Event-shaped) — labels, kind enums, role enums, conditional extras, privileged defaults all data-driven. `NewMatterDialog.tsx` rewritten as one config-driven renderer with generic primitives (text, combobox autocomplete, role-typed dropdown, conditional extras block). No per-area JSX components.
+  - **Split disk layout**. Operational state stays at `~/.config/oscar/state/<area-id>/{matters.json, matters/<slug>/{history.md, notes.md, session.json}}`; content moves to `~/Documents/Oscar GC/<Area>/<Matter>/{matter.md, outputs/, source documents}` — Finder-discoverable, drag-drop-friendly, cloud-sync-compatible. Recipe widens `oscar-fs` allowed-directories for an active matter to include both folders; `OSCAR_MATTER_DIR` points at the working folder. Plan-mode decision after Arturs's "Split (recommended)" pick in plan-mode `AskUserQuestion`.
+  - **Tag-and-group stakeholder grouping**. `MattersLanding` groups rows by case-insensitive stakeholder header with row counts; "Other" bucket for null-stakeholder matters. Dialog stakeholder field is a `<datalist>`-backed combobox autocompleting from prior values in the same area. Plan-mode decision after Arturs's "Tag-and-group (recommended start)" pick — defers first-class stakeholder entity until/unless a stakeholder-level profile document becomes load-bearing.
+  - **Matter back-affordance**. New `MatterBackButton` wraps existing `ui/BackButton.tsx` (no new pattern invented per brief). New IPC `oscar:matters:lookup-session(sessionId)` scans area registries for the session_id → matter binding. Button mounts top-left in `BaseChat`, renders only when matter-bound, label "All matters", click navigates to `/practice/{areaId}` + clears Top of Mind so the next matter isn't auto-anchored. Mouse back-button works for free via BackButton's existing IPC listener.
+  - **Top of Mind**. `renderTomActiveMatter` rewritten with adaptive template + single `LABELS` dictionary (`matterLabels.ts`). Empty sections omitted; labels read in in-house vocabulary (Employee/Subject/Vendor/Entity, not Client/Counterparty). The agent's first-turn response reaches for the right framing as a result.
+  - **IPC types**. Preload's `matters` block returns `MatterEntry` / `NewMatterInput` (typed), not `unknown` — canonical Window.electron shape lives in `preload.ts`; `useMatters.ts` no longer redeclares a shadow type that was masking the rest of the renderer's `window.electron.*` callsites.
+  - Screenshots: 4 representative practice-area landings captured (commercial, privacy, employment, commercial-disputes) at `docs/screenshots/sprint-14/practice-*.png`. Per-area dialog visual sign-off lands in Phase 7 dogfood (exit gate: "yes, that's how I'd describe a matter in my area").
+
+**Plan-mode discoveries** — three brief-vs-reality flags caught before implementation:
+- The brief and `TODO.md` reference `goose-cowork-comparison` / gotoHuman cowork pattern as the upstream reference for Workstream 5 (adeu MCP App preview). Plan-mode found no such doc in the codebase — only `documentation/docs/mcp/gotohuman-mcp.md` (the upstream community human-in-the-loop MCP, not an Oscar architectural pattern). Workstream 5 design grounded in adeu's existing native MCP-Apps Jinja-resource implementation (`mcp_components/resources/markdown_ui.py` + `templates/markdown_ui.html` pattern, applied to `read_docx` today); preview UI for `process_document_batch` is the narrow gap.
+- The plan-mode `AskUserQuestion` collected two architectural decisions from Arturs that shaped Unit 2 (disk layout = Split; grouping = Tag-and-group).
+- Both Plan agents (schema-first + UX-first perspectives) converged independently on the `subject + counterparty? + kind + extras + stakeholder` abstraction — the convergence was a strong signal that the shape is right.
+
+**Deferred to Sprint 15** (per brief, "What's NOT in this sprint" + scope reality):
+
+- **Workstream 5 — Adeu MCP App diff preview (carry-forward)**. Plan-mode design is captured end-to-end in `/root/.claude/plans/brief-sprint-14-immutable-diffie.md` §"5. Adeu MCP App diff preview". The work is bounded — extend adeu's existing native MCP-Apps pattern (the gap is narrow: `process_document_batch` lacks the `meta={"ui": {"resourceUri": ...}}` decoration that `read_docx` already has). The Sprint 15 unit is: author `docs/redline/adeu-1.6.9-redline-preview-ui.patch` adding `commit: bool = False` parameter + new `commit_document_batch` tool + new `redline_preview_ui` Jinja resource; wire postinst.sh + prepare-oscar-bundle.js; add `commit_document_batch` to `commercialRecipe.ts` available_tools; write ADR-048. Substantial enough to be its own ship — deferred so Unit 2 (the load-bearing anchor) lands clean for dogfood ahead of the preview UI iteration.
+- **Audit log infrastructure** (Sprint 15 candidate per Sprint 13 carry).
+- **gotoHuman / cowork pattern references** in the codebase need clean-up — informational flag, not blocking.
+
+**Carry-forwards from Sprint 13 closed**:
+- P0-A class lesson → ADR-049 spawn-boot smoke test ships in Unit 1.
+- P2-A Forge alignment → fixed in Unit 1.
+- P2-B / P2-C / P2-D / P2-E → all addressed in Unit 2.
+
+**Carry-forwards into Sprint 15**:
+- Workstream 5 (adeu MCP App preview) per plan-mode design.
+- Per-area kind vocabularies sanity-check by Arturs during dogfood (Sprint 14 ships best-guesses; refinements per-area are cheap config-only edits).
+- Phase 7 Sprint 14 dogfood (Arturs opens dialog in 4+ areas, signs off per "yes, that's how I'd describe a matter in my area" exit gate).
+- Upstream adeu PR (Sprint 13 carry; still open).
+
+**ADRs**: 047 (matter schema v2 — schema + split disk + tag-and-group), 049 (bundled MCP spawn-boot smoke test). ADR-048 reserved for Workstream 5 (Sprint 15).
+
+---
+
 ### Sprint 13 — Lawyer-shape redline: word-diff in adeu + prompt discipline (closed 2026-05-19, commit `d9c60c0db`)
 
 **Goal**: close the "adeu doesn't redline like a lawyer" carry-forward from Sprint 10 / Sprint 12. Make redline output lawyer-shape: narrow w:ins/w:del at word boundaries, preserved qualifiers retained verbatim, comments emitted when the LLM can't preserve a flagged phrase. Plan at `/root/.claude/plans/brief-sprint-13-noble-kahn.md`.
