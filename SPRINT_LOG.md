@@ -14,6 +14,37 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 15 — Practice-context intake: in-house shape, agentic, model-eval'd (closed 2026-05-19 on Stage 1 scaffolding, eval-run carry-forward; commit `2ba97d1e4`)
+
+**Goal**: redesign the onboarding intake so an in-house lawyer can describe their practice in ≤5 minutes and downstream practice-area agents are *briefed at turn 1* — they know industry depth, jurisdictions, regulatory baseline, recurring matter shapes, stakeholder/escalation context. Goal + rules, not script. Self-eval'd before user dogfood. Plan at `/root/.claude/plans/sprint-practice-context-intake-distributed-coral.md`. Displaces Sprint 14's first-listed Sprint 15 candidate (adeu MCP App diff preview, ADR-048 reserved — moves to Sprint 16).
+
+**Built** — five landable phases on `main`, five ADRs at decision time:
+
+- **P2a–P2d** (`fb3084eb7` + sibling `1af9386`) — Rules + schema. ADR-050 (intake rule-set, 8 rules: budget ≤5min/≤14 turns, signal-density branching, batch aggressively, hypothesis-confirm via Tavily, always-open final question, P3.5 skip-when-covered, hard stops preserved, state-tracking). ADR-051 (schema v3 with `company_context` block — industry depth, geography, regulatory_baseline + provenance, recurring_matters, stakeholders, risk_appetite, open_notes — and v2→v3 migration policy with `captured_via="needs-re-intake"` sentinel + gated re-intake routing). Schema implemented in sibling `oscar-onboarding-mcp` (v0.2.0 → v0.3.0; smoke.mjs verifies v3 round-trip + v2→v3 read-time migration). `systemPrompt.ts` rewritten — P2.5 — Company context block has 5 batched beats (industry+size; geography; hypothesis-confirm; recurring matters + stakeholders + escalation; risk appetite); new P3.99 — Open notes; P3.5 hard cap drops 2 → 1 per area with a concrete skip-when-covered table. Tavily key gitignored at both repo roots (root + ui/desktop); dev key written to `~/.config/oscar/secrets/tavily.json` (0600, outside the repo).
+
+- **P3** (`6f22b070a`) — Tavily as hosted SSE web-search extension. ADR-052 (also amends ADR-042 egress without editing it). `resolveTavilyKey.ts` + `oscar:resolve-tavily-key` IPC in `main.ts` + `oscarResolveTavilyKey` on `window.electron`; resolution order = env `TAVILY_API_KEY` > `~/.config/oscar/secrets/tavily.json` > absent (rule-4 fallback). `buildTavilyExtension` wires hosted SSE at `https://mcp.tavily.com/mcp/?tavilyApiKey=…`. `redactRecipeForLog` utility ready for any future code path that serialises a Recipe. `prepare-oscar-bundle.js` emits `runtime_egress_optional[]` block into `BUNDLE.json` declaring the `mcp.tavily.com` carve-out for audit completeness.
+
+- **P4** (`d7af52def`) — Recipe-time `company_context` injection (load-bearing wire from intake → agents). ADR-053. New `companyContextBlock.ts` renderer produces a dense one-line-per-dimension markdown block; `buildPracticeAreaRecipe` prepends `## About this company` to instructions when non-null. `buildCommercialRecipe` threads it through. `MattersLanding.openMatter` reads profile + Tavily key + passes both. `OscarOnboardingGuard` updated for v2-migrated profiles: routes `captured_via === "needs-re-intake"` profiles back to `OscarOnboardingView` so P2.5 runs against existing users (new intake overwrites the v2 stub on `finalize_profile`).
+
+- **P5** (`79cd2e46d`) — Eval harness scaffolding. ADR-054. Six axis-covering personas (Sarah Chen UK fintech / Daniel Okafor Sprint-7 baseline reused / Priya Iyer US healthcare / Marco Bianchi EU AI solo GC / Jin-soo Park Korean marketplace / Quiet Lawyer edge). CLI orchestrator `run-intake-eval.mjs` — every LLM call goes through `goose run` against a recipe so the eval exercises the production code path. tsx-invoked `render-recipe.ts` imports the production builders. Three judge prompts (coverage / efficiency / downstream-briefing) at `judge-prompts/*.md` with explicit 0–5 rubrics + nuance for Quiet Lawyer null-handling. `aggregate-scores.mjs` produces markdown summary + pass/fail vs criteria (mean ≥4.0 per axis; no cell <3.0). Recipes carry Tavily key in their SSE URI — written to `/tmp/` only; defence-in-depth `.gitignore` rule for `docs/sprint-15/eval/**/recipe-*.json`.
+
+- **P7** (`2ba97d1e4`) — Self-assessment `docs/sprint-15/self-assessment.md`. Honest framing on what shipped + what didn't run + what's wobbly + the ship gate to Stage 2.
+
+**Deferred** — two structural items:
+- **P6 (live self-eval) deferred to Sprint 16.** `goose run` requires a configured provider in `~/.config/goose/config.yaml`; that file is correctly permission-protected from the agent harness, so CC could not run the eval end-to-end in this session. Recipe rendering and schema migration verified independently. Path forward documented in self-assessment with the exact commands Arturs would run.
+- **P8 (Stage 2 user dogfood) deferred to Sprint 16.** Waits on P6 PASS or honest FAIL signal. The harness is shipping-quality; one of the next two sessions (CC with provider granted, OR Arturs running it himself) closes the gate.
+- **Settings UI for end-user Tavily key entry**: env-var + secrets-file resolution suffices for Sprint 15 self-eval + Stage 2 dogfood. End-user Settings affordance scheduled for Sprint 16.
+
+**Carry-forwards**:
+- **Run the eval (P6)** — once goose provider is in CC's permission scope OR Arturs runs the orchestrator directly. Bounded ≤5 iterations per ADR-054.
+- **Stage 2 dogfood (P8)** — gated on P6.
+- **Settings UI for Tavily** — small surface, deferred from P3 per ADR-052.
+- **Adeu MCP App diff preview (Sprint 14 carry, originally first Sprint 15 candidate)** — displaced by this sprint; ADR-048 still reserved; Sprint 16 picks up.
+
+**ADRs**: 050, 051, 052 (amends 042), 053, 054.
+
+---
+
 ### Sprint 14 — In-house framing for matters (closed 2026-05-19, commit `0ebe0d238`)
 
 **Goal**: redesign the matter-create flow so opening it in any of the 13 practice areas asks the questions an in-house lawyer would expect, in their vocabulary. Plus four adjacent items the Sprint 13 Crostini dogfood surfaced. Plan at `/root/.claude/plans/brief-sprint-14-immutable-diffie.md` (full plan-mode design including the deferred Workstream 5 captured there).

@@ -2,6 +2,14 @@
 
 Append-only. Format: `- **Topic** (origin sprint, optional target sprint) — one-line description.` Move to `SPRINT_LOG.md` when picked up.
 
+## Sprint 15 — shipped on Stage 1; eval-run + Stage 2 → Sprint 16
+
+Shipped P2–P5 + P7 (commits `fb3084eb7`, `1af9386` sibling, `6f22b070a`, `d7af52def`, `79cd2e46d`, `2ba97d1e4`); five ADRs (050–054). Carry-forwards:
+
+- **P6 — live self-eval (Sprint 15 carry, target Sprint 16)** — run `node scripts/dogfood/sprint-15/run-intake-eval.mjs --persona <id> --iteration 1` for each of 6 personas (sarah-chen / daniel-okafor / priya-iyer / marco-bianchi / jin-soo-park / quiet-lawyer); aggregate via `aggregate-scores.mjs`; if FAIL, iterate `systemPrompt.ts` per the weakest-axis rationales, ≤5 iterations. Requires `~/.config/goose/config.yaml` provider auth in scope.
+- **P8 — Stage 2 user dogfood (Sprint 15 carry, target Sprint 16)** — Arturs runs intake on his own practice + 1–2 invented personas; opens practice-area agents; confirms briefed first responses. Gated on P6 PASS.
+- **Settings UI for Tavily key entry (Sprint 15 carry, ADR-052 deferral)** — minimal row in Oscar's existing Settings surface writing `~/.config/oscar/secrets/tavily.json` (0600). Dev/CC/Arturs paths use env or pre-populated file; this is for end-user onboarding once UI dogfood expands beyond Arturs.
+
 ## Sprint 14 — shipped, see SPRINT_LOG.md
 
 Closed by Sprint 14 (commits `214bc10e6` Unit 1 + `0ebe0d238` Unit 2):
