@@ -6,7 +6,6 @@ import { getInitialWorkingDir } from '../../../utils/workingDir';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { GREETING } from './systemPrompt';
 import { buildOnboardingRecipe } from './onboardingRecipe';
-import { resolveTavilyKey } from './resolveTavilyKey';
 import { OscarChatTurn, deriveTurnFromMessage } from './OscarChatMessage';
 import { OscarChatInput } from './OscarChatInput';
 
@@ -18,11 +17,9 @@ export default function OscarOnboardingView() {
     let mounted = true;
     (async () => {
       try {
-        const tavily = await resolveTavilyKey();
         const session = await createSession(getInitialWorkingDir(), {
           recipe: buildOnboardingRecipe({
             resourcesRoot: window.electron.oscarResourcesRoot,
-            tavily,
           }),
         });
         if (mounted) setSessionId(session.id);

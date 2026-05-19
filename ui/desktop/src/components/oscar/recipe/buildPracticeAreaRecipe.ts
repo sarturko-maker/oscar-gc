@@ -11,7 +11,6 @@
 import type { Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
 import { buildTavilyExtension } from '../onboarding/onboardingRecipe';
-import type { TavilyKey } from '../onboarding/resolveTavilyKey';
 import type { OscarCompanyContext } from '../hooks/useOscarProfile';
 import { renderCompanyContextBlock } from './companyContextBlock';
 
@@ -43,10 +42,6 @@ export interface BuildPracticeAreaRecipeOptions {
   // Commercial passes the redline MCP; everywhere else this is empty.
   // Extra extensions append AFTER oscar-fs.
   extraExtensions?: Recipe['extensions'];
-  // Sprint 15 (ADR-052): if a Tavily key is configured, practice-area
-  // agents also get the hosted SSE search extension so they can verify
-  // regulatory currency mid-session. Optional; absence = no extension.
-  tavily?: TavilyKey | null;
   // Sprint 15 (ADR-053): company_context block injected at recipe-build
   // time. Renders to a markdown "## About this company" block prepended
   // to instructions — the load-bearing wire that briefs the agent at
@@ -123,10 +118,11 @@ export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): R
       timeout: 30,
     },
     ...(opts.extraExtensions ?? []),
+    // Sprint 16 (ADR-057): Tavily attached unconditionally; env_keys +
+    // URI substitution resolve the key at session-spawn from env or
+    // keyring. Absent key → SSE connect fails → rule 4 fallback narrates.
+    buildTavilyExtension(),
   ];
-  if (opts.tavily) {
-    extensions.push(buildTavilyExtension(opts.tavily));
-  }
   const baseInstructions =
     opts.systemPrompt ??
     defaultSystemPrompt(opts.area, opts.workingDir, opts.stateFolder);

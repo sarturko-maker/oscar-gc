@@ -2588,6 +2588,36 @@
         }
       }
     },
+    "/recipes/scan_secrets": {
+      "post": {
+        "tags": [
+          "Recipe Management"
+        ],
+        "operationId": "scan_recipe_secrets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRecipeSecretsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Recipe scanned for secrets successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanRecipeSecretsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recipes/schedule": {
       "post": {
         "tags": [
@@ -7784,6 +7814,31 @@
           }
         }
       },
+      "ScanRecipeSecretsRequest": {
+        "type": "object",
+        "required": [
+          "recipe"
+        ],
+        "properties": {
+          "recipe": {
+            "$ref": "#/components/schemas/Recipe"
+          }
+        }
+      },
+      "ScanRecipeSecretsResponse": {
+        "type": "object",
+        "required": [
+          "secrets"
+        ],
+        "properties": {
+          "secrets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SecretRequirement"
+            }
+          }
+        }
+      },
       "ScheduleRecipeRequest": {
         "type": "object",
         "required": [
@@ -7856,6 +7911,24 @@
           },
           "source": {
             "type": "string"
+          }
+        }
+      },
+      "SecretRequirement": {
+        "type": "object",
+        "description": "Represents a secret requirement discovered from a recipe extension.\n\nSprint 16 (ADR-058): Lifted from `goose-cli/src/recipes/secret_discovery.rs`\nto `goose-core` so the desktop and `goose-server` can use the same scan\nlogic the CLI already had. The CLI continues to consume this via a\nre-export at `goose-cli/src/recipes/secret_discovery.rs`.",
+        "required": [
+          "key",
+          "extension_name"
+        ],
+        "properties": {
+          "extension_name": {
+            "type": "string",
+            "description": "The name of the extension that requires this secret"
+          },
+          "key": {
+            "type": "string",
+            "description": "The environment variable name (e.g., \"GITHUB_TOKEN\")"
           }
         }
       },

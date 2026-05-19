@@ -1,21 +1,26 @@
-// Sprint 15 (ADR-054): emits a Goose recipe JSON to stdout. Invoked by
-// the eval orchestrator. Imports the production recipe builders directly
-// via tsx so the eval exercises the same code path as the UI.
+// Sprint 15 (ADR-054), Sprint 16 (ADR-056, ADR-057): emits a Goose recipe
+// JSON to stdout. Invoked by the eval orchestrator. Imports the production
+// recipe builders directly via tsx so the eval exercises the same code
+// path as the UI.
+//
+// Sprint 16: the Tavily key is resolved by Goose itself at session-spawn
+// (env var TAVILY_API_KEY then keyring). Recipe-builders no longer accept
+// a tavily parameter. The eval harness sets TAVILY_API_KEY in its env via
+// the launcher; Goose picks it up via Config::get_secret.
 //
 // Usage:
-//   tsx render-recipe.ts onboarding [--tavily-key <KEY>]
+//   tsx render-recipe.ts onboarding
 //   tsx render-recipe.ts practice-area --area <ID> --working-dir <PATH> \
-//     --state-folder <PATH> --profile <PATH> [--tavily-key <KEY>]
+//     --state-folder <PATH> --profile <PATH>
 //   tsx render-recipe.ts persona --persona <PATH>
 //   tsx render-recipe.ts judge --axis <coverage|efficiency|downstream-briefing|regulatory-fit>
 
 import { readFileSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve } from 'node:path';
 import { buildOnboardingRecipe } from '../../../../ui/desktop/src/components/oscar/onboarding/onboardingRecipe';
 import { buildPracticeAreaRecipe } from '../../../../ui/desktop/src/components/oscar/recipe/buildPracticeAreaRecipe';
 import { buildCommercialRecipe } from '../../../../ui/desktop/src/components/oscar/commercial/commercialRecipe';
 import { PRACTICE_AREAS } from '../../../../ui/desktop/src/components/oscar/practiceAreas';
-import type { TavilyKey } from '../../../../ui/desktop/src/components/oscar/onboarding/resolveTavilyKey';
 import type {
   OscarCompanyContext,
   OscarUserProfile,
@@ -25,26 +30,6 @@ function parseArg(name: string): string | null {
   const argv = process.argv;
   const idx = argv.indexOf(`--${name}`);
   return idx >= 0 && idx + 1 < argv.length ? argv[idx + 1] : null;
-}
-
-function loadTavilyFromArgOrSecrets(): TavilyKey | null {
-  const fromArg = parseArg('tavily-key');
-  if (fromArg) return { apiKey: fromArg, source: 'env' };
-  const envKey = process.env.TAVILY_API_KEY?.trim();
-  if (envKey) return { apiKey: envKey, source: 'env' };
-  const secretsPath =
-    process.env.OSCAR_TAVILY_PATH ||
-    join(process.env.HOME ?? '', '.config', 'oscar', 'secrets', 'tavily.json');
-  try {
-    const raw = readFileSync(secretsPath, 'utf8');
-    const parsed = JSON.parse(raw) as { api_key?: unknown };
-    if (typeof parsed.api_key === 'string' && parsed.api_key.trim().length > 0) {
-      return { apiKey: parsed.api_key.trim(), source: 'file' };
-    }
-  } catch {
-    /* absent — fine */
-  }
-  return null;
 }
 
 function loadProfile(path: string): OscarUserProfile {
@@ -62,8 +47,7 @@ function emit(recipe: unknown): void {
 const kind = process.argv[2];
 
 if (kind === 'onboarding') {
-  const tavily = loadTavilyFromArgOrSecrets();
-  emit(buildOnboardingRecipe({ resourcesRoot: null, tavily }));
+  emit(buildOnboardingRecipe({ resourcesRoot: null }));
 } else if (kind === 'practice-area') {
   const areaId = parseArg('area');
   const workingDir = parseArg('working-dir');
@@ -82,16 +66,14 @@ if (kind === 'onboarding') {
   }
   const profile = loadProfile(profilePath);
   const companyContext: OscarCompanyContext | null = profile.company_context ?? null;
-  const tavily = loadTavilyFromArgOrSecrets();
   const recipe =
     area.id === 'commercial'
-      ? buildCommercialRecipe(workingDir, stateFolder, null, tavily, companyContext)
+      ? buildCommercialRecipe(workingDir, stateFolder, null, companyContext)
       : buildPracticeAreaRecipe({
           area,
           workingDir,
           stateFolder,
           resourcesRoot: null,
-          tavily,
           companyContext,
         });
   emit(recipe);

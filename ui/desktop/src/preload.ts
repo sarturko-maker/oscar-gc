@@ -204,10 +204,6 @@ type ElectronAPI = {
   // Oscar user profile (Sprint 6, ADR-011): reads ~/.config/oscar/profile.json,
   // returns the parsed object or null if absent.
   readOscarProfile: () => Promise<unknown | null>;
-  // Sprint 15 (ADR-052): resolve the Tavily web-search API key. Env var
-  // wins; else reads ~/.config/oscar/secrets/tavily.json (gitignored,
-  // 0600 perms). Returns null when neither is present.
-  oscarResolveTavilyKey: () => Promise<{ apiKey: string; source: 'env' | 'file' } | null>;
   // Oscar bundled-resources root (Sprint 10, ADR-024): absolute path to the
   // packaged resources dir when the app is installed (e.g. /opt/oscar-gc/resources),
   // null when running in dev. Recipe factories use this to resolve adeu/node/MCP paths.
@@ -411,7 +407,6 @@ const electronAPI: ElectronAPI = {
   listRecentDirs: () => ipcRenderer.invoke('list-recent-dirs'),
   listGitWorktreeDirs: (dir: string) => ipcRenderer.invoke('list-git-worktree-dirs', dir),
   readOscarProfile: () => ipcRenderer.invoke('oscar:read-profile'),
-  oscarResolveTavilyKey: () => ipcRenderer.invoke('oscar:resolve-tavily-key'),
   oscarResourcesRoot,
   oscarHomeDir,
   matters: {

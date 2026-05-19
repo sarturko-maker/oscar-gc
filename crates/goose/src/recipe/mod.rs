@@ -17,6 +17,7 @@ pub mod build_recipe;
 pub mod local_recipes;
 pub mod read_recipe_file_content;
 mod recipe_extension_adapter;
+pub mod secret_discovery;
 pub mod template_recipe;
 pub mod validate_recipe;
 pub mod yaml_format_utils;

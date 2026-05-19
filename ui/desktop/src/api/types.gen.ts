@@ -1249,6 +1249,14 @@ export type ScanRecipeResponse = {
     has_security_warnings: boolean;
 };
 
+export type ScanRecipeSecretsRequest = {
+    recipe: Recipe;
+};
+
+export type ScanRecipeSecretsResponse = {
+    secrets: Array<SecretRequirement>;
+};
+
 export type ScheduleRecipeRequest = {
     cron_schedule?: string | null;
     id: string;
@@ -1270,6 +1278,25 @@ export type ScheduledJob = {
      */
     recipe_base_dir?: string | null;
     source: string;
+};
+
+/**
+ * Represents a secret requirement discovered from a recipe extension.
+ *
+ * Sprint 16 (ADR-058): Lifted from `goose-cli/src/recipes/secret_discovery.rs`
+ * to `goose-core` so the desktop and `goose-server` can use the same scan
+ * logic the CLI already had. The CLI continues to consume this via a
+ * re-export at `goose-cli/src/recipes/secret_discovery.rs`.
+ */
+export type SecretRequirement = {
+    /**
+     * The name of the extension that requires this secret
+     */
+    extension_name: string;
+    /**
+     * The environment variable name (e.g., "GITHUB_TOKEN")
+     */
+    key: string;
 };
 
 export type Session = {
@@ -3649,6 +3676,22 @@ export type ScanRecipeResponses = {
 };
 
 export type ScanRecipeResponse2 = ScanRecipeResponses[keyof ScanRecipeResponses];
+
+export type ScanRecipeSecretsData = {
+    body: ScanRecipeSecretsRequest;
+    path?: never;
+    query?: never;
+    url: '/recipes/scan_secrets';
+};
+
+export type ScanRecipeSecretsResponses = {
+    /**
+     * Recipe scanned for secrets successfully
+     */
+    200: ScanRecipeSecretsResponse;
+};
+
+export type ScanRecipeSecretsResponse2 = ScanRecipeSecretsResponses[keyof ScanRecipeSecretsResponses];
 
 export type ScheduleRecipeData = {
     body: ScheduleRecipeRequest;

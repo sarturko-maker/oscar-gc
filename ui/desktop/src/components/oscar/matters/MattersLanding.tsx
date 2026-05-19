@@ -10,7 +10,6 @@ import { AppEvents } from '../../../constants/events';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { buildCommercialRecipe } from '../commercial/commercialRecipe';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
-import { resolveTavilyKey } from '../onboarding/resolveTavilyKey';
 import type { PracticeArea } from '../practiceAreas';
 import type {
   OscarCompanyContext,
@@ -86,10 +85,10 @@ export default function MattersLanding({ area }: MattersLandingProps) {
       }
       const { working_dir: workingDir, state_folder: stateFolder } = active;
       const resourcesRoot = window.electron.oscarResourcesRoot;
-      // Sprint 15 (ADR-052): hosted Tavily SSE attached when configured.
-      const tavily = await resolveTavilyKey();
       // Sprint 15 (ADR-053): company_context block prepended to recipe
       // instructions for first-turn briefing.
+      // Sprint 16 (ADR-057): Tavily key handled via env_keys on the extension
+      // declaration; recipe-builders no longer take a tavily parameter.
       const profile = (await window.electron.readOscarProfile()) as
         | OscarUserProfile
         | null;
@@ -100,14 +99,13 @@ export default function MattersLanding({ area }: MattersLandingProps) {
       // via buildCommercialRecipe; the other 12 areas use the generic shape.
       const recipe =
         area.id === 'commercial'
-          ? buildCommercialRecipe(workingDir, stateFolder, resourcesRoot, tavily, companyContext)
+          ? buildCommercialRecipe(workingDir, stateFolder, resourcesRoot, companyContext)
           : buildPracticeAreaRecipe({
               area,
               workingDir,
               stateFolder,
               matterSlug: matter.slug,
               resourcesRoot,
-              tavily,
               companyContext,
             });
 

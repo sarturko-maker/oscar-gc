@@ -1,6 +1,5 @@
 import type { Recipe } from '../../../api';
 import { SYSTEM_PROMPT } from './systemPrompt';
-import type { TavilyKey } from './resolveTavilyKey';
 
 const DEV_ONBOARDING_NODE_CMD = '/usr/bin/node';
 const DEV_ONBOARDING_MCP_PATH = '/srv/projects/oscar-onboarding-mcp/dist/index.js';
@@ -19,26 +18,34 @@ function resolveOnboardingMcp(resourcesRoot: string | null): string {
   return DEV_ONBOARDING_MCP_PATH;
 }
 
-// Sprint 15 (ADR-052): hosted Tavily extension via streamable_http (per
-// Goose's accepted ExtensionConfig variants — the CLI rejects raw `sse`
-// in favour of `streamable_http`, which is HTTP + SSE under the hood and
-// the canonical Goose transport for hosted MCPs). Only attached when
-// resolveTavilyKey() returned non-null. The resolved uri carries the
-// user's API key as a query param — caller must NOT serialise this
-// Recipe to disk or logs without first calling redactRecipeForLog.
-export function buildTavilyExtension(key: TavilyKey): NonNullable<Recipe['extensions']>[number] {
+// Sprint 16 (ADR-057, ADR-058): hosted Tavily extension declared with
+// env_keys + URI substitution against Goose's secret config. At session-
+// spawn, extension_manager::merge_environments() reads TAVILY_API_KEY from
+// the env-then-keyring chain (config/base.rs::get_secret), then
+// extension_manager::substitute_env_vars() inlines it into the URI before
+// the streamable_http client connects. The recipe-builder no longer
+// resolves the key itself; first-launch entry is handled by the generic
+// RecipeSecretsModal that scans the recipe via /recipes/scan_secrets.
+//
+// If TAVILY_API_KEY is absent from env AND keyring, the literal
+// "${TAVILY_API_KEY}" placeholder stays in the URI, the SSE connect fails,
+// and rule 4 of the intake prompt narrates the LLM-only fallback. Noisy
+// but functional. (A v2 may add a recipe-build-time check that omits the
+// extension when OSCAR_TAVILY_SKIPPED=true AND no key is set; ADR-057 §
+// "Mitigation when user skips entry on first launch".)
+export function buildTavilyExtension(): NonNullable<Recipe['extensions']>[number] {
   return {
     type: 'streamable_http',
     name: 'tavily',
     description:
-      'Hosted Tavily web search for regulatory hypothesis-confirm (ADR-052). Tools: tavily-search (real-time web search), tavily-extract (page extraction). Used during P2.5c of the intake.',
-    uri: `https://mcp.tavily.com/mcp/?tavilyApiKey=${encodeURIComponent(key.apiKey)}`,
+      'Hosted Tavily web search for regulatory hypothesis-confirm (ADR-052, ADR-057). Tools: tavily-search, tavily-extract. Used during P5 of the intake.',
+    uri: 'https://mcp.tavily.com/mcp/?tavilyApiKey=${TAVILY_API_KEY}',
+    env_keys: ['TAVILY_API_KEY'],
   };
 }
 
 export interface BuildOnboardingRecipeOptions {
   resourcesRoot: string | null;
-  tavily: TavilyKey | null;
 }
 
 export function buildOnboardingRecipe(opts: BuildOnboardingRecipeOptions): Recipe {
@@ -56,16 +63,13 @@ export function buildOnboardingRecipe(opts: BuildOnboardingRecipeOptions): Recip
     envs,
     timeout: 30,
   };
-  const extensions: NonNullable<Recipe['extensions']> = opts.tavily
-    ? [onboardingExtension, buildTavilyExtension(opts.tavily)]
-    : [onboardingExtension];
   return {
     version: '1.0.0',
     title: 'Oscar GC Onboarding',
     description:
-      "First-launch interview (Sprint 15 ADR-050 rule-set). Captures user identity, corporate context, the company_context block (industry depth, geography, regulatory_baseline via hypothesis-confirm, recurring matters, stakeholders, risk appetite, open notes), practice scope, and provider; writes profile v3 to ~/.config/oscar/profile.json.",
+      "First-launch interview (Sprint 15 ADR-050, Sprint 16 ADR-055). Captures user identity, corporate context, the company_context block (industry depth, geography, regulatory_baseline via hypothesis-confirm scoped by practice areas, recurring matters, stakeholders, risk appetite, open notes), practice scope, and provider; writes profile v3 to ~/.config/oscar/profile.json.",
     instructions: SYSTEM_PROMPT,
-    extensions,
+    extensions: [onboardingExtension, buildTavilyExtension()],
     settings: {
       goose_provider: 'minimax',
       goose_model: 'MiniMax-M2.5',

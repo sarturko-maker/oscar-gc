@@ -7,6 +7,7 @@ use axum::extract::rejection::JsonRejection;
 use axum::routing::get;
 use axum::{extract::State, http::StatusCode, routing::post, Json, Router};
 use goose::recipe::local_recipes;
+use goose::recipe::secret_discovery::{discover_recipe_secrets, SecretRequirement};
 use goose::recipe::validate_recipe::validate_recipe_template_from_content;
 use goose::recipe::{strip_error_location, Recipe};
 use goose::{recipe_deeplink, slash_commands};
@@ -92,6 +93,16 @@ pub struct ScanRecipeRequest {
 #[derive(Debug, Serialize, ToSchema)]
 pub struct ScanRecipeResponse {
     has_security_warnings: bool,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct ScanRecipeSecretsRequest {
+    recipe: Recipe,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ScanRecipeSecretsResponse {
+    secrets: Vec<SecretRequirement>,
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
@@ -292,6 +303,28 @@ async fn scan_recipe(
     Ok(Json(ScanRecipeResponse {
         has_security_warnings,
     }))
+}
+
+// Sprint 16 (ADR-058): scan a recipe for declared env_keys so the desktop
+// can prompt the user on first launch for any missing secrets. The CLI has
+// had `discover_recipe_secrets` for a while; this route lifts the same
+// capability into goose-server so bundled-in-recipe extensions surface
+// missing keys instead of silently loading with an unresolved URI
+// placeholder.
+#[utoipa::path(
+    post,
+    path = "/recipes/scan_secrets",
+    request_body = ScanRecipeSecretsRequest,
+    responses(
+        (status = 200, description = "Recipe scanned for secrets successfully", body = ScanRecipeSecretsResponse),
+    ),
+    tag = "Recipe Management"
+)]
+async fn scan_recipe_secrets(
+    Json(request): Json<ScanRecipeSecretsRequest>,
+) -> Result<Json<ScanRecipeSecretsResponse>, StatusCode> {
+    let secrets = discover_recipe_secrets(&request.recipe);
+    Ok(Json(ScanRecipeSecretsResponse { secrets }))
 }
 
 #[utoipa::path(
@@ -575,6 +608,7 @@ pub fn routes(state: Arc<AppState>) -> Router {
         .route("/recipes/encode", post(encode_recipe))
         .route("/recipes/decode", post(decode_recipe))
         .route("/recipes/scan", post(scan_recipe))
+        .route("/recipes/scan_secrets", post(scan_recipe_secrets))
         .route("/recipes/list", get(list_recipes))
         .route("/recipes/delete", post(delete_recipe))
         .route("/recipes/schedule", post(schedule_recipe))

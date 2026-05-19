@@ -11,6 +11,7 @@ Time required: about three minutes for install + first-launch setup.
 - Your Linux container running **Debian 12 ("bookworm")**.
   - New Crostini containers ship Debian 12 by default. Older containers may still be on Debian 11; upgrade them via Settings → "Advanced" → "Developers" → "Linux Development Environment" → "Backup and restore" (creating a new container is the simplest path).
 - A **MiniMax API key**. You'll paste this in on first launch.
+- (Optional) A **Tavily API key** for the regulatory web-search step during intake. Free tier is 1000 searches/month — register at https://app.tavily.com/home. If you skip this, the intake falls back to your model's training-time knowledge only.
 
 ## Install
 
@@ -23,10 +24,11 @@ Time required: about three minutes for install + first-launch setup.
 ## First launch
 
 6. **MiniMax API key.** The first screen asks you to configure your AI provider. Choose **MiniMax**, paste your API key, click confirm. Oscar saves the key in your system keyring; you won't need to paste it again.
-7. **Onboarding.** Oscar's interview starts — a short conversation that captures your name, role, and the practice areas you actually work on. Answer in plain English. When it has what it needs, the sidebar populates with your practice areas.
-8. **Click "Commercial"** in the sidebar.
-9. **Paste a `.docx` path** (e.g., `/home/<your-user>/Documents/some-nda.docx`) and tell Oscar what redline you want — for example, *"Make this mutual."* Oscar reads the file, plans the changes, and writes a redlined version.
-10. **Open the output.** Oscar tells you the path — usually `~/Documents/Oscar Redlines/<original>_redlined_<timestamp>.docx`. Find it in the Files app under "Linux files" → "Documents" → "Oscar Redlines", double-click to open.
+7. **Tavily web-search key.** Next screen asks for your Tavily API key, used during the intake to ground the regulatory baseline against current frameworks. Paste it in (or click **Skip all** to fall back to model-knowledge-only). Stored in the same keyring as the MiniMax key — no terminal commands needed.
+8. **Onboarding.** Oscar's interview starts — a short conversation that captures your name, role, and the practice areas you actually work on. Answer in plain English. When it has what it needs, the sidebar populates with your practice areas.
+9. **Click "Commercial"** in the sidebar.
+10. **Paste a `.docx` path** (e.g., `/home/<your-user>/Documents/some-nda.docx`) and tell Oscar what redline you want — for example, *"Make this mutual."* Oscar reads the file, plans the changes, and writes a redlined version.
+11. **Open the output.** Oscar tells you the path — usually `~/Documents/Oscar Redlines/<original>_redlined_<timestamp>.docx`. Find it in the Files app under "Linux files" → "Documents" → "Oscar Redlines", double-click to open.
 
 That's the four-item flow.
 
@@ -40,6 +42,15 @@ echo 'export MINIMAX_API_KEY=<your-key>' >> ~/.profile
 ```
 
 Then log out and back in (or close and reopen the Terminal), and launch Oscar GC again from the launcher.
+
+**The Tavily key screen never appears, or I want to set the key from the terminal.**
+The Tavily key follows the same env-var fallback as MiniMax. To set via terminal:
+
+```sh
+echo 'export TAVILY_API_KEY=<your-key>' >> ~/.profile
+```
+
+Then log out and back in. The first-launch prompt will short-circuit because Goose reads the env var before falling back to the keyring.
 
 **The install seems to finish but Oscar won't open from the launcher.**
 The postinst step that builds the redline tool's Python environment can fail silently on a heavily-customised container. To check, open Terminal and run:
