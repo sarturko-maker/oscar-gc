@@ -19,11 +19,15 @@ function resolveRedlineBin(resourcesRoot: string | null): string {
 // Sprint 15 (ADR-053): companyContext pass through.
 // Sprint 16 (ADR-057): tavily key handled via env_keys on the extension; no
 // per-call param needed.
+// Sprint 17 (ADR-061): installedConfigs threaded through — lawyer-added
+// integrations from installed_integrations.json land after redline in
+// extraExtensions. Empty array when nothing's been added.
 export function buildCommercialRecipe(
   workingDir: string,
   stateFolder: string,
   resourcesRoot: string | null,
   companyContext: OscarCompanyContext | null,
+  installedConfigs: NonNullable<Recipe['extensions']> = [],
 ): Recipe {
   return buildPracticeAreaRecipe({
     area: {
@@ -48,6 +52,7 @@ export function buildCommercialRecipe(
         timeout: 300,
         available_tools: ['read_docx', 'process_document_batch', 'diff_docx_files'],
       },
+      ...installedConfigs,
     ],
   });
 }

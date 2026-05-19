@@ -10,6 +10,8 @@ import { AppEvents } from '../../../constants/events';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { buildCommercialRecipe } from '../commercial/commercialRecipe';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
+import { buildExtensionFromIntegration } from '../integrations/buildExtensionFromIntegration';
+import type { Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
 import type {
   OscarCompanyContext,
@@ -95,11 +97,30 @@ export default function MattersLanding({ area }: MattersLandingProps) {
       const companyContext: OscarCompanyContext | null =
         profile?.company_context ?? null;
 
+      // Sprint 17 (ADR-061): merge lawyer-added integrations into the
+      // recipe's extension array. Unknown ids and bundled-tier entries
+      // resolve to null in buildExtensionFromIntegration and are dropped.
+      const installed = await window.electron.integrations.list(area.id);
+      const trustedInstalled = installed.filter((i) => i.trust_acknowledged);
+      const installedConfigsRaw = await Promise.all(
+        trustedInstalled.map((i) => buildExtensionFromIntegration(i.id)),
+      );
+      const installedConfigs: NonNullable<Recipe['extensions']> =
+        installedConfigsRaw.filter(
+          (e): e is NonNullable<Recipe['extensions']>[number] => e !== null,
+        );
+
       // Commercial composes its bespoke system prompt + redline MCP on top
       // via buildCommercialRecipe; the other 12 areas use the generic shape.
       const recipe =
         area.id === 'commercial'
-          ? buildCommercialRecipe(workingDir, stateFolder, resourcesRoot, companyContext)
+          ? buildCommercialRecipe(
+              workingDir,
+              stateFolder,
+              resourcesRoot,
+              companyContext,
+              installedConfigs,
+            )
           : buildPracticeAreaRecipe({
               area,
               workingDir,
@@ -107,6 +128,7 @@ export default function MattersLanding({ area }: MattersLandingProps) {
               matterSlug: matter.slug,
               resourcesRoot,
               companyContext,
+              extraExtensions: installedConfigs,
             });
 
       const session = await createSession(workingDir, { recipe });
