@@ -4,3 +4,17 @@ packages:
   - 'desktop'
   - 'goose-binary/*'
   - 'goose2'
+# Sprint 17 (P7): pnpm 11+ no longer reads `pnpm.overrides` from package.json
+# (the field is silently ignored with a warning). Mirror the package.json
+# pnpm.overrides block here so deduplication of React across transitive
+# deps actually fires. Without these, two React copies can land in the
+# renderer bundle and hooks throw "Cannot read properties of null
+# (reading 'useRef')" at launch.
+overrides:
+  react: '^19.2.4'
+  react-dom: '^19.2.4'
+onlyBuiltDependencies:
+  - '@modelcontextprotocol/ext-apps'
+  - electron
+  - electron-winstaller
+  - esbuild
