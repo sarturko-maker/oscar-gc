@@ -33,9 +33,9 @@ if (names.join(",") !== "finalize_profile,list_area_questions") {
   process.exit(1);
 }
 
-// finalize_profile: v2 schema, with per-area area_profile populated
+// finalize_profile: v3 schema, with per-area area_profile + company_context populated
 const sampleProfile = {
-  schema_version: 2,
+  schema_version: 3,
   completed_at: new Date().toISOString(),
   user: {
     name: "Smoke Test",
@@ -46,6 +46,36 @@ const sampleProfile = {
     name: "Smoke Industries",
     industry: "Testing",
     size_band: "51-200",
+  },
+  company_context: {
+    industry: {
+      sector: "Software",
+      sub_sector: "B2B SaaS",
+      business_model: "Subscription",
+    },
+    geography: {
+      hq_jurisdiction: "United Kingdom",
+      operating_jurisdictions: ["United Kingdom", "Germany"],
+      customer_jurisdictions: null,
+      employee_jurisdictions: null,
+    },
+    regulatory_baseline: {
+      frameworks: [
+        { id: "gdpr", label: "GDPR", confidence: "user-confirmed" },
+        { id: "uk-gdpr", label: "UK GDPR", confidence: "tavily+user-confirmed" },
+      ],
+      captured_via: "hypothesis-confirm",
+    },
+    recurring_matters: {
+      top_shapes: ["customer agreements", "vendor MSAs", "DPA renegotiations"],
+    },
+    stakeholders: {
+      reports_to: "CFO",
+      key_business_partners: ["CTO", "VP Sales"],
+      escalation_threshold_label: "£500k commitments to CEO",
+    },
+    risk_appetite: "balanced",
+    open_notes: "acquiring a competitor next quarter",
   },
   practice_areas: [
     {
@@ -123,14 +153,57 @@ if (!existsSync(profilePath)) {
 
 const onDisk = JSON.parse(readFileSync(profilePath, "utf8"));
 if (
-  onDisk.schema_version !== 2 ||
+  onDisk.schema_version !== 3 ||
   onDisk.user.role !== "general-counsel" ||
   onDisk.practice_areas.length !== 2 ||
   onDisk.practice_areas[0].area_profile?.["commercial-side"] !== "purchasing" ||
-  onDisk.practice_areas[1].area_profile !== null
+  onDisk.practice_areas[1].area_profile !== null ||
+  onDisk.company_context?.regulatory_baseline?.captured_via !== "hypothesis-confirm" ||
+  onDisk.company_context?.regulatory_baseline?.frameworks?.length !== 2 ||
+  onDisk.company_context?.geography?.operating_jurisdictions?.length !== 2
 ) {
   console.error("FAIL: on-disk profile shape mismatched");
   console.error(JSON.stringify(onDisk, null, 2));
+  process.exit(1);
+}
+
+// v2→v3 read-time migration: write a v2 file directly to disk and re-read via the store
+import { writeFileSync } from "node:fs";
+import { ProfileStore } from "./dist/store.js";
+
+const v2OnlyPath = join(tmp, "profile-v2.json");
+writeFileSync(
+  v2OnlyPath,
+  JSON.stringify({
+    schema_version: 2,
+    completed_at: "2026-05-18T12:00:00Z",
+    user: { name: "Legacy", role: "counsel", role_label: "Counsel" },
+    corporate: { name: null, industry: null, size_band: null },
+    practice_areas: [
+      {
+        id: "commercial",
+        name: "Commercial",
+        body: "x",
+        source: "default",
+        area_profile: null,
+      },
+    ],
+    provider: { kind: "minimax", model: "MiniMax-M2.5" },
+  }),
+  "utf8",
+);
+
+const legacyStore = new ProfileStore(v2OnlyPath);
+const migrated = await legacyStore.read();
+if (
+  !migrated ||
+  migrated.schema_version !== 3 ||
+  migrated.company_context.regulatory_baseline.captured_via !== "needs-re-intake" ||
+  migrated.company_context.industry.sector !== null ||
+  migrated.practice_areas.length !== 1
+) {
+  console.error("FAIL: v2→v3 read-time migration shape mismatched");
+  console.error(JSON.stringify(migrated, null, 2));
   process.exit(1);
 }
 

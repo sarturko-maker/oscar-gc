@@ -1,7 +1,13 @@
 import { promises as fs, constants as fsConstants } from "node:fs";
 import { dirname } from "node:path";
 import type { Profile } from "./schema.js";
-import { ProfileSchema, ProfileSchemaV1, migrateV1ToV2 } from "./schema.js";
+import {
+  ProfileSchema,
+  ProfileSchemaV1,
+  ProfileSchemaV2,
+  migrateV1ToV2,
+  migrateV2ToV3,
+} from "./schema.js";
 
 export class ProfileStore {
   constructor(private readonly path: string) {}
@@ -23,12 +29,16 @@ export class ProfileStore {
       throw err;
     }
     const parsed = JSON.parse(raw);
-    const v2 = ProfileSchema.safeParse(parsed);
+    const v3 = ProfileSchema.safeParse(parsed);
+    if (v3.success) {
+      return v3.data;
+    }
+    const v2 = ProfileSchemaV2.safeParse(parsed);
     if (v2.success) {
-      return v2.data;
+      return migrateV2ToV3(v2.data);
     }
     const v1 = ProfileSchemaV1.parse(parsed);
-    return migrateV1ToV2(v1);
+    return migrateV2ToV3(migrateV1ToV2(v1));
   }
 
   private async writeAtomic(profile: Profile): Promise<void> {

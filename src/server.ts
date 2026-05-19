@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { ProfileStore } from "./store.js";
 import {
+  CompanyContextSchema,
   CorporateSchema,
   PracticeAreaSchema,
   ProviderSchema,
@@ -33,7 +34,7 @@ export function buildServer(store: ProfileStore): McpServer {
       inputSchema: {
         schema_version: z
           .literal(SCHEMA_VERSION)
-          .describe("Profile schema version. Must be 2 for this server."),
+          .describe("Profile schema version. Must be 3 for this server."),
         completed_at: z
           .string()
           .min(1)
@@ -42,13 +43,16 @@ export function buildServer(store: ProfileStore): McpServer {
           "User identity. name may be null if the user declined to share it. role is a short slug (e.g. general-counsel); role_label is the human-readable form for display.",
         ),
         corporate: CorporateSchema.describe(
-          "Corporate context. Any field may be null if the user declined to share that piece.",
+          "Corporate context — short display-facing fields. Any field may be null if the user declined to share that piece.",
+        ),
+        company_context: CompanyContextSchema.describe(
+          "Company context block (schema v3). Captured in the P2.5 phase. Drives downstream practice-area agent briefing via recipe-time injection. Fields: industry {sector, sub_sector, business_model}; geography {hq_jurisdiction, operating_jurisdictions[], customer_jurisdictions[]|null, employee_jurisdictions[]|null}; regulatory_baseline {frameworks: {id, label, confidence}[], captured_via}; recurring_matters {top_shapes[]}; stakeholders {reports_to, key_business_partners[], escalation_threshold_label}; risk_appetite; open_notes. Any nullable field may be null when the user declined; captured_via='needs-re-intake' only appears on v2-migrated profiles, never on a freshly-finalized one.",
         ),
         practice_areas: z
           .array(PracticeAreaSchema)
           .min(1)
           .describe(
-            "The practice areas the user works in. source is 'default' for seed entries, 'user-added' for areas the user contributed. area_profile is a per-area free-text answer map keyed by question id (from list_area_questions); null when the user skipped the area's mini-interview.",
+            "The practice areas the user works in. source is 'default' for seed entries, 'user-added' for areas the user contributed. area_profile is a per-area free-text answer map keyed by question id (from list_area_questions); null when the user skipped the area's mini-interview or skip-when-covered applied (ADR-050 rule 6).",
           ),
         provider: ProviderSchema.describe(
           "LLM provider configuration. kind is the provider identifier; model is the specific model identifier.",
