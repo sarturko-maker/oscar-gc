@@ -1,0 +1,6 @@
+{
+  "axis": "coverage",
+  "score": 5,
+  "rationale": "The Quiet Lawyer persona declined to share specifics, and all seven dimensions are recorded as null/empty without invention. Oscar respected each decline without re-asking ('company declined to share' → recorded null; role asked → captured 'counsel'; practice areas asked → captured list). This is exactly the null-faithful behavior the Edge persona tests.",
+  "specific_gaps": []
+}

@@ -1,0 +1,6 @@
+{
+  "axis": "coverage",
+  "score": 5,
+  "rationale": "All seven dimensions captured with depth matching the seed. Industry (sector/sub-sector/business model), geography (HQ + operating jurisdictions), regulatory baseline (10 frameworks with user-confirmed provenance), recurring matters (top 4 shapes with key stakeholders), risk appetite (conservative), and open notes (channel partner programme) are all present. Null captures for customer/employee jurisdictions are faithful to the persona's scope.",
+  "specific_gaps": []
+}

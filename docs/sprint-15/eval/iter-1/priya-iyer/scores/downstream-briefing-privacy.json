@@ -1,0 +1,11 @@
+{
+  "axis": "downstream-briefing",
+  "score": 2,
+  "rationale": "Response provides accurate HIPAA information covering notification clock, thresholds, and vendor questions, but operates entirely at a generic textbook level. It makes no reference to Vitalis Health's multi-state operations (TX/AZ/NM/CO), the CCO escalation threshold mentioned in the stakeholder block, vendor BAA protocols from recurring matters, or the conservative risk appetite. A practitioner briefed on this company's context would have anchored recommendations to CCO notification timelines and state-specific media-notification triggers.",
+  "specific_gifts": [
+    "No multi-state context (TX, AZ, NM, CO) despite geographic scope affecting media notification triggers",
+    "No stakeholder role references (CCO, GC) despite company block specifying escalation thresholds",
+    "Generic 'covered entity' framing rather than Vitalis Health-specific context",
+    "No recurring matter integration (vendor BAAs, vendor risk management) despite relevance"
+  ]
+}

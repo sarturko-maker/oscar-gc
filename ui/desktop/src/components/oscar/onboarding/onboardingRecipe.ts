@@ -19,13 +19,16 @@ function resolveOnboardingMcp(resourcesRoot: string | null): string {
   return DEV_ONBOARDING_MCP_PATH;
 }
 
-// Sprint 15 (ADR-052): hosted Tavily SSE extension. Only attached when
+// Sprint 15 (ADR-052): hosted Tavily extension via streamable_http (per
+// Goose's accepted ExtensionConfig variants — the CLI rejects raw `sse`
+// in favour of `streamable_http`, which is HTTP + SSE under the hood and
+// the canonical Goose transport for hosted MCPs). Only attached when
 // resolveTavilyKey() returned non-null. The resolved uri carries the
 // user's API key as a query param — caller must NOT serialise this
 // Recipe to disk or logs without first calling redactRecipeForLog.
 export function buildTavilyExtension(key: TavilyKey): NonNullable<Recipe['extensions']>[number] {
   return {
-    type: 'sse',
+    type: 'streamable_http',
     name: 'tavily',
     description:
       'Hosted Tavily web search for regulatory hypothesis-confirm (ADR-052). Tools: tavily-search (real-time web search), tavily-extract (page extraction). Used during P2.5c of the intake.',

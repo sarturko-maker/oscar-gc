@@ -1,0 +1,10 @@
+{
+  "axis": "downstream-briefing",
+  "score": 2,
+  "rationale": "The company_context_block is essentially empty (all nulls/empty arrays for industry, geography, regulatory baseline, recurring matters, and stakeholders). The agent responded generically to the request for a DPA review by asking about file access. Given the empty context block, there was nothing substantive to integrate. The response 'I don't have access' is generic refusal behavior — it doesn't reference any persona-specific elements because none were provided in the briefing.",
+  "specific_gaps": [
+    "company_context_block contains no actionable data (all nulls/empty arrays)",
+    "No industry, jurisdiction, or regulatory baseline was briefed for the agent to reference",
+    "Response is generic file-access question, not shaped by context"
+  ]
+}

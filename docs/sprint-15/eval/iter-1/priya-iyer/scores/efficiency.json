@@ -1,0 +1,9 @@
+{
+  "axis": "efficiency",
+  "score": "3",
+  "rationale": "Turn count reached 23, modestly over budget (target ≤14). The agent appropriately batched role/company/size questions in early turns and consolidated practice-area selection into two turns (offering list, user confirms/redlines). However, two efficiency gaps: (1) a display-gap confusion took 2 extra turns to resolve, where the user questioned covered context and the agent had to re-explain rather than showing prior transcript; (2) the final profile summary could have been integrated into the hand-off question rather than occupying a dedicated turn. Batching was generally sound, but the total turn count exceeded target.",
+  "specific_gaps": [
+    "Display-gap confusion (turns 16-17): user questioned whether context was covered; agent spent 2 turns resolving rather than transcript showing prior covered material",
+    "Profile save (turns 19-21): final summary occupied a dedicated turn cycle rather than being compressed into the hand-off"
+  ]
+}

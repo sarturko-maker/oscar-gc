@@ -1,0 +1,11 @@
+{
+  "axis": "downstream-briefing",
+  "score": 2,
+  "rationale": "The response acknowledges no clause was provided and asks for it, which is a reasonable clarification. However, it fundamentally misaligns with the 'Quiet Lawyer' persona seed which mandates terse, one-word answers where possible, declining specifics, pushing back on questions, and never volunteering more than asked. A properly calibrated response would have been brief ('Need the clause.') rather than the expansive explanatory paragraph actually given. The company_context_block is empty, so there's nothing to integrate - but the persona calibration failure is the more significant gap.",
+  "specific_gaps": [
+    "Response is verbose (4 sentences) when persona demands terse, one-word answers",
+    "Volunteers explanation of what it 'would do' - violates 'never volunteers more than asked'",
+    "Lists specific commercial contexts (vendor MSA, NDA, SaaS) - violates 'declines specifics'",
+    "No pushback or resistance - violates 'pushes back on questions' instruction"
+  ]
+}

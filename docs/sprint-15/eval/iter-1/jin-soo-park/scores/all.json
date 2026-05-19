@@ -1,0 +1,38 @@
+{
+  "persona_id": "jin-soo-park",
+  "agent_turn_count": 8,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 5,
+      "rationale": "All seven dimensions captured with depth comparable to the seed. Industry (logistics/cross-border shipping marketplace/commission model), geography (KR HQ, ops JP, DE; customers VN, ID), and all seven regulatory frameworks (PIPA, KFTC, E-commerce Act, APPI, GDPR, DSA, IMO MARPOL) were user-confirmed. Recurring matters, stakeholders, risk appetite (balanced), and open notes (PSD2 licence, VN/ID data transfer gap) are complete.",
+      "specific_gaps": []
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": 5,
+      "rationale": "In budget (8 turns vs ≤14 target). Agent used aggressive batching - user proactively provided dense regulatory framework in table format, eliminating need for separate search-turn. Correctly applied skip-when-covered when question templates returned empty ('check-when-covered applies here'), closed P2.5 fast by not re-asking on dropped fields (AI Governance, CoSec), and compressed to final confirmation without loops. No re-asks, no drilling-twice.",
+      "specific_gaps": []
+    },
+    "downstream_briefing": {
+      "regulatory": {
+        "axis": "downstream-briefing",
+        "score": 5,
+        "rationale": "Response naturally integrates Korean regulatory baseline (KFTC marketplace rules, MRFTA Article 23(1), Online Platform Review Guidelines) and jurisdiction-specific enforcement history (Naver, Kakao Mobility, Coupang fines in KRW). It uses the three briefed metrics (on-time delivery, claim ratio, pricing) as the substantive backbone of its defensibility analysis and tailors documentation requirements specifically to what KFTC expects, not generic compliance checklists.",
+        "specific_gaps": []
+      },
+      "privacy": {
+        "axis": "downstream-briefing",
+        "score": 3,
+        "rationale": "Response correctly distinguishes PIPA and APPI regulatory frameworks with specific article citations (28), explaining why separate addenda are needed. However, it treats the question as general cross-border transfer analysis rather than integrating the full persona seed — doesn't reflect that this is Hanseo's pending Germany payment-services licence context, the KFTC recurring matters, the specific stakeholder context (VP Ops, Regional Heads), or that the business model is a marketplace platform with commission on match. Answer is technically correct on the law but not shaped by the briefed company's operational context.",
+        "specific_gaps": [
+          "No reference to pending Germany PSD2-style licence which creates parallel regulatory exposure",
+          "No acknowledgment of KFTC inquiries as recurring matter affecting data handling posture",
+          "No reference to company's marketplace platform business model affecting the transfer",
+          "Stakeholder context (VP Operations, Regional Heads) not mentioned for approval workflow"
+        ]
+      }
+    }
+  }
+}

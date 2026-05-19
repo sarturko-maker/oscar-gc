@@ -1,0 +1,1 @@
+I don't see a clause attached or in your message. Could you paste the clause text or attach the document for me to review? Once I have that, I can tell you whether it tracks market-standard language for the relevant commercial context (vendor MSA, NDA, SaaS terms, etc.) and flag any notable deviations.

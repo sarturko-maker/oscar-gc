@@ -1,0 +1,44 @@
+{
+  "persona_id": "quiet-lawyer",
+  "agent_turn_count": 7,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 5,
+      "rationale": "The Quiet Lawyer persona declined to share specifics, and all seven dimensions are recorded as null/empty without invention. Oscar respected each decline without re-asking ('company declined to share' → recorded null; role asked → captured 'counsel'; practice areas asked → captured list). This is exactly the null-faithful behavior the Edge persona tests.",
+      "specific_gaps": []
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": 4,
+      "rationale": "In budget (9 turns vs 14 target) with aggressive batching (collected all 9 practice areas in one turn) and proper skip-when-covered (skipped per-area drill questions after 'Ready' signal). Lost one point for the clarification turn on 'Save?' - the question could have been clearer upfront.",
+      "specific_gaps": [
+        "One clarification turn needed for profile confirmation"
+      ]
+    },
+    "downstream_briefing": {
+      "commercial": {
+        "axis": "downstream-briefing",
+        "score": 2,
+        "rationale": "The response acknowledges no clause was provided and asks for it, which is a reasonable clarification. However, it fundamentally misaligns with the 'Quiet Lawyer' persona seed which mandates terse, one-word answers where possible, declining specifics, pushing back on questions, and never volunteering more than asked. A properly calibrated response would have been brief ('Need the clause.') rather than the expansive explanatory paragraph actually given. The company_context_block is empty, so there's nothing to integrate - but the persona calibration failure is the more significant gap.",
+        "specific_gaps": [
+          "Response is verbose (4 sentences) when persona demands terse, one-word answers",
+          "Volunteers explanation of what it 'would do' - violates 'never volunteers more than asked'",
+          "Lists specific commercial contexts (vendor MSA, NDA, SaaS) - violates 'declines specifics'",
+          "No pushback or resistance - violates 'pushes back on questions' instruction"
+        ]
+      },
+      "privacy": {
+        "axis": "downstream-briefing",
+        "score": 2,
+        "rationale": "The company_context_block is essentially empty (all nulls/empty arrays for industry, geography, regulatory baseline, recurring matters, and stakeholders). The agent responded generically to the request for a DPA review by asking about file access. Given the empty context block, there was nothing substantive to integrate. The response 'I don't have access' is generic refusal behavior — it doesn't reference any persona-specific elements because none were provided in the briefing.",
+        "specific_gaps": [
+          "company_context_block contains no actionable data (all nulls/empty arrays)",
+          "No industry, jurisdiction, or regulatory baseline was briefed for the agent to reference",
+          "Response is generic file-access question, not shaped by context"
+        ]
+      }
+    }
+  }
+}

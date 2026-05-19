@@ -1,0 +1,8 @@
+{
+  "axis": "efficiency",
+  "score": 4,
+  "rationale": "In budget (9 turns vs 14 target) with aggressive batching (collected all 9 practice areas in one turn) and proper skip-when-covered (skipped per-area drill questions after 'Ready' signal). Lost one point for the clarification turn on 'Save?' - the question could have been clearer upfront.",
+  "specific_gaps": [
+    "One clarification turn needed for profile confirmation"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "axis": "downstream-briefing",
+  "score": 1,
+  "rationale": "Response is a generic commercial negotiation strategy. It discusses price escalation and SKU discontinuation terms, but nowhere references the persona's industry (electrical components distribution), geography (UK-only operations), regulatory baseline (UK GDPR, UK REACH, WEEE, etc.), or stakeholders (MD approval £100k, Head of Procurement, Sales Director). The answer could apply to any supplier renegotiation in any jurisdiction. No integration of the company context block.",
+  "specific_gaps": [
+    "No reference to electrical components sub-sector when discussing SKU discontinuation risk",
+    "No mention of UK geography or jurisdiction-specific considerations",
+    "No regulatory context (e.g., UK REACH/WEEE supply continuity, Late Payment Act implications for payment terms)",
+    "No stakeholder awareness (MD escalation at £100k threshold, role of Head of Procurement)",
+    "Ignores open_notes about autumn channel partner programme launch",
+    "Does not reference recurring_matter 'supplier framework agreements' to ground the analysis"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "axis": "coverage",
+  "score": 5,
+  "rationale": "All seven dimensions are present with depth comparable to the seed. The regulatory baseline has all ten frameworks with provenance (user-confirmed). Geography captures HQ (Texas) and four operating jurisdictions. Industry depth includes sector and sub-sector; business_model is correctly null after the user declined to share for-profit status. The agent respected that decline without re-asking and recorded null faithfully. Recurring matters, stakeholders, risk appetite, and open notes all captured accurately.",
+  "specific_gaps": []
+}

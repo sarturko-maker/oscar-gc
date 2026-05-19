@@ -1,0 +1,45 @@
+{
+  "persona_id": "sarah-chen",
+  "agent_turn_count": 10,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 4,
+      "rationale": "Intake is thorough with all seven dimensions captured. Regulatory baseline is exceptionally detailed (14 frameworks across UK/EU/US) with hypothesis-confirm pattern. Geographic, stakeholder, risk appetite, recurring matters, and open notes all match seed depth. Industry dimension is thin on sub_sector (null) and missing business_model — the transcript establishes 'B2B payments SaaS' as sector but 'Subscription SaaS' business model was never captured. One load-bearing dimension gap.",
+      "specific_gaps": [
+        "Industry: business_model (Subscription SaaS) not captured — transcript never specified SaaS model type, only 'B2B payments SaaS' as sector and 'mid-market' for size"
+      ]
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": 5,
+      "rationale": "Agent completed intake in 10 turns (well under 14-target). Aggressive batching evident throughout: regulatory hypothesis covering all three jurisdictions at once (turn 3), combined workload+stakeholders in single beat (turn 5), presented all practice areas together (turn 7). Hypothesis-confirm pattern used correctly - stated regulatory expectation and let user correct/add. No re-asks, no single-fact drilling, skip-when-covered applied cleanly when user quickly selected practice areas.",
+      "specific_gaps": []
+    },
+    "downstream_briefing": {
+      "commercial": {
+        "axis": "downstream-briefing",
+        "score": 3,
+        "rationale": "Response uses industry context (B2B fintech/payments, UK GDPR, FCA) to structure commercial advice, correctly identifies the uncapped indemnity problem, and references leverage. However, it reads as a reasonably strong generic commercial law response rather than one shaped by the full briefing. Missing: DORA's ICT third-party risk framework (critical for fintech vendor assessments), PCI-DSS implications for payment data processors, US state breach notification exposure, multi-jurisdiction operational complexity, and stakeholder context (CISO/CTO as escalation partners). The answer would be stronger if it connected vendor risk to the acquisition diligence context noted in open_notes.",
+        "specific_gaps": [
+          "No reference to DORA third-party ICT risk framework relevant to fintech vendor critical services",
+          "No mention of PCI-DSS Level 1 implications for data-processor vendor selection",
+          "No acknowledgment of US state breach notification law cost exposure",
+          "Missing multi-jurisdiction complexity (UK + DE + US regulatory stack)",
+          "No stakeholder context (CISO/CTO as key partners in vendor evaluations)"
+        ]
+      },
+      "privacy": {
+        "axis": "downstream-briefing",
+        "score": 4,
+        "rationale": "Response demonstrates strong persona integration by leveraging PayFlow's fintech-regulated baseline (UK GDPR, FCA authorizer), the active acquisition context ('UK/US target, expect extra scrutiny'), and geographic controls tied to operating jurisdictions (UK→UK, US→US for transaction data). It addresses the controller posture analysis with FCA angle on data localisation—specific to B2B payments. Minor gap: Germany jurisdiction not individually flagged, and PCI-DSS/DORA from regulatory baseline not discussed though less material to this specific question.",
+        "specific_gaps": [
+          "Germany operating jurisdiction not individually referenced in geographic control analysis",
+          "PCI-DSS (in regulatory baseline) not acknowledged despite B2B payments context",
+          "No explicit stakeholder references (CISO, CTO) from persona"
+        ]
+      }
+    }
+  }
+}

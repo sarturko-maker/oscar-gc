@@ -16,7 +16,7 @@ export function redactRecipeForLog(recipe: Recipe): Recipe {
   return {
     ...recipe,
     extensions: recipe.extensions.map((ext) => {
-      if (ext.type !== 'sse' || !ext.uri) return ext;
+      if ((ext.type !== 'sse' && ext.type !== 'streamable_http') || !ext.uri) return ext;
       return { ...ext, uri: ext.uri.replace(TAVILY_KEY_RE, TAVILY_REDACTION) };
     }),
   };

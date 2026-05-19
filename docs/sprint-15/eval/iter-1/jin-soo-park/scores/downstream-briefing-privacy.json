@@ -1,0 +1,11 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "Response correctly distinguishes PIPA and APPI regulatory frameworks with specific article citations (28), explaining why separate addenda are needed. However, it treats the question as general cross-border transfer analysis rather than integrating the full persona seed — doesn't reflect that this is Hanseo's pending Germany payment-services licence context, the KFTC recurring matters, the specific stakeholder context (VP Ops, Regional Heads), or that the business model is a marketplace platform with commission on match. Answer is technically correct on the law but not shaped by the briefed company's operational context.",
+  "specific_gaps": [
+    "No reference to pending Germany PSD2-style licence which creates parallel regulatory exposure",
+    "No acknowledgment of KFTC inquiries as recurring matter affecting data handling posture",
+    "No reference to company's marketplace platform business model affecting the transfer",
+    "Stakeholder context (VP Operations, Regional Heads) not mentioned for approval workflow"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "persona_id": "daniel-okafor",
+  "agent_turn_count": 10,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 5,
+      "rationale": "All seven dimensions captured with depth matching the seed. Industry (sector/sub-sector/business model), geography (HQ + operating jurisdictions), regulatory baseline (10 frameworks with user-confirmed provenance), recurring matters (top 4 shapes with key stakeholders), risk appetite (conservative), and open notes (channel partner programme) are all present. Null captures for customer/employee jurisdictions are faithful to the persona's scope.",
+      "specific_gaps": []
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": 5,
+      "rationale": "Turn count of 10 stays well under the 14-turn target. Agent used hypothesis-confirm effectively on regulatory scope (P2.5), compressed practice-area review by listing and confirming (not drilling individually), and appropriately closed bundled question phases when they returned empty. No re-asks, no loops, clean efficient intake.",
+      "specific_gaps": []
+    },
+    "downstream_briefing": {
+      "commercial": {
+        "axis": "downstream-briefing",
+        "score": 1,
+        "rationale": "Response is a generic commercial negotiation strategy. It discusses price escalation and SKU discontinuation terms, but nowhere references the persona's industry (electrical components distribution), geography (UK-only operations), regulatory baseline (UK GDPR, UK REACH, WEEE, etc.), or stakeholders (MD approval £100k, Head of Procurement, Sales Director). The answer could apply to any supplier renegotiation in any jurisdiction. No integration of the company context block.",
+        "specific_gaps": [
+          "No reference to electrical components sub-sector when discussing SKU discontinuation risk",
+          "No mention of UK geography or jurisdiction-specific considerations",
+          "No regulatory context (e.g., UK REACH/WEEE supply continuity, Late Payment Act implications for payment terms)",
+          "No stakeholder awareness (MD escalation at £100k threshold, role of Head of Procurement)",
+          "Ignores open_notes about autumn channel partner programme launch",
+          "Does not reference recurring_matter 'supplier framework agreements' to ground the analysis"
+        ]
+      },
+      "employment": {
+        "axis": "downstream-briefing",
+        "score": 1,
+        "rationale": "Response is a thorough, technically accurate employment law answer but makes no reference to ANY element from the injected company context — no industry (electrical components distribution), no geography/regulatory baseline specific to Meridian, no stakeholder structure, no recurring commercial matters. It's a generic textbook answer about UK employment law that could apply to any company. The persona is identified as 'Commercial Counsel' at a B2B distributor but there's no integration of that context into the substantive advice.",
+        "specific_gaps": [
+          "No reference to industry: B2B electrical components distribution",
+          "No reference to geography/regulatory baseline: UK-only operations, listed frameworks",
+          "No reference to recurring matters: supplier framework agreements, customer terms, channel reseller agreements",
+          "No reference to stakeholders: MD, Head of Procurement, Sales Director",
+          "No reference to company size band: 201-1000 employees",
+          "No consideration of whether employment policy touches on commercial/legal exposure (warranty disputes, supplier terms)"
+        ]
+      }
+    }
+  }
+}

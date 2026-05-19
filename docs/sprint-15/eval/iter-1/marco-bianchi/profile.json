@@ -1,0 +1,157 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:28:00Z",
+  "user": {
+    "name": "Marco Bianchi",
+    "role": "general-counsel",
+    "role_label": "General Counsel"
+  },
+  "corporate": {
+    "name": "Lumen AI",
+    "industry": "AI - foundation models + inference",
+    "size_band": "51-200"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "AI",
+      "sub_sector": "foundation models + inference",
+      "business_model": "B2B platform + B2C developer API, dual-track"
+    },
+    "geography": {
+      "hq_jurisdiction": "Italy",
+      "operating_jurisdictions": [
+        "Italy",
+        "Germany",
+        "France",
+        "UK",
+        "US"
+      ],
+      "customer_jurisdictions": null,
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "gdpr",
+          "label": "GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "uk-gdpr",
+          "label": "UK GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dsa",
+          "label": "DSA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "eu-ai-act",
+          "label": "EU AI Act",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "italian-civil-code",
+          "label": "Italian Civil Code",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dma",
+          "label": "DMA (potential)",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "colorado-sb-205",
+          "label": "Colorado SB 205",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "illinois-hb-3773",
+          "label": "Illinois HB 3773",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "california-ai-law",
+          "label": "California AI law",
+          "confidence": "user-confirmed"
+        }
+      ],
+      "captured_via": "hypothesis-confirm"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "data provenance reviews",
+        "enterprise customer agreements",
+        "AI Act conformity assessment",
+        "B2C terms/T&S policy updates"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": "CEO",
+      "key_business_partners": [
+        "Engineering",
+        "Trust & Safety",
+        "Sales"
+      ],
+      "escalation_threshold_label": "CEO sign-off for AI Act high-risk tier debate; Board for AI Act safety notification triggers — escalate through GC first"
+    },
+    "risk_appetite": "growth-oriented",
+    "open_notes": "Code-gen product launching Q3 — AI Act classification open, awaiting outside counsel. B2C content-moderation policies need refresh post-launch. Enterprise deal cycles longer due to AI Act uncertainty. Board escalation for AI Act safety notifications through GC first."
+  },
+  "practice_areas": [
+    {
+      "id": "ai-governance",
+      "name": "AI Governance",
+      "body": "Models, datasets, and AI-governance memory live here. Instructions pull model detail and search risk artefacts.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy",
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "product",
+      "name": "Product",
+      "body": "Products, releases, and product-agreement memory live here. Instructions pull product detail and search related contracts.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "ip",
+      "name": "IP",
+      "body": "Inventors, marks, and IP-portfolio memory live here. Instructions pull profile detail and search filings.",
+      "source": "default",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

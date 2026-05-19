@@ -1,0 +1,6 @@
+{
+  "axis": "efficiency",
+  "score": 5,
+  "rationale": "In budget (8 turns vs ≤14 target). Agent used aggressive batching - user proactively provided dense regulatory framework in table format, eliminating need for separate search-turn. Correctly applied skip-when-covered when question templates returned empty ('check-when-covered applies here'), closed P2.5 fast by not re-asking on dropped fields (AI Governance, CoSec), and compressed to final confirmation without loops. No re-asks, no drilling-twice.",
+  "specific_gaps": []
+}

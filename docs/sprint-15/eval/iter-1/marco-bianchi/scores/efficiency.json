@@ -1,0 +1,10 @@
+{
+  "axis": "efficiency",
+  "score": 2,
+  "rationale": "23 turns clearly exceeds the 14-turn budget (64% over). The agent gathered comprehensive info but made multiple single-fact questions (size+model, HQ+juris, escalation) that could have been batched earlier. The 'Quiet Lawyer' persona was respected with brief turns, but the agent failed to compress phases — 23 turns rather than ≤14 is a material budget failure despite good skip-when-covered (declined Regulatory) and hypothesis-confirm (regulatory corrections).",
+  "specific_gaps": [
+    "Turns 3+5+13+15: Single-fact follow-ups that could have been batched into earlier questions",
+    "Turns 7-8: Detailed regulatory corrections took 2 turns; P2.5 could have been structured as 'here's my working list, confirm/correct' for one turn",
+    "23 turns total vs 14-turn budget - chronic over-budget despite persona-appropriate brevity"
+  ]
+}

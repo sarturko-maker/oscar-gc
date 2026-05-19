@@ -1,0 +1,12 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "Response uses industry context (B2B fintech/payments, UK GDPR, FCA) to structure commercial advice, correctly identifies the uncapped indemnity problem, and references leverage. However, it reads as a reasonably strong generic commercial law response rather than one shaped by the full briefing. Missing: DORA's ICT third-party risk framework (critical for fintech vendor assessments), PCI-DSS implications for payment data processors, US state breach notification exposure, multi-jurisdiction operational complexity, and stakeholder context (CISO/CTO as escalation partners). The answer would be stronger if it connected vendor risk to the acquisition diligence context noted in open_notes.",
+  "specific_gaps": [
+    "No reference to DORA third-party ICT risk framework relevant to fintech vendor critical services",
+    "No mention of PCI-DSS Level 1 implications for data-processor vendor selection",
+    "No acknowledgment of US state breach notification law cost exposure",
+    "Missing multi-jurisdiction complexity (UK + DE + US regulatory stack)",
+    "No stakeholder context (CISO/CTO as key partners in vendor evaluations)"
+  ]
+}

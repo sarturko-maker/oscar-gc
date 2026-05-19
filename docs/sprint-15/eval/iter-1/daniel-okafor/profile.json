@@ -1,0 +1,136 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:22:00Z",
+  "user": {
+    "name": "Daniel Okafor",
+    "role": "counsel",
+    "role_label": "Commercial Counsel"
+  },
+  "corporate": {
+    "name": "Meridian Power",
+    "industry": "B2B distribution",
+    "size_band": "201-1000"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "B2B distribution",
+      "sub_sector": "electrical components",
+      "business_model": "distribution"
+    },
+    "geography": {
+      "hq_jurisdiction": "United Kingdom",
+      "operating_jurisdictions": [
+        "United Kingdom"
+      ],
+      "customer_jurisdictions": null,
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "uk-gdpr",
+          "label": "UK GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "uk-reach",
+          "label": "UK REACH",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "emc-regulations",
+          "label": "EMC Regulations",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "late-payment-act",
+          "label": "Late Payment Act",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "rohs",
+          "label": "RoHS",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "weee",
+          "label": "WEEE",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "modern-slavery-act",
+          "label": "Modern Slavery Act",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "product-safety-metrology-act",
+          "label": "Product Safety & Metrology Act",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "bribery-act",
+          "label": "Bribery Act",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "consumer-rights-act",
+          "label": "Consumer Rights Act 2015",
+          "confidence": "user-confirmed"
+        }
+      ],
+      "captured_via": "hypothesis-confirm"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "supplier framework agreements",
+        "customer terms of supply",
+        "channel reseller agreements",
+        "warranty disputes"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": "Managing Director",
+      "key_business_partners": [
+        "Head of Procurement",
+        "Sales Director"
+      ],
+      "escalation_threshold_label": "£100k to MD; warranty exposure to Board"
+    },
+    "risk_appetite": "conservative",
+    "open_notes": "Autumn channel partner programme launch — first reseller agreements being drafted now."
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "channel-reseller",
+      "name": "Channel Reseller",
+      "body": "Channel partner and reseller agreements for partner programme launches.",
+      "source": "user-added",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

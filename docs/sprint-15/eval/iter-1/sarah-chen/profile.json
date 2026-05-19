@@ -1,0 +1,179 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:20:00Z",
+  "user": {
+    "name": "Sarah Chen",
+    "role": "general-counsel",
+    "role_label": "General Counsel"
+  },
+  "corporate": {
+    "name": "PayFlow",
+    "industry": "B2B payments SaaS",
+    "size_band": "1001-5000"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "B2B payments SaaS",
+      "sub_sector": null,
+      "business_model": null
+    },
+    "geography": {
+      "hq_jurisdiction": "United Kingdom",
+      "operating_jurisdictions": [
+        "United Kingdom",
+        "Germany",
+        "United States"
+      ],
+      "customer_jurisdictions": null,
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "uk-gdpr",
+          "label": "UK GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "fca-authorization",
+          "label": "FCA authorization",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "psr1",
+          "label": "PSR1",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "mlr",
+          "label": "UK MLR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dsa",
+          "label": "DSA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "gdpr",
+          "label": "GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dora",
+          "label": "DORA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "psd3-psr",
+          "label": "PSD3/PSR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "amld6",
+          "label": "AMLD6",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "ccpa",
+          "label": "CCPA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "finCen-bsa",
+          "label": "FinCEN BSA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "state-money-transmitter",
+          "label": "State money transmitter",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "state-breach-notification",
+          "label": "State breach notification",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "pci-dss",
+          "label": "PCI-DSS",
+          "confidence": "user-confirmed"
+        }
+      ],
+      "captured_via": "hypothesis-confirm"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "Customer agreements",
+        "Vendor MSAs",
+        "FCA regulator queries",
+        "MSA renegotiations"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": "CFO",
+      "key_business_partners": [
+        "CISO",
+        "CTO",
+        "VP Sales"
+      ],
+      "escalation_threshold_label": "£500k to CEO; material regulatory to Board"
+    },
+    "risk_appetite": "balanced",
+    "open_notes": "UK/US acquisition next quarter — diligence active across regulatory, privacy, commercial"
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": {
+        "ai-governance-model-risk-classification": "In-house cross-functional review (compliance, infoSec, business line sign-off) for all models before production. External validation brought in for higher-risk AI-driven decisions (payment routing, customer credit). Keeps us nimble but defensible with regulators."
+      }
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy",
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "regulatory",
+      "name": "Regulatory",
+      "body": "Regulators, obligations, and compliance memory live here. Instructions pull obligation detail and search filings.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": {
+        "employment-cross-functional-review": "In-house cross-functional review (compliance, infoSec, business line sign-off) for all models before production. External validation brought in for higher-risk AI-driven decisions (payment routing, customer credit). Keeps us nimble but defensible with regulators."
+      }
+    },
+    {
+      "id": "ai-governance",
+      "name": "AI Governance",
+      "body": "Models, datasets, and AI-governance memory live here. Instructions pull model detail and search risk artefacts.",
+      "source": "default",
+      "area_profile": {
+        "ai-governance-model-risk-classification": "In-house cross-functional review (compliance, infoSec, business line sign-off) for all models before production. External validation brought in for higher-risk AI-driven decisions (payment routing, customer credit). Keeps us nimble but defensible with regulators."
+      }
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

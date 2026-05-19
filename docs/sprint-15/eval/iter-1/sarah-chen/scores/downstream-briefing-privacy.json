@@ -1,0 +1,10 @@
+{
+  "axis": "downstream-briefing",
+  "score": 4,
+  "rationale": "Response demonstrates strong persona integration by leveraging PayFlow's fintech-regulated baseline (UK GDPR, FCA authorizer), the active acquisition context ('UK/US target, expect extra scrutiny'), and geographic controls tied to operating jurisdictions (UK→UK, US→US for transaction data). It addresses the controller posture analysis with FCA angle on data localisation—specific to B2B payments. Minor gap: Germany jurisdiction not individually flagged, and PCI-DSS/DORA from regulatory baseline not discussed though less material to this specific question.",
+  "specific_gaps": [
+    "Germany operating jurisdiction not individually referenced in geographic control analysis",
+    "PCI-DSS (in regulatory baseline) not acknowledged despite B2B payments context",
+    "No explicit stakeholder references (CISO, CTO) from persona"
+  ]
+}

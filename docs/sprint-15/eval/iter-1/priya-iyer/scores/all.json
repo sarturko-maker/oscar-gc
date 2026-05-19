@@ -1,0 +1,46 @@
+{
+  "persona_id": "priya-iyer",
+  "agent_turn_count": 11,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 5,
+      "rationale": "All seven dimensions are present with depth comparable to the seed. The regulatory baseline has all ten frameworks with provenance (user-confirmed). Geography captures HQ (Texas) and four operating jurisdictions. Industry depth includes sector and sub-sector; business_model is correctly null after the user declined to share for-profit status. The agent respected that decline without re-asking and recorded null faithfully. Recurring matters, stakeholders, risk appetite, and open notes all captured accurately.",
+      "specific_gaps": []
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": "3",
+      "rationale": "Turn count reached 23, modestly over budget (target ≤14). The agent appropriately batched role/company/size questions in early turns and consolidated practice-area selection into two turns (offering list, user confirms/redlines). However, two efficiency gaps: (1) a display-gap confusion took 2 extra turns to resolve, where the user questioned covered context and the agent had to re-explain rather than showing prior transcript; (2) the final profile summary could have been integrated into the hand-off question rather than occupying a dedicated turn. Batching was generally sound, but the total turn count exceeded target.",
+      "specific_gaps": [
+        "Display-gap confusion (turns 16-17): user questioned whether context was covered; agent spent 2 turns resolving rather than transcript showing prior covered material",
+        "Profile save (turns 19-21): final summary occupied a dedicated turn cycle rather than being compressed into the hand-off"
+      ]
+    },
+    "downstream_briefing": {
+      "regulatory": {
+        "axis": "downstream-briefing",
+        "score": 3,
+        "rationale": "Response integrates Texas-specific regulatory citations (Texas Occupations Code §157.0512) and correctly explains the TMB investigation process, showing some geography awareness. However, the answer focuses narrowly on Texas despite the persona operating across four states (TX, AZ, NM, CO). It does not reference the broader regulatory baseline (HIPAA, Stark, AKS which are in the context block) or connect to the escalation thresholds (GC for Stark, CCO for HIPAA) even tangentially. The content is shaped by the jurisdiction but not by the full persona context.",
+        "specific_gaps": [
+          "Ignores multi-state footprint (AZ, NM, CO) - doesn't acknowledge that other state medical boards may have parallel or different requirements",
+          "No reference to broader regulatory baseline (HIPAA, Stark, AKS) even as mitigation context",
+          "Doesn't tie to stakeholder structure (CCO, CMO) or escalation thresholds from context block",
+          "Recurring matters (physician employment structuring, BAAs) not referenced despite being in the context"
+        ]
+      },
+      "privacy": {
+        "axis": "downstream-briefing",
+        "score": 2,
+        "rationale": "Response provides accurate HIPAA information covering notification clock, thresholds, and vendor questions, but operates entirely at a generic textbook level. It makes no reference to Vitalis Health's multi-state operations (TX/AZ/NM/CO), the CCO escalation threshold mentioned in the stakeholder block, vendor BAA protocols from recurring matters, or the conservative risk appetite. A practitioner briefed on this company's context would have anchored recommendations to CCO notification timelines and state-specific media-notification triggers.",
+        "specific_gifts": [
+          "No multi-state context (TX, AZ, NM, CO) despite geographic scope affecting media notification triggers",
+          "No stakeholder role references (CCO, GC) despite company block specifying escalation thresholds",
+          "Generic 'covered entity' framing rather than Vitalis Health-specific context",
+          "No recurring matter integration (vendor BAAs, vendor risk management) despite relevance"
+        ]
+      }
+    }
+  }
+}

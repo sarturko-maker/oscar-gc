@@ -1,0 +1,147 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:25:00Z",
+  "user": {
+    "name": "Priya Iyer",
+    "role": "senior-counsel",
+    "role_label": "Senior Counsel, Regulatory"
+  },
+  "corporate": {
+    "name": "Vitalis Health",
+    "industry": "Healthcare",
+    "size_band": "5000+"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "Healthcare",
+      "sub_sector": "hospital and ambulatory clinic operations",
+      "business_model": null
+    },
+    "geography": {
+      "hq_jurisdiction": "Texas",
+      "operating_jurisdictions": [
+        "Texas",
+        "Arizona",
+        "New Mexico",
+        "Colorado"
+      ],
+      "customer_jurisdictions": null,
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "hipaa",
+          "label": "HIPAA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "emtala",
+          "label": "EMTALA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "stark-law",
+          "label": "Stark Law",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "anti-kickback-statute",
+          "label": "Anti-Kickback Statute",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "cms-cop",
+          "label": "CMS Conditions of Participation",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "fda-21-cfr-part-820",
+          "label": "FDA 21 CFR Part 820",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dea-registration",
+          "label": "DEA Registration",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "state-pharmacy-boards",
+          "label": "State Pharmacy Boards (TX, AZ, NM, CO)",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "state-medical-boards",
+          "label": "State Medical Boards (TX, AZ, NM, CO)",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "state-hospital-licensing",
+          "label": "State Hospital Licensing (TX, AZ, NM, CO)",
+          "confidence": "user-confirmed"
+        }
+      ],
+      "captured_via": "user-enumerated"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "Physician employment/comp structuring",
+        "Vendor BAAs",
+        "DEA controlled-substance compliance",
+        "Device complaints and CAPA reviews"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": "GC",
+      "key_business_partners": [
+        "CCO",
+        "CMO",
+        "VP Quality & Risk"
+      ],
+      "escalation_threshold_label": "Stark-designated health services → GC; HIPAA breaches >500 records → CCO"
+    },
+    "risk_appetite": "conservative",
+    "open_notes": "Integrating AI clinical-decision-support tool — FDA and state med-board rules apply"
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy",
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "regulatory",
+      "name": "Regulatory",
+      "body": "Regulators, obligations, and compliance memory live here. Instructions pull obligation detail and search filings.",
+      "source": "default",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

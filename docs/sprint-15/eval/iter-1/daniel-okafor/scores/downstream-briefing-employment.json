@@ -1,0 +1,13 @@
+{
+  "axis": "downstream-briefing",
+  "score": 1,
+  "rationale": "Response is a thorough, technically accurate employment law answer but makes no reference to ANY element from the injected company context — no industry (electrical components distribution), no geography/regulatory baseline specific to Meridian, no stakeholder structure, no recurring commercial matters. It's a generic textbook answer about UK employment law that could apply to any company. The persona is identified as 'Commercial Counsel' at a B2B distributor but there's no integration of that context into the substantive advice.",
+  "specific_gaps": [
+    "No reference to industry: B2B electrical components distribution",
+    "No reference to geography/regulatory baseline: UK-only operations, listed frameworks",
+    "No reference to recurring matters: supplier framework agreements, customer terms, channel reseller agreements",
+    "No reference to stakeholders: MD, Head of Procurement, Sales Director",
+    "No reference to company size band: 201-1000 employees",
+    "No consideration of whether employment policy touches on commercial/legal exposure (warranty disputes, supplier terms)"
+  ]
+}

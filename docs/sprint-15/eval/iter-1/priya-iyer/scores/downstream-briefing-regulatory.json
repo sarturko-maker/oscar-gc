@@ -1,0 +1,11 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "Response integrates Texas-specific regulatory citations (Texas Occupations Code §157.0512) and correctly explains the TMB investigation process, showing some geography awareness. However, the answer focuses narrowly on Texas despite the persona operating across four states (TX, AZ, NM, CO). It does not reference the broader regulatory baseline (HIPAA, Stark, AKS which are in the context block) or connect to the escalation thresholds (GC for Stark, CCO for HIPAA) even tangentially. The content is shaped by the jurisdiction but not by the full persona context.",
+  "specific_gaps": [
+    "Ignores multi-state footprint (AZ, NM, CO) - doesn't acknowledge that other state medical boards may have parallel or different requirements",
+    "No reference to broader regulatory baseline (HIPAA, Stark, AKS) even as mitigation context",
+    "Doesn't tie to stakeholder structure (CCO, CMO) or escalation thresholds from context block",
+    "Recurring matters (physician employment structuring, BAAs) not referenced despite being in the context"
+  ]
+}

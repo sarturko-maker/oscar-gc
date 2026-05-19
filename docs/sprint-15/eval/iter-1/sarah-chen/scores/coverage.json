@@ -1,0 +1,8 @@
+{
+  "axis": "coverage",
+  "score": 4,
+  "rationale": "Intake is thorough with all seven dimensions captured. Regulatory baseline is exceptionally detailed (14 frameworks across UK/EU/US) with hypothesis-confirm pattern. Geographic, stakeholder, risk appetite, recurring matters, and open notes all match seed depth. Industry dimension is thin on sub_sector (null) and missing business_model — the transcript establishes 'B2B payments SaaS' as sector but 'Subscription SaaS' business model was never captured. One load-bearing dimension gap.",
+  "specific_gaps": [
+    "Industry: business_model (Subscription SaaS) not captured — transcript never specified SaaS model type, only 'B2B payments SaaS' as sector and 'mid-market' for size"
+  ]
+}

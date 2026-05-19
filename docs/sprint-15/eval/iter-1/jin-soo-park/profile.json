@@ -1,0 +1,141 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:30:00Z",
+  "user": {
+    "name": "Jin-soo Park",
+    "role": "general-counsel",
+    "role_label": "Head of Legal"
+  },
+  "corporate": {
+    "name": "Hanseo Logistics",
+    "industry": "logistics",
+    "size_band": "1001-5000"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "logistics",
+      "sub_sector": "cross-border shipping marketplace",
+      "business_model": "commission on match"
+    },
+    "geography": {
+      "hq_jurisdiction": "South Korea",
+      "operating_jurisdictions": [
+        "South Korea",
+        "Japan",
+        "Germany"
+      ],
+      "customer_jurisdictions": [
+        "Vietnam",
+        "Indonesia"
+      ],
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "pipa",
+          "label": "PIPA (Korea)",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "kftc",
+          "label": "KFTC marketplace rules",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "ecommerce-act",
+          "label": "E-commerce Act (Korea)",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "appi",
+          "label": "APPI (Japan)",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "gdpr",
+          "label": "GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dsa",
+          "label": "DSA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "imo-marpol",
+          "label": "IMO MARPOL",
+          "confidence": "user-confirmed"
+        }
+      ],
+      "captured_via": "hypothesis-confirm"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "carrier onboarding agreements",
+        "shipper terms updates",
+        "KFTC inquiries",
+        "cross-border data transfer impact assessments"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": "CFO",
+      "key_business_partners": [
+        "VP Operations (Seoul)",
+        "Regional Head Japan",
+        "Regional Head Germany"
+      ],
+      "escalation_threshold_label": "CEO for KFTC; CFO for KRW 1B+"
+    },
+    "risk_appetite": "balanced",
+    "open_notes": "Pending Germany payment-services licence (PSD2-style), customer base extends to Vietnam and Indonesia without local privacy frameworks mapped — relies on consent + standard contractual clauses for cross-border transfers. KFTC inquiries on platform-fairness rules are recurring cadence issue."
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy",
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "regulatory",
+      "name": "Regulatory",
+      "body": "Regulators, obligations, and compliance memory live here. Instructions pull obligation detail and search filings.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "product",
+      "name": "Product",
+      "body": "Products, releases, and product-agreement memory live here. Instructions pull product detail and search related contracts.",
+      "source": "default",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

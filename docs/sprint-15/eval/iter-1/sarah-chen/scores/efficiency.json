@@ -1,0 +1,6 @@
+{
+  "axis": "efficiency",
+  "score": 5,
+  "rationale": "Agent completed intake in 10 turns (well under 14-target). Aggressive batching evident throughout: regulatory hypothesis covering all three jurisdictions at once (turn 3), combined workload+stakeholders in single beat (turn 5), presented all practice areas together (turn 7). Hypothesis-confirm pattern used correctly - stated regulatory expectation and let user correct/add. No re-asks, no single-fact drilling, skip-when-covered applied cleanly when user quickly selected practice areas.",
+  "specific_gaps": []
+}

@@ -1,0 +1,110 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:37:00Z",
+  "user": {
+    "name": null,
+    "role": "counsel",
+    "role_label": "counsel"
+  },
+  "corporate": {
+    "name": null,
+    "industry": null,
+    "size_band": null
+  },
+  "company_context": {
+    "industry": {
+      "sector": null,
+      "sub_sector": null,
+      "business_model": null
+    },
+    "geography": {
+      "hq_jurisdiction": null,
+      "operating_jurisdictions": [],
+      "customer_jurisdictions": null,
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [],
+      "captured_via": "user-enumerated"
+    },
+    "recurring_matters": {
+      "top_shapes": []
+    },
+    "stakeholders": {
+      "reports_to": null,
+      "key_business_partners": [],
+      "escalation_threshold_label": null
+    },
+    "risk_appetite": null,
+    "open_notes": null
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy",
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "ip",
+      "name": "IP",
+      "body": "Inventors, marks, and IP-portfolio memory live here. Instructions pull profile detail and search filings.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "regulatory",
+      "name": "Regulatory",
+      "body": "Regulators, obligations, and compliance memory live here. Instructions pull obligation detail and search filings.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "product",
+      "name": "Product",
+      "body": "Products, releases, and product-agreement memory live here. Instructions pull product detail and search related contracts.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "ai-governance",
+      "name": "AI Governance",
+      "body": "Models, datasets, and AI-governance memory live here. Instructions pull model detail and search risk artefacts.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "cosec",
+      "name": "CoSec",
+      "body": "Entities, board records, and statutory-filing memory live here. Instructions pull entity detail and search minutes and resolutions.",
+      "source": "default",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

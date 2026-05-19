@@ -91,33 +91,91 @@ async function writeText(path, text) {
   await fs.writeFile(path, text, 'utf8');
 }
 
-async function gooseOneShot(recipePath, text, { sessionId, resume, profilePath } = {}) {
-  const args = ['run', '--recipe', recipePath, '--quiet', '--output-format', 'json', '-t', text];
-  if (sessionId) args.push('--session-id', sessionId);
+async function gooseOneShot(baseRecipePath, text, { sessionId, resume, profilePath } = {}) {
+  // goose CLI makes --recipe mutually exclusive with -t and -i, so we
+  // thread the user turn through the recipe's `prompt` field. Each turn
+  // writes a fresh recipe JSON to /tmp with the prompt set; cleaned up
+  // after invocation. We do NOT pass --no-profile because goose's tool-
+  // call wiring depends on the default platform extensions being loaded
+  // (without them, MiniMax-M2.5 emits text-shaped "[TOOL_CALL]" pseudo-
+  // calls instead of real toolRequest content blocks; verified during
+  // Sprint 15 P6 first run).
+  const raw = await fs.readFile(baseRecipePath, 'utf8');
+  const recipe = JSON.parse(raw);
+  recipe.prompt = text;
+  const variantPath = `${baseRecipePath}.${Date.now()}.${randomUUID().slice(0, 6)}.json`;
+  await fs.writeFile(variantPath, JSON.stringify(recipe), 'utf8');
+  const args = ['run', '--recipe', variantPath, '--quiet', '--output-format', 'json'];
+  if (sessionId) args.push('--name', sessionId);
   if (resume) args.push('--resume');
   else if (!sessionId) args.push('--no-session');
   const env = {};
   if (profilePath) env.OSCAR_PROFILE_PATH = profilePath;
-  const { stdout, stderr } = await runProcess(GOOSE_BIN, args, { env });
-  return { stdout, stderr };
+  try {
+    const { stdout, stderr } = await runProcess(GOOSE_BIN, args, { env });
+    return { stdout, stderr };
+  } finally {
+    fs.unlink(variantPath).catch(() => undefined);
+  }
 }
 
 function extractAgentTextFromGooseOutput(stdout) {
-  // Goose --output-format json emits one JSON object per turn. Pull the
-  // last assistant message text. Tolerant of multi-line / streamed output.
+  // Goose --output-format json emits one JSON object with messages[] and
+  // metadata. Find the last role='assistant' message and concatenate all
+  // its content[] items of type='text' (skip thinking blocks).
   const text = stdout.trim();
-  // Try simple JSON parse first; otherwise pick text fields heuristically.
   try {
     const parsed = JSON.parse(text);
-    if (typeof parsed === 'string') return parsed;
+    if (parsed && Array.isArray(parsed.messages)) {
+      const assistantMessages = parsed.messages.filter((m) => m.role === 'assistant');
+      if (assistantMessages.length > 0) {
+        const last = assistantMessages[assistantMessages.length - 1];
+        if (Array.isArray(last.content)) {
+          return last.content
+            .filter((c) => c && c.type === 'text' && typeof c.text === 'string')
+            .map((c) => c.text)
+            .join('')
+            .trim();
+        }
+      }
+    }
+    // Older formats — fall back to root .text.
     if (parsed && typeof parsed.text === 'string') return parsed.text;
-    if (parsed && parsed.message && typeof parsed.message.text === 'string')
-      return parsed.message.text;
   } catch {
     /* fall through */
   }
-  // Fall back: take everything after the last newline block boundary.
   return text;
+}
+
+function detectFinalizeProfileCall(stdout) {
+  // After a goose run that finalizes the profile, the messages[] will
+  // contain a toolRequest content block of the form:
+  //   { type: "toolRequest",
+  //     toolCall: { status: "success",
+  //                 value: { name: "oscar-onboarding__finalize_profile",
+  //                          arguments: {...} } } }
+  // (Verified shape during Sprint 15 P6 first run with --output-format json.)
+  try {
+    const parsed = JSON.parse(stdout.trim());
+    if (!parsed || !Array.isArray(parsed.messages)) return false;
+    for (const m of parsed.messages) {
+      if (!Array.isArray(m.content)) continue;
+      for (const c of m.content) {
+        if (!c || typeof c !== 'object') continue;
+        if (c.type === 'toolRequest') {
+          const name = c.toolCall?.value?.name ?? c.toolCall?.name;
+          if (typeof name === 'string' && name.includes('finalize_profile')) return true;
+        }
+        if (c.type === 'toolResponse') {
+          const name = c.toolName ?? c.toolResponse?.value?.name;
+          if (typeof name === 'string' && name.includes('finalize_profile')) return true;
+        }
+      }
+    }
+  } catch {
+    /* not JSON */
+  }
+  return false;
 }
 
 async function readProfileIfWritten(profilePath) {
@@ -133,6 +191,7 @@ async function readProfileIfWritten(profilePath) {
 async function runIntake(persona, outDir) {
   const tmp = await mkdtemp(join(tmpdir(), `oscar-eval-${persona.id}-`));
   const profilePath = join(tmp, 'profile.json');
+  log(`[${persona.id}] tmp dir = ${tmp}`);
   // Recipes carry the Tavily key in the SSE URI — keep them OUT of the
   // committed docs/ directory and under /tmp instead. ADR-052 redaction
   // discipline.
@@ -162,17 +221,36 @@ async function runIntake(persona, outDir) {
   let firstCall = true;
 
   for (let turnIndex = 0; turnIndex < TURN_HARD_CAP; turnIndex++) {
-    const { stdout: agentOut } = await gooseOneShot(intakeRecipePath, nextUserTurn, {
-      sessionId,
-      resume: !firstCall,
-      profilePath,
-    });
+    let agentOut;
+    try {
+      const result = await gooseOneShot(intakeRecipePath, nextUserTurn, {
+        sessionId,
+        resume: !firstCall,
+        profilePath,
+      });
+      agentOut = result.stdout;
+    } catch (err) {
+      log(`[${persona.id}] turn ${turnIndex} goose call failed: ${err.message.slice(0, 200)}`);
+      return {
+        sessionId,
+        profile: await readProfileIfWritten(profilePath),
+        transcriptTurns,
+        agentTurnCount: turnIndex,
+        aborted: 'goose-error',
+      };
+    }
     firstCall = false;
     const agentText = extractAgentTextFromGooseOutput(agentOut);
-    transcriptTurns.push({ role: 'agent', text: agentText });
-    log(`[${persona.id}] turn ${turnIndex}: agent ${agentText.slice(0, 80).replace(/\n/g, ' ')}…`);
+    transcriptTurns.push({ role: 'agent', text: agentText, raw: agentOut });
+    await fs.writeFile(join(tmp, `turn-${turnIndex}-agent.json`), agentOut, 'utf8');
+    log(`[${persona.id}] turn ${turnIndex}: agent ${(agentText || '<empty/tool-only>').slice(0, 80).replace(/\n/g, ' ')}…`);
 
-    // Done? Check whether profile was written.
+    // Done? Either profile written, or finalize tool call seen.
+    const sawFinalize = detectFinalizeProfileCall(agentOut);
+    if (sawFinalize) {
+      log(`[${persona.id}] finalize_profile tool call detected on turn ${turnIndex}; waiting for disk write`);
+      await new Promise((r) => setTimeout(r, 500));
+    }
     const writtenProfile = await readProfileIfWritten(profilePath);
     if (writtenProfile && writtenProfile.schema_version === 3) {
       log(`[${persona.id}] profile written; intake complete after ${turnIndex + 1} agent turns`);
@@ -184,11 +262,55 @@ async function runIntake(persona, outDir) {
       };
     }
 
+    if (sawFinalize) {
+      // Tool call seen but profile not on disk — likely validation error
+      // or path issue. Save state and abort.
+      log(`[${persona.id}] finalize_profile call seen but profile not on disk — aborting`);
+      return {
+        sessionId,
+        profile: null,
+        transcriptTurns,
+        agentTurnCount: turnIndex + 1,
+        aborted: 'finalize-call-but-no-disk',
+      };
+    }
+
+    if (!agentText.trim()) {
+      // No text — possibly a tool-only turn that our detector missed.
+      // Dump the raw stdout so we can inspect, then abort.
+      const dumpPath = join(tmp, `turn-${turnIndex}-raw.json`);
+      await fs.writeFile(dumpPath, agentOut, 'utf8');
+      log(
+        `[${persona.id}] empty agent turn (raw saved to ${dumpPath}); detected finalize=${sawFinalize}`,
+      );
+      return {
+        sessionId,
+        profile: await readProfileIfWritten(profilePath),
+        transcriptTurns,
+        agentTurnCount: turnIndex + 1,
+        aborted: 'empty-agent-turn',
+        raw_dump_path: dumpPath,
+      };
+    }
+
     // Otherwise ask persona-driver for next user turn.
-    const { stdout: personaOut } = await gooseOneShot(personaRecipePath, agentText, {});
+    let personaOut;
+    try {
+      const result = await gooseOneShot(personaRecipePath, agentText, {});
+      personaOut = result.stdout;
+    } catch (err) {
+      log(`[${persona.id}] persona-driver failed at turn ${turnIndex}: ${err.message.slice(0, 200)}`);
+      return {
+        sessionId,
+        profile: await readProfileIfWritten(profilePath),
+        transcriptTurns,
+        agentTurnCount: turnIndex + 1,
+        aborted: 'persona-driver-error',
+      };
+    }
     const userText = extractAgentTextFromGooseOutput(personaOut).trim();
     transcriptTurns.push({ role: 'user', text: userText });
-    nextUserTurn = userText;
+    nextUserTurn = userText || 'continue';
   }
 
   log(`[${persona.id}] hit hard-cap ${TURN_HARD_CAP} without finalize_profile`);
@@ -259,7 +381,10 @@ async function runJudge(axis, body) {
 
 function transcriptToMarkdown(turns) {
   return turns
-    .map((t) => (t.role === 'user' ? `## User\n\n${t.text}` : `## Oscar\n\n${t.text}`))
+    .map((t) => {
+      const body = t.text && t.text.trim() ? t.text : '(empty / tool-call only)';
+      return t.role === 'user' ? `## User\n\n${body}` : `## Oscar\n\n${body}`;
+    })
     .join('\n\n---\n\n');
 }
 

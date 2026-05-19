@@ -1,0 +1,6 @@
+{
+  "axis": "efficiency",
+  "score": 5,
+  "rationale": "Turn count of 10 stays well under the 14-turn target. Agent used hypothesis-confirm effectively on regulatory scope (P2.5), compressed practice-area review by listing and confirming (not drilling individually), and appropriately closed bundled question phases when they returned empty. No re-asks, no loops, clean efficient intake.",
+  "specific_gaps": []
+}
