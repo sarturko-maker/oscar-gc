@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Settings, Sparkles } from 'lucide-react';
+import { Plug, Settings, Sparkles } from 'lucide-react';
 import { cn } from '../../utils';
 import { usePracticeAreas } from './hooks/usePracticeAreas';
 
@@ -10,7 +10,8 @@ export function OscarSidebar() {
   return (
     <aside className="oscar oscar__sidebar flex flex-col w-full h-full min-h-0">
       {/* Sprint 12 (ADR-039): Forge header zone — meta-agent for skill +
-          practice-area authoring. Sits above the practice-area list. */}
+          practice-area authoring. Sprint 17 (ADR-060): Integrations entry
+          added alongside Forge as the second system-affordance surface. */}
       <div className="oscar__sidebar-header">
         <Link
           to="/forge"
@@ -22,6 +23,17 @@ export function OscarSidebar() {
         >
           <Sparkles className="oscar__sidebar-item-icon" size={16} />
           Forge
+        </Link>
+        <Link
+          to="/integrations"
+          className={cn(
+            'oscar__sidebar-item oscar__sidebar-item--utility',
+            pathname.startsWith('/integrations') && 'oscar__sidebar-item--active'
+          )}
+          aria-label="Integrations"
+        >
+          <Plug className="oscar__sidebar-item-icon" size={16} />
+          Integrations
         </Link>
       </div>
       <nav className="oscar__sidebar-list flex-1 overflow-y-auto">
