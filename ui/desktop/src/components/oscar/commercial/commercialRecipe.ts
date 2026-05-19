@@ -1,5 +1,6 @@
 import type { Recipe } from '../../../api';
 import { SYSTEM_PROMPT } from './systemPrompt';
+import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
 
 const DEV_REDLINE_VENV_BIN = '/srv/projects/oscar-runtime/python/adeu-venv/bin/adeu-server';
 
@@ -10,14 +11,25 @@ function resolveRedlineBin(resourcesRoot: string | null): string {
   return DEV_REDLINE_VENV_BIN;
 }
 
-export function buildCommercialRecipe(resourcesRoot: string | null): Recipe {
-  return {
-    version: '1.0.0',
-    title: 'Oscar GC — Commercial',
-    description:
-      'Commercial practice area. Redline tooling for legal documents (.docx) via the adeu MCP, scoped to read_docx, process_document_batch, and diff_docx_files.',
-    instructions: SYSTEM_PROMPT,
-    extensions: [
+// Sprint 12 (ADR-041): composes the generic practice-area builder. oscar-fs
+// scoped to the matter folder; redline MCP added for adeu redlines; bespoke
+// SYSTEM_PROMPT replaces the generic default.
+export function buildCommercialRecipe(
+  matterFolder: string,
+  resourcesRoot: string | null,
+): Recipe {
+  return buildPracticeAreaRecipe({
+    area: {
+      id: 'commercial',
+      name: 'Commercial',
+      body: 'Commercial practice area. Redline tooling for legal documents (.docx) via the adeu MCP.',
+      source: 'default',
+      bundled_skill_sources: ['commercial-legal'],
+    },
+    matterFolder,
+    resourcesRoot,
+    systemPrompt: SYSTEM_PROMPT,
+    extraExtensions: [
       {
         type: 'stdio',
         name: 'redline',
@@ -28,9 +40,5 @@ export function buildCommercialRecipe(resourcesRoot: string | null): Recipe {
         available_tools: ['read_docx', 'process_document_batch', 'diff_docx_files'],
       },
     ],
-    settings: {
-      goose_provider: 'minimax',
-      goose_model: 'MiniMax-M2.5',
-    },
-  };
+  });
 }

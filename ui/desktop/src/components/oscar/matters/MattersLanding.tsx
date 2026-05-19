@@ -8,6 +8,7 @@ import { createSession } from '../../../sessions';
 import { AppEvents } from '../../../constants/events';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { buildCommercialRecipe } from '../commercial/commercialRecipe';
+import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
 import type { PracticeArea } from '../practiceAreas';
 import { useMatters } from './useMatters';
 import MatterRow from './MatterRow';
@@ -34,17 +35,22 @@ export default function MattersLanding({ area }: MattersLandingProps) {
         throw new Error('Failed to activate matter');
       }
       const matterFolder = active.folder;
+      const resourcesRoot = window.electron.oscarResourcesRoot;
 
-      // Sprint 12 Phase 4 swaps in buildPracticeAreaRecipe(area, matterFolder).
-      // Phase 3: Commercial uses its bespoke recipe; other areas open a
-      // session with matter folder as working_dir and no extensions until
-      // Phase 4 lands the generic builder.
+      // Sprint 12 Phase 4 (ADR-041): every area uses the generic builder for
+      // oscar-fs (scoped to the matter folder). Commercial composes its
+      // bespoke system prompt + redline MCP on top via buildCommercialRecipe.
       const recipe =
         area.id === 'commercial'
-          ? buildCommercialRecipe(window.electron.oscarResourcesRoot)
-          : undefined;
+          ? buildCommercialRecipe(matterFolder, resourcesRoot)
+          : buildPracticeAreaRecipe({
+              area,
+              matterFolder,
+              matterSlug: matter.slug,
+              resourcesRoot,
+            });
 
-      const session = await createSession(matterFolder, recipe ? { recipe } : undefined);
+      const session = await createSession(matterFolder, { recipe });
 
       if (matter.session_id !== session.id) {
         await window.electron.matters.bindSession(area.id, matter.slug, session.id);
