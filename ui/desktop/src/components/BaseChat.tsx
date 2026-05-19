@@ -39,6 +39,7 @@ import { Recipe } from '../recipe';
 import { useAutoSubmit } from '../hooks/useAutoSubmit';
 import { Goose } from './icons';
 import EnvironmentBadge from './GooseSidebar/EnvironmentBadge';
+import MatterBackButton from './oscar/matters/MatterBackButton';
 
 const i18n = defineMessages({
   failedToLoadSession: {
@@ -400,6 +401,12 @@ export default function BaseChat({
 
         {/* Chat container with sticky recipe header */}
         <div className="flex flex-col flex-1 mb-0.5 min-h-0 relative">
+          {/* Sprint 14 (ADR-047): matter back-button — top left. Renders only
+              when the active session is bound to a matter; closes Sprint 13
+              dogfood P2-C gap. */}
+          <div className="absolute top-3 left-4 z-[60]">
+            <MatterBackButton sessionId={sessionId} />
+          </div>
           {/* Goose watermark - top right */}
           <div className="absolute top-3 right-4 z-[60] flex flex-row items-center gap-1">
             <a

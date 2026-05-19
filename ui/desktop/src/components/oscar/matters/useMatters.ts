@@ -1,30 +1,9 @@
 // Sprint 12 (ADR-036): renderer hook over the matters IPC. Owns the list
-// state; the IPC is the source of truth.
+// state; the IPC is the source of truth. Type for window.electron lives in
+// preload.ts — don't redeclare here (would shadow the canonical shape).
 
 import { useCallback, useEffect, useState } from 'react';
 import type { MatterEntry, NewMatterInput } from './types';
-
-declare global {
-  interface Window {
-    electron: {
-      matters: {
-        list: (areaId: string) => Promise<MatterEntry[]>;
-        get: (
-          areaId: string,
-          slug: string,
-        ) => Promise<{ entry: MatterEntry; matter_md: string | null } | null>;
-        create: (areaId: string, input: NewMatterInput) => Promise<MatterEntry>;
-        bindSession: (areaId: string, slug: string, sessionId: string) => Promise<{ ok: boolean }>;
-        archive: (areaId: string, slug: string) => Promise<{ ok: boolean }>;
-        setActive: (
-          areaId: string,
-          slug: string,
-        ) => Promise<{ ok: boolean; folder?: string }>;
-        detachActive: () => Promise<{ ok: boolean }>;
-      };
-    };
-  }
-}
 
 export function useMatters(areaId: string) {
   const [matters, setMatters] = useState<MatterEntry[]>([]);

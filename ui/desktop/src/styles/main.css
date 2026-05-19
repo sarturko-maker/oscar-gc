@@ -1606,6 +1606,40 @@ pre:has(> code.bg-inline-code) {
   flex-shrink: 0;
 }
 
+/* Sprint 14 (ADR-047): stakeholder grouping in the matter list. */
+.oscar__matters-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.oscar__matters-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 2px 6px;
+  font-family: var(--mono-editorial);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--copper);
+}
+
+.oscar__matters-group-header--other {
+  color: var(--ink-faint);
+}
+
+.oscar__matters-group-count {
+  font-family: var(--mono-editorial);
+  font-size: 9px;
+  color: var(--ink-faint);
+  letter-spacing: 0.1em;
+}
+
+.oscar__matter-row-meta-sep {
+  color: var(--ink-faint);
+}
+
 /* New-matter modal. */
 
 .oscar__modal-backdrop {
@@ -1627,6 +1661,19 @@ pre:has(> code.bg-inline-code) {
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
+}
+
+/* Sprint 14 (ADR-047): wider modal for the per-area new-matter dialog —
+   counterparty name + role render side-by-side at this width. */
+.oscar__modal--wide {
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 4px;
+  padding: 32px;
+  width: 100%;
   overflow-y: auto;
   box-shadow: 0 24px 64px rgba(28, 25, 23, 0.25);
 }
@@ -1651,6 +1698,32 @@ pre:has(> code.bg-inline-code) {
   flex-direction: row;
   align-items: center;
   gap: 10px;
+}
+
+/* Sprint 14 (ADR-047): paired horizontal field layout — counterparty
+   name input + role dropdown sit side-by-side. */
+.oscar__field-group {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.oscar__field-group .oscar__field {
+  margin-bottom: 0;
+}
+
+/* Sprint 14 (ADR-047): kind-conditional extras block, visually indented
+   so the lawyer reads it as "extra context for the kind I just picked". */
+.oscar__field-extras {
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 2px solid var(--rule-light);
+  margin-bottom: 16px;
+}
+
+.oscar__field-extras .oscar__field:last-child {
+  margin-bottom: 0;
 }
 
 .oscar__field-label {

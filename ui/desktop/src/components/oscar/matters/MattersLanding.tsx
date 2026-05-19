@@ -1,8 +1,9 @@
-// Sprint 12 (ADRs 036, 038, 041, 044): practice-area landing — list of
-// matters + new-matter affordance. Replaces the placeholder body in
-// PracticeAreaPlaceholder.tsx for every practice area uniformly.
+// Sprint 12 (ADRs 036, 038, 041, 044), Sprint 14 (ADR-047): practice-area
+// landing — list of matters + new-matter affordance. Now passes `area` (not
+// just name) to the dialog so per-area shape can drive the form, and groups
+// matter rows by stakeholder header (controlled-vocab tag).
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createSession } from '../../../sessions';
 import { AppEvents } from '../../../constants/events';
@@ -13,11 +14,42 @@ import type { PracticeArea } from '../practiceAreas';
 import { useMatters } from './useMatters';
 import MatterRow from './MatterRow';
 import NewMatterDialog from './NewMatterDialog';
+import { getPracticeAreaShape } from './practiceAreaShapes';
 import type { MatterEntry, NewMatterInput } from './types';
 
 interface MattersLandingProps {
   area: PracticeArea;
 }
+
+interface StakeholderGroup {
+  label: string; // display label; null-stakeholder bucket → "Other"
+  isOther: boolean;
+  matters: MatterEntry[];
+}
+
+const groupByStakeholder = (matters: MatterEntry[]): StakeholderGroup[] => {
+  const buckets = new Map<string, { label: string; isOther: boolean; matters: MatterEntry[] }>();
+  for (const m of matters) {
+    const key = m.stakeholder ? m.stakeholder.toLowerCase() : '__other__';
+    const label = m.stakeholder ?? 'Other';
+    const isOther = !m.stakeholder;
+    if (!buckets.has(key)) buckets.set(key, { label, isOther, matters: [] });
+    buckets.get(key)!.matters.push(m);
+  }
+  const groups = Array.from(buckets.values());
+  // Order: most-recently-accessed within each bucket, then groups by their
+  // most-recently-accessed matter, with the "Other" bucket last.
+  for (const g of groups) {
+    g.matters.sort((a, b) => b.last_accessed_at.localeCompare(a.last_accessed_at));
+  }
+  groups.sort((a, b) => {
+    if (a.isOther !== b.isOther) return a.isOther ? 1 : -1;
+    const aTop = a.matters[0]?.last_accessed_at ?? '';
+    const bTop = b.matters[0]?.last_accessed_at ?? '';
+    return bTop.localeCompare(aTop);
+  });
+  return groups;
+};
 
 export default function MattersLanding({ area }: MattersLandingProps) {
   const navigate = useNavigate();
@@ -26,31 +58,44 @@ export default function MattersLanding({ area }: MattersLandingProps) {
   const [opening, setOpening] = useState<string | null>(null);
   const [openError, setOpenError] = useState<string | null>(null);
 
+  const groups = useMemo(() => groupByStakeholder(matters), [matters]);
+  const shape = getPracticeAreaShape(area.id);
+
+  // Sprint 14: stakeholder autocomplete source — prior values in this area,
+  // case-insensitive deduped.
+  const stakeholderSuggestions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const m of matters) {
+      if (m.stakeholder) seen.set(m.stakeholder.toLowerCase(), m.stakeholder);
+    }
+    return Array.from(seen.values()).sort();
+  }, [matters]);
+
   const openMatter = async (matter: MatterEntry): Promise<void> => {
     setOpening(matter.slug);
     setOpenError(null);
     try {
       const active = await window.electron.matters.setActive(area.id, matter.slug);
-      if (!active.ok || !active.folder) {
+      if (!active.ok || !active.working_dir || !active.state_folder) {
         throw new Error('Failed to activate matter');
       }
-      const matterFolder = active.folder;
+      const { working_dir: workingDir, state_folder: stateFolder } = active;
       const resourcesRoot = window.electron.oscarResourcesRoot;
 
-      // Sprint 12 Phase 4 (ADR-041): every area uses the generic builder for
-      // oscar-fs (scoped to the matter folder). Commercial composes its
-      // bespoke system prompt + redline MCP on top via buildCommercialRecipe.
+      // Commercial composes its bespoke system prompt + redline MCP on top
+      // via buildCommercialRecipe; the other 12 areas use the generic shape.
       const recipe =
         area.id === 'commercial'
-          ? buildCommercialRecipe(matterFolder, resourcesRoot)
+          ? buildCommercialRecipe(workingDir, stateFolder, resourcesRoot)
           : buildPracticeAreaRecipe({
               area,
-              matterFolder,
+              workingDir,
+              stateFolder,
               matterSlug: matter.slug,
               resourcesRoot,
             });
 
-      const session = await createSession(matterFolder, { recipe });
+      const session = await createSession(workingDir, { recipe });
 
       if (matter.session_id !== session.id) {
         await window.electron.matters.bindSession(area.id, matter.slug, session.id);
@@ -103,8 +148,28 @@ export default function MattersLanding({ area }: MattersLandingProps) {
 
         {!loading && matters.length > 0 && (
           <div className="oscar__matters-list flex flex-col mt-2 overflow-y-auto min-h-0">
-            {matters.map((m) => (
-              <MatterRow key={m.slug} matter={m} onOpen={(mt) => void openMatter(mt)} />
+            {groups.map((g) => (
+              <div key={g.label} className="oscar__matters-group">
+                <div
+                  className={
+                    g.isOther
+                      ? 'oscar__matters-group-header oscar__matters-group-header--other'
+                      : 'oscar__matters-group-header'
+                  }
+                >
+                  {g.label}
+                  <span className="oscar__matters-group-count">
+                    {g.matters.length}
+                  </span>
+                </div>
+                {g.matters.map((m) => (
+                  <MatterRow
+                    key={m.slug}
+                    matter={m}
+                    onOpen={(mt) => void openMatter(mt)}
+                  />
+                ))}
+              </div>
             ))}
           </div>
         )}
@@ -113,12 +178,32 @@ export default function MattersLanding({ area }: MattersLandingProps) {
         {openError && <p className="oscar__matters-error">{openError}</p>}
       </div>
 
-      {showNew && (
+      {showNew && shape && (
         <NewMatterDialog
-          areaName={area.name}
+          area={area}
+          shape={shape}
+          stakeholderSuggestions={stakeholderSuggestions}
           onCancel={() => setShowNew(false)}
           onCreate={handleCreate}
         />
+      )}
+      {showNew && !shape && (
+        <div className="oscar__modal-backdrop" onClick={() => setShowNew(false)}>
+          <div className="oscar__modal" onClick={(e) => e.stopPropagation()}>
+            <p className="oscar__field-error">
+              No matter-intake shape registered for area "{area.id}".
+            </p>
+            <div className="oscar__modal-actions">
+              <button
+                type="button"
+                onClick={() => setShowNew(false)}
+                className="oscar__button oscar__button--ghost"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

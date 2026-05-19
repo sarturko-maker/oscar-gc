@@ -18,6 +18,9 @@ interface BackButtonProps extends VariantProps<typeof buttonVariants> {
   className?: string;
   showText?: boolean;
   shape?: 'pill' | 'round';
+  // Sprint 14 (ADR-047): caller-supplied label override (e.g. "All matters").
+  // Falls back to the i18n "Back" default.
+  text?: string;
 }
 
 const BackButton: React.FC<BackButtonProps> = ({
@@ -27,6 +30,7 @@ const BackButton: React.FC<BackButtonProps> = ({
   size = 'default',
   shape = 'pill',
   showText = true,
+  text,
   ...props
 }) => {
   const intl = useIntl();
@@ -84,7 +88,7 @@ const BackButton: React.FC<BackButtonProps> = ({
       {...props}
     >
       <ArrowLeft />
-      {showText && intl.formatMessage(i18n.back)}
+      {showText && (text ?? intl.formatMessage(i18n.back))}
     </Button>
   );
 };

@@ -1755,12 +1755,52 @@ ipcMain.handle('oscar:read-profile', async () => {
   }
 });
 
-// Sprint 12 (ADRs 036, 038, 043, 044): Matters layer. Per-practice-area
-// state under ~/.config/oscar/state/<area-id>/; registry at matters.json
-// for the UI index; matter folders for matter.md + history.md + notes.md +
-// outputs/; Top of Mind matter context file written on set-active.
+// Sprint 12 (ADRs 036, 038, 043, 044) + Sprint 14 (ADR-047): Matters layer.
+// Sprint 14 reshape — split disk layout:
+//   - Operational state under ~/.config/oscar/state/<area-id>/
+//     (registry matters.json + matters/<slug>/{history.md, notes.md})
+//   - Content under ~/Documents/Oscar GC/<Area Name>/<Matter Name>/
+//     (matter.md + outputs/ + user-droppable source docs)
+// Schema v2 (subject + counterparty? + kind + extras + stakeholder +
+// working_dir). v1 registries renamed to .bak on first read and treated as
+// empty (pre-pilot; no automated migration).
+
+import {
+  MatterEntrySchema,
+  MattersFileSchema,
+  NewMatterInputSchema,
+  type MatterEntry,
+  type MattersFile,
+} from './components/oscar/matters/types';
+import {
+  partyRoleLabel,
+  subjectTypeLabel,
+  extrasKeyLabel,
+} from './components/oscar/matters/matterLabels';
+import { kindLabel } from './components/oscar/matters/practiceAreaShapes';
 
 const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
+const OSCAR_DOCUMENTS_DIR = path.join(os.homedir(), 'Documents', 'Oscar GC');
+
+// area_id → display name. Kept here (small static table) rather than
+// importing practiceAreas.ts from renderer code into the main bundle.
+const AREA_DISPLAY_NAMES: Record<string, string> = {
+  commercial: 'Commercial',
+  'commercial-disputes': 'Commercial Disputes',
+  corporate: 'Corporate',
+  employment: 'Employment',
+  'employment-disputes': 'Employment Disputes',
+  privacy: 'Privacy',
+  ip: 'IP',
+  'ip-disputes': 'IP Disputes',
+  regulatory: 'Regulatory',
+  'regulatory-disputes': 'Regulatory Disputes',
+  product: 'Product',
+  'ai-governance': 'AI Governance',
+  cosec: 'CoSec',
+};
+const displayAreaName = (areaId: string): string =>
+  AREA_DISPLAY_NAMES[areaId] ?? areaId;
 
 const safeAreaId = (raw: unknown): string | null => {
   if (typeof raw !== 'string' || raw.length === 0 || raw.length > 64) return null;
@@ -1782,50 +1822,60 @@ const matterFolderPath = (areaId: string, slug: string) =>
 const archivedFolderPath = (areaId: string, slug: string) =>
   path.join(areaStateDir(areaId), 'matters', '_archived', slug);
 
-interface MatterEntryV1 {
-  slug: string;
-  name: string;
-  client: string;
-  counterparty: string | null;
-  matter_type: string;
-  opened_at: string;
-  last_accessed_at: string;
-  status: 'active' | 'closed';
-  privileged: boolean;
-  session_id: string | null;
-  schema_version: 1;
-}
+// Filesystem-safe display name (the matter title can contain anything;
+// strip / collapse anything that breaks file managers or oscar-fs scope-down).
+const safeFilesystemName = (raw: string, fallback: string): string => {
+  const cleaned = raw
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
+  return cleaned.length > 0 ? cleaned : fallback;
+};
 
-interface MattersFileV1 {
-  schema_version: 1;
-  matters: MatterEntryV1[];
-}
+const matterWorkingDir = (areaId: string, matterName: string, slug: string): string =>
+  path.join(
+    OSCAR_DOCUMENTS_DIR,
+    displayAreaName(areaId),
+    safeFilesystemName(matterName, slug),
+  );
 
-const readMattersRegistry = async (areaId: string): Promise<MattersFileV1> => {
+const readMattersRegistry = async (areaId: string): Promise<MattersFile> => {
+  const registryPath = mattersRegistryPath(areaId);
   try {
-    const raw = await fs.readFile(mattersRegistryPath(areaId), 'utf8');
-    const parsed = JSON.parse(raw) as MattersFileV1;
-    if (parsed.schema_version === 1 && Array.isArray(parsed.matters)) {
-      return parsed;
-    }
-    log.warn('oscar:matters registry shape unexpected; treating as empty', { areaId });
-    return { schema_version: 1, matters: [] };
+    const raw = await fs.readFile(registryPath, 'utf8');
+    const json = JSON.parse(raw) as unknown;
+    const result = MattersFileSchema.safeParse(json);
+    if (result.success) return result.data;
+    // Schema mismatch — likely v1 carry-over from Sprint 12/13. Pre-pilot:
+    // back up and start fresh (ADR-047 §migration).
+    const bakPath = `${registryPath}.v1.bak`;
+    await fs.rename(registryPath, bakPath);
+    log.warn('oscar:matters registry v1 → backed up, fresh v2 registry', {
+      areaId,
+      bakPath,
+      issues: result.error.issues.slice(0, 3),
+    });
+    return { schema_version: 2, matters: [] };
   } catch (err) {
     if ((err as { code?: string }).code === 'ENOENT') {
-      return { schema_version: 1, matters: [] };
+      return { schema_version: 2, matters: [] };
     }
     log.warn('oscar:matters registry read failed', {
       areaId,
       err: errorMessage(err, 'Unknown error'),
     });
-    return { schema_version: 1, matters: [] };
+    return { schema_version: 2, matters: [] };
   }
 };
 
 const writeMattersRegistry = async (
   areaId: string,
-  registry: MattersFileV1,
+  registry: MattersFile,
 ): Promise<void> => {
+  // Validate at the write boundary too — caller-bug or programmer-error
+  // produces a parse failure here, not silently corrupted state on disk.
+  MattersFileSchema.parse(registry);
   await fs.mkdir(areaStateDir(areaId), { recursive: true });
   await fs.writeFile(
     mattersRegistryPath(areaId),
@@ -1834,37 +1884,69 @@ const writeMattersRegistry = async (
   );
 };
 
-const renderMatterMd = (entry: MatterEntryV1, keyFacts: string): string => {
-  const frontmatter = [
+const renderMatterMd = (entry: MatterEntry, keyFacts: string): string => {
+  const lines: string[] = [
     '---',
     `slug: ${entry.slug}`,
     `name: ${JSON.stringify(entry.name)}`,
-    `client: ${JSON.stringify(entry.client)}`,
-    `counterparty: ${entry.counterparty === null ? 'null' : JSON.stringify(entry.counterparty)}`,
-    `matter_type: ${JSON.stringify(entry.matter_type)}`,
+    `area_id: ${entry.area_id}`,
+    `kind: ${entry.kind}`,
+    `subject_type: ${entry.subject.type}`,
+    `subject_label: ${JSON.stringify(entry.subject.label)}`,
+  ];
+  if (entry.counterparty) {
+    lines.push(
+      `counterparty_role: ${entry.counterparty.role}`,
+      `counterparty_name: ${JSON.stringify(entry.counterparty.name)}`,
+    );
+  }
+  if (entry.stakeholder) {
+    lines.push(`stakeholder: ${JSON.stringify(entry.stakeholder)}`);
+  }
+  if (entry.extras) {
+    for (const [k, v] of Object.entries(entry.extras)) {
+      lines.push(`extras_${k}: ${JSON.stringify(v)}`);
+    }
+  }
+  lines.push(
     `opened_at: ${entry.opened_at}`,
     `status: ${entry.status}`,
     `privileged: ${entry.privileged}`,
-    'schema_version: 1',
+    'schema_version: 2',
     '---',
-  ].join('\n');
-  return `${frontmatter}\n\n# Matter: ${entry.name}\n\n## Key facts\n\n${keyFacts.trim()}\n\n## Matter-specific overrides\n\n_None yet._\n`;
+  );
+  return `${lines.join('\n')}\n\n# Matter: ${entry.name}\n\n## Key facts\n\n${keyFacts.trim()}\n\n## Matter-specific overrides\n\n_None yet._\n`;
 };
 
-const renderTomActiveMatter = (entry: MatterEntryV1, keyFacts: string): string => {
-  const lines = [
+const renderTomActiveMatter = (entry: MatterEntry, keyFacts: string): string => {
+  const lines: string[] = [
     'You are currently working on this matter:',
     '',
     `- Slug: ${entry.slug}`,
     `- Name: ${entry.name}`,
-    `- Client: ${entry.client}`,
-    `- Counterparty: ${entry.counterparty ?? 'none'}`,
-    `- Matter type: ${entry.matter_type}`,
+    `- Practice area: ${displayAreaName(entry.area_id)}`,
+    `- ${subjectTypeLabel(entry.subject.type)}: ${entry.subject.label}`,
+  ];
+  if (entry.counterparty) {
+    lines.push(
+      `- ${partyRoleLabel(entry.counterparty.role)}: ${entry.counterparty.name}`,
+    );
+  }
+  lines.push(`- Kind: ${kindLabel(entry.area_id, entry.kind)}`);
+  if (entry.stakeholder) {
+    lines.push(`- Stakeholder: ${entry.stakeholder}`);
+  }
+  if (entry.extras) {
+    for (const [k, v] of Object.entries(entry.extras)) {
+      lines.push(`- ${extrasKeyLabel(k)}: ${v}`);
+    }
+  }
+  lines.push(
     `- Privileged: ${entry.privileged ? 'yes' : 'no'}`,
     '',
     'Key facts:',
     keyFacts.trim(),
-  ];
+  );
   return lines.join('\n') + '\n';
 };
 
@@ -1888,7 +1970,7 @@ ipcMain.handle(
     if (!entry) return null;
     let matterMd: string | null = null;
     try {
-      matterMd = await fs.readFile(path.join(matterFolderPath(areaId, slug), 'matter.md'), 'utf8');
+      matterMd = await fs.readFile(path.join(entry.working_dir, 'matter.md'), 'utf8');
     } catch {
       matterMd = null;
     }
@@ -1901,59 +1983,64 @@ ipcMain.handle(
   async (_event, areaIdRaw: unknown, inputRaw: unknown) => {
     const areaId = safeAreaId(areaIdRaw);
     if (!areaId) throw new Error('invalid practice area id');
-    const input = inputRaw as {
-      slug?: unknown;
-      name?: unknown;
-      client?: unknown;
-      counterparty?: unknown;
-      matter_type?: unknown;
-      privileged?: unknown;
-      key_facts?: unknown;
-    };
-    const slug = safeSlug(input.slug);
-    if (!slug) throw new Error('invalid slug');
-    if (
-      typeof input.name !== 'string' ||
-      typeof input.client !== 'string' ||
-      typeof input.matter_type !== 'string' ||
-      typeof input.key_facts !== 'string' ||
-      typeof input.privileged !== 'boolean'
-    ) {
-      throw new Error('invalid matter input');
+    // Validate at the IPC boundary per CLAUDE.md "trust internal, validate
+    // at boundaries". Any malformed field surfaces here, not deeper.
+    const input = NewMatterInputSchema.parse(inputRaw);
+    if (fsSync.existsSync(matterFolderPath(areaId, input.slug))) {
+      throw new Error(`matter slug '${input.slug}' already exists`);
     }
-    if (fsSync.existsSync(matterFolderPath(areaId, slug))) {
-      throw new Error(`matter slug '${slug}' already exists`);
+    if (fsSync.existsSync(archivedFolderPath(areaId, input.slug))) {
+      throw new Error(`matter slug '${input.slug}' exists in _archived`);
     }
-    if (fsSync.existsSync(archivedFolderPath(areaId, slug))) {
-      throw new Error(`matter slug '${slug}' exists in _archived`);
+    const workingDir = matterWorkingDir(areaId, input.name, input.slug);
+    if (fsSync.existsSync(workingDir)) {
+      throw new Error(`working folder already exists at ${workingDir}`);
     }
-    const counterparty =
-      typeof input.counterparty === 'string' && input.counterparty.length > 0
-        ? input.counterparty
-        : null;
     const now = new Date().toISOString();
-    const entry: MatterEntryV1 = {
-      slug,
+    const entry: MatterEntry = {
+      slug: input.slug,
       name: input.name,
-      client: input.client,
-      counterparty,
-      matter_type: input.matter_type,
+      area_id: areaId,
+      kind: input.kind,
+      subject: input.subject,
+      counterparty: input.counterparty,
+      stakeholder: input.stakeholder,
+      extras: input.extras,
+      working_dir: workingDir,
       opened_at: now,
       last_accessed_at: now,
       status: 'active',
       privileged: input.privileged,
       session_id: null,
-      schema_version: 1,
+      schema_version: 2,
     };
-    const folder = matterFolderPath(areaId, slug);
-    await fs.mkdir(path.join(folder, 'outputs'), { recursive: true });
-    await fs.writeFile(path.join(folder, 'matter.md'), renderMatterMd(entry, input.key_facts), 'utf8');
+    // Validate the constructed entry. Catches bugs in the constructor here,
+    // not when something downstream reads a malformed entry from disk.
+    MatterEntrySchema.parse(entry);
+
+    // State folder: operational artefacts the user shouldn't touch directly.
+    const stateFolder = matterFolderPath(areaId, input.slug);
+    await fs.mkdir(stateFolder, { recursive: true });
     await fs.writeFile(
-      path.join(folder, 'history.md'),
-      `# History: ${entry.name}\n\nAppend-only event log; most recent at top.\n\n---\n\n## ${now.slice(0, 10)} — Matter opened\n\nIntake completed. Slug: \`${slug}\`. Status: active.\n`,
+      path.join(stateFolder, 'history.md'),
+      `# History: ${entry.name}\n\nAppend-only event log; most recent at top.\n\n---\n\n## ${now.slice(0, 10)} — Matter opened\n\nIntake completed. Slug: \`${input.slug}\`. Status: active.\n`,
       'utf8',
     );
-    await fs.writeFile(path.join(folder, 'notes.md'), `# Notes: ${entry.name}\n\n`, 'utf8');
+    await fs.writeFile(
+      path.join(stateFolder, 'notes.md'),
+      `# Notes: ${entry.name}\n\n`,
+      'utf8',
+    );
+
+    // Working folder: matter.md + outputs/ + user-droppable source docs.
+    // Discoverable in Finder/Explorer; cloud-sync-friendly.
+    await fs.mkdir(path.join(workingDir, 'outputs'), { recursive: true });
+    await fs.writeFile(
+      path.join(workingDir, 'matter.md'),
+      renderMatterMd(entry, input.key_facts),
+      'utf8',
+    );
+
     const registry = await readMattersRegistry(areaId);
     registry.matters.push(entry);
     await writeMattersRegistry(areaId, registry);
@@ -2008,12 +2095,11 @@ ipcMain.handle(
     const registry = await readMattersRegistry(areaId);
     const entry = registry.matters.find((m) => m.slug === slug);
     if (!entry) return { ok: false };
+    // Sprint 14 (ADR-047): matter.md lives in the working folder
+    // (~/Documents/Oscar GC/...), not the state folder.
     let matterMdBody = '';
     try {
-      const md = await fs.readFile(
-        path.join(matterFolderPath(areaId, slug), 'matter.md'),
-        'utf8',
-      );
+      const md = await fs.readFile(path.join(entry.working_dir, 'matter.md'), 'utf8');
       const keyFactsMatch = md.match(/## Key facts\s*\n+([\s\S]*?)(?=\n## |$)/);
       matterMdBody = keyFactsMatch ? keyFactsMatch[1].trim() : '';
     } catch {
@@ -2026,7 +2112,11 @@ ipcMain.handle(
     );
     entry.last_accessed_at = new Date().toISOString();
     await writeMattersRegistry(areaId, registry);
-    return { ok: true, folder: matterFolderPath(areaId, slug) };
+    return {
+      ok: true,
+      state_folder: matterFolderPath(areaId, slug),
+      working_dir: entry.working_dir,
+    };
   },
 );
 
@@ -2039,6 +2129,39 @@ ipcMain.handle('oscar:matters:detach-active', async () => {
       err: errorMessage(err, 'Unknown error'),
     });
     return { ok: false };
+  }
+});
+
+// Sprint 14 (ADR-047): reverse lookup — given a session_id (from BaseChat),
+// find the matter bound to it. Used by the matter back-button affordance to
+// know which practice area to navigate back to. Returns null if the session
+// isn't bound to any matter. Scans all area registries; the count is small
+// (13 areas, dozens of matters per area in dogfood-scale use).
+ipcMain.handle('oscar:matters:lookup-session', async (_event, sessionIdRaw: unknown) => {
+  if (typeof sessionIdRaw !== 'string' || sessionIdRaw.length === 0) return null;
+  try {
+    const entries = await fs.readdir(OSCAR_STATE_DIR, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const areaId = entry.name;
+      const registry = await readMattersRegistry(areaId);
+      const match = registry.matters.find((m) => m.session_id === sessionIdRaw);
+      if (match) {
+        return {
+          area_id: match.area_id,
+          area_name: displayAreaName(match.area_id),
+          slug: match.slug,
+          name: match.name,
+        };
+      }
+    }
+    return null;
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') return null;
+    log.warn('oscar:matters:lookup-session failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return null;
   }
 });
 

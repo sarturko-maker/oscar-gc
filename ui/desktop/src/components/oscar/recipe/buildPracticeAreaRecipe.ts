@@ -24,7 +24,13 @@ function resolveOscarFsBundle(resourcesRoot: string | null): string {
 
 export interface BuildPracticeAreaRecipeOptions {
   area: PracticeArea;
-  matterFolder: string;
+  // Sprint 14 (ADR-047): two-folder layout. workingDir is the user-visible
+  // matter folder under ~/Documents/Oscar GC/<Area>/<Matter>/ — where
+  // matter.md, source documents, and outputs/ live. stateFolder is the
+  // operational folder under ~/.config/oscar/state/ — where history.md
+  // and notes.md live. Both are added to oscar-fs allowed-directories.
+  workingDir: string;
+  stateFolder: string;
   matterSlug?: string;
   resourcesRoot: string | null;
   // Commercial passes its bespoke system prompt; the generic default
@@ -35,22 +41,34 @@ export interface BuildPracticeAreaRecipeOptions {
   extraExtensions?: Recipe['extensions'];
 }
 
-const defaultSystemPrompt = (area: PracticeArea, matterFolder: string): string => `
+const defaultSystemPrompt = (
+  area: PracticeArea,
+  workingDir: string,
+  stateFolder: string,
+): string => `
 You are Oscar GC's ${area.name} agent.
 
 ${area.body}
 
-The current matter's working files live at: ${matterFolder}
-- Read and write matter files via the oscar-fs__* tools (allowed-directories is scoped
-  to this matter; sibling matters are not visible).
-- The "Top of Mind" injection above contains the matter facts (client, counterparty,
-  matter type, key facts, privileged status). Don't ask the user to repeat them.
-- Skills in ~/.agents/skills/in-house-legal/ are auto-discovered. Invoke skills by name
-  when their procedural guidance is helpful; defer to skill bodies for scope and steps.
+The current matter has two folders, both scoped via oscar-fs:
+- Working folder: ${workingDir}
+  Contains matter.md, user-droppable source documents, and outputs/ for
+  generated artefacts (redlined .docx, etc.). $OSCAR_MATTER_DIR points here.
+- State folder: ${stateFolder}
+  Contains history.md (append-only event log) and notes.md (your free-form
+  notes). Sibling matters are not visible.
 
-Plain English. In-house perspective. Cite specific facts; flag uncertainty rather than
-guessing. Match output to the audience: legal team in legal idiom; business stakeholders
-in plain business framing.
+The "Top of Mind" injection above contains the matter facts (subject,
+counterparty, kind, key facts, privileged status, and any extras). Don't
+ask the user to repeat them.
+
+Skills in ~/.agents/skills/in-house-legal/ are auto-discovered. Invoke
+skills by name when their procedural guidance is helpful; defer to skill
+bodies for scope and steps.
+
+Plain English. In-house perspective. Cite specific facts; flag uncertainty
+rather than guessing. Match output to the audience: legal team in legal
+idiom; business stakeholders in plain business framing.
 `.trim();
 
 export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): Recipe {
@@ -58,20 +76,26 @@ export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): R
     version: '1.0.0',
     title: `Oscar GC — ${opts.area.name}`,
     description: opts.area.body,
-    instructions: opts.systemPrompt ?? defaultSystemPrompt(opts.area, opts.matterFolder),
+    instructions:
+      opts.systemPrompt ??
+      defaultSystemPrompt(opts.area, opts.workingDir, opts.stateFolder),
     extensions: [
       {
         type: 'stdio',
         name: 'oscar-fs',
         description:
-          'Filesystem MCP scoped to the active matter folder (Sprint 12, ADR-040).',
+          'Filesystem MCP scoped to the matter working + state folders (Sprint 12 ADR-040, Sprint 14 ADR-047).',
         cmd: resolveNodeCmd(opts.resourcesRoot),
-        args: [resolveOscarFsBundle(opts.resourcesRoot), opts.matterFolder],
+        args: [
+          resolveOscarFsBundle(opts.resourcesRoot),
+          opts.workingDir,
+          opts.stateFolder,
+        ],
         envs: {
-          // Sprint 12 (ADR-037): the 51 substantive bundled skills consume
-          // $OSCAR_MATTER_DIR to resolve matter-scoped paths instead of the
-          // Sprint-11-stub plugin-slug paths.
-          OSCAR_MATTER_DIR: opts.matterFolder,
+          // Sprint 12 (ADR-037), Sprint 14 (ADR-047): skills consume
+          // $OSCAR_MATTER_DIR to resolve matter-scoped paths. Points at the
+          // working folder (user-visible matter dir), not state.
+          OSCAR_MATTER_DIR: opts.workingDir,
         },
         timeout: 30,
       },

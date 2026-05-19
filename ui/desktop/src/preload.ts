@@ -3,6 +3,10 @@ import { Recipe } from './recipe';
 import { GooseApp } from './api';
 import type { Settings, SettingKey } from './utils/settings';
 import { defaultSettings } from './utils/settings';
+import type {
+  MatterEntry,
+  NewMatterInput,
+} from './components/oscar/matters/types';
 
 // Mapping from settings keys to their old localStorage keys for lazy migration
 const localStorageKeyMap: Partial<Record<SettingKey, string>> = {
@@ -206,22 +210,30 @@ type ElectronAPI = {
   oscarResourcesRoot: string | null;
   // Sprint 12 (ADR-039): user home dir for Forge's oscar-fs allowed-directories.
   oscarHomeDir: string | null;
-  // Oscar Matters (Sprint 12, ADRs 036/038/043/044). Registry-driven scoped
-  // containers per practice area. Schemas validated in main.ts IPC handlers.
+  // Oscar Matters (Sprint 12 ADRs 036/038/043/044, Sprint 14 ADR-047).
+  // Registry-driven scoped containers per practice area; Zod-validated at
+  // the IPC boundary in main.ts. Types imported from the matters module so
+  // renderer code doesn't re-shadow them.
   matters: {
-    list: (areaId: string) => Promise<unknown[]>;
+    list: (areaId: string) => Promise<MatterEntry[]>;
     get: (
       areaId: string,
       slug: string,
-    ) => Promise<{ entry: unknown; matter_md: string | null } | null>;
-    create: (areaId: string, input: unknown) => Promise<unknown>;
+    ) => Promise<{ entry: MatterEntry; matter_md: string | null } | null>;
+    create: (areaId: string, input: NewMatterInput) => Promise<MatterEntry>;
     bindSession: (areaId: string, slug: string, sessionId: string) => Promise<{ ok: boolean }>;
     archive: (areaId: string, slug: string) => Promise<{ ok: boolean }>;
     setActive: (
       areaId: string,
       slug: string,
-    ) => Promise<{ ok: boolean; folder?: string }>;
+    ) => Promise<{ ok: boolean; state_folder?: string; working_dir?: string }>;
     detachActive: () => Promise<{ ok: boolean }>;
+    lookupSession: (sessionId: string) => Promise<{
+      area_id: string;
+      area_name: string;
+      slug: string;
+      name: string;
+    } | null>;
   };
 };
 
@@ -410,6 +422,8 @@ const electronAPI: ElectronAPI = {
     setActive: (areaId: string, slug: string) =>
       ipcRenderer.invoke('oscar:matters:set-active', areaId, slug),
     detachActive: () => ipcRenderer.invoke('oscar:matters:detach-active'),
+    lookupSession: (sessionId: string) =>
+      ipcRenderer.invoke('oscar:matters:lookup-session', sessionId),
   },
 };
 

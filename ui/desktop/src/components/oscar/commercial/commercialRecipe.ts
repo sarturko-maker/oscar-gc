@@ -11,11 +11,13 @@ function resolveRedlineBin(resourcesRoot: string | null): string {
   return DEV_REDLINE_VENV_BIN;
 }
 
-// Sprint 12 (ADR-041): composes the generic practice-area builder. oscar-fs
-// scoped to the matter folder; redline MCP added for adeu redlines; bespoke
-// SYSTEM_PROMPT replaces the generic default.
+// Sprint 12 (ADR-041), Sprint 14 (ADR-047): composes the generic practice-area
+// builder. oscar-fs scoped to BOTH the working folder (~/Documents/Oscar GC/...)
+// and the state folder (~/.config/oscar/state/...); redline MCP added for
+// adeu redlines; bespoke SYSTEM_PROMPT replaces the generic default.
 export function buildCommercialRecipe(
-  matterFolder: string,
+  workingDir: string,
+  stateFolder: string,
   resourcesRoot: string | null,
 ): Recipe {
   return buildPracticeAreaRecipe({
@@ -26,7 +28,8 @@ export function buildCommercialRecipe(
       source: 'default',
       bundled_skill_sources: ['commercial-legal'],
     },
-    matterFolder,
+    workingDir,
+    stateFolder,
     resourcesRoot,
     systemPrompt: SYSTEM_PROMPT,
     extraExtensions: [
