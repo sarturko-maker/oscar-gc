@@ -85,3 +85,9 @@ result
 # Goose self-test artifacts
 gooseselftest/
 .tasks/
+
+# Sprint 15 — Tavily / web search API keys (never committed; user-provided runtime)
+**/secrets/tavily.json
+.env.tavily
+*.tavily.key
+*.tavily.url

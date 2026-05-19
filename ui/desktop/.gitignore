@@ -16,3 +16,8 @@ src/i18n/compiled/
 # Sprint 10 bundled runtime resources (built by scripts/prepare-oscar-bundle.js)
 .oscar-bundle-cache/
 src/resources/
+# Sprint 15 — Tavily / web search API keys (never committed; user-provided runtime)
+**/secrets/tavily.json
+.env.tavily
+*.tavily.key
+*.tavily.url
