@@ -1,0 +1,40 @@
+{
+  "id": "quiet-lawyer",
+  "label": "Edge persona — the Quiet Lawyer",
+  "why_this_persona": "Deliberately uncooperative test character extending Sprint 7's Edge persona. Declines to give specifics; gives terse one-word answers; refuses to enumerate jurisdictions or regulations. Tests the rule set's null-handling, budget-discipline, and pushback-handling paths.",
+  "identity": {
+    "name": "(declines to share)",
+    "role_slug": "counsel",
+    "role_label": "Counsel",
+    "company": "(declines to share)"
+  },
+  "industry_seed": {
+    "sector": "Technology",
+    "sub_sector": null,
+    "business_model": null,
+    "size_band": null
+  },
+  "geography_seed": {
+    "hq_jurisdiction": "Europe",
+    "operating_jurisdictions": ["Europe"],
+    "customer_jurisdictions": null,
+    "employee_jurisdictions": null
+  },
+  "regulatory_seed": [],
+  "recurring_matters_seed": ["contracts"],
+  "stakeholders_seed": {
+    "reports_to": null,
+    "key_business_partners": [],
+    "escalation_threshold_label": null
+  },
+  "risk_appetite_seed": null,
+  "open_notes_seed": null,
+  "conversation_style": "terse, one-word answers where possible; declines specifics; pushes back on questions; never volunteers more than asked; willing to accept defaults",
+  "practice_areas_to_select_default": true,
+  "practice_areas_to_select": ["commercial", "commercial-disputes", "corporate", "employment", "employment-disputes", "privacy", "ip", "ip-disputes", "regulatory", "regulatory-disputes", "product", "ai-governance", "cosec"],
+  "areas_to_drop": [],
+  "first_turn_questions": {
+    "commercial": "Look at this clause and tell me if it's standard.",
+    "privacy": "DPA review."
+  }
+}

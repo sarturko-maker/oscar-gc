@@ -1,0 +1,52 @@
+{
+  "id": "jin-soo-park",
+  "label": "Jin-soo Park, Head of Legal at Hanseo Logistics",
+  "why_this_persona": "Korean HQ marketplace platform operating across KR/JP/DE. Tests the rule set for assumed-Western jurisdictional bias and non-English-jurisdiction regulatory baseline. Korean Personal Information Protection Act, JP APPI, EU operations.",
+  "identity": {
+    "name": "Jin-soo Park",
+    "role_slug": "general-counsel",
+    "role_label": "Head of Legal",
+    "company": "Hanseo Logistics"
+  },
+  "industry_seed": {
+    "sector": "Logistics + supply chain",
+    "sub_sector": "Cross-border shipping marketplace",
+    "business_model": "Marketplace platform (shipper-carrier matching with commission)",
+    "size_band": "1001-5000"
+  },
+  "geography_seed": {
+    "hq_jurisdiction": "South Korea",
+    "operating_jurisdictions": ["South Korea", "Japan", "Germany"],
+    "customer_jurisdictions": ["South Korea", "Japan", "Germany", "Vietnam", "Indonesia"],
+    "employee_jurisdictions": ["South Korea", "Japan", "Germany"]
+  },
+  "regulatory_seed": [
+    {"id": "pipa-kr", "label": "Personal Information Protection Act (Korea)"},
+    {"id": "appi-jp", "label": "Act on the Protection of Personal Information (Japan)"},
+    {"id": "gdpr", "label": "GDPR (DE operations)"},
+    {"id": "dsa", "label": "DSA (EU platform obligations)"},
+    {"id": "kr-fair-trade", "label": "Korea Fair Trade Commission marketplace rules"},
+    {"id": "kr-e-commerce-act", "label": "Korean E-commerce Consumer Protection Act"},
+    {"id": "imo-marpol", "label": "IMO MARPOL (shipping environmental)"}
+  ],
+  "recurring_matters_seed": [
+    "carrier onboarding agreements",
+    "shipper terms-of-service updates per jurisdiction",
+    "KFTC inquiries on platform-fairness rules",
+    "cross-border data-transfer impact assessments"
+  ],
+  "stakeholders_seed": {
+    "reports_to": "CFO",
+    "key_business_partners": ["VP Operations (Seoul)", "Regional Head Japan", "Regional Head Europe"],
+    "escalation_threshold_label": "CFO approval for KRW 1B+ commitments; CEO for regulatory escalations to KFTC level"
+  },
+  "risk_appetite_seed": "balanced",
+  "open_notes_seed": "We're applying for an EU PSD2-style payment-services licence in Germany this quarter to enable carrier payouts in-network — separate workstream from logistics regulatory.",
+  "conversation_style": "precise, occasional clarifying back-questions, brief turns",
+  "practice_areas_to_select": ["commercial", "privacy", "regulatory", "employment", "corporate", "product"],
+  "areas_to_drop": ["commercial-disputes", "employment-disputes", "ip", "ip-disputes", "regulatory-disputes", "ai-governance", "cosec"],
+  "first_turn_questions": {
+    "regulatory": "KFTC is asking us how we calculate our carrier-ranking algorithm — they're testing whether marketplace operators apply discriminatory weights. We do weight by historical on-time delivery, claim ratio, and pricing. Where is the line between performance-based ranking and prohibited discrimination under the Fair Trade Act marketplace rules, and what's our defensible documentation posture?",
+    "privacy": "A Japanese shipper customer is asking for an APPI data-transfer agreement separate from our standard DPA — they want explicit consent flows for their corporate users' information. Our Korean PIPA flow gets consent at signup; can we cover both with one document or do we need parallel addenda?"
+  }
+}

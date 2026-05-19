@@ -1,0 +1,51 @@
+{
+  "id": "daniel-okafor",
+  "label": "Daniel Okafor, Commercial Counsel at Meridian Power Components",
+  "why_this_persona": "Sprint 7 baseline persona extended to v3 schema. Industrial distribution, UK-only, low-regulation, commercial-heavy. Tests the rule set against a persona who reasonably has thin regulatory baseline (not every in-house lawyer is GDPR-on-fire).",
+  "identity": {
+    "name": "Daniel Okafor",
+    "role_slug": "counsel",
+    "role_label": "Commercial Counsel",
+    "company": "Meridian Power Components"
+  },
+  "industry_seed": {
+    "sector": "Industrial distribution",
+    "sub_sector": "Electrical components reseller",
+    "business_model": "Reseller / distributor",
+    "size_band": "201-1000"
+  },
+  "geography_seed": {
+    "hq_jurisdiction": "United Kingdom",
+    "operating_jurisdictions": ["United Kingdom"],
+    "customer_jurisdictions": null,
+    "employee_jurisdictions": null
+  },
+  "regulatory_seed": [
+    {"id": "uk-gdpr", "label": "UK GDPR"},
+    {"id": "uk-consumer-rights", "label": "Consumer Rights Act 2015"},
+    {"id": "uk-modern-slavery", "label": "Modern Slavery Act 2015"}
+  ],
+  "recurring_matters_seed": [
+    "supplier framework agreements",
+    "customer terms of supply",
+    "channel reseller agreements",
+    "warranty and product-quality disputes"
+  ],
+  "stakeholders_seed": {
+    "reports_to": "Managing Director",
+    "key_business_partners": ["Head of Procurement", "Sales Director"],
+    "escalation_threshold_label": "MD approval above £100k; Board for anything that affects warranty exposure"
+  },
+  "risk_appetite_seed": "conservative",
+  "open_notes_seed": "New channel partner programme launching this autumn — first reseller agreements being drafted now.",
+  "conversation_style": "concise, comfortable, occasional dry humour, drops two or three facts per turn",
+  "practice_areas_to_select": ["commercial", "employment", "corporate"],
+  "areas_to_drop": ["commercial-disputes", "employment-disputes", "privacy", "ip", "ip-disputes", "regulatory", "regulatory-disputes", "product", "ai-governance", "cosec"],
+  "custom_practice_areas_to_add": [
+    {"id": "custom-channel-reseller", "name": "Channel & Reseller", "body": "Reseller agreements, channel-partner terms, and distribution network policies live here."}
+  ],
+  "first_turn_questions": {
+    "commercial": "A long-standing supplier wants to renegotiate the master framework — they're proposing a 12% price uplift tied to currency moves and a unilateral right to discontinue specific SKUs with 90 days' notice. We've been on this paper for six years. What's my opening position and what's the walk-away?",
+    "employment": "We're rolling out a hybrid working policy — three days in office, two flexible. HR drafted something but I'm worried about Section 12 of the Employment Rights Act 1996 and what it means for varied contracts. What's actually load-bearing here?"
+  }
+}

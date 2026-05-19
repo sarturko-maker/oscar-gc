@@ -1,0 +1,54 @@
+{
+  "id": "priya-iyer",
+  "label": "Priya Iyer, Senior Counsel at Vitalis Health",
+  "why_this_persona": "Heavily regulated US healthcare (hospital systems). HIPAA, state pharmacy boards, FDA Class II devices, Stark, Anti-Kickback. Tests the rule set against a US-only persona with a dense and distinctively US regulatory baseline (not EU privacy-shaped).",
+  "identity": {
+    "name": "Priya Iyer",
+    "role_slug": "senior-counsel",
+    "role_label": "Senior Counsel — Regulatory",
+    "company": "Vitalis Health"
+  },
+  "industry_seed": {
+    "sector": "Healthcare",
+    "sub_sector": "Hospital systems + ambulatory clinics",
+    "business_model": "Direct services (patient care + physician practice acquisition)",
+    "size_band": "5000+"
+  },
+  "geography_seed": {
+    "hq_jurisdiction": "United States — Texas",
+    "operating_jurisdictions": ["United States — Texas", "United States — Arizona", "United States — New Mexico", "United States — Colorado"],
+    "customer_jurisdictions": null,
+    "employee_jurisdictions": null
+  },
+  "regulatory_seed": [
+    {"id": "hipaa", "label": "HIPAA / HITECH"},
+    {"id": "stark", "label": "Stark Law"},
+    {"id": "aks", "label": "Anti-Kickback Statute"},
+    {"id": "fda-21cfr820", "label": "FDA 21 CFR Part 820 (Class II devices)"},
+    {"id": "tx-pharmacy", "label": "Texas State Board of Pharmacy"},
+    {"id": "az-pharmacy", "label": "Arizona State Board of Pharmacy"},
+    {"id": "emtala", "label": "EMTALA"},
+    {"id": "tx-medical-board", "label": "Texas Medical Board"}
+  ],
+  "recurring_matters_seed": [
+    "physician employment agreements",
+    "Stark / AKS structuring on physician compensation",
+    "vendor BAAs",
+    "DEA registration and controlled-substance compliance",
+    "device complaint and CAPA review"
+  ],
+  "stakeholders_seed": {
+    "reports_to": "General Counsel (Vitalis HQ)",
+    "key_business_partners": ["Chief Compliance Officer", "Chief Medical Officer", "VP Quality & Risk"],
+    "escalation_threshold_label": "GC approval for any physician compensation that triggers Stark designated health services; CCO for any HIPAA breach over 500 records"
+  },
+  "risk_appetite_seed": "conservative",
+  "open_notes_seed": "We're integrating an AI clinical-decision-support tool over the next 9 months — the AI Act doesn't reach us but FDA and state medical-practice rules absolutely do. Risk-stratification is the live debate.",
+  "conversation_style": "measured, careful with regulatory terminology, drops dense facts when asked but defaults to short answers",
+  "practice_areas_to_select": ["regulatory", "regulatory-disputes", "privacy", "employment", "commercial", "corporate"],
+  "areas_to_drop": ["commercial-disputes", "employment-disputes", "ip", "ip-disputes", "product", "ai-governance", "cosec"],
+  "first_turn_questions": {
+    "regulatory": "We're under a Texas Medical Board investigation into a physician practice we acquired three months ago — alleged improper supervision of NP-led visits at a satellite clinic. What's the standard scope of a TMB investigation at this stage, what do we have to produce, and where's our defensible position given the supervision protocol was inherited from the prior owner?",
+    "privacy": "An IT vendor we use for revenue cycle management had a ransomware incident two weeks ago. They've told us no PHI was accessed but we have no independent visibility. What's our HIPAA notification clock, what triggers the 500-record threshold for HHS reporting, and what should I be asking the vendor right now?"
+  }
+}

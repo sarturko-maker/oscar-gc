@@ -1,0 +1,52 @@
+{
+  "id": "marco-bianchi",
+  "label": "Marco Bianchi, Solo GC at Lumen AI",
+  "why_this_persona": "Solo in-house at an AI model-dev + deployment company. EU AI Act + DSA + DMA + UK and US exposure. Tests the rule set against a solo lawyer (no team to escalate to, hybrid B2B+B2C) and AI-specific regulatory framing.",
+  "identity": {
+    "name": "Marco Bianchi",
+    "role_slug": "general-counsel",
+    "role_label": "General Counsel",
+    "company": "Lumen AI"
+  },
+  "industry_seed": {
+    "sector": "Artificial intelligence",
+    "sub_sector": "Foundation-model fine-tuning + deployed inference",
+    "business_model": "B2B platform + B2C application",
+    "size_band": "51-200"
+  },
+  "geography_seed": {
+    "hq_jurisdiction": "Italy",
+    "operating_jurisdictions": ["Italy", "Germany", "France", "United Kingdom", "United States"],
+    "customer_jurisdictions": null,
+    "employee_jurisdictions": null
+  },
+  "regulatory_seed": [
+    {"id": "eu-ai-act", "label": "EU AI Act"},
+    {"id": "gdpr", "label": "GDPR"},
+    {"id": "dsa", "label": "DSA"},
+    {"id": "dma", "label": "DMA (if our B2C usage tips)"},
+    {"id": "uk-gdpr", "label": "UK GDPR"},
+    {"id": "us-state-ai-laws", "label": "US state AI laws (CO SB-205, IL HB 3773, CA AB-2013)"},
+    {"id": "italian-civil-code", "label": "Italian Civil Code (employment & consumer protections)"}
+  ],
+  "recurring_matters_seed": [
+    "model-training data-provenance reviews",
+    "customer enterprise agreements",
+    "AI Act conformity-assessment scoping",
+    "B2C terms-of-service and content-moderation policy updates"
+  ],
+  "stakeholders_seed": {
+    "reports_to": "CEO",
+    "key_business_partners": ["VP Engineering", "Head of Trust & Safety", "Head of Sales"],
+    "escalation_threshold_label": "CEO approval for any AI Act high-risk-tier classification; Board for any incident that triggers an AI Act safety notification"
+  },
+  "risk_appetite_seed": "growth-oriented",
+  "open_notes_seed": "We're racing to ship a code-generation product in Q3 — AI Act high-risk classification debate is open and I haven't gotten a clean answer from outside counsel.",
+  "conversation_style": "fast, sometimes interrupts to clarify, switches between Italian-tinged English and crisp legal English, comfortable with technical specifics",
+  "practice_areas_to_select": ["ai-governance", "privacy", "commercial", "product", "employment", "corporate", "ip"],
+  "areas_to_drop": ["commercial-disputes", "employment-disputes", "ip-disputes", "regulatory", "regulatory-disputes", "cosec"],
+  "first_turn_questions": {
+    "ai-governance": "Our code-generation product — does it land high-risk under the AI Act or not? It's a productivity tool for engineers, not safety-critical, but it touches Annex III workplace-related sub-categories. Where's the load-bearing argument either way?",
+    "privacy": "We trained on a public-scrape corpus that probably contains personal data — emails in commit messages, names in code comments. What's our Article 6 basis for the training-time processing, and how do we surface this in a deployment notice without lighting ourselves on fire?"
+  }
+}

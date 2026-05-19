@@ -1,0 +1,52 @@
+{
+  "id": "sarah-chen",
+  "label": "Sarah Chen, GC at PayFlow",
+  "why_this_persona": "Regulatory-heavy multi-jurisdiction fintech. Classic mid-market GC with substantive recurring matters across Commercial / Privacy / Regulatory / Employment / AI Governance / Corporate. Tests the hypothesis-confirm pattern against a dense regulatory baseline.",
+  "identity": {
+    "name": "Sarah Chen",
+    "role_slug": "general-counsel",
+    "role_label": "General Counsel",
+    "company": "PayFlow"
+  },
+  "industry_seed": {
+    "sector": "Financial services",
+    "sub_sector": "B2B payments SaaS",
+    "business_model": "Subscription SaaS",
+    "size_band": "1001-5000"
+  },
+  "geography_seed": {
+    "hq_jurisdiction": "United Kingdom",
+    "operating_jurisdictions": ["United Kingdom", "Germany", "United States"],
+    "customer_jurisdictions": null,
+    "employee_jurisdictions": null
+  },
+  "regulatory_seed": [
+    {"id": "gdpr", "label": "GDPR"},
+    {"id": "uk-gdpr", "label": "UK GDPR"},
+    {"id": "psd2", "label": "PSD2"},
+    {"id": "psr1", "label": "PSR1 (UK)"},
+    {"id": "dora", "label": "DORA"},
+    {"id": "dsa", "label": "DSA"},
+    {"id": "pci-dss", "label": "PCI DSS Level 1"}
+  ],
+  "recurring_matters_seed": [
+    "customer agreements",
+    "vendor MSAs for cloud and data infrastructure",
+    "FCA regulator queries",
+    "MSA renegotiations"
+  ],
+  "stakeholders_seed": {
+    "reports_to": "CFO",
+    "key_business_partners": ["CISO", "CTO", "VP Sales"],
+    "escalation_threshold_label": "£500k commitments to CEO; Board for material regulatory matters"
+  },
+  "risk_appetite_seed": "balanced",
+  "open_notes_seed": "Acquiring a smaller competitor next quarter; diligence active.",
+  "conversation_style": "concise, business-direct, peer-to-peer with the agent, drops multiple facts per turn",
+  "practice_areas_to_select": ["commercial", "privacy", "regulatory", "employment", "ai-governance", "corporate"],
+  "areas_to_drop": ["commercial-disputes", "employment-disputes", "ip", "ip-disputes", "regulatory-disputes", "product", "cosec"],
+  "first_turn_questions": {
+    "commercial": "A new vendor wants us on their paper for a data-processing engagement — they're proposing uncapped indemnities on data-breach liability and a £25k aggregate cap on everything else. What should I push back on first, and where do I have leverage given they want our deal?",
+    "privacy": "We're starting to deploy LLM features into the product. Customer data will flow through a third-party model provider as a processor. What does the DPA addendum need to cover that our standard DPA template doesn't, and what's the controller posture analysis given the model provider can claim it's an essential service?"
+  }
+}

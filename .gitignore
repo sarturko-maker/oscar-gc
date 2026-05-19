@@ -91,3 +91,6 @@ gooseselftest/
 .env.tavily
 *.tavily.key
 *.tavily.url
+# Sprint 15 eval — recipe files contain Tavily key in their SSE URI; orchestrator writes them to /tmp
+# but defence-in-depth, never commit any recipe-*.json under sprint-15 eval dirs.
+docs/sprint-15/eval/**/recipe-*.json
