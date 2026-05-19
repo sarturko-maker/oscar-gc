@@ -173,6 +173,19 @@ async function preparePython() {
     PY_WHEELS_DIR,
     '--only-binary=:all:',
   ]);
+
+  // ADR-045 (Sprint 13): copy the adeu batch-path word-diff vendor patch
+  // alongside the wheels so postinst.sh can apply it after the venv build.
+  // Deletion criterion: upstream adeu releases this fix and we repin —
+  // at which point remove this copy step and the postinst patch invocation.
+  const repoRoot = path.resolve(UI_DESKTOP, '..', '..');
+  const patchSrc = path.join(repoRoot, 'docs', 'redline', `adeu-${ADEU_VERSION}-batch-path-word-diff.patch`);
+  const patchDest = path.join(PY_DIR, `adeu-${ADEU_VERSION}-batch-path-word-diff.patch`);
+  if (!fs.existsSync(patchSrc)) {
+    throw new Error(`[python] ADR-045 patch missing at ${patchSrc}`);
+  }
+  fs.copyFileSync(patchSrc, patchDest);
+  console.log(`[python] copied ADR-045 patch → ${patchDest}`);
 }
 
 async function prepareNode() {

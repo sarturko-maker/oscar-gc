@@ -11,6 +11,7 @@ APP_ROOT=/usr/lib/oscar-gc
 PY="$APP_ROOT/resources/python/cpython/bin/python3"
 VENV="$APP_ROOT/resources/python/adeu-venv"
 WHEELS="$APP_ROOT/resources/python/wheels"
+ADEU_PATCH="$APP_ROOT/resources/python/adeu-1.6.9-batch-path-word-diff.patch"
 LAUNCHER="$APP_ROOT/oscar-gc-launcher.sh"
 
 install_launcher() {
@@ -58,6 +59,14 @@ case "$1" in
     rm -rf "$VENV"
     "$PY" -m venv "$VENV"
     "$VENV/bin/pip" install --no-index --find-links="$WHEELS" adeu==1.6.9
+
+    # ADR-045 (Sprint 13): apply the adeu batch-path word-diff patch.
+    # Deletion criterion: upstream adeu releases this fix and we repin.
+    if [ -f "$ADEU_PATCH" ]; then
+      patch -d "$VENV/lib/python3.12/site-packages" -p1 < "$ADEU_PATCH"
+    else
+      echo "oscar-gc postinst: WARNING — ADR-045 patch not found at $ADEU_PATCH; redline will not produce word-shape output" >&2
+    fi
 
     install_launcher
     ;;
