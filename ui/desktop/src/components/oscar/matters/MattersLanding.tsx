@@ -11,6 +11,9 @@ import { errorMessage } from '../../../utils/conversionUtils';
 import { buildCommercialRecipe } from '../commercial/commercialRecipe';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
 import { buildExtensionFromIntegration } from '../integrations/buildExtensionFromIntegration';
+import { ensureRecipeSecrets } from '../onboarding/ensureRecipeSecrets';
+import RecipeSecretsModal from '../onboarding/RecipeSecretsModal';
+import { useConfig } from '../../ConfigContext';
 import type { Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
 import type {
@@ -22,6 +25,17 @@ import MatterRow from './MatterRow';
 import NewMatterDialog from './NewMatterDialog';
 import { getPracticeAreaShape } from './practiceAreaShapes';
 import type { MatterEntry, NewMatterInput } from './types';
+
+// Sprint 17 (P6): pending-spawn state when ensureRecipeSecrets reports a
+// missing key. The lawyer needs to satisfy the gate (Save / Skip in
+// RecipeSecretsModal) before createSession fires. For the Sprint 17 seed
+// every integration has env_keys: [] so this state stays null in normal
+// flow; structurally in place for Sprint 18+ entries.
+interface PendingSpawn {
+  matter: MatterEntry;
+  workingDir: string;
+  recipe: Recipe;
+}
 
 interface MattersLandingProps {
   area: PracticeArea;
@@ -59,10 +73,12 @@ const groupByStakeholder = (matters: MatterEntry[]): StakeholderGroup[] => {
 
 export default function MattersLanding({ area }: MattersLandingProps) {
   const navigate = useNavigate();
+  const config = useConfig();
   const { matters, loading, error, create } = useMatters(area.id);
   const [showNew, setShowNew] = useState(false);
   const [opening, setOpening] = useState<string | null>(null);
   const [openError, setOpenError] = useState<string | null>(null);
+  const [pendingSpawn, setPendingSpawn] = useState<PendingSpawn | null>(null);
 
   const groups = useMemo(() => groupByStakeholder(matters), [matters]);
   const shape = getPracticeAreaShape(area.id);
@@ -131,20 +147,51 @@ export default function MattersLanding({ area }: MattersLandingProps) {
               extraExtensions: installedConfigs,
             });
 
-      const session = await createSession(workingDir, { recipe });
-
-      if (matter.session_id !== session.id) {
-        await window.electron.matters.bindSession(area.id, matter.slug, session.id);
+      // Sprint 17 (P6): if any installed integration declares an env_key
+      // that's unset in env/keyring AND not skipped, gate the spawn behind
+      // RecipeSecretsModal. For Sprint 17's seed set this resolves to
+      // false on every matter open (Tavily is set at onboarding; all six
+      // seed entries declare env_keys: []), so this short-circuits without
+      // rendering. Sprint 18+ catalog entries that grow real keys flow
+      // through the same gate.
+      const gateNeeded = await ensureRecipeSecrets(recipe, config);
+      if (gateNeeded) {
+        setPendingSpawn({ matter, workingDir, recipe });
+        return;
       }
 
-      window.dispatchEvent(
-        new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
-          detail: { sessionId: session.id, initialMessage: undefined },
-        }),
-      );
-      navigate(`/pair?resumeSessionId=${encodeURIComponent(session.id)}`, {
-        state: { disableAnimation: true },
-      });
+      await spawnSession(matter, workingDir, recipe);
+    } catch (err) {
+      setOpenError(errorMessage(err, 'Failed to open matter'));
+      setOpening(null);
+    }
+  };
+
+  const spawnSession = async (
+    matter: MatterEntry,
+    workingDir: string,
+    recipe: Recipe,
+  ): Promise<void> => {
+    const session = await createSession(workingDir, { recipe });
+    if (matter.session_id !== session.id) {
+      await window.electron.matters.bindSession(area.id, matter.slug, session.id);
+    }
+    window.dispatchEvent(
+      new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
+        detail: { sessionId: session.id, initialMessage: undefined },
+      }),
+    );
+    navigate(`/pair?resumeSessionId=${encodeURIComponent(session.id)}`, {
+      state: { disableAnimation: true },
+    });
+  };
+
+  const onSecretsResolved = async (): Promise<void> => {
+    const pending = pendingSpawn;
+    setPendingSpawn(null);
+    if (!pending) return;
+    try {
+      await spawnSession(pending.matter, pending.workingDir, pending.recipe);
     } catch (err) {
       setOpenError(errorMessage(err, 'Failed to open matter'));
       setOpening(null);
@@ -156,6 +203,19 @@ export default function MattersLanding({ area }: MattersLandingProps) {
     setShowNew(false);
     await openMatter(entry);
   };
+
+  // Sprint 17 (P6): when a recipe needs a key the user hasn't provided yet,
+  // take over the matters surface with RecipeSecretsModal. After Save /
+  // Skip All the modal calls onComplete → onSecretsResolved resumes the
+  // spawn.
+  if (pendingSpawn) {
+    return (
+      <RecipeSecretsModal
+        recipe={pendingSpawn.recipe}
+        onComplete={() => void onSecretsResolved()}
+      />
+    );
+  }
 
   return (
     <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
