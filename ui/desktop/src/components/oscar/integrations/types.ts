@@ -97,11 +97,22 @@ export interface VendorMcpEntry {
   description: string;
 }
 
-// Installed-state row (mirrors InstalledIntegrationEntrySchema in main.ts).
-// Sprint 17 (ADR-061): persisted at
-// ~/.config/oscar/state/<area-id>/installed_integrations.json.
-export interface InstalledIntegration {
-  id: string;
-  added_at: string;
-  trust_acknowledged: boolean;
-}
+// Installed-state row + file schema (Sprint 17, ADR-061): persisted at
+// ~/.config/oscar/state/<area-id>/installed_integrations.json. Zod
+// schemas validated at the main.ts IPC boundary; the renderer consumes
+// the inferred TypeScript types. Matches the matters/types.ts pattern.
+
+import { z } from 'zod';
+
+export const InstalledIntegrationEntrySchema = z.object({
+  id: z.string().min(1).max(128),
+  added_at: z.string().min(1),
+  trust_acknowledged: z.boolean(),
+});
+export type InstalledIntegration = z.infer<typeof InstalledIntegrationEntrySchema>;
+
+export const InstalledIntegrationsFileSchema = z.object({
+  schema_version: z.literal(1),
+  installed_integrations: z.array(InstalledIntegrationEntrySchema).default([]),
+});
+export type InstalledIntegrationsFile = z.infer<typeof InstalledIntegrationsFileSchema>;

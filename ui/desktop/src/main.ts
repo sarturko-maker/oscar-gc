@@ -1780,6 +1780,12 @@ import {
   type MattersFile,
 } from './components/oscar/matters/types';
 import {
+  InstalledIntegrationsFileSchema,
+  type InstalledIntegrationsFile,
+  type InstalledIntegration,
+} from './components/oscar/integrations/types';
+import { INTEGRATIONS_OVERLAY } from './components/oscar/integrations/registry';
+import {
   partyRoleLabel,
   subjectTypeLabel,
   extrasKeyLabel,
@@ -2195,6 +2201,52 @@ interface VendorMcpEntry {
   description: string;
 }
 
+// Sibling state file alongside matters.json (ADR-061). Electron main owns
+// reads + writes; profile.json stays single-writer (only oscar-onboarding-
+// mcp::finalize_profile writes profile.json).
+const installedIntegrationsPath = (areaId: string) =>
+  path.join(areaStateDir(areaId), 'installed_integrations.json');
+
+const readInstalledIntegrations = async (
+  areaId: string,
+): Promise<InstalledIntegrationsFile> => {
+  const filePath = installedIntegrationsPath(areaId);
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    const json = JSON.parse(raw) as unknown;
+    const result = InstalledIntegrationsFileSchema.safeParse(json);
+    if (result.success) return result.data;
+    log.warn('oscar:integrations registry read: schema mismatch', {
+      areaId,
+      filePath,
+      issues: result.error.issues.slice(0, 3),
+    });
+    return { schema_version: 1, installed_integrations: [] };
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') {
+      return { schema_version: 1, installed_integrations: [] };
+    }
+    log.warn('oscar:integrations registry read failed', {
+      areaId,
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { schema_version: 1, installed_integrations: [] };
+  }
+};
+
+const writeInstalledIntegrations = async (
+  areaId: string,
+  file: InstalledIntegrationsFile,
+): Promise<void> => {
+  InstalledIntegrationsFileSchema.parse(file);
+  await fs.mkdir(areaStateDir(areaId), { recursive: true });
+  await fs.writeFile(
+    installedIntegrationsPath(areaId),
+    JSON.stringify(file, null, 2),
+    'utf8',
+  );
+};
+
 ipcMain.handle('oscar:integrations:list-available', async () => {
   const root = inHouseLegalRoot();
   const out: VendorMcpEntry[] = [];
@@ -2252,6 +2304,110 @@ ipcMain.handle('oscar:integrations:list-available', async () => {
   }
   return out;
 });
+
+ipcMain.handle('oscar:integrations:list', async (_event, areaIdRaw: unknown) => {
+  const areaId = safeAreaId(areaIdRaw);
+  if (!areaId) return [];
+  const file = await readInstalledIntegrations(areaId);
+  return file.installed_integrations;
+});
+
+ipcMain.handle(
+  'oscar:integrations:install',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    entryIdRaw: unknown,
+    trustAcknowledgedRaw: unknown,
+  ) => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) throw new Error('invalid practice area id');
+    if (typeof entryIdRaw !== 'string' || entryIdRaw.length === 0) {
+      throw new Error('invalid entry id');
+    }
+    // Reject ids not in the overlay — fail-closed per ADR-060. The
+    // renderer's loadRegistry already filters to overlay-known entries;
+    // this is defence-in-depth.
+    if (!INTEGRATIONS_OVERLAY[entryIdRaw]) {
+      throw new Error(`unknown integration id: ${entryIdRaw}`);
+    }
+    // Bundled entries are not installable (ADR-060): they're always-on.
+    if (INTEGRATIONS_OVERLAY[entryIdRaw].security_tier === 'bundled') {
+      throw new Error(
+        `integration "${entryIdRaw}" is bundled and cannot be installed`,
+      );
+    }
+    const trustAcknowledged = trustAcknowledgedRaw === true;
+    const file = await readInstalledIntegrations(areaId);
+    const existing = file.installed_integrations.find(
+      (e) => e.id === entryIdRaw,
+    );
+    if (existing) {
+      // Idempotent: no-op if already installed. UI flips to Installed
+      // state and won't surface the Add button again, so this branch is
+      // mostly defensive against double-clicks.
+      return { ok: true, already_installed: true };
+    }
+    const entry: InstalledIntegration = {
+      id: entryIdRaw,
+      added_at: new Date().toISOString(),
+      trust_acknowledged: trustAcknowledged,
+    };
+    file.installed_integrations.push(entry);
+    await writeInstalledIntegrations(areaId, file);
+    return { ok: true, already_installed: false };
+  },
+);
+
+// Sprint 17 (ADR-062): one-shot startup log enumerating the runtime egress
+// envelope. Walks all practice-area state dirs, resolves installed entry
+// ids against INTEGRATIONS_OVERLAY, emits a single line:
+//   "egress envelope: N integrations across M areas → host1, host2, ..."
+// Hostnames only (no entry ids, no credentials). Useful for support when
+// a pilot user reports a misbehaving agent: the log tells you which
+// extensions are widening the outbound surface without reading profile.
+// Fail-silent (the log is informational; it must never block app boot).
+const logEgressEnvelope = async (): Promise<void> => {
+  try {
+    let areaDirs: import('fs').Dirent[];
+    try {
+      areaDirs = await fs.readdir(OSCAR_STATE_DIR, { withFileTypes: true });
+    } catch (err) {
+      if ((err as { code?: string }).code === 'ENOENT') return;
+      throw err;
+    }
+    const hosts = new Set<string>();
+    let entryCount = 0;
+    let areaCount = 0;
+    for (const dirent of areaDirs) {
+      if (!dirent.isDirectory()) continue;
+      const file = await readInstalledIntegrations(dirent.name);
+      if (file.installed_integrations.length === 0) continue;
+      areaCount += 1;
+      for (const e of file.installed_integrations) {
+        entryCount += 1;
+        const overlay = INTEGRATIONS_OVERLAY[e.id];
+        if (overlay?.service_endpoint_host) {
+          hosts.add(overlay.service_endpoint_host);
+        }
+      }
+    }
+    if (entryCount === 0) return;
+    log.info('egress envelope', {
+      integration_count: entryCount,
+      area_count: areaCount,
+      hosts: [...hosts].sort(),
+    });
+  } catch (err) {
+    log.warn('logEgressEnvelope failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+  }
+};
+
+// Fire-and-forget at module load; the log appears alongside other boot
+// diagnostics. Not awaited so it never delays goosed spawn.
+void logEgressEnvelope();
 
 // Handle menu bar icon visibility
 ipcMain.handle('set-menu-bar-icon', async (_event, show: boolean) => {
