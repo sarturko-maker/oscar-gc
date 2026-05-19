@@ -1,15 +1,16 @@
+// Sprint 12 (ADR-036): mounts MattersLanding for every practice area.
+// The Commercial special-case (direct OscarCommercialView) is retired —
+// Commercial now opens via MattersLanding like the other 12 areas, with the
+// matter folder threading into the session's working_dir.
+
 import { useParams } from 'react-router-dom';
 import { usePracticeAreas } from './hooks/usePracticeAreas';
-import OscarCommercialView from './commercial/OscarCommercialView';
+import MattersLanding from './matters/MattersLanding';
 
 export default function PracticeAreaPlaceholder() {
   const { areaId } = useParams<{ areaId: string }>();
   const areas = usePracticeAreas();
   const area = areas.find((a) => a.id === areaId);
-
-  if (areaId === 'commercial') {
-    return <OscarCommercialView />;
-  }
 
   if (!area) {
     return (
@@ -21,16 +22,5 @@ export default function PracticeAreaPlaceholder() {
     );
   }
 
-  return (
-    <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
-      <div className="flex flex-col max-w-3xl flex-1 justify-center">
-        <div className="oscar__eyebrow">{area.name}</div>
-        <h1 className="oscar__placeholder-title">
-          {area.name}{' '}
-          <span className="oscar__placeholder-title-em">— placeholder.</span>
-        </h1>
-        <p className="oscar__placeholder-body">{area.body}</p>
-      </div>
-    </div>
-  );
+  return <MattersLanding area={area} />;
 }

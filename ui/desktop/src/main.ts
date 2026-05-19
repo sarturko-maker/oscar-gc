@@ -1735,6 +1735,293 @@ ipcMain.handle('oscar:read-profile', async () => {
   }
 });
 
+// Sprint 12 (ADRs 036, 038, 043, 044): Matters layer. Per-practice-area
+// state under ~/.config/oscar/state/<area-id>/; registry at matters.json
+// for the UI index; matter folders for matter.md + history.md + notes.md +
+// outputs/; Top of Mind matter context file written on set-active.
+
+const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
+
+const safeAreaId = (raw: unknown): string | null => {
+  if (typeof raw !== 'string' || raw.length === 0 || raw.length > 64) return null;
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(raw)) return null;
+  return raw;
+};
+
+const safeSlug = (raw: unknown): string | null => {
+  if (typeof raw !== 'string' || raw.length === 0 || raw.length > 64) return null;
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(raw)) return null;
+  return raw;
+};
+
+const areaStateDir = (areaId: string) => path.join(OSCAR_STATE_DIR, areaId);
+const mattersRegistryPath = (areaId: string) =>
+  path.join(areaStateDir(areaId), 'matters.json');
+const matterFolderPath = (areaId: string, slug: string) =>
+  path.join(areaStateDir(areaId), 'matters', slug);
+const archivedFolderPath = (areaId: string, slug: string) =>
+  path.join(areaStateDir(areaId), 'matters', '_archived', slug);
+
+interface MatterEntryV1 {
+  slug: string;
+  name: string;
+  client: string;
+  counterparty: string | null;
+  matter_type: string;
+  opened_at: string;
+  last_accessed_at: string;
+  status: 'active' | 'closed';
+  privileged: boolean;
+  session_id: string | null;
+  schema_version: 1;
+}
+
+interface MattersFileV1 {
+  schema_version: 1;
+  matters: MatterEntryV1[];
+}
+
+const readMattersRegistry = async (areaId: string): Promise<MattersFileV1> => {
+  try {
+    const raw = await fs.readFile(mattersRegistryPath(areaId), 'utf8');
+    const parsed = JSON.parse(raw) as MattersFileV1;
+    if (parsed.schema_version === 1 && Array.isArray(parsed.matters)) {
+      return parsed;
+    }
+    log.warn('oscar:matters registry shape unexpected; treating as empty', { areaId });
+    return { schema_version: 1, matters: [] };
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') {
+      return { schema_version: 1, matters: [] };
+    }
+    log.warn('oscar:matters registry read failed', {
+      areaId,
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { schema_version: 1, matters: [] };
+  }
+};
+
+const writeMattersRegistry = async (
+  areaId: string,
+  registry: MattersFileV1,
+): Promise<void> => {
+  await fs.mkdir(areaStateDir(areaId), { recursive: true });
+  await fs.writeFile(
+    mattersRegistryPath(areaId),
+    JSON.stringify(registry, null, 2),
+    'utf8',
+  );
+};
+
+const renderMatterMd = (entry: MatterEntryV1, keyFacts: string): string => {
+  const frontmatter = [
+    '---',
+    `slug: ${entry.slug}`,
+    `name: ${JSON.stringify(entry.name)}`,
+    `client: ${JSON.stringify(entry.client)}`,
+    `counterparty: ${entry.counterparty === null ? 'null' : JSON.stringify(entry.counterparty)}`,
+    `matter_type: ${JSON.stringify(entry.matter_type)}`,
+    `opened_at: ${entry.opened_at}`,
+    `status: ${entry.status}`,
+    `privileged: ${entry.privileged}`,
+    'schema_version: 1',
+    '---',
+  ].join('\n');
+  return `${frontmatter}\n\n# Matter: ${entry.name}\n\n## Key facts\n\n${keyFacts.trim()}\n\n## Matter-specific overrides\n\n_None yet._\n`;
+};
+
+const renderTomActiveMatter = (entry: MatterEntryV1, keyFacts: string): string => {
+  const lines = [
+    'You are currently working on this matter:',
+    '',
+    `- Slug: ${entry.slug}`,
+    `- Name: ${entry.name}`,
+    `- Client: ${entry.client}`,
+    `- Counterparty: ${entry.counterparty ?? 'none'}`,
+    `- Matter type: ${entry.matter_type}`,
+    `- Privileged: ${entry.privileged ? 'yes' : 'no'}`,
+    '',
+    'Key facts:',
+    keyFacts.trim(),
+  ];
+  return lines.join('\n') + '\n';
+};
+
+ipcMain.handle('oscar:matters:list', async (_event, areaIdRaw: unknown) => {
+  const areaId = safeAreaId(areaIdRaw);
+  if (!areaId) return [];
+  const registry = await readMattersRegistry(areaId);
+  return [...registry.matters].sort((a, b) =>
+    b.last_accessed_at.localeCompare(a.last_accessed_at),
+  );
+});
+
+ipcMain.handle(
+  'oscar:matters:get',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    if (!areaId || !slug) return null;
+    const registry = await readMattersRegistry(areaId);
+    const entry = registry.matters.find((m) => m.slug === slug);
+    if (!entry) return null;
+    let matterMd: string | null = null;
+    try {
+      matterMd = await fs.readFile(path.join(matterFolderPath(areaId, slug), 'matter.md'), 'utf8');
+    } catch {
+      matterMd = null;
+    }
+    return { entry, matter_md: matterMd };
+  },
+);
+
+ipcMain.handle(
+  'oscar:matters:create',
+  async (_event, areaIdRaw: unknown, inputRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) throw new Error('invalid practice area id');
+    const input = inputRaw as {
+      slug?: unknown;
+      name?: unknown;
+      client?: unknown;
+      counterparty?: unknown;
+      matter_type?: unknown;
+      privileged?: unknown;
+      key_facts?: unknown;
+    };
+    const slug = safeSlug(input.slug);
+    if (!slug) throw new Error('invalid slug');
+    if (
+      typeof input.name !== 'string' ||
+      typeof input.client !== 'string' ||
+      typeof input.matter_type !== 'string' ||
+      typeof input.key_facts !== 'string' ||
+      typeof input.privileged !== 'boolean'
+    ) {
+      throw new Error('invalid matter input');
+    }
+    if (fsSync.existsSync(matterFolderPath(areaId, slug))) {
+      throw new Error(`matter slug '${slug}' already exists`);
+    }
+    if (fsSync.existsSync(archivedFolderPath(areaId, slug))) {
+      throw new Error(`matter slug '${slug}' exists in _archived`);
+    }
+    const counterparty =
+      typeof input.counterparty === 'string' && input.counterparty.length > 0
+        ? input.counterparty
+        : null;
+    const now = new Date().toISOString();
+    const entry: MatterEntryV1 = {
+      slug,
+      name: input.name,
+      client: input.client,
+      counterparty,
+      matter_type: input.matter_type,
+      opened_at: now,
+      last_accessed_at: now,
+      status: 'active',
+      privileged: input.privileged,
+      session_id: null,
+      schema_version: 1,
+    };
+    const folder = matterFolderPath(areaId, slug);
+    await fs.mkdir(path.join(folder, 'outputs'), { recursive: true });
+    await fs.writeFile(path.join(folder, 'matter.md'), renderMatterMd(entry, input.key_facts), 'utf8');
+    await fs.writeFile(
+      path.join(folder, 'history.md'),
+      `# History: ${entry.name}\n\nAppend-only event log; most recent at top.\n\n---\n\n## ${now.slice(0, 10)} — Matter opened\n\nIntake completed. Slug: \`${slug}\`. Status: active.\n`,
+      'utf8',
+    );
+    await fs.writeFile(path.join(folder, 'notes.md'), `# Notes: ${entry.name}\n\n`, 'utf8');
+    const registry = await readMattersRegistry(areaId);
+    registry.matters.push(entry);
+    await writeMattersRegistry(areaId, registry);
+    return entry;
+  },
+);
+
+ipcMain.handle(
+  'oscar:matters:bind-session',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown, sessionIdRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    if (!areaId || !slug || typeof sessionIdRaw !== 'string') return { ok: false };
+    const registry = await readMattersRegistry(areaId);
+    const entry = registry.matters.find((m) => m.slug === slug);
+    if (!entry) return { ok: false };
+    entry.session_id = sessionIdRaw;
+    entry.last_accessed_at = new Date().toISOString();
+    await writeMattersRegistry(areaId, registry);
+    return { ok: true };
+  },
+);
+
+ipcMain.handle(
+  'oscar:matters:archive',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    if (!areaId || !slug) return { ok: false };
+    const active = matterFolderPath(areaId, slug);
+    const archived = archivedFolderPath(areaId, slug);
+    if (!fsSync.existsSync(active)) return { ok: false };
+    await fs.mkdir(path.dirname(archived), { recursive: true });
+    await fs.rename(active, archived);
+    const registry = await readMattersRegistry(areaId);
+    const entry = registry.matters.find((m) => m.slug === slug);
+    if (entry) {
+      entry.status = 'closed';
+      entry.last_accessed_at = new Date().toISOString();
+    }
+    await writeMattersRegistry(areaId, registry);
+    return { ok: true };
+  },
+);
+
+ipcMain.handle(
+  'oscar:matters:set-active',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    if (!areaId || !slug) return { ok: false };
+    const registry = await readMattersRegistry(areaId);
+    const entry = registry.matters.find((m) => m.slug === slug);
+    if (!entry) return { ok: false };
+    let matterMdBody = '';
+    try {
+      const md = await fs.readFile(
+        path.join(matterFolderPath(areaId, slug), 'matter.md'),
+        'utf8',
+      );
+      const keyFactsMatch = md.match(/## Key facts\s*\n+([\s\S]*?)(?=\n## |$)/);
+      matterMdBody = keyFactsMatch ? keyFactsMatch[1].trim() : '';
+    } catch {
+      matterMdBody = '';
+    }
+    await fs.writeFile(
+      OSCAR_TOM_ACTIVE_MATTER_FILE,
+      renderTomActiveMatter(entry, matterMdBody),
+      'utf8',
+    );
+    entry.last_accessed_at = new Date().toISOString();
+    await writeMattersRegistry(areaId, registry);
+    return { ok: true, folder: matterFolderPath(areaId, slug) };
+  },
+);
+
+ipcMain.handle('oscar:matters:detach-active', async () => {
+  try {
+    await fs.writeFile(OSCAR_TOM_ACTIVE_MATTER_FILE, '', 'utf8');
+    return { ok: true };
+  } catch (err) {
+    log.warn('oscar:matters:detach-active failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { ok: false };
+  }
+});
+
 // Handle menu bar icon visibility
 ipcMain.handle('set-menu-bar-icon', async (_event, show: boolean) => {
   updateSettings((s) => {

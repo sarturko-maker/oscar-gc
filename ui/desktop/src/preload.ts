@@ -199,6 +199,23 @@ type ElectronAPI = {
   // packaged resources dir when the app is installed (e.g. /opt/oscar-gc/resources),
   // null when running in dev. Recipe factories use this to resolve adeu/node/MCP paths.
   oscarResourcesRoot: string | null;
+  // Oscar Matters (Sprint 12, ADRs 036/038/043/044). Registry-driven scoped
+  // containers per practice area. Schemas validated in main.ts IPC handlers.
+  matters: {
+    list: (areaId: string) => Promise<unknown[]>;
+    get: (
+      areaId: string,
+      slug: string,
+    ) => Promise<{ entry: unknown; matter_md: string | null } | null>;
+    create: (areaId: string, input: unknown) => Promise<unknown>;
+    bindSession: (areaId: string, slug: string, sessionId: string) => Promise<{ ok: boolean }>;
+    archive: (areaId: string, slug: string) => Promise<{ ok: boolean }>;
+    setActive: (
+      areaId: string,
+      slug: string,
+    ) => Promise<{ ok: boolean; folder?: string }>;
+    detachActive: () => Promise<{ ok: boolean }>;
+  };
 };
 
 type AppConfigAPI = {
@@ -372,6 +389,20 @@ const electronAPI: ElectronAPI = {
   listGitWorktreeDirs: (dir: string) => ipcRenderer.invoke('list-git-worktree-dirs', dir),
   readOscarProfile: () => ipcRenderer.invoke('oscar:read-profile'),
   oscarResourcesRoot,
+  matters: {
+    list: (areaId: string) => ipcRenderer.invoke('oscar:matters:list', areaId),
+    get: (areaId: string, slug: string) =>
+      ipcRenderer.invoke('oscar:matters:get', areaId, slug),
+    create: (areaId: string, input: unknown) =>
+      ipcRenderer.invoke('oscar:matters:create', areaId, input),
+    bindSession: (areaId: string, slug: string, sessionId: string) =>
+      ipcRenderer.invoke('oscar:matters:bind-session', areaId, slug, sessionId),
+    archive: (areaId: string, slug: string) =>
+      ipcRenderer.invoke('oscar:matters:archive', areaId, slug),
+    setActive: (areaId: string, slug: string) =>
+      ipcRenderer.invoke('oscar:matters:set-active', areaId, slug),
+    detachActive: () => ipcRenderer.invoke('oscar:matters:detach-active'),
+  },
 };
 
 const appConfigAPI: AppConfigAPI = {
