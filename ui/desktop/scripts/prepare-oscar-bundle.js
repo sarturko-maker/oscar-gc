@@ -480,6 +480,20 @@ async function main() {
     mcps: [...Object.keys(SIBLING_MCPS), ...Object.keys(VENDORED_MCPS)],
     skills: { 'in-house-legal': { skill_md_count: skills.skillCount } },
     network_audit: networkAudit,
+    // Sprint 15 (ADR-052): hosted MCP extensions wired by Oscar code,
+    // not bundled. Egress only occurs when the user has configured the
+    // relevant credential. Declared here for audit-trail completeness;
+    // see goosed's runtime egress posture amending ADR-042.
+    runtime_egress_optional: [
+      {
+        extension: 'tavily',
+        type: 'sse',
+        host: 'mcp.tavily.com',
+        purpose: 'Web-search hypothesis-confirm during intake P2.5c (ADR-050 rule 4); also available to practice-area agents mid-matter.',
+        credential_handling: 'user-provided runtime key; never bundled. Env TAVILY_API_KEY > ~/.config/oscar/secrets/tavily.json > omitted.',
+        fallback_on_absence: 'Tavily extension omitted from recipe; intake degrades to LLM-only hypothesis silently.',
+      },
+    ],
     smoke_test: smokeTest,
     timestamp: new Date().toISOString(),
   };

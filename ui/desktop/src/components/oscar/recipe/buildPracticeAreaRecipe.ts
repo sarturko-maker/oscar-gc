@@ -10,6 +10,8 @@
 
 import type { Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
+import { buildTavilyExtension } from '../onboarding/onboardingRecipe';
+import type { TavilyKey } from '../onboarding/resolveTavilyKey';
 
 const DEV_NODE_CMD = '/usr/bin/node';
 const DEV_OSCAR_FS_BUNDLE = '/srv/projects/goose/ui/desktop/src/resources/mcps/oscar-fs/index.js';
@@ -39,6 +41,10 @@ export interface BuildPracticeAreaRecipeOptions {
   // Commercial passes the redline MCP; everywhere else this is empty.
   // Extra extensions append AFTER oscar-fs.
   extraExtensions?: Recipe['extensions'];
+  // Sprint 15 (ADR-052): if a Tavily key is configured, practice-area
+  // agents also get the hosted SSE search extension so they can verify
+  // regulatory currency mid-session. Optional; absence = no extension.
+  tavily?: TavilyKey | null;
 }
 
 const defaultSystemPrompt = (
@@ -72,6 +78,31 @@ idiom; business stakeholders in plain business framing.
 `.trim();
 
 export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): Recipe {
+  const extensions: NonNullable<Recipe['extensions']> = [
+    {
+      type: 'stdio',
+      name: 'oscar-fs',
+      description:
+        'Filesystem MCP scoped to the matter working + state folders (Sprint 12 ADR-040, Sprint 14 ADR-047).',
+      cmd: resolveNodeCmd(opts.resourcesRoot),
+      args: [
+        resolveOscarFsBundle(opts.resourcesRoot),
+        opts.workingDir,
+        opts.stateFolder,
+      ],
+      envs: {
+        // Sprint 12 (ADR-037), Sprint 14 (ADR-047): skills consume
+        // $OSCAR_MATTER_DIR to resolve matter-scoped paths. Points at the
+        // working folder (user-visible matter dir), not state.
+        OSCAR_MATTER_DIR: opts.workingDir,
+      },
+      timeout: 30,
+    },
+    ...(opts.extraExtensions ?? []),
+  ];
+  if (opts.tavily) {
+    extensions.push(buildTavilyExtension(opts.tavily));
+  }
   return {
     version: '1.0.0',
     title: `Oscar GC — ${opts.area.name}`,
@@ -79,28 +110,7 @@ export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): R
     instructions:
       opts.systemPrompt ??
       defaultSystemPrompt(opts.area, opts.workingDir, opts.stateFolder),
-    extensions: [
-      {
-        type: 'stdio',
-        name: 'oscar-fs',
-        description:
-          'Filesystem MCP scoped to the matter working + state folders (Sprint 12 ADR-040, Sprint 14 ADR-047).',
-        cmd: resolveNodeCmd(opts.resourcesRoot),
-        args: [
-          resolveOscarFsBundle(opts.resourcesRoot),
-          opts.workingDir,
-          opts.stateFolder,
-        ],
-        envs: {
-          // Sprint 12 (ADR-037), Sprint 14 (ADR-047): skills consume
-          // $OSCAR_MATTER_DIR to resolve matter-scoped paths. Points at the
-          // working folder (user-visible matter dir), not state.
-          OSCAR_MATTER_DIR: opts.workingDir,
-        },
-        timeout: 30,
-      },
-      ...(opts.extraExtensions ?? []),
-    ],
+    extensions,
     settings: {
       goose_provider: 'minimax',
       goose_model: 'MiniMax-M2.5',

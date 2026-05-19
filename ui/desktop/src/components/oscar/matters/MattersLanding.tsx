@@ -10,6 +10,7 @@ import { AppEvents } from '../../../constants/events';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { buildCommercialRecipe } from '../commercial/commercialRecipe';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
+import { resolveTavilyKey } from '../onboarding/resolveTavilyKey';
 import type { PracticeArea } from '../practiceAreas';
 import { useMatters } from './useMatters';
 import MatterRow from './MatterRow';
@@ -81,18 +82,21 @@ export default function MattersLanding({ area }: MattersLandingProps) {
       }
       const { working_dir: workingDir, state_folder: stateFolder } = active;
       const resourcesRoot = window.electron.oscarResourcesRoot;
+      // Sprint 15 (ADR-052): hosted Tavily SSE attached when configured.
+      const tavily = await resolveTavilyKey();
 
       // Commercial composes its bespoke system prompt + redline MCP on top
       // via buildCommercialRecipe; the other 12 areas use the generic shape.
       const recipe =
         area.id === 'commercial'
-          ? buildCommercialRecipe(workingDir, stateFolder, resourcesRoot)
+          ? buildCommercialRecipe(workingDir, stateFolder, resourcesRoot, tavily)
           : buildPracticeAreaRecipe({
               area,
               workingDir,
               stateFolder,
               matterSlug: matter.slug,
               resourcesRoot,
+              tavily,
             });
 
       const session = await createSession(workingDir, { recipe });

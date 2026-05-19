@@ -1755,6 +1755,39 @@ ipcMain.handle('oscar:read-profile', async () => {
   }
 });
 
+// Sprint 15 (ADR-052): resolve the hosted Tavily SSE API key.
+// Env var TAVILY_API_KEY wins (dev / CI / launcher-wrapper); else read
+// ~/.config/oscar/secrets/tavily.json (0600 perms; gitignored at root and
+// ui/desktop). Returns null when neither is present — the recipe builder
+// omits the Tavily extension and the intake prompt's rule-4 fallback
+// handles the absence silently.
+const oscarTavilySecretsPath =
+  process.env.OSCAR_TAVILY_PATH ||
+  path.join(os.homedir(), '.config', 'oscar', 'secrets', 'tavily.json');
+
+ipcMain.handle('oscar:resolve-tavily-key', async () => {
+  const envKey = process.env.TAVILY_API_KEY?.trim();
+  if (envKey) {
+    return { apiKey: envKey, source: 'env' as const };
+  }
+  try {
+    const raw = await fs.readFile(oscarTavilySecretsPath, 'utf8');
+    const parsed = JSON.parse(raw) as { api_key?: unknown };
+    if (typeof parsed.api_key === 'string' && parsed.api_key.trim().length > 0) {
+      return { apiKey: parsed.api_key.trim(), source: 'file' as const };
+    }
+    return null;
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') {
+      return null;
+    }
+    log.warn('oscar:resolve-tavily-key failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return null;
+  }
+});
+
 // Sprint 12 (ADRs 036, 038, 043, 044) + Sprint 14 (ADR-047): Matters layer.
 // Sprint 14 reshape — split disk layout:
 //   - Operational state under ~/.config/oscar/state/<area-id>/
