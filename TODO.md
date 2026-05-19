@@ -2,13 +2,15 @@
 
 Append-only. Format: `- **Topic** (origin sprint, optional target sprint) — one-line description.` Move to `SPRINT_LOG.md` when picked up.
 
-## Sprint 15 — shipped on Stage 1; eval-run + Stage 2 → Sprint 16
+## Sprint 15 — shipped Stage 1 self-eval (two iterations); Stage 2 → Sprint 16
 
-Shipped P2–P5 + P7 (commits `fb3084eb7`, `1af9386` sibling, `6f22b070a`, `d7af52def`, `79cd2e46d`, `2ba97d1e4`); five ADRs (050–054). Carry-forwards:
+Shipped P2–P7 incl. two live eval iterations (`fb3084eb7`, `1af9386` sibling, `6f22b070a`, `d7af52def`, `79cd2e46d`, `2ba97d1e4`, `fc5e756eb`, `36db132b5`, `98cc2f73b`); five ADRs (050–054). Iter-2 aggregate: coverage 4.50 PASS, efficiency 4.80 PASS, downstream-briefing 2.92 FAIL (target 4.0; +0.34 vs iter-1). Carry-forwards:
 
-- **P6 — live self-eval (Sprint 15 carry, target Sprint 16)** — run `node scripts/dogfood/sprint-15/run-intake-eval.mjs --persona <id> --iteration 1` for each of 6 personas (sarah-chen / daniel-okafor / priya-iyer / marco-bianchi / jin-soo-park / quiet-lawyer); aggregate via `aggregate-scores.mjs`; if FAIL, iterate `systemPrompt.ts` per the weakest-axis rationales, ≤5 iterations. Requires `~/.config/goose/config.yaml` provider auth in scope.
-- **P8 — Stage 2 user dogfood (Sprint 15 carry, target Sprint 16)** — Arturs runs intake on his own practice + 1–2 invented personas; opens practice-area agents; confirms briefed first responses. Gated on P6 PASS.
-- **Settings UI for Tavily key entry (Sprint 15 carry, ADR-052 deferral)** — minimal row in Oscar's existing Settings surface writing `~/.config/oscar/secrets/tavily.json` (0600). Dev/CC/Arturs paths use env or pre-populated file; this is for end-user onboarding once UI dogfood expands beyond Arturs.
+- **P8 — Stage 2 user dogfood (Sprint 15 carry, target Sprint 16)** — Arturs runs intake on his own practice + 1–2 invented personas via UI or the harness; opens practice-area agents; confirms whether the briefed first-turn responses feel right qualitatively. Supersedes the 2.92 downstream model-judge mean.
+- **Iter-3+ practice-area prompt tightening (Sprint 15 carry, target Sprint 16 contingent on Stage 2)** — three open levers documented in `docs/sprint-15/self-assessment.md`: force-cite-≥2-dimensions; inject company_context into user message; trim goose default extensions (replacement, not blanket removal — `--no-profile` breaks tool calls). Each has second-order risk.
+- **Judge robustness (Sprint 15 carry, target Sprint 16)** — Priya's iter-2 efficiency returned prose-only rationale (orchestrator parse-failure fallback returned null); need stricter judge prompt or score-coercion step.
+- **Quiet Lawyer scoring rubric refinement (Sprint 15 carry, target Sprint 16)** — downstream-briefing axis penalises generic answers but persona declines specifics; consider excluding from downstream mean or scoring as separate "null-handling fidelity" axis.
+- **Settings UI for Tavily + MiniMax key entry (Sprint 15 carry, ADR-052 deferral, target Sprint 16)** — minimal row in Oscar's existing Settings surface writing `~/.config/oscar/secrets/{tavily,minimax}.json` (0600). Dev/CC/Arturs paths use env or pre-populated file; end-user affordance for broader dogfood.
 
 ## Sprint 14 — shipped, see SPRINT_LOG.md
 

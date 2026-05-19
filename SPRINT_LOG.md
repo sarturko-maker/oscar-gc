@@ -14,7 +14,7 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
-### Sprint 15 — Practice-context intake: in-house shape, agentic, model-eval'd (closed 2026-05-19 on Stage 1 scaffolding, eval-run carry-forward; commit `2ba97d1e4`)
+### Sprint 15 — Practice-context intake: in-house shape, agentic, model-eval'd (closed 2026-05-19 on Stage 1 self-eval — two live iterations; Stage 2 → Sprint 16; commits `fb3084eb7`, `1af9386` sibling, `6f22b070a`, `d7af52def`, `79cd2e46d`, `2ba97d1e4`, `fc5e756eb`, `36db132b5`, `98cc2f73b`)
 
 **Goal**: redesign the onboarding intake so an in-house lawyer can describe their practice in ≤5 minutes and downstream practice-area agents are *briefed at turn 1* — they know industry depth, jurisdictions, regulatory baseline, recurring matter shapes, stakeholder/escalation context. Goal + rules, not script. Self-eval'd before user dogfood. Plan at `/root/.claude/plans/sprint-practice-context-intake-distributed-coral.md`. Displaces Sprint 14's first-listed Sprint 15 candidate (adeu MCP App diff preview, ADR-048 reserved — moves to Sprint 16).
 
@@ -30,15 +30,25 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 - **P7** (`2ba97d1e4`) — Self-assessment `docs/sprint-15/self-assessment.md`. Honest framing on what shipped + what didn't run + what's wobbly + the ship gate to Stage 2.
 
-**Deferred** — two structural items:
-- **P6 (live self-eval) deferred to Sprint 16.** `goose run` requires a configured provider in `~/.config/goose/config.yaml`; that file is correctly permission-protected from the agent harness, so CC could not run the eval end-to-end in this session. Recipe rendering and schema migration verified independently. Path forward documented in self-assessment with the exact commands Arturs would run.
-- **P8 (Stage 2 user dogfood) deferred to Sprint 16.** Waits on P6 PASS or honest FAIL signal. The harness is shipping-quality; one of the next two sessions (CC with provider granted, OR Arturs running it himself) closes the gate.
-- **Settings UI for end-user Tavily key entry**: env-var + secrets-file resolution suffices for Sprint 15 self-eval + Stage 2 dogfood. End-user Settings affordance scheduled for Sprint 16.
+**P6 ran end-to-end across two iterations** (after Arturs provided the MiniMax dev key — `~/.config/oscar/secrets/minimax.json`, 0600, USD 10/month cap, key handling mirrors the Tavily pattern: secrets file gitignored at both repo roots + `**/secrets/*.json` defence-in-depth pattern):
+
+- Per-persona wall-time 2.4–7.0 min, mean ~4.2 min. Full 6-persona iteration ~25–30 min total.
+- Real harness fixes landed during iter-1 (`fc5e756eb`): Tavily extension type `sse` → `streamable_http` (goose CLI's recipe validator rejects `sse`); `--recipe` mutually exclusive with `-t`/`-i` (user-turn now threads through recipe `prompt` field, fresh JSON per turn); `--no-profile` breaks tool calls (must NOT be passed — without it, MiniMax-M2.5 emits text-shaped `[TOOL_CALL]` pseudo-calls instead of real `toolRequest` content blocks); `--session-id` requires `--resume` (use `--name` for new session); `detectFinalizeProfileCall` traverses `toolCall.value.name`.
+- **iter-1** (`fc5e756eb`): coverage 4.83 PASS, efficiency 4.20 PASS, downstream 2.58 FAIL (min cell 1). Intake itself works; downstream-briefing wobble is practice-area agents not actively using the injected `## About this company` block (Daniel Okafor commercial first-turn scored 1/5 — generic negotiation playbook with zero persona anchors).
+- **iter-2 prompt fix** (`36db132b5`): defaultSystemPrompt + commercial systemPrompt gain explicit "Use the About this company block actively" sections; intake rule 4 capped at one Tavily call per intake (iter-1 Sarah triggered 8 calls).
+- **iter-2** (`98cc2f73b`): coverage 4.50, efficiency 4.80, downstream **2.92 (+0.34 vs iter-1)**. Daniel jumped 1.0 → 3.0 on downstream (now cites UK REACH/WEEE, MD £100k threshold, Late Payment Act, channel-reseller programme — five persona anchors in one response). Priya 2.5 → 4.0. Quiet Lawyer stays at 1 (expected — persona declines specifics; nothing to brief on).
+- **Iter-3 not run.** Three open levers (force-cite ≥2 dimensions; inject company_context into user message; trim default extensions) each carry second-order risk; documented in self-assessment.md. Sprint 16 picks up after Arturs's Stage 2 qualitative signal.
+
+**Deferred** — two items:
+- **P8 (Stage 2 user dogfood) carries to Sprint 16.** Arturs runs intake on his own practice + 1–2 invented personas via the UI or the harness; the qualitative judgment ("does it FEEL briefed when I open a practice-area agent post-intake?") supersedes the 2.92 model-judge mean.
+- **Settings UI for end-user Tavily key entry**: env-var + secrets-file resolution suffices for Sprint 15 self-eval. End-user Settings affordance scheduled for Sprint 16.
 
 **Carry-forwards**:
-- **Run the eval (P6)** — once goose provider is in CC's permission scope OR Arturs runs the orchestrator directly. Bounded ≤5 iterations per ADR-054.
-- **Stage 2 dogfood (P8)** — gated on P6.
-- **Settings UI for Tavily** — small surface, deferred from P3 per ADR-052.
+- **Stage 2 dogfood (P8)** — Arturs runs the intake (UI or harness) and qualitatively judges whether the practice-area first-turn feels briefed. Iter-2 prompts now live in main; Crostini rebuild picks them up.
+- **Iter-3+ practice-area prompt tightening** — gated on Stage 2 signal. Open levers documented in `docs/sprint-15/self-assessment.md` "Why we did not run iter-3".
+- **Settings UI for Tavily + MiniMax** — small surface, deferred from P3 per ADR-052.
+- **Judge robustness** — Priya's iter-2 efficiency returned prose-only rationale (orchestrator caught it as parse-failure null); stricter judge prompt or score-coercion step needed.
+- **Quiet Lawyer scoring** — downstream-briefing axis penalises generic answers but the Quiet Lawyer declines specifics; consider excluding from downstream mean or scoring as a separate "null-handling fidelity" axis.
 - **Adeu MCP App diff preview (Sprint 14 carry, originally first Sprint 15 candidate)** — displaced by this sprint; ADR-048 still reserved; Sprint 16 picks up.
 
 **ADRs**: 050, 051, 052 (amends 042), 053, 054.
