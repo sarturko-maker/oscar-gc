@@ -14,6 +14,55 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 13 — Lawyer-shape redline: word-diff in adeu + prompt discipline (Phases 1-6 closed 2026-05-19; Phase 7 pending Crostini dogfood)
+
+**Goal**: close the "adeu doesn't redline like a lawyer" carry-forward from Sprint 10 / Sprint 12. Make redline output lawyer-shape: narrow w:ins/w:del at word boundaries, preserved qualifiers retained verbatim, comments emitted when the LLM can't preserve a flagged phrase. Plan at `/root/.claude/plans/brief-sprint-13-noble-kahn.md`.
+
+**Built** — six commit-shaped phases on `main`. Plan-mode investigation surfaced three brief-vs-reality corrections folded into the plan: (a) the brief's premise of a "redline MCP wrapper" between Goose and adeu was wrong — adeu IS the MCP (called directly from Goose); (b) adeu already has the word-diff algorithm internally (`generate_edits_from_text` in `adeu/diff.py:189`), just not invoked on `process_document_batch` — only on `diff_docx_files`; (c) the brief's prompt-template path (`redline-mcp/prompt_templates/*.md`) doesn't exist — the Commercial system prompt is a TS string literal at `systemPrompt.ts`.
+
+- **Phase 1** (`1f1adeb5a`) — ADRs 045 + 046 at decision time. ADR-045 documents the adeu batch-path word-diff vendor patch — its site (engine.py:1609 area, MODIFICATION branch of `_pre_resolve_heuristic_edit`), architectural reasoning (adeu has the algorithm; batch-path wiring is the gap), deletion criterion (upstream merges + we repin). ADR-046 documents Commercial recipe prompt discipline — preserve list, anchor-preservation idiom, failure-mode examples, consequence framing as additions to `systemPrompt.ts`. Brief's 044/045 numbering corrected to 045/046 (ADR-044 = Sprint 12 Top of Mind).
+
+- **Phase 2** (`538894d8e`) — adeu vendor-patch. Adds 33-line word-diff block + one-line import to `_pre_resolve_heuristic_edit` MODIFICATION branch: after `trim_common_context` produces `final_target` / `final_new`, call `generate_edits_from_text` on them; for each returned word-granular sub-edit, anchor `_match_start_index = effective_start_idx + sub_idx`, set `_internal_op` from target/new shape, set `_active_mapper_ref`. Apply_edits already iterates over list returns (engine.py:1162). Patch committed as `docs/redline/adeu-1.6.9-batch-path-word-diff.patch` (51 lines diff against pristine wheel). Sanity-check: `generate_edits_from_text("within thirty (30) days", "within fourteen (14) days")` yields 2 narrow sub-edits ("thirty"→"fourteen", "30"→"14") instead of one wholesale modification. RUNBOOK §Sprint 13 documents apply/verify procedure.
+
+- **Phase 3** (`15ef6a351`) — System-prompt discipline. Four new sections inlined into `ui/desktop/src/components/oscar/commercial/systemPrompt.ts` SYSTEM_PROMPT string literal, after "Things you never do":
+  - `# Preserve discipline` — name preserved phrases per edit; emit comment if rewrite can't preserve.
+  - `# Anchor-preservation idiom` — concrete WRONG/RIGHT block teaching the LLM to begin `new_text` with a verbatim prefix of `target_text`. Primary cooperator with the adeu word-diff.
+  - `# Failure modes to avoid` — WRONG/RIGHT blocks for qualifier-drop (e.g., "to those of its officers and employees on a need-to-know basis") and mandatory-law-catch-out drop (e.g., "or as required by applicable law").
+  - `# Consequence framing` — un-explained drops are rejected and reworked by the senior solicitor.
+  
+  Prompt grew from ~1,600 to ~2,400 tokens. Recipe wiring unchanged — `commercialRecipe.ts` already imports SYSTEM_PROMPT and passes it through `buildPracticeAreaRecipe`. Typecheck: zero errors introduced; 202 pre-existing TS errors in unrelated files (window.electron type drift from Sprint 12 matters IPC) — outside Sprint 13 scope.
+
+- **Phase 4** (`1d5579710`) — Lawyer-shape criteria document. New `docs/redline/lawyer-shape-criteria.md` lifts the implicit Sprint 9 `verification-comprehension.md` criteria into a standalone signed-off contract. Six numbered criteria: OOXML granularity (median ≤ 3 / p80 ≤ 5 / 11+ wraps only for genuine wholesale), preserve discipline, cross-clause consistency, no emphasis-Markdown on substantive text, author propagation, coherence verification. Includes sign-off bar and verification methodology. Living document — refines sprint-over-sprint via ADRs. (The brief's referenced criteria document at `oscar-m2-addendum/.../adeu-lawyer-shape-criteria.md` didn't exist locally; Sprint 13 formalises into the Oscar GC repo.)
+
+- **Phase 5** (`d7ca49d8c`) — End-to-end verification + load-bearing gate. New `scripts/dogfood/verify-redline-shape.py` (OOXML width-distribution inspector with `inspect` + `compare` subcommands; grades against §1 hard gates; surfaces 11+ wraps for human review per criteria §1) and `scripts/dogfood/replay-sprint9-batch.py` (deterministic replay of Sprint 9's exact 8 LLM-emitted (target_text, new_text) pairs through the patched adeu — isolates the patch's effect from LLM variance). Verification report at `docs/dogfood/sprint-13/verification.md`:
+  - **Pre-patch baseline** (Sprint 9 `output-cli-verify.docx`): 15 tracked elements, median wrap **60.0 words**, p80 72.4, max 94, all 15 in the 11+ bucket.
+  - **Post-patch** (`sprint9-replay-patched.docx`): 68 tracked elements, median wrap **2.5 words**, p80 3.0, max 27. 1-2 word bucket: 34, 3-5: 27, 6-10: 5, 11+: 2.
+  - The 2 remaining 11+ wraps are pure INSERTION (27 words; new mutuality sentence appended to preamble, no target text) and pure DELETION (16 words; sentence removed wholesale, replaced structurally) — genuine wholesale per criteria §1, no common ground for word-diff to narrow.
+  - **Gate**: PASS. Median Δ -57.5 words, max Δ -67 words. Author propagation PASS (all 68 elements `w:author="Oscar"`).
+
+- **Phase 6** (`56715302c`) — Bundle the patch into the .deb. `prepare-oscar-bundle.js` copies `docs/redline/adeu-1.6.9-batch-path-word-diff.patch` to `src/resources/python/` alongside the wheels (hard-fails the build if the patch is missing — silent skip would ship a non-narrow redline). `postinst.sh` applies the patch via `patch -d <venv-site-packages> -p1` immediately after `pip install adeu==1.6.9`; WARNs (does not fail) if the patch file is missing. Deletion criterion (same as ADR-045): upstream merges + we repin → delete patch-copy in bundle prep, patch-apply in postinst, the `.patch` file. The .deb build itself runs on Crostini (lq-vps has a known pnpm-install issue per RUNBOOK).
+
+**Phase 7 (pending Arturs's Crostini dogfood)**: rebuild the .deb on Crostini (`cd ui/desktop && pnpm install --no-frozen-lockfile && pnpm run bundle:oscar-linux`), install, open the Commercial agent against a real NDA, exercise the lawyer-shape criteria from `docs/redline/lawyer-shape-criteria.md` (§1 granularity is empirically verified for the deterministic replay; §2 preserve discipline is testable only with the new prompt + live MiniMax, which Phase 7 covers). Sign-off ratifies the close; SPRINT_LOG entry header updates to "(closed YYYY-MM-DD, commit <sha>)" once recorded.
+
+**Deferred** (per brief, "What's NOT in this sprint"):
+
+- New wrapper MCP between Goose and adeu — premature abstraction; vendor-patch is smaller.
+- One-adapter-file isolation / adeu-bump RUNBOOK procedure — build when adeu bump becomes routine.
+- Counter-propose / counterparty round-2 workflow — Sprint 14+.
+- MCP App diff preview — Sprint 14+; TODO.md item "depends on adeu redline-quality fix" is now unblocked.
+- Audit log infrastructure, SECURITY.md writeup — Sprint 14 or 15.
+- Cross-document directive ceiling (mutual-obligations propagation) — known MiniMax single-shot limit; documented, not designed around.
+
+**Carry-forwards**:
+
+- Phase 7 user Crostini dogfood + sign-off (the actual close gate).
+- Upstream adeu PR: file the change against adeu's repo, recommending the opt-in `granularity: 'word' | 'span'` shape so the maintainer is more likely to accept. ADR-045 documents the deletion criterion.
+- TODO.md updates after Phase 7: close the "adeu doesn't redline like a lawyer" carry-forward; mark "MCP App diff preview" as unblocked.
+
+**ADRs**: 045, 046.
+
+---
+
 ### Sprint 1 — Unmodified Goose builds + MiniMax round-trip (closed 2026-05-17)
 
 **Goal**: build unmodified Goose on `lq-vps` and complete one round-trip via MiniMax. No customisation, no product code. Brief at `SPRINT_1_BRIEF.md`; plan at `/root/.claude/plans/sprint-1-dazzling-tide.md`.

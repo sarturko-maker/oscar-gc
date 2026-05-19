@@ -2,18 +2,20 @@
 
 Append-only. Format: `- **Topic** (origin sprint, optional target sprint) — one-line description.` Move to `SPRINT_LOG.md` when picked up.
 
-## Sprint 13 candidates (anchor decisions)
+## Sprint 14 candidates (anchor decisions)
 
 - **Audit-log infrastructure** (Sprint 12, ADR-043 hand-off) — `privileged: boolean` is the load-bearing field; audit log reads it, agents don't condition on it. Log shape, retention, integrity-verification surface need an ADR.
 - **SECURITY.md / threat-model writeup** (Sprint 12 plan deferral) — formalises what ADRs 029/042 imply. Targets in-house lawyer audience.
-- **Adeu MCP App diff preview** (Sprint 12 plan deferral; depends on adeu redline-quality fix) — render proposed redlines in chat with Apply/Edit/Reject affordances; disk write happens on Apply, not on tool execute. Per `goose-cowork-comparison` gotoHuman pattern. Phase 4 Commercial recipe shape will need to evolve (ADR-034 path applies on Apply).
+- **Adeu MCP App diff preview** (Sprint 12 plan deferral; **unblocked by Sprint 13 ADR-045**) — render proposed redlines in chat with Apply/Edit/Reject affordances; disk write happens on Apply, not on tool execute. Per `goose-cowork-comparison` gotoHuman pattern. Now that adeu produces word-shape OOXML, the diff-preview pattern is meaningful — pre-Sprint-13 wholesale wraps would have made review unusable.
 - **Bespoke Commercial Disputes recipe** (Sprint 12 plan deferral) — Sprint 12 ships Disputes via the generic builder (oscar-fs only). Need decision: redline-like tool for disputes work, or different substantive scope?
 - **"## Matter workspaces" boilerplate cleanup** (Sprint 12 Phase 6 deferral) — 48 substantive bundled skills carry rotted Sprint-11-stub-era prose. Top of Mind injection compensates behaviourally, but a clean orchestrator pass updates the boilerplate to assume always-on matter mode for in-house.
 - **Per-plugin state-file references in 16 skills** (Sprint 12 Phase 6 deferral) — references to `~/.config/oscar/state/<plugin>/matters/_log.yaml`, `gap-tracker.yaml`, `comment-tracker.yaml` etc. These are practice-level (not matter-scoped) state files. Decide: implement the state files, or rewrite the skills.
-- **Sprint 9 P1/P2 commercial system-prompt polish** (Sprint 9 carry) — Markdown emphasis discipline, defined-term capitalisation, Clause 8 mutuality reminder. Touch lightly.
+- **Sprint 9 P1/P2 commercial system-prompt polish — partially closed by Sprint 13** (Sprint 9 carry) — Markdown emphasis discipline still relies on the existing "Things you never do" rule (Sprint 9 baseline); defined-term capitalisation + Clause 8 mutuality reminder remain open. Sprint 13's preserve discipline (ADR-046) is the structural pickup; the specific defined-term + mutuality polish is unaddressed.
 - **Pre-Sprint-12 session migration** (Sprint 12 plan deferral) — only if Arturs's pre-Sprint-12 dogfood sessions need surfacing as matters. Explicit non-goal in Sprint 12.
+- **adeu upstream PR follow-through** (Sprint 13 ADR-045 deletion criterion) — file the word-diff-on-batch-path change against adeu's repo, recommending an opt-in `granularity: 'word' | 'span'` parameter. When merged + released, repin `ADEU_VERSION` in `prepare-oscar-bundle.js`, delete the patch-copy/apply steps + the `.patch` file.
+- **TypeScript `window.electron` type drift cleanup** (Sprint 13 incidental finding) — `pnpm run typecheck` surfaces 202 pre-existing TS errors caused by partial type override of `window.electron` since Sprint 12's matters IPC work. Properties like `startMesh`, `stopMesh`, `getSetting`, `setSetting`, `openExternal`, `getPathForFile`, etc. exist on the runtime object but are missing from the type def. Run lint cleanly before next Sprint touches preload.ts.
 
-## Sprint 14-15 candidates
+## Sprint 15 candidates
 
 - **Anthropic claude-for-legal managed-agent-cookbooks** (Sprint 11 deferral) — scheduled background agents. Re-vendoring pattern from Sprint 11 likely applies.
 - **Multi-provider Inference Gateway** (Sprint 12 plan deferral) — when Oscar GC goes beyond MiniMax. LQ-AI gateway pattern banked.
