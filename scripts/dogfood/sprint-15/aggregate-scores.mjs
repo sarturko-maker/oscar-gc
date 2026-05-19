@@ -1,15 +1,18 @@
 #!/usr/bin/env node
-// Sprint 15 (ADR-054): aggregates per-persona axis scores into a single
-// markdown report. Reads docs/sprint-15/eval/iter-<N>/<persona>/scores/all.json
-// for each persona under the iteration; emits a summary table + per-axis
-// drilldown to stdout.
+// Sprint 15 (ADR-054) / Sprint 16 (ADR-056): aggregates per-persona axis
+// scores into a single markdown report. Reads
+// docs/sprint-<S>/eval/iter-<N>/<persona>/scores/all.json for each persona
+// under the iteration; emits a summary table + per-axis drilldown to stdout.
 //
 // Usage:
-//   node aggregate-scores.mjs --iteration 1
+//   node aggregate-scores.mjs --iteration 3 [--sprint 16]
 //
-// Pass criteria (per the plan):
+// Pass criteria (Sprint 16 — ADR-056 update):
 //   PASS = (mean coverage ≥ 4.0) AND (mean efficiency ≥ 4.0) AND
-//          (mean downstream-briefing ≥ 4.0) AND (no cell < 3.0).
+//          (mean downstream-briefing ≥ 4.0) AND (mean regulatory-fit ≥ 4.0)
+//          AND (no cell < 3.0 on any axis)
+//          AND (no persona regulatory-fit < 3.0 — per-persona floor on the
+//               bug-detection axis).
 
 import { promises as fs } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
@@ -31,7 +34,8 @@ function mean(arr) {
 
 async function main() {
   const iteration = parseFlag('iteration') ?? '1';
-  const evalDir = join(REPO_ROOT, 'docs', 'sprint-15', 'eval', `iter-${iteration}`);
+  const sprint = parseFlag('sprint') ?? '16';
+  const evalDir = join(REPO_ROOT, 'docs', `sprint-${sprint}`, 'eval', `iter-${iteration}`);
   let entries;
   try {
     entries = await fs.readdir(evalDir, { withFileTypes: true });
@@ -61,6 +65,7 @@ async function main() {
         coverage: parsed.scores.coverage?.score ?? null,
         efficiency: parsed.scores.efficiency?.score ?? null,
         downstream: downstreamScores,
+        regulatoryFit: parsed.scores.regulatory_fit?.score ?? null,
       });
     } catch (err) {
       rows.push({
@@ -70,6 +75,7 @@ async function main() {
         coverage: null,
         efficiency: null,
         downstream: [],
+        regulatoryFit: null,
         error: err.message,
       });
     }
@@ -78,14 +84,20 @@ async function main() {
   const coverages = rows.map((r) => r.coverage);
   const efficiencies = rows.map((r) => r.efficiency);
   const downstreams = rows.flatMap((r) => r.downstream);
+  const regulatoryFits = rows.map((r) => r.regulatoryFit);
 
   const meanCoverage = mean(coverages);
   const meanEfficiency = mean(efficiencies);
   const meanDownstream = mean(downstreams);
-  const allCells = [...coverages, ...efficiencies, ...downstreams].filter(
+  const meanRegulatoryFit = mean(regulatoryFits);
+  const allCells = [...coverages, ...efficiencies, ...downstreams, ...regulatoryFits].filter(
     (x) => typeof x === 'number',
   );
   const minCell = allCells.length > 0 ? Math.min(...allCells) : null;
+
+  const regulatoryFitFloorBroken = regulatoryFits.some(
+    (s) => typeof s === 'number' && s < 3.0,
+  );
 
   const pass =
     meanCoverage !== null &&
@@ -94,32 +106,41 @@ async function main() {
     meanEfficiency >= 4.0 &&
     meanDownstream !== null &&
     meanDownstream >= 4.0 &&
+    meanRegulatoryFit !== null &&
+    meanRegulatoryFit >= 4.0 &&
     minCell !== null &&
-    minCell >= 3.0;
+    minCell >= 3.0 &&
+    !regulatoryFitFloorBroken;
 
   const lines = [];
-  lines.push(`# Sprint 15 eval — iteration ${iteration}`);
+  lines.push(`# Sprint ${sprint} eval — iteration ${iteration}`);
   lines.push('');
-  lines.push(`**Pass criteria**: mean ≥ 4.0 per axis AND no cell < 3.0.`);
+  lines.push(
+    `**Pass criteria**: mean ≥ 4.0 per axis AND no cell < 3.0 AND no persona regulatory-fit < 3.0.`,
+  );
   lines.push('');
   lines.push(`**Result**: **${pass ? 'PASS' : 'FAIL'}**.`);
   lines.push('');
   lines.push(`- Mean coverage: ${meanCoverage?.toFixed(2) ?? 'n/a'}`);
   lines.push(`- Mean efficiency: ${meanEfficiency?.toFixed(2) ?? 'n/a'}`);
   lines.push(`- Mean downstream-briefing: ${meanDownstream?.toFixed(2) ?? 'n/a'}`);
+  lines.push(`- Mean regulatory-fit: ${meanRegulatoryFit?.toFixed(2) ?? 'n/a'}`);
   lines.push(`- Min individual cell: ${minCell ?? 'n/a'}`);
+  lines.push(
+    `- Regulatory-fit per-persona floor (≥ 3.0): ${regulatoryFitFloorBroken ? 'BROKEN' : 'OK'}`,
+  );
   lines.push('');
   lines.push('## Per-persona scores');
   lines.push('');
   lines.push(
-    '| Persona | Turns | Aborted? | Coverage | Efficiency | Downstream (per area) |',
+    '| Persona | Turns | Aborted? | Coverage | Efficiency | Downstream (per area) | Regulatory-fit |',
   );
-  lines.push('|---|---|---|---|---|---|');
+  lines.push('|---|---|---|---|---|---|---|');
   for (const r of rows) {
     lines.push(
       `| ${r.persona} | ${r.turns ?? '—'} | ${r.aborted ?? '—'} | ${r.coverage ?? '—'} | ${
         r.efficiency ?? '—'
-      } | ${r.downstream.length > 0 ? r.downstream.join(', ') : '—'} |`,
+      } | ${r.downstream.length > 0 ? r.downstream.join(', ') : '—'} | ${r.regulatoryFit ?? '—'} |`,
     );
   }
   process.stdout.write(lines.join('\n') + '\n');

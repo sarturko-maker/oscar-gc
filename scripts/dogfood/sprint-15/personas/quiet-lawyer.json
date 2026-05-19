@@ -21,6 +21,8 @@
     "employee_jurisdictions": null
   },
   "regulatory_seed": [],
+  "regulatory_answer_key": [],
+  "_decline_expected": true,
   "recurring_matters_seed": ["contracts"],
   "stakeholders_seed": {
     "reports_to": null,

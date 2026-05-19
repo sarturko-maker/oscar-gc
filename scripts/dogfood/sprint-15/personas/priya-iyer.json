@@ -30,6 +30,23 @@
     {"id": "emtala", "label": "EMTALA"},
     {"id": "tx-medical-board", "label": "Texas Medical Board"}
   ],
+  "regulatory_answer_key": [
+    {"id": "hipaa-hitech", "label": "HIPAA / HITECH (privacy + security + breach notification)", "tier": "load-bearing"},
+    {"id": "stark", "label": "Stark Law (physician self-referral)", "tier": "load-bearing"},
+    {"id": "aks", "label": "Anti-Kickback Statute", "tier": "load-bearing"},
+    {"id": "false-claims-act", "label": "False Claims Act (Medicare/Medicaid billing exposure)", "tier": "load-bearing"},
+    {"id": "fda-21cfr820", "label": "FDA 21 CFR Part 820 (Quality System Regulation, Class II devices)", "tier": "load-bearing"},
+    {"id": "emtala", "label": "EMTALA (emergency medical treatment + active labor)", "tier": "load-bearing"},
+    {"id": "dea-controlled-substances", "label": "DEA registration / Controlled Substances Act (Schedule II–V)", "tier": "load-bearing"},
+    {"id": "state-medical-boards", "label": "TX/AZ/NM/CO Medical Boards (physician licensure + practice acts)", "tier": "load-bearing"},
+    {"id": "state-pharmacy-boards", "label": "TX/AZ/NM/CO State Boards of Pharmacy", "tier": "load-bearing"},
+    {"id": "cms-cops", "label": "CMS Conditions of Participation (Medicare/Medicaid)", "tier": "load-bearing"},
+    {"id": "42-cfr-part-2", "label": "42 CFR Part 2 (substance use disorder records)", "tier": "load-bearing"},
+    {"id": "state-data-breach-laws", "label": "State data breach notification laws (TX, AZ, NM, CO)", "tier": "nice-to-have"},
+    {"id": "ada", "label": "ADA (employment + facility access)", "tier": "nice-to-have"},
+    {"id": "us-state-ai-laws", "label": "US state AI laws (CO SB-205, etc.) — for clinical-decision-support deployment", "tier": "nice-to-have"},
+    {"id": "ftc-health-breach", "label": "FTC Health Breach Notification Rule (non-HIPAA-covered apps)", "tier": "nice-to-have"}
+  ],
   "recurring_matters_seed": [
     "physician employment agreements",
     "Stark / AKS structuring on physician compensation",

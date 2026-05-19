@@ -1,0 +1,77 @@
+{
+  "id": "arturs-industrial-eu",
+  "label": "Arturs (dogfood persona) — Commercial Counsel at a UK+IE+DE+FR industrial-cable distributor",
+  "why_this_persona": "Sprint 16 / ADR-056 — encodes Arturs's Sprint 15 P8 Crostini dogfood scenario for synthetic eval. Industrial-cable distribution across UK + Ireland + Germany + France; commercial/employment/corporate/channel-reseller-heavy practice. The persona that revealed Sprint 15's privacy-default failure (missed REACH/WEEE/RoHS/UKCA/Modern Slavery/Late Payment); now in the harness so iter-3 can verify the re-sequenced intake actually fixes it.",
+  "identity": {
+    "name": "Arturs",
+    "role_slug": "counsel",
+    "role_label": "Commercial Counsel",
+    "company": "Meridian Power Components (EU)"
+  },
+  "industry_seed": {
+    "sector": "Industrial distribution",
+    "sub_sector": "Electrical and industrial cable distribution",
+    "business_model": "Reseller / distributor (B2B + OEM channel)",
+    "size_band": "1001-5000"
+  },
+  "geography_seed": {
+    "hq_jurisdiction": "United Kingdom",
+    "operating_jurisdictions": ["United Kingdom", "Ireland", "Germany", "France"],
+    "customer_jurisdictions": null,
+    "employee_jurisdictions": null
+  },
+  "regulatory_seed": [
+    {"id": "uk-modern-slavery", "label": "Modern Slavery Act 2015 (UK)"},
+    {"id": "uk-gdpr", "label": "UK GDPR"},
+    {"id": "gdpr", "label": "GDPR"}
+  ],
+  "regulatory_answer_key": [
+    {"id": "uk-reach", "label": "UK REACH (chemicals / restricted substances)", "tier": "load-bearing"},
+    {"id": "eu-reach", "label": "EU REACH Regulation 1907/2006 (SVHC, authorisation, restriction)", "tier": "load-bearing"},
+    {"id": "uk-rohs", "label": "UK RoHS Regulations 2012", "tier": "load-bearing"},
+    {"id": "eu-rohs", "label": "EU RoHS Directive 2011/65/EU", "tier": "load-bearing"},
+    {"id": "uk-weee", "label": "UK WEEE Regulations 2013", "tier": "load-bearing"},
+    {"id": "eu-weee", "label": "EU WEEE Directive 2012/19/EU", "tier": "load-bearing"},
+    {"id": "ukca-ce-marking", "label": "UKCA + CE marking (Low Voltage Directive + EMC Directive)", "tier": "load-bearing"},
+    {"id": "eu-emc-uk-emc", "label": "EU EMC Directive + UK EMC Regulations", "tier": "load-bearing"},
+    {"id": "uk-modern-slavery", "label": "Modern Slavery Act 2015 (UK)", "tier": "load-bearing"},
+    {"id": "de-lksg", "label": "German Lieferkettensorgfaltspflichtengesetz (LkSG / Supply Chain Due Diligence Act)", "tier": "load-bearing"},
+    {"id": "eu-csddd", "label": "EU Corporate Sustainability Due Diligence Directive (CSDDD)", "tier": "load-bearing"},
+    {"id": "uk-late-payment", "label": "Late Payment of Commercial Debts (Interest) Act 1998 (UK)", "tier": "load-bearing"},
+    {"id": "eu-late-payment", "label": "EU Late Payment Directive 2011/7/EU", "tier": "load-bearing"},
+    {"id": "de-bgb-271a", "label": "German BGB §271a (Late payment / payment terms)", "tier": "load-bearing"},
+    {"id": "uk-bribery-act", "label": "Bribery Act 2010 (UK; procurement / channel exposure)", "tier": "load-bearing"},
+    {"id": "uk-gdpr", "label": "UK GDPR (B2B contact + employee data)", "tier": "load-bearing"},
+    {"id": "gdpr", "label": "GDPR (IE/DE/FR ops)", "tier": "load-bearing"},
+    {"id": "fr-loi-vigilance", "label": "French Loi sur le devoir de vigilance (size-thresholded)", "tier": "nice-to-have"},
+    {"id": "fr-sapin-ii", "label": "French Sapin II (anti-corruption)", "tier": "nice-to-have"},
+    {"id": "eu-cbam", "label": "EU CBAM (Carbon Border Adjustment Mechanism — chemicals / aluminium / iron)", "tier": "nice-to-have"},
+    {"id": "incoterms-2020", "label": "Incoterms 2020 (cross-border commercial terms)", "tier": "nice-to-have"},
+    {"id": "uk-product-safety", "label": "UK General Product Safety Regulations 2005", "tier": "nice-to-have"},
+    {"id": "eu-gpsr", "label": "EU General Product Safety Regulation 2023/988", "tier": "nice-to-have"}
+  ],
+  "recurring_matters_seed": [
+    "supplier framework agreements (chemical-component manufacturers + insulation suppliers)",
+    "customer terms of supply (OEMs + industrial distributors)",
+    "channel and reseller agreements across UK/IE/DE/FR",
+    "warranty and product-quality disputes",
+    "supply-chain due-diligence reporting (LkSG / CSDDD scoping)"
+  ],
+  "stakeholders_seed": {
+    "reports_to": "Head of EMEA Legal",
+    "key_business_partners": ["Head of Procurement", "Sales Director EMEA", "Head of Operations DE"],
+    "escalation_threshold_label": "Head of EMEA Legal approval above €250k; Board for anything that touches REACH SVHC notifications or LkSG public reporting"
+  },
+  "risk_appetite_seed": "balanced",
+  "open_notes_seed": "DE LkSG annual report due Q2 — first year of reporting at the new size threshold; outside counsel engaged but I'm running point internally.",
+  "conversation_style": "direct, drops several facts per turn, occasionally tests the agent with a probe (e.g., 'and what about REACH?' to see if the agent had it on the radar)",
+  "practice_areas_to_select": ["commercial", "employment", "corporate"],
+  "areas_to_drop": ["commercial-disputes", "employment-disputes", "privacy", "ip", "ip-disputes", "regulatory", "regulatory-disputes", "product", "ai-governance", "cosec"],
+  "custom_practice_areas_to_add": [
+    {"id": "custom-channel-reseller", "name": "Channel & Reseller", "body": "Reseller agreements, channel-partner terms, and distribution network policies live here."}
+  ],
+  "first_turn_questions": {
+    "commercial": "A German distributor wants us to indemnify them against any LkSG (supply chain due diligence) findings traceable to our upstream chemical suppliers — they want this in our supplier framework agreement. We can't accept open-ended supply-chain indemnity but I also can't refuse outright given they're a 12% revenue customer. What's the defensible middle?",
+    "employment": "We're rolling out a unified EMEA hybrid working policy — UK 3-2, DE works council requires consultation, FR has labour-code constraints on remote work for certain roles. HR drafted something assuming UK rules apply uniformly. What are the load-bearing jurisdiction-specific carve-outs I need to fight for before this lands?"
+  }
+}

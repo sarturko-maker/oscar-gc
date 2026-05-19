@@ -25,6 +25,21 @@
     {"id": "uk-consumer-rights", "label": "Consumer Rights Act 2015"},
     {"id": "uk-modern-slavery", "label": "Modern Slavery Act 2015"}
   ],
+  "regulatory_answer_key": [
+    {"id": "uk-reach", "label": "UK REACH (chemicals / restricted substances in cable insulation)", "tier": "load-bearing"},
+    {"id": "uk-rohs", "label": "UK RoHS Regulations (restricted substances in electrical equipment)", "tier": "load-bearing"},
+    {"id": "uk-weee", "label": "UK WEEE Regulations (e-waste / take-back)", "tier": "load-bearing"},
+    {"id": "ukca-ce-marking", "label": "UKCA marking + Low Voltage Directive (electrical safety)", "tier": "load-bearing"},
+    {"id": "uk-emc", "label": "UK EMC Regulations (electromagnetic compatibility)", "tier": "load-bearing"},
+    {"id": "uk-modern-slavery", "label": "Modern Slavery Act 2015 (UK)", "tier": "load-bearing"},
+    {"id": "uk-late-payment", "label": "Late Payment of Commercial Debts (Interest) Act 1998 (UK)", "tier": "load-bearing"},
+    {"id": "uk-bribery-act", "label": "Bribery Act 2010 (procurement / channel-partner exposure)", "tier": "load-bearing"},
+    {"id": "uk-gdpr", "label": "UK GDPR (B2B contact data + employee data)", "tier": "load-bearing"},
+    {"id": "uk-product-safety", "label": "General Product Safety Regulations 2005", "tier": "nice-to-have"},
+    {"id": "uk-consumer-rights", "label": "Consumer Rights Act 2015 (if any B2C channel)", "tier": "nice-to-have"},
+    {"id": "incoterms-2020", "label": "Incoterms 2020 (cross-border supply terms)", "tier": "nice-to-have"},
+    {"id": "uk-equality-act", "label": "Equality Act 2010 (employment)", "tier": "nice-to-have"}
+  ],
   "recurring_matters_seed": [
     "supplier framework agreements",
     "customer terms of supply",

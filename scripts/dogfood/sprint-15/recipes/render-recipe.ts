@@ -7,7 +7,7 @@
 //   tsx render-recipe.ts practice-area --area <ID> --working-dir <PATH> \
 //     --state-folder <PATH> --profile <PATH> [--tavily-key <KEY>]
 //   tsx render-recipe.ts persona --persona <PATH>
-//   tsx render-recipe.ts judge --axis <coverage|efficiency|downstream-briefing>
+//   tsx render-recipe.ts judge --axis <coverage|efficiency|downstream-briefing|regulatory-fit>
 
 import { readFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
@@ -144,8 +144,8 @@ if (kind === 'onboarding') {
   });
 } else if (kind === 'judge') {
   const axis = parseArg('axis');
-  if (!axis || !['coverage', 'efficiency', 'downstream-briefing'].includes(axis)) {
-    console.error('Usage: render-recipe.ts judge --axis coverage|efficiency|downstream-briefing');
+  if (!axis || !['coverage', 'efficiency', 'downstream-briefing', 'regulatory-fit'].includes(axis)) {
+    console.error('Usage: render-recipe.ts judge --axis coverage|efficiency|downstream-briefing|regulatory-fit');
     process.exit(2);
   }
   const promptPath = resolve(__dirname, '..', 'judge-prompts', `${axis}.md`);

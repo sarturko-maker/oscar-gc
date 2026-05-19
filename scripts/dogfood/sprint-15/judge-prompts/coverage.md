@@ -22,7 +22,7 @@ Score 0–5 (integer) on coverage of the load-bearing company-level dimensions. 
 
 1. **Industry depth** — sector + sub-sector + business model (3 fields).
 2. **Geography** — HQ + operating jurisdictions; customer/employee jurisdictions if differentiated.
-3. **Regulatory baseline** — the frameworks that actually apply, with provenance.
+3. **Regulatory baseline** — that `frameworks[]` is populated, `captured_via` is set, and provenance/confidence is recorded per framework. Industry-fit is judged separately on the regulatory-fit axis — do NOT double-penalise here.
 4. **Recurring matters** — top 3–5 shapes of work.
 5. **Stakeholders** — reports-to + key partners + escalation threshold.
 6. **Risk appetite** — conservative / balanced / growth-oriented.
@@ -31,6 +31,8 @@ Score 0–5 (integer) on coverage of the load-bearing company-level dimensions. 
 # Scoring rubric
 
 - **5** — All seven dimensions present with depth comparable to the seed. Verbatim fidelity on regulatory frameworks. No reasonable gap.
+
+Coverage is a presence axis. Industry-mismatched but populated `regulatory_baseline` is a regulatory-fit failure, not a coverage failure.
 - **4** — One dimension thin or missing where the persona would have shared.
 - **3** — Two dimensions thin or missing.
 - **2** — Three dimensions thin or missing OR a load-bearing capture is wrong (e.g. wrong industry).

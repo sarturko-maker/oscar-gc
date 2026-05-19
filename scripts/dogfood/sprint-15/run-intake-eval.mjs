@@ -6,7 +6,7 @@
 // company_context injected per ADR-053), then invokes the three judges.
 //
 // Usage:
-//   node run-intake-eval.mjs --persona sarah-chen [--iteration 1]
+//   node run-intake-eval.mjs --persona sarah-chen [--iteration 3] [--sprint 16]
 //
 // Pre-reqs:
 //   - goose CLI on PATH or at GOOSE_BIN env var.
@@ -15,7 +15,7 @@
 //   - Tavily key resolvable via env TAVILY_API_KEY or ~/.config/oscar/secrets/tavily.json.
 //
 // Output layout:
-//   docs/sprint-15/eval/iter-<N>/<persona-id>/
+//   docs/sprint-<S>/eval/iter-<N>/<persona-id>/
 //     ├── transcript.md
 //     ├── profile.json
 //     ├── recipe-intake.json
@@ -25,7 +25,8 @@
 //     └── scores/
 //           ├── coverage.json
 //           ├── efficiency.json
-//           └── downstream-briefing.json
+//           ├── downstream-briefing.json
+//           └── regulatory-fit.json   (Sprint 16 / ADR-056)
 
 import { spawn } from 'node:child_process';
 import { promises as fs } from 'node:fs';
@@ -391,13 +392,14 @@ function transcriptToMarkdown(turns) {
 async function main() {
   const personaId = parseFlag('persona');
   const iteration = parseFlag('iteration') ?? '1';
+  const sprint = parseFlag('sprint') ?? '16';
   if (!personaId) {
-    console.error('Usage: run-intake-eval.mjs --persona <id> [--iteration <N>]');
+    console.error('Usage: run-intake-eval.mjs --persona <id> [--iteration <N>] [--sprint <S>]');
     process.exit(2);
   }
   const personaPath = join(PERSONAS_DIR, `${personaId}.json`);
   const persona = JSON.parse(await fs.readFile(personaPath, 'utf8'));
-  const outDir = join(REPO_ROOT, 'docs', 'sprint-15', 'eval', `iter-${iteration}`, personaId);
+  const outDir = join(REPO_ROOT, 'docs', `sprint-${sprint}`, 'eval', `iter-${iteration}`, personaId);
   await fs.mkdir(outDir, { recursive: true });
 
   log(`persona ${personaId} → ${outDir}`);
@@ -440,6 +442,28 @@ async function main() {
     }),
   );
   await writeJson(join(outDir, 'scores', 'coverage.json'), scores.coverage);
+
+  // Regulatory-fit axis (Sprint 16 / ADR-056). Reads the per-persona
+  // `regulatory_answer_key` and the captured regulatory_baseline. Personas
+  // without an answer-key field score null on this axis (legacy personas
+  // before the augmentation land).
+  scores.regulatory_fit = persona.regulatory_answer_key
+    ? await runJudge(
+        'regulatory-fit',
+        JSON.stringify({
+          persona_seed: persona,
+          regulatory_answer_key: persona.regulatory_answer_key,
+          practice_areas: intake.profile?.practice_areas ?? [],
+          regulatory_baseline: intake.profile?.company_context?.regulatory_baseline ?? null,
+        }),
+      )
+    : {
+        axis: 'regulatory-fit',
+        score: null,
+        rationale: 'persona has no regulatory_answer_key — judge not run',
+        specific_gaps: [],
+      };
+  await writeJson(join(outDir, 'scores', 'regulatory-fit.json'), scores.regulatory_fit);
 
   // Efficiency axis
   scores.efficiency = await runJudge(

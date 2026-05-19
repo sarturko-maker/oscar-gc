@@ -29,6 +29,22 @@
     {"id": "dsa", "label": "DSA"},
     {"id": "pci-dss", "label": "PCI DSS Level 1"}
   ],
+  "regulatory_answer_key": [
+    {"id": "gdpr", "label": "GDPR (DE operations + EU data flows)", "tier": "load-bearing"},
+    {"id": "uk-gdpr", "label": "UK GDPR (UK HQ + operations)", "tier": "load-bearing"},
+    {"id": "psd2-psr1", "label": "PSD2 (EU) + PSR1 (UK) — payment services authorisation", "tier": "load-bearing"},
+    {"id": "dora", "label": "DORA (EU digital operational resilience for financial sector)", "tier": "load-bearing"},
+    {"id": "pci-dss", "label": "PCI DSS Level 1 (card data handling)", "tier": "load-bearing"},
+    {"id": "fca-handbook", "label": "FCA Handbook / PRIN / SYSC (UK regulator)", "tier": "load-bearing"},
+    {"id": "uk-mlr-eu-amld", "label": "UK MLR 2017 + EU AML directives (KYC / AML / sanctions for payment services)", "tier": "load-bearing"},
+    {"id": "dsa", "label": "DSA (EU; depends on user-facing surface)", "tier": "load-bearing"},
+    {"id": "us-state-mtl", "label": "US state money-transmitter licences (multi-state US operations)", "tier": "load-bearing"},
+    {"id": "consumer-duty-fca", "label": "FCA Consumer Duty (if any retail merchant exposure)", "tier": "nice-to-have"},
+    {"id": "ccpa-cpra", "label": "CCPA / CPRA (US ops; mostly B2B-exempt but watch employee + merchant data)", "tier": "nice-to-have"},
+    {"id": "bafin-zag", "label": "BaFin ZAG (DE payment services authorisation specifics)", "tier": "nice-to-have"},
+    {"id": "e-money-regs-uk", "label": "Electronic Money Regulations 2011 (UK)", "tier": "nice-to-have"},
+    {"id": "uk-equality-act", "label": "Equality Act 2010 (UK employment)", "tier": "nice-to-have"}
+  ],
   "recurring_matters_seed": [
     "customer agreements",
     "vendor MSAs for cloud and data infrastructure",

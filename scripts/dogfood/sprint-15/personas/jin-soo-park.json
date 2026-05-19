@@ -29,6 +29,22 @@
     {"id": "kr-e-commerce-act", "label": "Korean E-commerce Consumer Protection Act"},
     {"id": "imo-marpol", "label": "IMO MARPOL (shipping environmental)"}
   ],
+  "regulatory_answer_key": [
+    {"id": "pipa-kr", "label": "PIPA (Personal Information Protection Act, Korea)", "tier": "load-bearing"},
+    {"id": "appi-jp", "label": "APPI (Act on the Protection of Personal Information, Japan)", "tier": "load-bearing"},
+    {"id": "gdpr", "label": "GDPR (DE operations + customer data from EU)", "tier": "load-bearing"},
+    {"id": "dsa", "label": "DSA (EU marketplace / intermediary obligations)", "tier": "load-bearing"},
+    {"id": "kr-fair-trade-marketplace", "label": "KFTC marketplace fairness rules (Korea Fair Trade Commission)", "tier": "load-bearing"},
+    {"id": "kr-e-commerce-act", "label": "Korean E-commerce Consumer Protection Act", "tier": "load-bearing"},
+    {"id": "eu-p2b-regulation", "label": "EU Platform-to-Business Regulation (DE/EU intermediation)", "tier": "load-bearing"},
+    {"id": "imo-marpol", "label": "IMO MARPOL (shipping environmental, industry-specific)", "tier": "load-bearing"},
+    {"id": "kr-cross-border-data", "label": "Korean cross-border data-transfer rules (PIPA Art. 28-8)", "tier": "load-bearing"},
+    {"id": "kr-p2p-financial-act", "label": "KR P2P Online Financial Transactions Act (if carrier payouts launch)", "tier": "load-bearing"},
+    {"id": "imo-solas", "label": "IMO SOLAS (safety of life at sea)", "tier": "nice-to-have"},
+    {"id": "us-ofac-sanctions", "label": "US OFAC sanctions (cross-border carriers via embargoed routes)", "tier": "nice-to-have"},
+    {"id": "vn-id-privacy-laws", "label": "Vietnam PDPD + Indonesia PDP Law (customer-jurisdiction privacy)", "tier": "nice-to-have"},
+    {"id": "psd2-bafin-zag", "label": "PSD2 / BaFin ZAG (DE payment-services licence — open-notes workstream)", "tier": "nice-to-have"}
+  ],
   "recurring_matters_seed": [
     "carrier onboarding agreements",
     "shipper terms-of-service updates per jurisdiction",

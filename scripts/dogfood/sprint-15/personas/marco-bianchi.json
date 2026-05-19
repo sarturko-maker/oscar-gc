@@ -29,6 +29,22 @@
     {"id": "us-state-ai-laws", "label": "US state AI laws (CO SB-205, IL HB 3773, CA AB-2013)"},
     {"id": "italian-civil-code", "label": "Italian Civil Code (employment & consumer protections)"}
   ],
+  "regulatory_answer_key": [
+    {"id": "eu-ai-act", "label": "EU AI Act (foundation models + high-risk classification)", "tier": "load-bearing"},
+    {"id": "gdpr", "label": "GDPR (IT/DE/FR ops + training-data privacy)", "tier": "load-bearing"},
+    {"id": "uk-gdpr", "label": "UK GDPR (UK ops)", "tier": "load-bearing"},
+    {"id": "dsa", "label": "DSA (B2C deployment / intermediary obligations)", "tier": "load-bearing"},
+    {"id": "us-state-ai-laws", "label": "US state AI laws (CO SB-205, IL HB 3773, CA AB-2013, TX TRAIGA)", "tier": "load-bearing"},
+    {"id": "us-state-privacy-laws", "label": "US state privacy laws (CCPA/CPRA, VCDPA, CPA, etc.)", "tier": "load-bearing"},
+    {"id": "eu-product-liability-revised", "label": "EU Product Liability Directive (revised, covers AI)", "tier": "load-bearing"},
+    {"id": "copyright-training-data", "label": "Copyright / database rights (training-data corpus)", "tier": "load-bearing"},
+    {"id": "italian-civil-code", "label": "Italian Civil Code (employment + consumer protections, IT HQ)", "tier": "load-bearing"},
+    {"id": "dma", "label": "DMA (only if usage tips into gatekeeper thresholds)", "tier": "nice-to-have"},
+    {"id": "nist-ai-rmf", "label": "NIST AI Risk Management Framework (US voluntary, B2B-relevant)", "tier": "nice-to-have"},
+    {"id": "iso-iec-42001", "label": "ISO/IEC 42001 AI management system standard", "tier": "nice-to-have"},
+    {"id": "eu-data-act", "label": "EU Data Act (2025; data-sharing obligations)", "tier": "nice-to-have"},
+    {"id": "uk-ai-regulation-principles", "label": "UK AI regulation principles (cross-regulator, non-statutory for now)", "tier": "nice-to-have"}
+  ],
   "recurring_matters_seed": [
     "model-training data-provenance reviews",
     "customer enterprise agreements",
