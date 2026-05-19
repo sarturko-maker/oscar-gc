@@ -1260,6 +1260,13 @@ pre:has(> code.bg-inline-code) {
   padding: 8px 0 16px;
 }
 
+/* Sprint 12 (ADR-039): Forge header zone — meta-agent surface above the
+   practice-area list. Mirrors the footer's utility-item idiom. */
+.oscar__sidebar-header {
+  border-bottom: 1px solid var(--rule-light);
+  padding: 16px 0 8px;
+}
+
 .oscar__sidebar-item--utility {
   color: var(--ink-light);
   font-family: var(--mono-editorial);

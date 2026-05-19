@@ -90,6 +90,11 @@ const config = JSON.parse(process.argv.find((arg) => arg.startsWith('{')) || '{}
 const oscarResourcesRoot: string | null =
   (config.OSCAR_RESOURCES_ROOT as string | null | undefined) ?? null;
 
+// Sprint 12 (ADR-039): HOME_DIR also flows from main for Forge's recipe
+// builder (no node:os in renderer).
+const oscarHomeDir: string | null =
+  (config.HOME_DIR as string | null | undefined) ?? null;
+
 interface UpdaterEvent {
   event: string;
   data?: unknown;
@@ -199,6 +204,8 @@ type ElectronAPI = {
   // packaged resources dir when the app is installed (e.g. /opt/oscar-gc/resources),
   // null when running in dev. Recipe factories use this to resolve adeu/node/MCP paths.
   oscarResourcesRoot: string | null;
+  // Sprint 12 (ADR-039): user home dir for Forge's oscar-fs allowed-directories.
+  oscarHomeDir: string | null;
   // Oscar Matters (Sprint 12, ADRs 036/038/043/044). Registry-driven scoped
   // containers per practice area. Schemas validated in main.ts IPC handlers.
   matters: {
@@ -389,6 +396,7 @@ const electronAPI: ElectronAPI = {
   listGitWorktreeDirs: (dir: string) => ipcRenderer.invoke('list-git-worktree-dirs', dir),
   readOscarProfile: () => ipcRenderer.invoke('oscar:read-profile'),
   oscarResourcesRoot,
+  oscarHomeDir,
   matters: {
     list: (areaId: string) => ipcRenderer.invoke('oscar:matters:list', areaId),
     get: (areaId: string, slug: string) =>

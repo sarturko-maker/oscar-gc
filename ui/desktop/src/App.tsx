@@ -23,6 +23,7 @@ import { createSession } from './sessions';
 import { ChatType } from './types/chat';
 import Hub from './components/Hub';
 import PracticeAreaPlaceholder from './components/oscar/PracticeAreaPlaceholder';
+import ForgeView from './components/oscar/forge/ForgeView';
 import OscarOnboardingGuard from './components/oscar/onboarding/OscarOnboardingGuard';
 import { UserInput } from './types/message';
 
@@ -698,6 +699,7 @@ export function AppInner() {
               <Route path="recipes" element={<RecipesRoute />} />
               <Route path="skills" element={<SkillsRoute />} />
               <Route path="practice/:areaId" element={<PracticeAreaPlaceholder />} />
+              <Route path="forge" element={<ForgeView />} />
               <Route
                 path="shared-session"
                 element={

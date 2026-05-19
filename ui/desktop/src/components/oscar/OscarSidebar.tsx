@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Settings } from 'lucide-react';
+import { Settings, Sparkles } from 'lucide-react';
 import { cn } from '../../utils';
 import { usePracticeAreas } from './hooks/usePracticeAreas';
 
@@ -9,6 +9,21 @@ export function OscarSidebar() {
 
   return (
     <aside className="oscar oscar__sidebar flex flex-col w-full h-full min-h-0">
+      {/* Sprint 12 (ADR-039): Forge header zone — meta-agent for skill +
+          practice-area authoring. Sits above the practice-area list. */}
+      <div className="oscar__sidebar-header">
+        <Link
+          to="/forge"
+          className={cn(
+            'oscar__sidebar-item oscar__sidebar-item--utility',
+            pathname.startsWith('/forge') && 'oscar__sidebar-item--active'
+          )}
+          aria-label="Forge"
+        >
+          <Sparkles className="oscar__sidebar-item-icon" size={16} />
+          Forge
+        </Link>
+      </div>
       <nav className="oscar__sidebar-list flex-1 overflow-y-auto">
         <div className="oscar__eyebrow oscar__sidebar-eyebrow">Practice Areas</div>
         {areas.map((area, idx) => {

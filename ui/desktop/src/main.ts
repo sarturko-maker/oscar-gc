@@ -822,6 +822,10 @@ let appConfig = {
   // If GOOSE_ALLOWLIST_WARNING env var is not set, defaults to false (strict blocking mode)
   GOOSE_ALLOWLIST_WARNING: process.env.GOOSE_ALLOWLIST_WARNING === 'true',
   OSCAR_RESOURCES_ROOT: oscarResourcesRoot,
+  // Sprint 12 (ADR-039): Forge needs the user's home dir to compute the
+  // oscar-fs allowed-directories (~/.agents/skills/ + ~/.config/oscar/).
+  // The renderer cannot resolve $HOME (no node:os) so we pass it through.
+  HOME_DIR: os.homedir(),
 };
 
 const windowMap = new Map<number, BrowserWindow>();
