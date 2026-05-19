@@ -246,10 +246,16 @@ async function prepareVendoredMcps() {
   const esbuild = require('esbuild');
   ensureDir(MCPS_DIR);
   for (const [name, { pkg, entry: entryRel }] of Object.entries(VENDORED_MCPS)) {
-    const pkgRoot = path.join(UI_DESKTOP, 'node_modules', pkg);
-    if (!fs.existsSync(pkgRoot)) {
+    // pnpm hoists workspace-root deps to ui/node_modules, not ui/desktop/node_modules.
+    // require.resolve walks upward through node_modules — matches whichever layout
+    // pnpm chose without needing to know the hoist policy.
+    let pkgRoot;
+    try {
+      const pkgJson = require.resolve(`${pkg}/package.json`, { paths: [UI_DESKTOP] });
+      pkgRoot = path.dirname(pkgJson);
+    } catch {
       throw new Error(
-        `Vendored MCP package not installed: ${pkg}. Run pnpm install in ui/desktop first.`,
+        `Vendored MCP package not installed: ${pkg}. Run pnpm install in ui/ first.`,
       );
     }
     const entry = path.join(pkgRoot, entryRel);
@@ -260,18 +266,23 @@ async function prepareVendoredMcps() {
     fs.rmSync(destDir, { recursive: true, force: true });
     ensureDir(destDir);
     const outfile = path.join(destDir, 'index.js');
+    // Vendored MCPs ship as ESM (top-level await is increasingly common —
+    // @modelcontextprotocol/server-filesystem@2026.1.14 onwards). Emit ESM
+    // and drop a sibling package.json so Node loads the .js file as ESM
+    // without changing the recipe paths.
     console.log(`[mcps] esbuild ${entry} → ${outfile}`);
     await esbuild.build({
       entryPoints: [entry],
       bundle: true,
       platform: 'node',
       target: 'node24',
-      format: 'cjs',
+      format: 'esm',
       outfile,
       logLevel: 'warning',
       absWorkingDir: UI_DESKTOP,
       banner: { js: '#!/usr/bin/env node' },
     });
+    fs.writeFileSync(path.join(destDir, 'package.json'), '{"type":"module"}\n');
     const sz = fs.statSync(outfile).size;
     console.log(`[mcps] ${name} bundle size: ${(sz / 1024).toFixed(1)} KB`);
   }
