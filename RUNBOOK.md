@@ -935,9 +935,17 @@ Expected boot effects (verify):
 - Logs show `GOOSE_ALLOWLIST=file://...` and `GOOSE_MOIM_MESSAGE_FILE=...` in the env.
 - `BUNDLE.json` includes `network_audit.summary.matches: 0`.
 
-### Known pre-existing pnpm-install issue on lq-vps
+### Known pre-existing pnpm-install issue on lq-vps — RESOLVED (Sprint 13)
 
-`pnpm install` on this build host (Debian 12 Docker) errors with `ERR_PNPM_EXOTIC_SUBDEP` for `@electron/node-gyp` (resolved via git) — `blockExoticSubdeps` rejects it inside `@electron-forge/cli@7.11.1`. The error is pre-existing and unrelated to Sprint 12; the .deb build happens on Crostini where the install completes despite the warning. Tracked but not blocking.
+The earlier statement that "the .deb build happens on Crostini" was wrong. lq-vps **is** the canonical .deb build host per the Sprint 10+ dogfood loop: `scripts/build-oscar-deb.sh` runs both phases here (Debian-12 Docker for `goosed`; lq-vps host for `pnpm run bundle:oscar-linux` + `electron-forge make`). The .deb is uploaded to a draft GitHub Release; Arturs installs on Crostini via `dpkg -i`.
+
+Two latent issues from Sprint 12 surfaced + were fixed during the Sprint 13 build:
+
+1. **Lockfile drift** (commit `3caf286eb`): Sprint 12 ADR-040 added `@modelcontextprotocol/server-filesystem@2026.1.14` to `ui/desktop/package.json` but the lockfile was never updated. `pnpm install --frozen-lockfile` errored with `ERR_PNPM_OUTDATED_LOCKFILE`. Fixed by running `pnpm install --no-frozen-lockfile` once and committing the regenerated lockfile.
+
+2. **prepareVendoredMcps mis-resolution + top-level await** (commit `cd5b251da`): pnpm hoists workspace-root deps to `ui/node_modules`, not `ui/desktop/node_modules` — the previous hardcoded path lookup failed. AND `@modelcontextprotocol/server-filesystem@2026.1.14` uses top-level await, which esbuild rejects with `format: 'cjs'`. Fixed by switching to `require.resolve(..., { paths: [UI_DESKTOP] })` for the lookup and `format: 'esm'` + a sibling `package.json {"type":"module"}` for the bundle.
+
+The `ERR_PNPM_EXOTIC_SUBDEP` for `@electron/node-gyp` mentioned in the original note was never observed in the actual Sprint 13 build — either it was a stale issue from earlier in Sprint 12, or it only surfaces under specific pnpm config that doesn't apply here. If it does recur, investigate `blockExoticSubdeps` setting in `.npmrc`.
 
 ## Sprint 13 — adeu batch-path word-diff vendor-patch (2026-05-19, lq-vps)
 
