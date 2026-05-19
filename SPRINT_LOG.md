@@ -30,7 +30,9 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
   - **Matter back-affordance**. New `MatterBackButton` wraps existing `ui/BackButton.tsx` (no new pattern invented per brief). New IPC `oscar:matters:lookup-session(sessionId)` scans area registries for the session_id → matter binding. Button mounts top-left in `BaseChat`, renders only when matter-bound, label "All matters", click navigates to `/practice/{areaId}` + clears Top of Mind so the next matter isn't auto-anchored. Mouse back-button works for free via BackButton's existing IPC listener.
   - **Top of Mind**. `renderTomActiveMatter` rewritten with adaptive template + single `LABELS` dictionary (`matterLabels.ts`). Empty sections omitted; labels read in in-house vocabulary (Employee/Subject/Vendor/Entity, not Client/Counterparty). The agent's first-turn response reaches for the right framing as a result.
   - **IPC types**. Preload's `matters` block returns `MatterEntry` / `NewMatterInput` (typed), not `unknown` — canonical Window.electron shape lives in `preload.ts`; `useMatters.ts` no longer redeclares a shadow type that was masking the rest of the renderer's `window.electron.*` callsites.
-  - Screenshots: 4 representative practice-area landings captured (commercial, privacy, employment, commercial-disputes) at `docs/screenshots/sprint-14/practice-*.png`. Per-area dialog visual sign-off lands in Phase 7 dogfood (exit gate: "yes, that's how I'd describe a matter in my area").
+  - Screenshots: 4 representative practice-area landings captured (commercial, privacy, employment, commercial-disputes) at `docs/screenshots/sprint-14/practice-*.png`.
+
+- **Phase 7 dogfood + sign-off** (2026-05-19) — .deb built on lq-vps via `scripts/build-oscar-deb.sh`, uploaded as draft release `oscar-gc-sprint14` (smoke test ran during the build: oscar-fs 111ms, oscar-memory 123ms, oscar-onboarding 117ms; all pass). Arturs installed on Crostini with clean Oscar config (`~/.config/oscar`, `~/.local/share/Oscar GC`, `~/Documents/Oscar GC` wiped; Goose/keyring/MiniMax credentials preserved). Re-ran onboarding; per-area matter-create dialog tested. Verbatim sign-off: "It works, but more testing to do on edge cases." Sprint 14 closes on Unit 2 exit gate met.
 
 **Plan-mode discoveries** — three brief-vs-reality flags caught before implementation:
 - The brief and `TODO.md` reference `goose-cowork-comparison` / gotoHuman cowork pattern as the upstream reference for Workstream 5 (adeu MCP App preview). Plan-mode found no such doc in the codebase — only `documentation/docs/mcp/gotohuman-mcp.md` (the upstream community human-in-the-loop MCP, not an Oscar architectural pattern). Workstream 5 design grounded in adeu's existing native MCP-Apps Jinja-resource implementation (`mcp_components/resources/markdown_ui.py` + `templates/markdown_ui.html` pattern, applied to `read_docx` today); preview UI for `process_document_batch` is the narrow gap.
@@ -50,8 +52,8 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 **Carry-forwards into Sprint 15**:
 - Workstream 5 (adeu MCP App preview) per plan-mode design.
-- Per-area kind vocabularies sanity-check by Arturs during dogfood (Sprint 14 ships best-guesses; refinements per-area are cheap config-only edits).
-- Phase 7 Sprint 14 dogfood (Arturs opens dialog in 4+ areas, signs off per "yes, that's how I'd describe a matter in my area" exit gate).
+- Per-area kind vocabularies sanity-check (Sprint 14 ships best-guesses; refinements per-area are cheap config-only edits).
+- **Edge-case testing across the 13 per-area dialogs** (Phase 7 dogfood sign-off "more testing to do on edge cases") — kind-conditional extras (e.g. Privacy regulator dropdown only when kind=regulator_inquiry; AI Governance risk-classification only on pre-deployment review), privileged-by-default kinds, stakeholder near-match merging ("Acme" vs "Acme Corp"), folder-rename re-link UX when the Documents working folder is renamed by the user, multi-matter same-stakeholder grouping at scale, v1→v2 .bak migration on a registry that already has matters.
 - Upstream adeu PR (Sprint 13 carry; still open).
 
 **ADRs**: 047 (matter schema v2 — schema + split disk + tag-and-group), 049 (bundled MCP spawn-boot smoke test). ADR-048 reserved for Workstream 5 (Sprint 15).
