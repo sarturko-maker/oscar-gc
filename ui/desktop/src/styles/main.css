@@ -1155,9 +1155,10 @@ pre:has(> code.bg-inline-code) {
 .oscar__sidebar-list {
   display: flex;
   flex-direction: column;
-  /* Top padding clears the absolutely-positioned Menu trigger in
-     AppLayout's chrome. */
-  padding: 56px 0 16px;
+  /* Sprint 14: header now carries the Menu-trigger clearance (it's the
+     topmost element when present). List's own top padding is its content
+     gutter only. */
+  padding: 16px 0 16px;
 }
 
 .oscar__sidebar-item {
@@ -1261,10 +1262,13 @@ pre:has(> code.bg-inline-code) {
 }
 
 /* Sprint 12 (ADR-039): Forge header zone — meta-agent surface above the
-   practice-area list. Mirrors the footer's utility-item idiom. */
+   practice-area list. Mirrors the footer's utility-item idiom.
+   Sprint 14 (Crostini P2-A): top padding clears the absolutely-positioned
+   Menu trigger in AppLayout's chrome — moved from .oscar__sidebar-list
+   when the header took over as topmost element. */
 .oscar__sidebar-header {
   border-bottom: 1px solid var(--rule-light);
-  padding: 16px 0 8px;
+  padding: 56px 0 8px;
 }
 
 .oscar__sidebar-item--utility {

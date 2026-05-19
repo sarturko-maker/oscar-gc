@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const https = require('node:https');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 
 // --- Pinned versions ----------------------------------------------------
 
@@ -324,6 +324,116 @@ function auditMcpNetworkSurface() {
   return report;
 }
 
+// Sprint 14 (ADR-049): spawn-boot smoke test for bundled MCPs. After bundling,
+// spawn each MCP under the bundled Node and wait for its ready-line on stderr.
+// Fails the build if any MCP can't reach handshake within the timeout — catches
+// the class of regression that produced Sprint 13's duplicate-shebang P0-A.
+async function smokeTestBundledMcps() {
+  console.log('--- smokeTestBundledMcps (ADR-049) ---');
+  const sandbox = path.join(CACHE_DIR, 'smoke-sandbox');
+  ensureDir(sandbox);
+  const TIMEOUT_MS = 3000;
+  const checks = [
+    {
+      name: 'oscar-fs',
+      bundle: path.join(MCPS_DIR, 'oscar-fs', 'index.js'),
+      args: [sandbox],
+      readyRe: /Secure MCP Filesystem Server running on stdio/,
+    },
+    {
+      name: 'oscar-memory',
+      bundle: path.join(MCPS_DIR, 'oscar-memory', 'index.js'),
+      args: [],
+      readyRe: /oscar-memory-mcp ready/,
+    },
+    {
+      name: 'oscar-onboarding',
+      bundle: path.join(MCPS_DIR, 'oscar-onboarding', 'index.js'),
+      args: [],
+      readyRe: /oscar-onboarding-mcp ready/,
+    },
+  ];
+
+  if (process.env.SKIP_SMOKE_TEST === '1') {
+    console.warn(
+      '[smoke] SKIPPED (SKIP_SMOKE_TEST=1) — do not ship a build with this flag set',
+    );
+    return { skipped: true, results: {} };
+  }
+
+  const results = {};
+  for (const check of checks) {
+    if (!fs.existsSync(check.bundle)) {
+      results[check.name] = { status: 'fail', reason: 'bundle missing' };
+      console.error(`[smoke] ${check.name}: FAIL — bundle missing at ${check.bundle}`);
+      continue;
+    }
+    results[check.name] = await spawnAndAwaitReady(check, NODE_BIN, TIMEOUT_MS);
+    const r = results[check.name];
+    if (r.status === 'pass') {
+      console.log(`[smoke] ${check.name}: pass (${r.ms}ms)`);
+    } else {
+      console.error(`[smoke] ${check.name}: FAIL — ${r.reason}`);
+      if (r.stderr_tail) console.error(`        stderr_tail: ${r.stderr_tail}`);
+    }
+  }
+
+  const allOk = Object.values(results).every((r) => r.status === 'pass');
+  if (!allOk) {
+    throw new Error('smokeTestBundledMcps: one or more bundled MCPs failed to spawn-boot');
+  }
+  return { skipped: false, timeout_ms: TIMEOUT_MS, results };
+}
+
+function spawnAndAwaitReady(check, nodeBin, timeoutMs) {
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const child = spawn(nodeBin, [check.bundle, ...check.args], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, NODE_NO_WARNINGS: '1' },
+    });
+    let stderr = '';
+    let resolved = false;
+    const finish = (status, reason, extra = {}) => {
+      if (resolved) return;
+      resolved = true;
+      try {
+        child.kill('SIGTERM');
+      } catch {
+        // child may already have exited
+      }
+      setTimeout(() => {
+        try {
+          child.kill('SIGKILL');
+        } catch {
+          // child may already have exited
+        }
+      }, 500).unref();
+      resolve({
+        status,
+        reason,
+        ms: Date.now() - started,
+        stderr_tail: stderr.slice(-512),
+        ...extra,
+      });
+    };
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+      if (check.readyRe.test(stderr)) finish('pass');
+    });
+    child.on('exit', (code, signal) => {
+      if (!resolved) {
+        finish('fail', `process exited before ready line (code=${code}, signal=${signal})`);
+      }
+    });
+    child.on('error', (err) => finish('fail', `spawn error: ${err.message}`));
+    setTimeout(
+      () => finish('fail', `timeout after ${timeoutMs}ms — no ready line on stderr`),
+      timeoutMs,
+    ).unref();
+  });
+}
+
 async function prepareSkills() {
   console.log('--- prepareSkills ---');
   if (!fs.existsSync(SKILLS_SOURCE)) {
@@ -358,6 +468,7 @@ async function main() {
   await prepareNode();
   await prepareMcps();
   await prepareVendoredMcps();
+  const smokeTest = await smokeTestBundledMcps();
   const skills = await prepareSkills();
   const networkAudit = auditMcpNetworkSurface();
   console.log('Oscar GC bundle prep complete.');
@@ -369,6 +480,7 @@ async function main() {
     mcps: [...Object.keys(SIBLING_MCPS), ...Object.keys(VENDORED_MCPS)],
     skills: { 'in-house-legal': { skill_md_count: skills.skillCount } },
     network_audit: networkAudit,
+    smoke_test: smokeTest,
     timestamp: new Date().toISOString(),
   };
   fs.writeFileSync(path.join(RESOURCES, 'BUNDLE.json'), JSON.stringify(summary, null, 2));
