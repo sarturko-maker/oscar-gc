@@ -14,6 +14,53 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 17 — Integrations (see and add) (closed 2026-05-19 on code; Crostini dogfood E1–E5 = Sprint 17b; commits `dc0125f05`, `7f5696e0d`, `7058aadc1`, `65ad7f1a4`, `c6b239b31`, `a20333606`, `4bbf11c8e`, this commit)
+
+**Goal**: a lawyer opens a practice area, sees a clear list of MCPs labelled honestly (license, subscription, what-it-connects-to), and clicks Add to wire one into the agent in a few clicks. Same registry, two surfaces: per-area filtered Integrations tab + top-level Integrations sidebar entry. Plan at `/root/.claude/plans/sprint-mcp-marketplace-breezy-lagoon.md`. Brief flagged "marketplace" naming; plan-mode AskUserQuestion settled on **Integrations** (lawyer-natural; corporate-IT vocabulary; "operator marketplace" reserved for a future product). The first sprint where Oscar GC stops *suppressing* the upstream Extensions UI and starts shipping a transparent in-house-shaped surface — `GOOSE_ALLOWLIST=extensions: []` stays in place; this is a parallel sanctioned path.
+
+**Built** — seven commits on `main`, four ADRs at decision time:
+
+- **P0 — ADRs 059–062** (`dc0125f05`) — Written before any code. ADR-059 (registry data source: `.mcp.json` + hand-curated `INTEGRATIONS_OVERLAY` overlay; per-area scoping derives from `bundled_skill_sources` inversion). ADR-060 (trust tiering: bundled/trusted/community; community-tier fires explicit consent prompt; "Add and acknowledge" persists `trust_acknowledged: true`). ADR-061 (`installed_integrations.json` per-area state file; sibling to matters.json; profile.json stays single-writer per plan-mode AskUserQuestion). ADR-062 (amends ADR-042 — per-entry runtime egress disclosure; trust prompt is the structural consent floor; bubblewrap stays deferred).
+
+- **P1 — Registry overlay + loader + list-available IPC** (`7f5696e0d`) — New `ui/desktop/src/components/oscar/integrations/{types.ts, registry.ts, loadRegistry.ts, buildExtensionFromIntegration.ts}`. `INTEGRATIONS_OVERLAY` ships 6 seed entries: `oscar-fs` (bundled), `CourtListener` (trusted), `Slack`, `Google Drive`, `Ironclad`, `DocuSign` (community). Brief's OpenContracts / Open Legal Compliance MCP / US Legal MCP dropped — `grep -rn` across `/srv/projects/goose` found zero references; deferred to Sprint 18. `oscar:integrations:list-available` IPC walks the 9 in-house-legal plugin `.mcp.json` files (`<resourcesRoot>/skills/in-house-legal/` packaged; `/srv/projects/goose/skills/in-house-legal/` dev). Loader joins vendor data with overlay by id, computes `relevant_areas` by inverting `bundled_skill_sources` (Slack/GDrive → all 13; Ironclad → commercial + commercial-disputes; CourtListener → ip + 4 disputes areas). Fail-closed: vendor rows without an overlay row are excluded with a console warning.
+
+- **P2 — `installed_integrations.json` state file + IPCs** (`7058aadc1`) — Zod schemas (`InstalledIntegrationEntrySchema`, `InstalledIntegrationsFileSchema`) in `components/oscar/integrations/types.ts`. Helpers `readInstalledIntegrations` / `writeInstalledIntegrations` in `main.ts` mirror the matters pattern. New IPCs `oscar:integrations:list(areaId)` and `oscar:integrations:install(areaId, entryId, trustAcknowledged)`. Install rejects unknown ids and bundled-tier entries (ADR-060 invariant); idempotent on duplicate id. Startup egress envelope log (ADR-062) one-shot scans area state dirs at boot; emits a single `log.info` line enumerating distinct hostnames when any integration is installed.
+
+- **P3 — Per-area Integrations tab + card + trust-prompt modal** (`65ad7f1a4`) — `PracticeAreaPlaceholder.tsx` becomes a thin tab host (`?tab=matters` default → MattersLanding; `?tab=integrations` → IntegrationsPerArea). New components `IntegrationsPerArea.tsx`, `IntegrationCard.tsx`, `Tags.tsx`, `ConfirmAddModal.tsx`. Card states: Bundled → Always-on badge; Trusted → short confirmation; Community → full trust prompt (hostname + license + subscription + maintainer + egress widening + sandboxing caveat); Installed → greyed Installed badge. `main.css` gains `.oscar__area-tabs` + `.oscar__integration-*` class family in the Editorial register (serif title, mono tags, copper accent for bundled tier, outline for trusted, ink-muted outline for community).
+
+- **P4 — Top-level Integrations sidebar entry + view** (`c6b239b31`) — `OscarSidebar.tsx` gains a second header-zone entry next to Forge (Plug icon, `/integrations` route). `IntegrationsView.tsx` renders all entries unfiltered with per-card target-area `<select>` dropdown sourced from `relevant_areas`. ADR-039 untouched: Forge stays auto-spawn-chat; Integrations is its own sibling surface, not a Forge tab.
+
+- **P5 — Recipe-builder merge** (`a20333606`) — `MattersLanding.openMatter` reads `installed_integrations` via the new IPC, calls `buildExtensionFromIntegration` per `trust_acknowledged` entry, threads the resulting `ExtensionConfig[]` through `buildPracticeAreaRecipe`'s `extraExtensions` (12 generic areas) or `buildCommercialRecipe`'s new `installedConfigs` param (appended after redline). Assembled recipe: `[oscar-fs, ...extraExtensions, tavily]` where `extraExtensions = [redline, ...installedConfigs]` for Commercial and `[...installedConfigs]` for the other 12.
+
+- **P6 — env_keys gate generalisation** (`4bbf11c8e`) — New `ensureRecipeSecrets.ts` helper walks `recipe.extensions[].env_keys`, checks each against env+keyring + `OSCAR_<KEY>_SKIPPED` flag, returns true if any key is genuinely missing. `MattersLanding.openMatter` gates spawn behind `RecipeSecretsModal` only when needed — no modal flash for the common path. For Sprint 17's seed set (every entry's `env_keys: []` + Tavily already-set at onboarding) the gate resolves false on every matter open; structurally ready for Sprint 18+ entries that grow real keys.
+
+**Verification** (in this session):
+- `pnpm exec tsc --noEmit` on ui/desktop: clean after every phase.
+- ADR line counts: 49 / 73 / 65 / 52 (target ≤50; 060 carries the literal trust-prompt copy; over by acceptable margin given the load-bearing decision).
+- Commit trailer hygiene: all 7 commits trailer-clean per CLAUDE.md.
+
+**Deferred** — three items, in priority order:
+
+- **Crostini E1–E5 dogfood → Sprint 17b.** Build .deb on lq-vps via `scripts/build-oscar-deb.sh`, push to draft release `oscar-gc-sprint17`, Arturs runs the five exit criteria on a fresh Crostini install. E1 (per-area Integrations tab visible across Commercial/IP/Privacy with correct subsets), E2 (Add Ironclad in Commercial → trust prompt → entry lands in `installed_integrations.json`), E3 (top-level Integrations + target-area picker writes to the chosen area), E4 (matter opens with installed integration in recipe → agent reports tool surface includes it), E5 (honest-labelling qualitative gate per the brief).
+- **Settings UI for Tavily-key rotation (Sprint 16 carry, deferred from Sprint 17 P4).** Scope-creep risk against the Integrations focus; defer to Sprint 18.
+- **Platform-extension trim (Sprint 16 carry, conditional).** Gated on iter-3 eval numbers from Sprint 16b; still conditional in Sprint 18.
+
+**Carry-forwards**:
+
+- **Sprint 17b Crostini dogfood E1–E5** — runtime gate.
+- **Upstream PR for ADR-058's secret_discovery generalisation** — small standalone Sprint 18 candidate.
+- **OpenContracts / Open Legal Compliance MCP / US Legal MCP** — brief seed entries dropped because zero references in `/srv/projects/goose`. Sprint 18 candidates pending hand-verified metadata (license, URL, security posture).
+- **Removal / round-2 / edit flow for installed integrations** — Sprint 18+. Schema supports the array shape; UI affordance is intentionally absent in Sprint 17.
+- **Multi-area Add in one click** — top-level Integrations target dropdown is single-area; Sprint 18+ for "apply to all" / "apply to these areas".
+- **OAuth flows for commercial wrappers** — modeled today as "SaaS owns first-call auth"; Sprint 18+ if a wrapper grows an `env_keys`-based auth path.
+- **Real-time `maintenance_signal`** — overlay carries the field structurally; populating from GitHub readmes / service status pages is Sprint 18+.
+- **Chat-driven Add via a Forge MCP tool** — Sprint 18+ layer on the existing `oscar:integrations:install` IPC.
+- **`oscar-memory` recipe wiring** — TODO.md carry stays open.
+
+**ADRs**: 059, 060, 061, 062 (amends 042).
+
+---
+
 ### Sprint 16 — Re-sequenced intake (practice scope before regulatory hypothesis) + Goose-native Tavily key surface (closed 2026-05-19 on code; iter-3 eval + Crostini dogfood = Sprint 16b; commits `2d6ae81b5`, `90ca22af5`, this commit)
 
 **Goal**: correct two structural mistakes Sprint 15 P8 dogfood exposed. (1) The regulatory hypothesis fired before practice areas were known, so MiniMax defaulted to its most-trained-on EU regs (privacy stack); Arturs's industrial-cable-distribution scenario missed REACH/WEEE/RoHS/UKCA/Modern Slavery/Late Payment, yet coverage scored 5/5 because the rubric counted framework presence not industry fit. (2) Tavily key entry required the terminal — the developer-audience default the inverted-defaults doctrine exists to undo. Plan at `/root/.claude/plans/what-arturs-said-wobbly-fog.md`. Closes Sprint 14's `ADR-048-reserved` slot (Adeu MCP App diff preview design — implementation in Sprint 16b).
