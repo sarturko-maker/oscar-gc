@@ -5,6 +5,7 @@ argument-hint: '[--patent | --civil] [--infringement | --invalidity | --review] 
 ---
 
 <!-- Sourced from anthropics/claude-for-legal/litigation-legal @ 4d55f539; Apache 2.0 -->
+<!-- Oscar GC modifications (Sprint 12, ADR-037): matter paths rewritten to $OSCAR_MATTER_DIR -->
 
 # /claim-chart
 
@@ -49,7 +50,7 @@ Under-flagging a gap is a one-way door — a complaint filed without plausibilit
 
 ## Matter context
 
-Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` — especially the case theory, the pleading / complaint (for the elements actually alleged), the jurisdiction, any Markman order or stipulated constructions (patent mode), and the phase of the case. Write outputs to the matter folder at `~/.config/oscar/state/litigation-legal/matters/<matter-slug>/claim-charts/`. Never read another matter's files unless `Cross-matter context` is `on`.
+Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` — especially the case theory, the pleading / complaint (for the elements actually alleged), the jurisdiction, any Markman order or stipulated constructions (patent mode), and the phase of the case. Write outputs to the matter folder at `$OSCAR_MATTER_DIR/claim-charts/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -416,7 +417,7 @@ Prepend the work-product header as the top row. Alongside it, include:
 - Civil: `element-chart-[count-slug]-[side]-YYYY-MM-DD.{md,csv,xlsx}`
 - Review: `chart-review-[subject]-YYYY-MM-DD.{md,csv,xlsx}`
 
-If matter workspaces enabled and a matter is active: `~/.config/oscar/state/litigation-legal/matters/<matter-slug>/claim-charts/`. Otherwise: `~/.config/oscar/state/litigation-legal/claim-charts/`. Surface the path. Append a one-line entry to the matter's `history.md`.
+If matter workspaces enabled and a matter is active: `$OSCAR_MATTER_DIR/claim-charts/`. Otherwise: `~/.config/oscar/state/litigation-legal/claim-charts/`. Surface the path. Append a one-line entry to the matter's `history.md`.
 
 ## Summary readout
 

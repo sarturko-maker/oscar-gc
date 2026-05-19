@@ -9,6 +9,7 @@ argument-hint: "<--send | --receive> [context, counterparty, or path to incoming
 ---
 
 <!-- Sourced from anthropics/claude-for-legal/ip-legal @ 4d55f539; Apache 2.0 -->
+<!-- Oscar GC modifications (Sprint 12, ADR-037): matter paths rewritten to $OSCAR_MATTER_DIR -->
 
 # /cease-desist
 
@@ -72,7 +73,7 @@ Trademark rights are territorial — a US registration does not travel. Copyrigh
 
 - `~/.config/oscar/profile.json` → `## Enforcement posture` (posture, C&D triggers, soft-letter criteria, approval matrix, automatic escalations), `## IP practice profile` (practice area mix, registered jurisdictions, outside counsel roster), `## Outputs` (work-product header, role), `## Who's using this` (role — lawyer vs. non-lawyer)
 - Any C&D template or enforcement playbook referenced in the practice profile's seed documents — read it, match the structure
-- **Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip matter machinery — skills use practice-level context. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific overrides (e.g., posture override, approver override). Write outputs to the matter folder at `~/.config/oscar/state/ip-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+- **Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip matter machinery — skills use practice-level context. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific overrides (e.g., posture override, approver override). Write outputs to the matter folder at `$OSCAR_MATTER_DIR/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ## Send mode — drafting the C&D
 

@@ -10,6 +10,7 @@ argument-hint: "[describe the proposed mark, goods/services, and jurisdictions �
 ---
 
 <!-- Sourced from anthropics/claude-for-legal/ip-legal @ 4d55f539; Apache 2.0 -->
+<!-- Oscar GC modifications (Sprint 12, ADR-037): matter paths rewritten to $OSCAR_MATTER_DIR -->
 
 # /clearance
 
@@ -76,7 +77,7 @@ the list in review. Stay on the two-way door side.
 
 ## Matter context
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.config/oscar/state/ip-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `$OSCAR_MATTER_DIR/`. Never read another matter's files unless `Cross-matter context` is `on`.
 
 ---
 
@@ -460,7 +461,7 @@ Deliver the full triage memo alongside the brief. Do not withhold the analysis.
 ## Output location
 
 If matter workspaces are enabled and a matter is active, write the output to
-`~/.config/oscar/state/ip-legal/matters/<matter-slug>/outputs/clearance-<mark-slug>-YYYY-MM-DD.md`.
+`$OSCAR_MATTER_DIR/outputs/clearance-<mark-slug>-YYYY-MM-DD.md`.
 Otherwise write to
 `~/.config/oscar/state/ip-legal/outputs/clearance-<mark-slug>-YYYY-MM-DD.md`
 and surface the path to the user.

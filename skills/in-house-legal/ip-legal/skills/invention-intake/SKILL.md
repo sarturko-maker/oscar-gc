@@ -9,6 +9,7 @@ argument-hint: "[paste or describe the invention disclosure — or just the titl
 ---
 
 <!-- Sourced from anthropics/claude-for-legal/ip-legal @ 4d55f539; Apache 2.0 -->
+<!-- Oscar GC modifications (Sprint 12, ADR-037): matter paths rewritten to $OSCAR_MATTER_DIR -->
 
 # /invention-intake
 
@@ -95,7 +96,7 @@ is invisible. If enabled and there is no active matter, ask: "Which matter is
 this for? Run `matter-workspace switch <slug>` or say `practice-level`." Load
 the active matter's `matter.md` for matter-specific context and overrides.
 Write outputs to the matter folder at
-`~/.config/oscar/state/ip-legal/matters/<matter-slug>/`.
+`$OSCAR_MATTER_DIR/`.
 Never read another matter's files unless `Cross-matter context` is `on`.
 
 Invention disclosures are particularly common candidates for **clean-team** or

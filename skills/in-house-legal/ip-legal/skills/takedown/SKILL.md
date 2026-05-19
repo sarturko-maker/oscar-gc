@@ -10,6 +10,7 @@ argument-hint: "<--send | --respond | --counter> [context or path to incoming no
 ---
 
 <!-- Sourced from anthropics/claude-for-legal/ip-legal @ 4d55f539; Apache 2.0 -->
+<!-- Oscar GC modifications (Sprint 12, ADR-037): matter paths rewritten to $OSCAR_MATTER_DIR -->
 
 # /takedown
 
@@ -76,7 +77,7 @@ DMCA §512 is **US federal law**. It runs against service providers subject to U
 ## Load context
 
 - `~/.config/oscar/profile.json` → `## IP practice profile` (copyright registrations if any), `## Enforcement posture` → `Approval matrix → DMCA takedown (ordinary)` row, `## Outputs` (work-product header, role), `## Who's using this` (role — lawyer vs. non-lawyer)
-- **Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (in-house default), skip matter machinery. If enabled and no active matter, ask: "Which matter? Run `matter-workspace switch <slug>` or say `practice-level`." Write outputs to the active matter's folder at `~/.config/oscar/state/ip-legal/matters/<matter-slug>/takedown/<slug>/` (or `takedown/<slug>/` at practice level). Never read another matter's files unless `Cross-matter context` is `on`.
+- **Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (in-house default), skip matter machinery. If enabled and no active matter, ask: "Which matter? Run `matter-workspace switch <slug>` or say `practice-level`." Write outputs to the active matter's folder at `$OSCAR_MATTER_DIR/takedown/<slug>/` (or `takedown/<slug>/` at practice level). Never read another matter's files unless `Cross-matter context` is `on`.
 
 ## Send mode — drafting a §512(c)(3) takedown notice
 
