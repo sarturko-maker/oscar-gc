@@ -2,6 +2,7 @@ import type { Recipe } from '../../../api';
 import { SYSTEM_PROMPT } from './systemPrompt';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
 import type { TavilyKey } from '../onboarding/resolveTavilyKey';
+import type { OscarCompanyContext } from '../hooks/useOscarProfile';
 
 const DEV_REDLINE_VENV_BIN = '/srv/projects/oscar-runtime/python/adeu-venv/bin/adeu-server';
 
@@ -16,12 +17,13 @@ function resolveRedlineBin(resourcesRoot: string | null): string {
 // builder. oscar-fs scoped to BOTH the working folder (~/Documents/Oscar GC/...)
 // and the state folder (~/.config/oscar/state/...); redline MCP added for
 // adeu redlines; bespoke SYSTEM_PROMPT replaces the generic default.
-// Sprint 15 (ADR-052): tavily passes through when configured.
+// Sprint 15 (ADR-052/053): tavily + companyContext pass through.
 export function buildCommercialRecipe(
   workingDir: string,
   stateFolder: string,
   resourcesRoot: string | null,
   tavily: TavilyKey | null,
+  companyContext: OscarCompanyContext | null,
 ): Recipe {
   return buildPracticeAreaRecipe({
     area: {
@@ -36,6 +38,7 @@ export function buildCommercialRecipe(
     resourcesRoot,
     systemPrompt: SYSTEM_PROMPT,
     tavily,
+    companyContext,
     extraExtensions: [
       {
         type: 'stdio',

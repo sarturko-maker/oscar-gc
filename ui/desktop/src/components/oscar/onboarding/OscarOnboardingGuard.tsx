@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import OscarOnboardingView from './OscarOnboardingView';
-import { useOscarProfile } from '../hooks/useOscarProfile';
+import { profileNeedsReIntake, useOscarProfile } from '../hooks/useOscarProfile';
 
 interface Props {
   children: ReactNode;
@@ -15,7 +15,16 @@ export default function OscarOnboardingGuard({ children }: Props) {
     return null;
   }
 
+  // No profile → first launch onboarding.
   if (!profile) {
+    return <OscarOnboardingView />;
+  }
+
+  // Sprint 15 (ADR-051): v2 profile read-time-migrated to a v3 stub with
+  // captured_via="needs-re-intake". Route back into onboarding so the new
+  // P2.5 — Company context block runs against this user. The new intake
+  // overwrites the stub on finalize_profile.
+  if (profileNeedsReIntake(profile)) {
     return <OscarOnboardingView />;
   }
 

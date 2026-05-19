@@ -12,6 +12,8 @@ import type { Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
 import { buildTavilyExtension } from '../onboarding/onboardingRecipe';
 import type { TavilyKey } from '../onboarding/resolveTavilyKey';
+import type { OscarCompanyContext } from '../hooks/useOscarProfile';
+import { renderCompanyContextBlock } from './companyContextBlock';
 
 const DEV_NODE_CMD = '/usr/bin/node';
 const DEV_OSCAR_FS_BUNDLE = '/srv/projects/goose/ui/desktop/src/resources/mcps/oscar-fs/index.js';
@@ -45,6 +47,12 @@ export interface BuildPracticeAreaRecipeOptions {
   // agents also get the hosted SSE search extension so they can verify
   // regulatory currency mid-session. Optional; absence = no extension.
   tavily?: TavilyKey | null;
+  // Sprint 15 (ADR-053): company_context block injected at recipe-build
+  // time. Renders to a markdown "## About this company" block prepended
+  // to instructions — the load-bearing wire that briefs the agent at
+  // turn 1. Null when v2-migrated stub (captured_via="needs-re-intake")
+  // or when intake hasn't run; OscarOnboardingGuard catches that case.
+  companyContext?: OscarCompanyContext | null;
 }
 
 const defaultSystemPrompt = (
@@ -103,13 +111,18 @@ export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): R
   if (opts.tavily) {
     extensions.push(buildTavilyExtension(opts.tavily));
   }
+  const baseInstructions =
+    opts.systemPrompt ??
+    defaultSystemPrompt(opts.area, opts.workingDir, opts.stateFolder);
+  const companyBlock = renderCompanyContextBlock(opts.companyContext);
+  const instructions = companyBlock
+    ? `${companyBlock}\n\n${baseInstructions}`
+    : baseInstructions;
   return {
     version: '1.0.0',
     title: `Oscar GC — ${opts.area.name}`,
     description: opts.area.body,
-    instructions:
-      opts.systemPrompt ??
-      defaultSystemPrompt(opts.area, opts.workingDir, opts.stateFolder),
+    instructions,
     extensions,
     settings: {
       goose_provider: 'minimax',

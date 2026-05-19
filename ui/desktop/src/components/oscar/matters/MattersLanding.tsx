@@ -12,6 +12,10 @@ import { buildCommercialRecipe } from '../commercial/commercialRecipe';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
 import { resolveTavilyKey } from '../onboarding/resolveTavilyKey';
 import type { PracticeArea } from '../practiceAreas';
+import type {
+  OscarCompanyContext,
+  OscarUserProfile,
+} from '../hooks/useOscarProfile';
 import { useMatters } from './useMatters';
 import MatterRow from './MatterRow';
 import NewMatterDialog from './NewMatterDialog';
@@ -84,12 +88,19 @@ export default function MattersLanding({ area }: MattersLandingProps) {
       const resourcesRoot = window.electron.oscarResourcesRoot;
       // Sprint 15 (ADR-052): hosted Tavily SSE attached when configured.
       const tavily = await resolveTavilyKey();
+      // Sprint 15 (ADR-053): company_context block prepended to recipe
+      // instructions for first-turn briefing.
+      const profile = (await window.electron.readOscarProfile()) as
+        | OscarUserProfile
+        | null;
+      const companyContext: OscarCompanyContext | null =
+        profile?.company_context ?? null;
 
       // Commercial composes its bespoke system prompt + redline MCP on top
       // via buildCommercialRecipe; the other 12 areas use the generic shape.
       const recipe =
         area.id === 'commercial'
-          ? buildCommercialRecipe(workingDir, stateFolder, resourcesRoot, tavily)
+          ? buildCommercialRecipe(workingDir, stateFolder, resourcesRoot, tavily, companyContext)
           : buildPracticeAreaRecipe({
               area,
               workingDir,
@@ -97,6 +108,7 @@ export default function MattersLanding({ area }: MattersLandingProps) {
               matterSlug: matter.slug,
               resourcesRoot,
               tavily,
+              companyContext,
             });
 
       const session = await createSession(workingDir, { recipe });
