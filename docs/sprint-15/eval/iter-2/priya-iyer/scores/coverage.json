@@ -1,0 +1,6 @@
+{
+  "axis": "coverage",
+  "score": 5,
+  "rationale": "All seven load-bearing dimensions captured with high fidelity. Industry captures sector and sub-sector; business model was not volunteered and the agent appropriately did not invent. Geography, regulatory baseline (with provenance tags matching the seed), recurring matters, stakeholders with clear escalation thresholds, and conservative risk appetite all match the persona seed. Open notes capture the AI integration and risk-stratification debate verbatim. The agent respected the persona's measured style and confirmed each dimension without over-reaching.",
+  "specific_gaps": []
+}

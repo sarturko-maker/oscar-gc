@@ -1,0 +1,11 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "Response addresses the specific scenario (data-processing, vendor MSA) with relevant regulatory frameworks (UK GDPR, DORA, PSD2/PSR) and provides practical leverage-based advice. However, it reads as applicable to any UK-regulated company rather than reflecting PayFlow's specific B2B payments SaaS context, operating jurisdictions (US+DE alongside UK), or stakeholder dynamics (CISO/CTO alignment, escalation thresholds). The regulatory baseline is cited but not integrated into a persona-specific posture.",
+  "specific_Gaps": [
+    "No mention of company's B2B payments SaaS/fintech industry context that would shape risk posture",
+    "Missing stakeholder layer (CISO involvement in vendor security review, escalation thresholds)",
+    "Operating jurisdictions (US presence) not connected to the analysis",
+    "Recurring matters like FCA regulatory queries or MSA renegotiations not referenced"
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:41:00Z",
+  "user": {
+    "name": "Sarah Chen",
+    "role": "general-counsel",
+    "role_label": "General Counsel"
+  },
+  "corporate": {
+    "name": "PayFlow",
+    "industry": "B2B payments SaaS",
+    "size_band": "1001-5000"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "payments",
+      "sub_sector": "B2B payments SaaS",
+      "business_model": "SaaS"
+    },
+    "geography": {
+      "hq_jurisdiction": "United Kingdom",
+      "operating_jurisdictions": [
+        "United States",
+        "Germany"
+      ],
+      "customer_jurisdictions": null,
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "gdpr",
+          "label": "GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "uk-gdpr",
+          "label": "UK GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "fca",
+          "label": "FCA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "aml-bsa",
+          "label": "AML/BSA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "psd2-psr",
+          "label": "PSD2/PSR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dora",
+          "label": "DORA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dsa",
+          "label": "DSA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "state-mtl",
+          "label": "State MTL regimes (CA-DBO, BitLicense)",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "pci-dss",
+          "label": "PCI DSS",
+          "confidence": "user-confirmed"
+        }
+      ],
+      "captured_via": "hypothesis-confirm"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "Customer contracts",
+        "Vendor MSAs",
+        "MSA renegotiations",
+        "FCA regulatory queries"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": "CFO",
+      "key_business_partners": [
+        "CISO",
+        "CTO",
+        "VP Sales"
+      ],
+      "escalation_threshold_label": "£500k to CEO; material regulatory to Board"
+    },
+    "risk_appetite": "balanced",
+    "open_notes": "Acquisition (next quarter, active diligence); DORA compliance (January 2025, German entity in scope)"
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customer contracts, vendor MSAs, and dispute memory live here.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy",
+      "body": "Data subjects, processors, and privacy memory live here.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "regulatory",
+      "name": "Regulatory",
+      "body": "Regulators, obligations, and compliance memory live here.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "ai-governance",
+      "name": "AI Governance",
+      "body": "Models, datasets, and AI-governance memory live here.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here.",
+      "source": "default",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

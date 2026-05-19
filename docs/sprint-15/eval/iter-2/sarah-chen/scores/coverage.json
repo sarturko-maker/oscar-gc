@@ -1,0 +1,6 @@
+{
+  "axis": "coverage",
+  "score": 5,
+  "rationale": "All seven dimensions captured with depth matching the seed. Industry (payments/B2B SaaS), geography (UK HQ/US+Germany), regulatory baseline with nine frameworks including FCA/AML/BSA via hypothesis-confirm, recurring matters, stakeholders with £500k threshold, balanced risk appetite, and acquisition/DORA open notes. Nulls faithfully recorded where applicable (customer/employee jurisdictions).",
+  "specific_gaps": []
+}

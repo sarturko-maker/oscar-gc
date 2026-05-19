@@ -1,0 +1,43 @@
+{
+  "persona_id": "daniel-okafor",
+  "agent_turn_count": 10,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 4,
+      "rationale": "Most dimensions captured with reasonable depth. Industry, geography, regulatory baseline, recurring matters, risk appetite, and open notes all align with the seed. Key gap: reports_to is recorded as null when the seed clearly shows 'Managing Director' — this is a missed detail. The stakeholder capture otherwise matches including key partners and escalation thresholds. Overall, the intake reflects the persona accurately with one substantive omission.",
+      "specific_gaps": [
+        "reports_to field captured as null instead of 'Managing Director'"
+      ]
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": 5,
+      "rationale": "Ten turns well under the 14-turn target with aggressive batching visible (regulatory baseline presented as a hypothesis in turn 4, practice areas presented as a batch in turn 6). One brief clarification on profile save in turn 9 was resolved in a single exchange—quick recovery, no re-ask trail. No redundant loops or single-fact drilling.",
+      "specific_gaps": []
+    },
+    "downstream_briefing": {
+      "commercial": {
+        "axis": "downstream-briefing",
+        "score": 4,
+        "rationale": "The response integrates two persona-specific dimensions from the context block: (1) recurring matter 'supplier framework agreements' being the core subject, and (2) open notes 'Channel partner programme launching autumn 2026' and 'warranty disputes ongoing' are both invoked to reinforce the negotiating position — using the autumn 2026 timeline to stress supply continuity risk and the warranty disputes to justify escalation to Board. The regulatory baseline is thin but appropriate since this commercial negotiation doesn't invoke privacy/competition issues. The response is shaped by the company context rather than giving a generic negotiation template.",
+        "specific_gaps": [
+          "Regulatory baseline not invoked - but expected given thin-regulation persona and non-regulatory question",
+          "Stakeholder mapping not explicit (Head of Procurement/Sales Director could be referenced as part of negotiation team)"
+        ]
+      },
+      "employment": {
+        "axis": "downstream-briefing",
+        "score": 2,
+        "rationale": "Response correctly identified that Section 12 ERA 1996 concerns pay statements, not contract variation, and provided substantive employment law guidance. However, it gave a generic textbook answer without integrating any elements from the company_context block — no reference to the persona's industry (electrical components distribution), UK-only geography, or the fact that employment is not among the company's captured recurring matters (which focus on supplier/customer/warranty disputes). A well-briefed agent would have noted that this falls outside Meridian's typical commercial wheelhouse and aligned advice with the conservative risk appetite and stakeholder dynamics.",
+        "specific_gaps": [
+          "No mention of industry (electrical components B2B distribution)",
+          "No acknowledgment that employment matters are not in the company's captured recurring matters",
+          "No integration of the conservative risk appetite or stakeholder dynamics (MD approval thresholds)",
+          "Response reads as generic employment law advice rather than Meridian-specific counsel"
+        ]
+      }
+    }
+  }
+}

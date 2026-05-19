@@ -1,0 +1,9 @@
+{
+  "axis": "coverage",
+  "score": 4,
+  "rationale": "The intake captures all seven dimensions with strong depth, but employee_jurisdictions is null when the persona explicitly stated operations in South Korea, Japan, and Germany. Customer_jurisdictions is also narrowed to only Vietnam/Indonesia rather than the full five jurisdictions mentioned. These gaps represent lost specificity from the seed despite faithful capture elsewhere.",
+  "specific_gaps": [
+    "employee_jurisdictions is null; persona explicitly named KR/JP/DE for employees",
+    "customer_jurisdictions narrowed to only Vietnam/Indonesia instead of full KR/JP/DE/VI/ID list"
+  ]
+}

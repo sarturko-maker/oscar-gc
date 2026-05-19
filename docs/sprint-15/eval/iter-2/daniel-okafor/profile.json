@@ -1,0 +1,111 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:43:00Z",
+  "user": {
+    "name": "Daniel Okafor",
+    "role": "commercial-counsel",
+    "role_label": "Commercial Counsel"
+  },
+  "corporate": {
+    "name": "Meridian Power Components",
+    "industry": "Electrical Components",
+    "size_band": "201-1000"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "Electrical Components",
+      "sub_sector": "Distribution",
+      "business_model": "B2B"
+    },
+    "geography": {
+      "hq_jurisdiction": "United Kingdom",
+      "operating_jurisdictions": [
+        "United Kingdom"
+      ],
+      "customer_jurisdictions": null,
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "uk-gdpr",
+          "label": "UK GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "modern-slavery-act",
+          "label": "Modern Slavery Act",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "product-safety-regulations",
+          "label": "Product Safety Regulations",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "competition-act",
+          "label": "Competition Act",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "bribery-act",
+          "label": "Bribery Act",
+          "confidence": "user-confirmed"
+        }
+      ],
+      "captured_via": "hypothesis-confirm"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "Supplier framework agreements",
+        "Customer terms of supply",
+        "Warranty disputes",
+        "Reseller agreements"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": null,
+      "key_business_partners": [
+        "Head of Procurement",
+        "Sales Director"
+      ],
+      "escalation_threshold_label": "£100k to MD; Board for warranty matters"
+    },
+    "risk_appetite": "conservative",
+    "open_notes": "Channel partner programme launching autumn 2026 — first reseller agreements in draft. Warranty and product-quality disputes ongoing."
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "custom-channel-reseller",
+      "name": "Channel & Reseller",
+      "body": "Channel partner and reseller agreements, programme terms, and partner onboarding. Instructions pull programme detail and search negotiated terms.",
+      "source": "user-added",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

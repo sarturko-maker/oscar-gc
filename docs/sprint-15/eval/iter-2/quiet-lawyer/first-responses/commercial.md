@@ -1,0 +1,1 @@
+I don't see a clause attached or quoted in your message. Could you paste the clause text or attach the document you'd like me to review?

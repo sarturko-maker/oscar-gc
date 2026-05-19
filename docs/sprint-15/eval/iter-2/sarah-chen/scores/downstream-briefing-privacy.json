@@ -1,0 +1,13 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "Response shows partial integration — it references DORA (mentioned in open_notes) and briefly flags FCA, but defaults to a generic multi-jurisdiction GDPR framework without grounding the answer in PayFlow's specific geography (UK HQ, US + Germany ops), regulatory mix (UK GDPR, PCI DSS, AML/BSA), or acquisition context. The DPA addendum guidance is substantive but reads as general AI/LLM advice rather than PayFlow-specific.",
+  "specific_gaps": [
+    "No reference to UK GDPR requirements distinct from EU GDPR",
+    "No acknowledgment of German entity under DORA (Jan 2025) or how it materially changes the addendum requirements",
+    "No mention of operating jurisdictions (US, Germany) for data flow analysis",
+    "No reference to PCI DSS given B2B payments industry",
+    "No stakeholder framing (CISO/CTO escalation, acquisition diligence context)",
+    "Missing USregulatory considerations (state MTL, AML/BSA) despite US ops"
+  ]
+}

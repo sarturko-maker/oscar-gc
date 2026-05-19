@@ -1,0 +1,11 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "The response correctly applies HIPAA's breach notification framework (45 CFR 164.400-414) to the vendor incident, which is the primary regulatory baseline. However, it treats this as a generic HIPAA question rather than integrating Vitalis-specific context: the multi-state footprint (AZ/NM/CO have different breach notification timelines), the CCO escalation threshold for breaches over 500 records, or the conservative risk appetite that should drive vendor due diligence expectations.",
+  "specific_gaps": [
+    "Multi-state variation not addressed (AZ/NM/CO have state breach notification laws that may have different timelines than federal HIPAA)",
+    "CCO escalation threshold (defined in context as threshold for any breach >500 records) not mentioned as internal workflow step",
+    "Vendor BAA due diligence questions missing — this is a top-3 recurring matter for Vitalis",
+    "No reference to risk appetite (conservative) shaping the recommendation posture"
+  ]
+}

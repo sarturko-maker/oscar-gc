@@ -1,0 +1,11 @@
+{
+  "axis": "downstream-briefing",
+  "score": 1,
+  "rationale": "Response is entirely generic — asks for the missing clause but shows no integration of the company context block. No mention of Technology industry, Europe geography, the GDPR/AI Act/NIS2/DMA/ePrivacy/DSA regulatory baseline, or the recurring contracts matter. Could have come from any textbook assistant.",
+  "specific_gaps": [
+    "Industry (Technology) not cited or used to shape response",
+    "Geography (Europe HQ) not referenced",
+    "No regulatory baseline citation (GDPR, AI Act, NIS2, DSA, ePrivacy, DMA)",
+    "Recurring matter (Contracts) not acknowledged despite area being commercial"
+  ]
+}

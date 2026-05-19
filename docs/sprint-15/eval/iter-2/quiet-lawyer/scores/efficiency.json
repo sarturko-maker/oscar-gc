@@ -1,0 +1,6 @@
+{
+  "axis": "efficiency",
+  "score": 5,
+  "rationale": "Stayed well under budget at 9 turns (target ≤14). The agent compressed phases appropriately when the user declined specifics—closing P2.5 efficiently by accepting defaults rather than drilling. No re-asks, visible loops, or single-fact turns. The agent correctly handled the 'Quiet Lawyer' persona's brevity by not probing further when the user declined and moving to the next logical phase.",
+  "specific_gaps": []
+}

@@ -1,0 +1,6 @@
+{
+  "axis": "efficiency",
+  "score": 5,
+  "rationale": "In budget (11 turns ≤14). Agent captured regulatory landscape efficiently, corrected for DSA/NIS2 conditionally, compressed practice-area selection by presenting full set and allowing drops. The code-gen product was clarified once, not drilled. Profile finalized cleanly with provider confirm. No re-asks, no loops. Quiet Lawyer persona explains short user turns — agent appropriately condensed responses when user gave definitive answers.",
+  "specific_gaps": []
+}

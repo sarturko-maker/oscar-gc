@@ -1,0 +1,12 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "Response correctly analyzes EU AI Act classification (the center of the question) but treats the analysis as generic rather than integrating the persona's specific operating context: multi-jurisdiction presence (Italy/DE/FR/UK/US), US state AI law exposure, foundation-model developer posture, the enterprise deal blocker tension, or stakeholder dynamics. The legal analysis is sound but reads as a standard regulatory memo rather than advice tailored to a solo GC at an AI model company with those specific exposures.",
+  "specific_gights": [
+    "No geographic jurisdiction mix — operates in 5 jurisdictions including UK (post-Brexit separate from EU AI Act) and US states with distinct AI laws",
+    "No US state AI law coverage — context flagged US state laws (CO SB-205, IL HB 3773, CA AB-2013) but response is EU-only",
+    "No industry framing — foundation-model developer company context not used to tailor analysis",
+    "No business context connection — open notes say classification is 'blocker for enterprise agreement finalization' but response doesn't address deal impact",
+    "No stakeholder awareness — VP Engineering and Sales are key partners per context but not acknowledged"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "axis": "efficiency",
+  "score": 4,
+  "rationale": "Clean intake that used hypothesis-confirm for regulatory gaps (P2.5c) and efficient practice-area framing. Slight overage on turn count (17 vs 14 target) with no visible batching misses or re-asks. The agent compressed phases appropriately given the substantive user responses.",
+  "specific_gaps": [
+    "Turn count 17 exceeds target of 14 by 3 turns"
+  ]
+}

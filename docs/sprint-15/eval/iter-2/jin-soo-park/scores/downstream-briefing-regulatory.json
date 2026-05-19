@@ -1,0 +1,10 @@
+{
+  "axis": "downstream-briefing",
+  "score": 4,
+  "rationale": "Response demonstrates strong jurisdiction-specific integration for Korea — citing Korean Fair Trade Act provisions (공정거래법, 전자상거래법), referencing the Naver Shopping case analog, and directly addressing the KFTC inquiry context. However, it omits the persona's multi-jurisdiction dimension (JP/DE operations) and the PSD2 licence application noted in recurring matters. The answer is clearly shaped for a Korean marketplace context but doesn't connect to the broader geographic footprint or the regulatory baseline in Germany.",
+  "specific_gaps": [
+    "No reference to German market operations or DSA/PSD2 regulatory thread",
+    "Japanese dimension absent despite operating jurisdiction",
+    "Could have mentioned whether Japan has comparable fair-trade marketplace rules (JFTC)"
+  ]
+}

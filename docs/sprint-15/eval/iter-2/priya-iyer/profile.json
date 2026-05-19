@@ -1,0 +1,151 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:46:00Z",
+  "user": {
+    "name": "Priya Iyer",
+    "role": "senior-counsel",
+    "role_label": "Senior Counsel — Regulatory"
+  },
+  "corporate": {
+    "name": "Vitalis Health",
+    "industry": "healthcare",
+    "size_band": "5000+"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "healthcare",
+      "sub_sector": "hospital system",
+      "business_model": null
+    },
+    "geography": {
+      "hq_jurisdiction": "Texas",
+      "operating_jurisdictions": [
+        "Texas",
+        "Arizona",
+        "New Mexico",
+        "Colorado"
+      ],
+      "customer_jurisdictions": null,
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "hipaa",
+          "label": "HIPAA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "stark-law",
+          "label": "Stark Law",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "anti-kickback-statute",
+          "label": "Anti-Kickback Statute",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "emtala",
+          "label": "EMTALA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "state-medical-boards",
+          "label": "State Medical Boards",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dea",
+          "label": "DEA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "state-pharmacy-boards",
+          "label": "State Pharmacy Boards",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "clia",
+          "label": "CLIA",
+          "confidence": "llm-hypothesis-only"
+        },
+        {
+          "id": "workers-comp",
+          "label": "Workers' Comp",
+          "confidence": "llm-hypothesis-only"
+        },
+        {
+          "id": "state-facility-licensing",
+          "label": "State Facility Licensing",
+          "confidence": "llm-hypothesis-only"
+        },
+        {
+          "id": "cms-cop",
+          "label": "CMS Conditions of Participation",
+          "confidence": "llm-hypothesis-only"
+        }
+      ],
+      "captured_via": "hypothesis-confirm"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "Physician comp agreements",
+        "Vendor BAAs",
+        "DEA compliance",
+        "Device complaints/CAPA"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": "GC",
+      "key_business_partners": [
+        "CCO",
+        "CMO"
+      ],
+      "escalation_threshold_label": "GC signs off on any physician compensation tied to designated health services; anything over 500 records goes to CCO"
+    },
+    "risk_appetite": "conservative",
+    "open_notes": "Mid-integration on an AI clinical-decision-support tool. FDA and state medical practice rules apply; the AI Act doesn't reach us. The risk-stratification piece is the live debate."
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy",
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "regulatory",
+      "name": "Regulatory",
+      "body": "Regulators, obligations, and compliance memory live here. Instructions pull obligation detail and search filings.",
+      "source": "default",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

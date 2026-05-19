@@ -1,0 +1,6 @@
+{
+  "axis": "efficiency",
+  "score": 5,
+  "rationale": "Agent stayed well under budget (10 true turns vs. 14 target). Used aggressive batching in P2.5 with hypothesis-present (regulatory list), confirmed quickly in P2.5c via user's detailed corrections, and closed P2/P3 efficiently with sparse answers. No re-asks, no loops. Single brief turn for risk appetite was appropriate given baseline depth. Terminated cleanly with finalize_profile.",
+  "specific_gaps": []
+}

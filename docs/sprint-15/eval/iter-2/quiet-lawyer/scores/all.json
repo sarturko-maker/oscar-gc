@@ -1,0 +1,44 @@
+{
+  "persona_id": "quiet-lawyer",
+  "agent_turn_count": 9,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 5,
+      "rationale": "All seven dimensions captured faithfully to seed structure. Industry (Technology/sector only), geography (Europe/HQ + operating), recurring matters (Contracts), stakeholders and risk appetite null per persona's explicit refusals — correctly recorded as nulls. Regulatory baseline includes GDPR, AI Act, NIS2, DSA, ePrivacy, DMA with proper provenance (tavily+hypothesis-confirm). No invented data.",
+      "specific_gaps": []
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": 5,
+      "rationale": "Stayed well under budget at 9 turns (target ≤14). The agent compressed phases appropriately when the user declined specifics—closing P2.5 efficiently by accepting defaults rather than drilling. No re-asks, visible loops, or single-fact turns. The agent correctly handled the 'Quiet Lawyer' persona's brevity by not probing further when the user declined and moving to the next logical phase.",
+      "specific_gaps": []
+    },
+    "downstream_briefing": {
+      "commercial": {
+        "axis": "downstream-briefing",
+        "score": 1,
+        "rationale": "Response is entirely generic — asks for the missing clause but shows no integration of the company context block. No mention of Technology industry, Europe geography, the GDPR/AI Act/NIS2/DMA/ePrivacy/DSA regulatory baseline, or the recurring contracts matter. Could have come from any textbook assistant.",
+        "specific_gaps": [
+          "Industry (Technology) not cited or used to shape response",
+          "Geography (Europe HQ) not referenced",
+          "No regulatory baseline citation (GDPR, AI Act, NIS2, DSA, ePrivacy, DMA)",
+          "Recurring matter (Contracts) not acknowledged despite area being commercial"
+        ]
+      },
+      "privacy": {
+        "axis": "downstream-briefing",
+        "score": 1,
+        "rationale": "Response is entirely generic. No reference to company_context block's Technology industry, Europe geography/jurisdictions, or any of the listed regulatory frameworks (GDPR, AI Act, NIS2, DSA, ePrivacy, DMA). Could have come from any unbriefed agent asking for clarification about a file path.",
+        "specific_gaps": [
+          "No citation of Technology sector or Europe geography",
+          "No mention of GDPR/AI Act/NIS2/ePrivacy/DMA/DSA regulatory baseline",
+          "No reference to 'Contracts' recurring matter despite privacy-commercial nexus",
+          "No stakeholder or jurisdiction acknowledgment despite Europe ops",
+          "Generic request for clarification lacks persona-specific framing"
+        ]
+      }
+    }
+  }
+}

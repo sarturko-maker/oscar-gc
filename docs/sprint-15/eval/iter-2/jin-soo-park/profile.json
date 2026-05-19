@@ -1,0 +1,176 @@
+{
+  "schema_version": 3,
+  "completed_at": "2026-05-19T15:57:00Z",
+  "user": {
+    "name": "Jin-soo Park",
+    "role": "general-counsel",
+    "role_label": "Head of Legal"
+  },
+  "corporate": {
+    "name": "Hanseo Logistics",
+    "industry": "Logistics",
+    "size_band": "1001-5000"
+  },
+  "company_context": {
+    "industry": {
+      "sector": "Logistics",
+      "sub_sector": "Digital Logistics Platform",
+      "business_model": "Cross-border shipping marketplace"
+    },
+    "geography": {
+      "hq_jurisdiction": "South Korea",
+      "operating_jurisdictions": [
+        "South Korea",
+        "Japan",
+        "Germany"
+      ],
+      "customer_jurisdictions": [
+        "Vietnam",
+        "Indonesia"
+      ],
+      "employee_jurisdictions": null
+    },
+    "regulatory_baseline": {
+      "frameworks": [
+        {
+          "id": "gdpr",
+          "label": "GDPR",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "pipa",
+          "label": "Korean PIPA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "appi",
+          "label": "Japanese APPI",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "dsa",
+          "label": "DSA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "psd2",
+          "label": "PSD2",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "kftc-rules",
+          "label": "KFTC marketplace rules",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "korea-customs",
+          "label": "Korea Customs Service regulations",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "marpol",
+          "label": "IMO MARPOL",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "solas",
+          "label": "SOLAS",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "ism-code",
+          "label": "ISM Code",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "icna",
+          "label": "Korean ICNA",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "consumer-protection",
+          "label": "Consumer protection statutes",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "vat-gst",
+          "label": "Tax compliance (VAT/GST)",
+          "confidence": "user-confirmed"
+        },
+        {
+          "id": "carrier-licensing",
+          "label": "Carrier licensing regulations",
+          "confidence": "user-confirmed"
+        }
+      ],
+      "captured_via": "hypothesis-confirm"
+    },
+    "recurring_matters": {
+      "top_shapes": [
+        "Carrier onboarding agreements",
+        "Terms-of-service updates",
+        "KFTC inquiries",
+        "Cross-border data transfers"
+      ]
+    },
+    "stakeholders": {
+      "reports_to": "CEO",
+      "key_business_partners": [
+        "VP Operations (Seoul)",
+        "Regional Head Japan",
+        "Regional Head Europe"
+      ],
+      "escalation_threshold_label": "KRW 1bn+ commitments to CFO; KFTC-level regulatory to CEO"
+    },
+    "risk_appetite": "balanced",
+    "open_notes": "PSD2 licence application in Germany is highest-exposure file this quarter — currently pre-application, formal submission expected Q2 2026. KFTC inquiries and GDPR cross-border matters are steady-state."
+  },
+  "practice_areas": [
+    {
+      "id": "commercial",
+      "name": "Commercial",
+      "body": "Customers, vendors, suppliers, and contract memory live here. Instructions pull profile detail and search negotiated terms.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "body": "Entities, subsidiaries, and corporate memory live here. Instructions pull entity detail and search filings and resolutions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "employment",
+      "name": "Employment",
+      "body": "Employees, contractors, and HR memory live here. Instructions pull profile detail and search agreements and policy versions.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy",
+      "body": "Data subjects, processors, and privacy memory live here. Instructions pull profile detail and search processing records.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "product",
+      "name": "Product",
+      "body": "Products, releases, and product-agreement memory live here. Instructions pull product detail and search related contracts.",
+      "source": "default",
+      "area_profile": null
+    },
+    {
+      "id": "regulatory",
+      "name": "Regulatory",
+      "body": "Regulators, obligations, and compliance memory live here. Instructions pull obligation detail and search filings.",
+      "source": "default",
+      "area_profile": null
+    }
+  ],
+  "provider": {
+    "kind": "minimax",
+    "model": "MiniMax-M2.5"
+  }
+}

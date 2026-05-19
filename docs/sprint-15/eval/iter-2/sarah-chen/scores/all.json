@@ -1,0 +1,47 @@
+{
+  "persona_id": "sarah-chen",
+  "agent_turn_count": 9,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 5,
+      "rationale": "All seven dimensions captured with depth matching the seed. Industry (payments/B2B SaaS), geography (UK HQ/US+Germany), regulatory baseline with nine frameworks including FCA/AML/BSA via hypothesis-confirm, recurring matters, stakeholders with £500k threshold, balanced risk appetite, and acquisition/DORA open notes. Nulls faithfully recorded where applicable (customer/employee jurisdictions).",
+      "specific_gaps": []
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": 4,
+      "rationale": "Clean intake that used hypothesis-confirm for regulatory gaps (P2.5c) and efficient practice-area framing. Slight overage on turn count (17 vs 14 target) with no visible batching misses or re-asks. The agent compressed phases appropriately given the substantive user responses.",
+      "specific_gaps": [
+        "Turn count 17 exceeds target of 14 by 3 turns"
+      ]
+    },
+    "downstream_briefing": {
+      "commercial": {
+        "axis": "downstream-briefing",
+        "score": 3,
+        "rationale": "Response addresses the specific scenario (data-processing, vendor MSA) with relevant regulatory frameworks (UK GDPR, DORA, PSD2/PSR) and provides practical leverage-based advice. However, it reads as applicable to any UK-regulated company rather than reflecting PayFlow's specific B2B payments SaaS context, operating jurisdictions (US+DE alongside UK), or stakeholder dynamics (CISO/CTO alignment, escalation thresholds). The regulatory baseline is cited but not integrated into a persona-specific posture.",
+        "specific_Gaps": [
+          "No mention of company's B2B payments SaaS/fintech industry context that would shape risk posture",
+          "Missing stakeholder layer (CISO involvement in vendor security review, escalation thresholds)",
+          "Operating jurisdictions (US presence) not connected to the analysis",
+          "Recurring matters like FCA regulatory queries or MSA renegotiations not referenced"
+        ]
+      },
+      "privacy": {
+        "axis": "downstream-briefing",
+        "score": 3,
+        "rationale": "Response shows partial integration — it references DORA (mentioned in open_notes) and briefly flags FCA, but defaults to a generic multi-jurisdiction GDPR framework without grounding the answer in PayFlow's specific geography (UK HQ, US + Germany ops), regulatory mix (UK GDPR, PCI DSS, AML/BSA), or acquisition context. The DPA addendum guidance is substantive but reads as general AI/LLM advice rather than PayFlow-specific.",
+        "specific_gaps": [
+          "No reference to UK GDPR requirements distinct from EU GDPR",
+          "No acknowledgment of German entity under DORA (Jan 2025) or how it materially changes the addendum requirements",
+          "No mention of operating jurisdictions (US, Germany) for data flow analysis",
+          "No reference to PCI DSS given B2B payments industry",
+          "No stakeholder framing (CISO/CTO escalation, acquisition diligence context)",
+          "Missing USregulatory considerations (state MTL, AML/BSA) despite US ops"
+        ]
+      }
+    }
+  }
+}

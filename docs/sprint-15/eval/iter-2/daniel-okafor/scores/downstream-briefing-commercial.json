@@ -1,0 +1,9 @@
+{
+  "axis": "downstream-briefing",
+  "score": 4,
+  "rationale": "The response integrates two persona-specific dimensions from the context block: (1) recurring matter 'supplier framework agreements' being the core subject, and (2) open notes 'Channel partner programme launching autumn 2026' and 'warranty disputes ongoing' are both invoked to reinforce the negotiating position — using the autumn 2026 timeline to stress supply continuity risk and the warranty disputes to justify escalation to Board. The regulatory baseline is thin but appropriate since this commercial negotiation doesn't invoke privacy/competition issues. The response is shaped by the company context rather than giving a generic negotiation template.",
+  "specific_gaps": [
+    "Regulatory baseline not invoked - but expected given thin-regulation persona and non-regulatory question",
+    "Stakeholder mapping not explicit (Head of Procurement/Sales Director could be referenced as part of negotiation team)"
+  ]
+}

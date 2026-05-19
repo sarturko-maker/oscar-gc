@@ -1,0 +1,8 @@
+{
+  "axis": "coverage",
+  "score": 4,
+  "rationale": "Most dimensions captured with reasonable depth. Industry, geography, regulatory baseline, recurring matters, risk appetite, and open notes all align with the seed. Key gap: reports_to is recorded as null when the seed clearly shows 'Managing Director' — this is a missed detail. The stakeholder capture otherwise matches including key partners and escalation thresholds. Overall, the intake reflects the persona accurately with one substantive omission.",
+  "specific_gaps": [
+    "reports_to field captured as null instead of 'Managing Director'"
+  ]
+}

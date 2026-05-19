@@ -1,0 +1,45 @@
+{
+  "persona_id": "jin-soo-park",
+  "agent_turn_count": 10,
+  "aborted": null,
+  "scores": {
+    "coverage": {
+      "axis": "coverage",
+      "score": 4,
+      "rationale": "The intake captures all seven dimensions with strong depth, but employee_jurisdictions is null when the persona explicitly stated operations in South Korea, Japan, and Germany. Customer_jurisdictions is also narrowed to only Vietnam/Indonesia rather than the full five jurisdictions mentioned. These gaps represent lost specificity from the seed despite faithful capture elsewhere.",
+      "specific_gaps": [
+        "employee_jurisdictions is null; persona explicitly named KR/JP/DE for employees",
+        "customer_jurisdictions narrowed to only Vietnam/Indonesia instead of full KR/JP/DE/VI/ID list"
+      ]
+    },
+    "efficiency": {
+      "axis": "efficiency",
+      "score": 5,
+      "rationale": "Agent stayed well under budget (10 true turns vs. 14 target). Used aggressive batching in P2.5 with hypothesis-present (regulatory list), confirmed quickly in P2.5c via user's detailed corrections, and closed P2/P3 efficiently with sparse answers. No re-asks, no loops. Single brief turn for risk appetite was appropriate given baseline depth. Terminated cleanly with finalize_profile.",
+      "specific_gaps": []
+    },
+    "downstream_briefing": {
+      "regulatory": {
+        "axis": "downstream-briefing",
+        "score": 4,
+        "rationale": "Response demonstrates strong jurisdiction-specific integration for Korea — citing Korean Fair Trade Act provisions (공정거래법, 전자상거래법), referencing the Naver Shopping case analog, and directly addressing the KFTC inquiry context. However, it omits the persona's multi-jurisdiction dimension (JP/DE operations) and the PSD2 licence application noted in recurring matters. The answer is clearly shaped for a Korean marketplace context but doesn't connect to the broader geographic footprint or the regulatory baseline in Germany.",
+        "specific_gaps": [
+          "No reference to German market operations or DSA/PSD2 regulatory thread",
+          "Japanese dimension absent despite operating jurisdiction",
+          "Could have mentioned whether Japan has comparable fair-trade marketplace rules (JFTC)"
+        ]
+      },
+      "privacy": {
+        "axis": "downstream-briefing",
+        "score": 3,
+        "rationale": "Response correctly explains PIPA vs APPI consent paradigms and recommends parallel addenda with accurate regulatory citations (Art. 17 PIPA, Art. 24 APPI). However, the answer treats this as a generic privacy-law comparison rather than integrating Hanseo's cross-border logistics context, operating jurisdictions (KR/JP/DE), or stakeholder dynamics. The reasoning would be identical for any company facing this question.",
+        "specific_gifts": null,
+        "specific_gaps": [
+          "Industry context (logistics marketplace) not used to frame the answer",
+          "Operating jurisdictions (KR/JP/DE) not actively cited despite being in company_context",
+          "Recurring matter (cross-border data transfers) acknowledged but not central to reasoning"
+        ]
+      }
+    }
+  }
+}

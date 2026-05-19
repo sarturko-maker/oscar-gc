@@ -1,0 +1,6 @@
+{
+  "axis": "coverage",
+  "score": 5,
+  "rationale": "All seven dimensions captured faithfully to seed structure. Industry (Technology/sector only), geography (Europe/HQ + operating), recurring matters (Contracts), stakeholders and risk appetite null per persona's explicit refusals — correctly recorded as nulls. Regulatory baseline includes GDPR, AI Act, NIS2, DSA, ePrivacy, DMA with proper provenance (tavily+hypothesis-confirm). No invented data.",
+  "specific_gaps": []
+}

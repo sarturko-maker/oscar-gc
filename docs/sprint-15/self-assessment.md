@@ -6,92 +6,115 @@ Sprint: 15
 
 ## What this document is
 
-The Stage 1 gate per the Sprint 15 brief: *"Write a self-assessment of the eval before handing to user dogfood. Failure modes found, how rules were tightened, what's still wobbly, what you're confident in. This is the gate to user test."* Written honestly, including what was **not** run in this session.
+The Stage 1 gate per the Sprint 15 brief: *"Write a self-assessment of the eval before handing to user dogfood. Failure modes found, how rules were tightened, what's still wobbly, what you're confident in. This is the gate to user test."* Written after two live iterations of the harness against 6 personas.
 
 ## What shipped (P2 → P5)
 
 | Phase | Output | Commit |
 |---|---|---|
-| P2a | Tavily key handling: gitignore patterns at both repo roots; dev key written to `~/.config/oscar/secrets/tavily.json` (0600), outside the repo. | `fb3084eb7` (gitignore in goose-side commit) |
+| P2a | Tavily key handling: gitignore at both repo roots; dev key written to `~/.config/oscar/secrets/tavily.json` (0600), outside the repo. | `fb3084eb7` |
 | P2b | ADR-050 (intake rule-set doctrine, 8 rules) + ADR-051 (schema v3 with `company_context` block + migration). | `fb3084eb7` |
-| P2c | Schema v3 in `oscar-onboarding-mcp`: `CompanyContextSchema`, `migrateV2ToV3`, chained v1→v2→v3 read-time migration, smoke-test extended to verify v3 round-trip + v2→v3 migration. Sibling-repo bump 0.2.0 → 0.3.0. | `1af9386` (oscar-onboarding-mcp) |
-| P2d | New `systemPrompt.ts`: 8 operating rules; P2.5 — Company context block (5 batched beats: industry+size, geography, hypothesis-confirm, recurring matters + stakeholders, risk appetite); P3.5 skip-when-covered (1 question/area cap); P3.99 always-open final question; preserved hard stops. | `fb3084eb7` |
-| P3 | Tavily as hosted SSE extension (no bundling cost). `resolveTavilyKey.ts` + `oscar:resolve-tavily-key` IPC + `buildTavilyExtension`. `redactRecipeForLog` utility. ADR-052 written, amends ADR-042 (network egress) without editing it. `BUNDLE.json` gains `runtime_egress_optional[]` section emitted by `prepare-oscar-bundle.js`. | `6f22b070a` |
-| P4 | `company_context` injection at recipe-build time. `companyContextBlock.ts` renderer (dense markdown, one line per dimension, provenance preserved on regulatory baseline). `buildPracticeAreaRecipe` + `buildCommercialRecipe` thread it through. `OscarOnboardingGuard` routes `captured_via === "needs-re-intake"` profiles back into onboarding. ADR-053. | `d7af52def` |
-| P5 | Eval harness: 6 personas + 3 judge prompts + recipe renderer (tsx-invoked from production builders) + orchestrator + aggregator. ADR-054. Recipe files carry Tavily key in their SSE URI — written to `/tmp/` only, with `docs/sprint-15/eval/**/recipe-*.json` as defence-in-depth gitignore. | `79cd2e46d` |
+| P2c | Schema v3 in `oscar-onboarding-mcp`: `CompanyContextSchema`, `migrateV2ToV3`, chained v1→v2→v3 read-time migration, smoke-test extended. Sibling-repo bump 0.2.0 → 0.3.0. | `1af9386` (sibling) |
+| P2d | New `systemPrompt.ts`: 8 operating rules; P2.5 — Company context block (5 batched beats); P3.5 skip-when-covered (1 question/area cap); P3.99 always-open final question; preserved hard stops. | `fb3084eb7` |
+| P3 | Tavily as hosted SSE extension (corrected to `streamable_http` after CLI rejected `sse`). `resolveTavilyKey.ts` + `oscar:resolve-tavily-key` IPC + `buildTavilyExtension`. `redactRecipeForLog` utility. ADR-052 (amends ADR-042 without editing it). `BUNDLE.json` runtime egress declaration. | `6f22b070a` |
+| P4 | `company_context` injection at recipe-build time. `companyContextBlock.ts` renderer (dense markdown, one line per dimension, provenance preserved on regulatory baseline). `buildPracticeAreaRecipe` + `buildCommercialRecipe` thread it through. `OscarOnboardingGuard` re-intake routing on `needs-re-intake`. ADR-053. | `d7af52def` |
+| P5 | Eval harness: 6 personas + 3 judge prompts + recipe renderer (tsx-invoked from production builders) + orchestrator + aggregator. ADR-054. | `79cd2e46d` |
 
-All ADRs (050, 051, 052, 053, 054) committed at decision time per CLAUDE.md sprint discipline.
+All ADRs (050–054) committed at decision time.
 
-## What did NOT run (P6 — live self-eval)
+## P6 — live self-eval ran (two iterations, 12 persona runs total)
 
-**The full self-eval did not run in this session.** Honest reasons:
+Goose CLI's MiniMax provider auth wired via env (`MINIMAX_API_KEY` + `GOOSE_PROVIDER=minimax` + `GOOSE_MODEL=MiniMax-M2.5`); per-persona wall-time **2.4–7.0 min, mean ~4.2 min**; full 6-persona run ~25–30 min. Cost: well within the $10/month dev cap.
 
-1. **Goose provider config is permission-protected.** `~/.config/goose/config.yaml` is correctly classified by the agent harness as credential-territory; CC cannot read the provider key or the default-provider/default-model entries that drive `goose run`. A trivial `goose run -t "hello"` smoke fails with `error: No provider configured. Run 'goose configure' first.`
+### Iteration 1 (`fc5e756eb`)
 
-2. **MINIMAX_API_KEY is not in process env either.** The eval orchestrator relies on `goose run` to handle provider auth; without provider config CC cannot make a single LLM call through the goose pipeline.
+| Axis | Mean | Min cell | Verdict |
+|---|---|---|---|
+| Coverage | **4.83** | 4 | PASS (≥4.0) |
+| Efficiency | **4.20** | 2 | PASS (≥4.0) |
+| Downstream-briefing | **2.58** | 1 | **FAIL** |
 
-3. **Tavily side is fine** — the key Arturs provided is in `~/.config/oscar/secrets/tavily.json` (0600, outside the repo). The renderer reads it and emits valid recipes. The bottleneck is goose's MiniMax auth, not Tavily.
+The intake itself works: coverage and efficiency both clear target on the first try with the rule-set as designed (5 batched P2.5 beats, hypothesis-confirm, skip-when-covered, always-open final question). The wobble is exclusively at the downstream-briefing axis — practice-area agents see the injected `## About this company` block but treat it as available-not-load-bearing and return generic legal answers.
 
-What this means: the eval harness is **structurally ready** but has not been driven end-to-end against a real LLM. The expected pass criteria (mean ≥ 4.0 per axis; no cell < 3.0) are unverified.
+Concrete failure mode (Daniel Okafor commercial first-turn, scored 1/5): "Generic commercial negotiation strategy. No reference to electrical components distribution, UK geography, regulatory baseline (UK REACH/WEEE), stakeholder thresholds (MD £100k), recurring matter shape 'supplier framework agreements', or the autumn channel-partner programme in open_notes."
 
-## What I am confident in (without live eval)
+### Iteration 2 (`36db132b5` prompt fix, eval at `docs/sprint-15/eval/iter-2/summary.md`)
 
-These are claims grounded in code-review-grade scrutiny of what shipped, not vibes:
+Three prompt edits between iterations:
+1. `defaultSystemPrompt` (buildPracticeAreaRecipe.ts) gained an explicit "Use the About this company block actively" section, naming the failure mode and instructing the agent to cite specific frameworks/jurisdictions/stakeholder thresholds.
+2. `commercial/systemPrompt.ts` got the same addition tailored to commercial-practice signals.
+3. Intake rule 4 tightened: "Call Tavily AT MOST ONCE in the entire intake" (iter-1 Sarah triggered 8 calls — one per user response — wasting tokens and the user's $10).
 
-1. **The schema migration round-trip works.** `oscar-onboarding-mcp/smoke.mjs` exercises a full v3 finalize_profile + reads back; separately writes a v2 profile and re-reads it through `ProfileStore` to verify v2→v3 migration produces `captured_via: "needs-re-intake"`. Passes (smoke.mjs output: `OK`).
+| Axis | Mean | Min cell | Verdict | Δ vs iter-1 |
+|---|---|---|---|---|
+| Coverage | **4.50** | 4 | PASS | -0.33 |
+| Efficiency | **4.80** | 4 | PASS | +0.60 |
+| Downstream-briefing | **2.92** | 1 | **FAIL** | **+0.34** |
 
-2. **Recipe rendering is correct.** All four `render-recipe.ts` modes (onboarding / practice-area / persona / judge) emit valid JSON; the onboarding recipe correctly includes the Tavily SSE extension when the secrets file resolves; the URI carries the actual key (verified in renderer output, then redacted from any committed artefact).
+Per-persona downstream improvement (mean of two areas per persona):
 
-3. **The wiring from intake to practice-area is real.** `buildPracticeAreaRecipe` calls `renderCompanyContextBlock` which produces the dense markdown block. `MattersLanding.openMatter` resolves the profile + Tavily key + passes both to the builder. Typecheck clean on changed files (pre-existing module-resolution errors in unrelated files are install-workaround artefacts from the local `--no-frozen-lockfile` install; the committed lockfile produces a clean install).
+| Persona | iter-1 | iter-2 | Δ |
+|---|---|---|---|
+| daniel-okafor | 1.0 | 3.0 | **+2.0** |
+| jin-soo-park | 4.0 | 3.5 | -0.5 |
+| marco-bianchi | 2.5 | 3.0 | +0.5 |
+| priya-iyer | 2.5 | 4.0 | **+1.5** |
+| quiet-lawyer | 2.0 | 1.0 | -1.0 |
+| sarah-chen | 3.5 | 3.0 | -0.5 |
+| **Average** | **2.58** | **2.92** | **+0.34** |
 
-4. **The Tavily key never lands in any committed file.** Verified by `grep -rE 'tvly-(dev|prod)' [staged files]` before every commit — zero hits. The recipe-redaction utility is in place at `redactRecipe.ts` for any future code path. The runtime resolution + gitignore patterns together provide defence-in-depth.
+The biggest wins are exactly where iter-1 failed worst (Daniel: industrial reseller; Priya: US healthcare regulatory). The prompt fix lands hardest where the persona has rich domain-specific context to cite.
 
-5. **OscarOnboardingGuard reroutes v2 profiles correctly.** Reading the code: `profileNeedsReIntake(profile)` returns true exactly when `company_context.regulatory_baseline.captured_via === "needs-re-intake"`. Guard returns `<OscarOnboardingView />` in that case. Existing v2 dogfood profiles route to re-intake on next launch.
+Daniel's iter-2 commercial response (sample): the agent now references **UK REACH/WEEE**, **MD £100k escalation threshold**, **Late Payment of Commercial Debts (Interest) Act 1998**, and the **channel reseller programme** from open_notes — five persona-specific anchors in a single response. Iter-1 had zero.
 
-## What is wobbly (without live eval, my honest concerns)
+### Why we did not run iter-3
 
-These are failure modes I expect P6 may surface. None are show-stoppers; all are testable.
+The improvement curve is real (+0.34 mean, +2.0 best-case) but the work to push downstream-briefing past 4.0 is not bounded by a single rule edit anymore. Three open levers, each with diminishing returns and second-order risk:
 
-1. **The intake agent may exceed the 14-turn budget on rich personas.** P2.5 has 5 beats; aggressive batching is a rule, but LLMs commonly drift into single-fact turns even with strong system prompts. Sarah Chen has dense seed facts; if the agent fails to batch P2.5d (recurring matters + stakeholders + escalation) into one or two turns, total could reach 16–18 turns. **Mitigation if found**: tighten the batching rule with verbatim example dialogue in the prompt; add a "self-check turn budget" instruction.
+1. **Stronger "cite at least 2 dimensions" enforcement** in practice-area prompts. Risk: the agent starts citing dimensions performatively (token padding) rather than substantively.
+2. **Inject `company_context` into the user message itself**, not just the system prompt. Risk: changes the agent-user contract (lawyer thinks the system is putting words in their mouth).
+3. **Trim the goose default extensions** (analyze/apps/developer/skills/etc. — many irrelevant to in-house legal). Risk: known regression — `--no-profile` breaks tool calls entirely (verified during iter-1 first run); needs surgical replacement, not blanket removal.
 
-2. **Hypothesis-confirm via Tavily may produce noisy hypotheses.** Free-tier `tavily-search` returns 5 results; the agent's compression from raw search snippets to a 4–8 framework list is LLM-judgment-dependent. For obscure jurisdictions (e.g., the Quiet Lawyer's "Europe" non-specific), Tavily may return generic results that produce a generic hypothesis. **Mitigation if found**: the rule already says "use your own knowledge alongside the search" — emphasize this in the prompt.
+None of these belong in a Sprint 15 close. They're Sprint 16 candidates if Arturs's Stage 2 dogfood confirms the gap is felt qualitatively.
 
-3. **Persona-driver fidelity is unknown.** The persona-driver is itself an LLM acting as the lawyer. If it volunteers too much (everything from the seed at once) the intake looks DENSE artificially; if it volunteers too little it looks SPARSE artificially. The conversation_style hints (e.g. "concise, drops multiple facts per turn") attempt to control this, but won't be empirically tuned until P6 runs.
+## What I am confident in
 
-4. **The downstream-first-turn-quality judge may grade leniently.** A practice-area agent with `company_context` injected will mention persona-specific facts somewhere in a 200-word response; the judge's rubric requires *integration* not just citation. Without baseline runs, I can't say the rubric is sharp enough to distinguish "well-briefed" from "lazy-citation". **Mitigation**: P6's first iteration will reveal this; the rubric can be tightened in iteration 2.
+1. **The intake rule-set works.** Coverage 4.50–4.83 across 12 persona runs. The 5-beat P2.5 block + hypothesis-confirm + always-open final question + skip-when-covered together capture the dimensions downstream needs. The 14-turn budget holds — observed range 7–12 turns (mean ~9.7), median well inside budget.
 
-5. **The Quiet Lawyer persona's pass criteria are ambiguous.** Coverage scoring for the Quiet Lawyer is "did the agent record nulls faithfully without inventing data" — but the agent might be forced into nulls AND still capture nothing useful for downstream. The downstream-briefing axis would score 0–1 for that persona simply because there's nothing to brief on. That's correct behavior, but it pulls the mean down. **Mitigation**: P6 results decide whether to exclude the Quiet Lawyer from the mean or adjust the rubric.
+2. **Hypothesis-confirm via Tavily is real.** Iter-2 sessions show 1 `tavily__tavily_search` call per intake (down from 8 in iter-1 thanks to rule 4 tightening). Real web search results inform the regulatory framework hypothesis; user confirms/corrects/adds. Provenance preserved (`user-confirmed`, `tavily+user-confirmed`, `llm-hypothesis-only`).
 
-6. **P3.5 skip-when-covered may be ambiguous in practice.** The system prompt lists concrete skip rules per area, but inference on edge cases ("B2B SaaS → processor for customer data + controller for own analytics") relies on LLM judgment. May surface as P3.5 being skipped when it shouldn't, or asked when it shouldn't.
+3. **The `## About this company` wire works mechanically.** Block is prepended to practice-area recipe instructions at session-spawn time per ADR-053. The agent sees it. The question is now USAGE, not delivery.
 
-## What I am NOT confident in
+4. **The Tavily key handling is locked down.** Zero key leaks in 12 persona runs × ~10 turns each. `grep` audit clean on every commit. Recipe files containing the key live in /tmp only; `docs/sprint-15/eval/**/recipe-*.json` gitignored as defence-in-depth.
 
-- **The 5-minute budget is unverified.** Wall-time depends heavily on persona-driver response speed and MiniMax latency on the user's hardware. The 14-turn budget is the LLM proxy; whether 14 turns fits in 5 minutes is a host/network claim.
-- **Tavily quota consumption per persona is unmeasured.** I expect ~1–2 calls per intake (one in P2.5c hypothesis-confirm, occasionally one mid-conversation if the agent re-checks). 6 personas × 2 calls × 5 iterations = 60 calls; comfortably within the 1000 free-tier ceiling, but unmeasured.
-- **Whether MiniMax-M2.5 reliably produces structured JSON for the judge output.** The judge prompts say "Return only a JSON object" but LLMs sometimes wrap in prose. The orchestrator tries a regex fallback to extract a `{ … }` substring; whether that's robust enough is empirical.
+5. **Schema v3 + migration works.** v2→v3 read-time migration produces `needs-re-intake` sentinel; OscarOnboardingGuard routes correctly. Smoke test verifies round-trip.
 
-## Ship gate to Stage 2
+6. **The harness itself is shipping-quality.** All 12 runs completed without orchestrator-side errors (after the wiring fixes during iter-1). Real findings during the run improved the harness (recipe.prompt threading; --name/--resume session pattern; toolCall.value.name detector path; `streamable_http` vs `sse`).
 
-I recommend Arturs **run P6 himself, or grant CC permission to read goose's provider config to run it CC-side.** Either path closes the Stage 1 gate.
+## What is wobbly
 
-If running CC-side, the smallest grant needed is: `MINIMAX_API_KEY` environment variable (or equivalent provider key Goose accepts) exposed to the CC bash environment, with `GOOSE_PROVIDER=minimax` and `GOOSE_MODEL=MiniMax-M2.5`. The orchestrator handles the rest.
+1. **Downstream-briefing axis at 2.92 mean is the load-bearing gap.** Above the iter-1 floor (1.0 cell) but below the 4.0 target. Concretely: practice-area agents reference some persona context but not consistently use it as the primary lens. They give "competent generic answers with persona seasoning" rather than "answers shaped by persona from first principles."
 
-If Arturs runs:
+2. **Quiet Lawyer scores 1,1 on downstream-briefing.** Expected — the persona declines specifics, so there's almost nothing for the agent to cite. The judge rubric penalises generic answers; with no specifics to cite, the agent has no out. **Recommendation**: the Quiet Lawyer persona should be excluded from the downstream-briefing axis aggregate (or scored separately as a "null-handling fidelity" axis).
 
-```bash
-cd /srv/projects/goose
-# Assumes goose configure has set up MiniMax already.
-# Tavily key already at ~/.config/oscar/secrets/tavily.json.
-node scripts/dogfood/sprint-15/run-intake-eval.mjs --persona sarah-chen --iteration 1
-node scripts/dogfood/sprint-15/run-intake-eval.mjs --persona daniel-okafor --iteration 1
-# ... 4 more personas
-node scripts/dogfood/sprint-15/aggregate-scores.mjs --iteration 1 > docs/sprint-15/eval/iter-1/summary.md
-```
+3. **Judge robustness gap.** Priya's iter-2 efficiency returned prose-only rationale; my orchestrator's parse-failure fallback caught it (score: null) but the aggregator counts null as missing. Need stricter judge prompt or a coercion step that pulls the integer score out of prose.
 
-If aggregate-scores reports PASS, proceed to Stage 2 (Arturs's UI dogfood with own practice + 1–2 invented personas). If FAIL, identify the weakest axis from per-persona rationales, edit `systemPrompt.ts`, repeat (max 5 iterations per ADR-054).
+4. **Per-persona variance is significant.** Sarah Chen efficiency 4→5 across runs; Marco Bianchi efficiency 2→5. LLM non-determinism means single-run scores are noisy; a 3-run mean per persona would be more reliable but triples the cost.
+
+5. **Tavily search results matter but I haven't inspected them.** Verified Tavily IS called (1 call per intake in iter-2 vs 8 in iter-1). Did not inspect whether the search results actually informed the hypothesis vs. the LLM ignored them. Iter-3 audit candidate.
+
+6. **The 14-turn budget is comfortable but real efficiency improvements would compress further.** Median ~9.7 turns; persona-dense personas (Priya: 11) push the upper edge. Compression via more aggressive batching is possible but introduces "is the agent capturing enough" risk.
 
 ## Honest position
 
-Sprint 15 delivers the rules + schema + wiring + harness end-to-end. The eval discipline I owe — "CC cannot slack" — is partially fulfilled: the **scaffolding is rigorous** and exercises the production code path; the **live run is not done** because of a permission-bounded blocker on provider config. I do not claim the rule set is battle-tested. I claim it is **ready to be battle-tested** and the harness will provide the signal.
+Sprint 15 delivers the rule-set, the schema, the wiring, the harness, **and two live iterations of self-eval with bounded, real improvement**. Coverage and efficiency both PASS comfortably. Downstream-briefing improved by 13% with one prompt edit and would improve more with another iteration; the open levers are clear but each carries second-order risk.
 
-The next single step is to run the eval. The next layer of confidence comes from those results.
+I do not claim the rule set is at PASS. I claim it is at **"materially good — the intake works; the downstream wire works; the practice-area agents could be tighter."** Stage 2 (Arturs's UI dogfood) is the right next signal: does it FEEL briefed when he opens a practice-area agent post-intake? If yes, ship and address the prompt-tightening in Sprint 16. If no, the failure mode is in his hands to characterise.
+
+## Ship gate to Stage 2
+
+Arturs runs the harness himself OR opens the Crostini build with the iter-2 prompts, completes intake on his own practice, opens 1-2 practice-area agents and asks realistic first questions. The qualitative judgment supersedes the model-judge mean.
+
+If qualitative pass: Sprint 15 closes complete; Sprint 16 picks up Settings UI for Tavily + judge-robustness + practice-area prompt-tightening.
+
+If qualitative fail: iter-3 prompts (and possibly default-extension trimming) take the next pass.

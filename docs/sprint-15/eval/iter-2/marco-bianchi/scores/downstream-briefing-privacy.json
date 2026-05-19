@@ -1,0 +1,12 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "Response correctly identifies GDPR Article 6(f) as the only plausible basis and demonstrates legal analysis. It references Germany's APD position (connecting to operating jurisdictions) and notes AI Act classification as a downstream concern. However, it doesn't connect to Lumen AI's Italian HQ, B2B+B2C business model implications for the deployment notice, or the Q3 product deadline's urgency. The answer would benefit from anchoring the disclosure strategy to enterprise deal requirements and UK jurisdiction-specific UK GDPR considerations.",
+  "specific_gaps": [
+    "No reference to Italian jurisdiction (HQ) or Italian GDPR context",
+    "B2B platform business model not integrated into deployment notice strategy (enterprise customers need different disclosure than B2C)",
+    "UK jurisdiction (separate UK GDPR regime) not addressed despite being an operating market",
+    "Q3 code-gen product deadline from open notes not mentioned as risk-calibration driver",
+    "Enterprise customer deals (recurring matter) not connected to why this disclosure matters for commercial ops"
+  ]
+}

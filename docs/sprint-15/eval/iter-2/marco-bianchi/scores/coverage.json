@@ -1,0 +1,10 @@
+{
+  "axis": "coverage",
+  "score": 4,
+  "rationale": "Six of seven dimensions are captured with reasonable fidelity. Industry depth uses broader 'AI/ML' vs seed's specific 'Foundation-model fine-tuning + deployed inference', but captures sector+sub-sector+business model. Geography is precise. Regulatory baseline is partial - DSA/NIS2 show 'llm-hypothesis-only' confidence but user conditionally accepted these in transcript; the capture could be cleaner on provenance. Stakeholders missing 'Head of Trust & Safety' from key partners. Overall solid capture with one notable gap.",
+  "specific_gaps": [
+    "Industry: 'AI/ML' less specific than seed's 'Foundation-model fine-tuning + deployed inference'",
+    "Stakeholders: Missing 'Head of Trust & Safety' from key business partners (only VP Engineering and Sales captured)",
+    "Regulatory: DSA/NIS2 conditional status not cleanly captured as conditional - shows llm-hypothesis-only confidence despite user confirmation"
+  ]
+}

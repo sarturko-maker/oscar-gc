@@ -1,0 +1,11 @@
+{
+  "axis": "downstream-briefing",
+  "score": 3,
+  "rationale": "Response correctly explains PIPA vs APPI consent paradigms and recommends parallel addenda with accurate regulatory citations (Art. 17 PIPA, Art. 24 APPI). However, the answer treats this as a generic privacy-law comparison rather than integrating Hanseo's cross-border logistics context, operating jurisdictions (KR/JP/DE), or stakeholder dynamics. The reasoning would be identical for any company facing this question.",
+  "specific_gifts": null,
+  "specific_gaps": [
+    "Industry context (logistics marketplace) not used to frame the answer",
+    "Operating jurisdictions (KR/JP/DE) not actively cited despite being in company_context",
+    "Recurring matter (cross-border data transfers) acknowledged but not central to reasoning"
+  ]
+}
