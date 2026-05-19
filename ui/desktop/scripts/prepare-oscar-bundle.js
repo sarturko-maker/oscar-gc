@@ -270,6 +270,9 @@ async function prepareVendoredMcps() {
     // @modelcontextprotocol/server-filesystem@2026.1.14 onwards). Emit ESM
     // and drop a sibling package.json so Node loads the .js file as ESM
     // without changing the recipe paths.
+    // No shebang banner here: ESM preserves the source's own shebang (CJS
+    // strips it), so a banner would produce a duplicate and Node rejects
+    // the file with SyntaxError on line 2.
     console.log(`[mcps] esbuild ${entry} → ${outfile}`);
     await esbuild.build({
       entryPoints: [entry],
@@ -280,7 +283,6 @@ async function prepareVendoredMcps() {
       outfile,
       logLevel: 'warning',
       absWorkingDir: UI_DESKTOP,
-      banner: { js: '#!/usr/bin/env node' },
     });
     fs.writeFileSync(path.join(destDir, 'package.json'), '{"type":"module"}\n');
     const sz = fs.statSync(outfile).size;
