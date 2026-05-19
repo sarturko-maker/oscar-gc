@@ -874,11 +874,77 @@ find ~/.agents/skills/in-house-legal -name SKILL.md | wc -l  # expect 93
 cat ~/.config/oscar/profile.json | python3 -c "import json,sys; p=json.load(sys.stdin); print('schema_version:', p['schema_version']); [print(a['id'], '->', list((a.get('area_profile') or {}).keys())) for a in p['practice_areas']]"
 ```
 
+## Sprint 12 — Matters, Forge, access model (2026-05-19, lq-vps)
+
+Nine ADRs (036–044). Three workstreams: Matters as scoped containers; Forge meta-agent; access-model formalisation (filesystem scope + network discipline).
+
+### New on-disk state
+
+| Path | Created by | Purpose |
+|---|---|---|
+| `~/.config/oscar/state/<area-id>/matters.json` | matters IPC (`oscar:matters:create`) | Per-practice-area registry; Zod-validated at IPC. |
+| `~/.config/oscar/state/<area-id>/matters/<slug>/` | matters IPC | Matter folder: `matter.md`, `history.md`, `notes.md`, `outputs/`. |
+| `~/.config/oscar/state/<area-id>/matters/_archived/<slug>/` | matters IPC archive | Closed matters; never deleted (legal retention discipline). |
+| `~/.config/oscar/tom-active-matter.md` | `main.ts ensureTomActiveMatterFile()` (every boot) | Top of Mind matter-context surface; read every turn by `tom` platform extension (`crates/goose/src/agents/platform_extensions/tom.rs:72-78`). 64KB cap. |
+| `~/.agents/skills/<personal-skill-slug>/SKILL.md` | Forge create-skill | Personal skills written by Forge; discovered by `all_skill_dirs()`. |
+
+### New env vars (set by `main.ts` before goosed spawn)
+
+| Env | Value | Purpose |
+|---|---|---|
+| `GOOSE_MOIM_MESSAGE_FILE` | `~/.config/oscar/tom-active-matter.md` | Top of Mind file path (ADR-044). |
+| `GOOSE_ALLOWLIST` | `file://<resourcesRoot>/allowlist.yaml` | Empty extensions list (no MCP installs via UI per ADR-042). Skipped in dev if file absent. |
+
+Recipe-injected env on every practice-area session (ADR-037, ADR-041):
+
+| Env | Value | Purpose |
+|---|---|---|
+| `OSCAR_MATTER_DIR` | `<matter folder>` | 48 substantive bundled skills consume this to resolve matter-scoped paths. |
+
+### New MCP
+
+| MCP | Source | Bundle output | Scope |
+|---|---|---|---|
+| `oscar-fs` | npm `@modelcontextprotocol/server-filesystem@2026.1.14` (MIT) | `src/resources/mcps/oscar-fs/index.js` (esbuild from `node_modules`) | Per recipe: matter folder (practice-area agents) or `~/.agents/skills/` + `~/.config/oscar/` (Forge). |
+
+### Network discipline (ADR-042)
+
+- Build-time grep audit in `prepare-oscar-bundle.js` over each bundled MCP for outbound-call shapes (`fetch(`, `axios`, `https.request`, `XMLHttpRequest`, `node-fetch`). Result lands in `BUNDLE.json#network_audit`. Expect zero unwaived matches.
+- Goosed → MiniMax provider only (ADR-012).
+- Renderer CSP tightened in `index.html`: `connect-src 'self' http://127.0.0.1:* https://localhost:*` (was `connect-src 'self' http://127.0.0.1:* https:`); `font-src 'self' data:` (was `font-src 'self' data: https:`).
+- Renderer `webRequest.onBeforeRequest` blocks POST/PUT/PATCH/DELETE to non-localhost; GETs stay open for image rendering.
+
+### Chrome change
+
+Forge enters in a new sidebar header zone above the practice-area list (Settings stays in the footer); two distinct system-affordance zones. New `/forge` route.
+
+### Sprint 12 dogfood install command (on Crostini)
+
+```bash
+cd /srv/projects/goose/ui/desktop
+pnpm install --no-frozen-lockfile     # works on Crostini despite the lq-vps blockExoticSubdeps issue
+pnpm run bundle:oscar-linux            # runs prepare-oscar-bundle.js then electron-forge make
+# .deb lands in ./out/make/deb/x64/
+sudo dpkg -i ./out/make/deb/x64/oscar-gc_*.deb
+oscar-gc
+```
+
+Expected boot effects (verify):
+- `~/.config/oscar/tom-active-matter.md` exists (empty).
+- `~/.agents/skills/in-house-legal` symlink intact (Sprint 11 behaviour).
+- Logs show `GOOSE_ALLOWLIST=file://...` and `GOOSE_MOIM_MESSAGE_FILE=...` in the env.
+- `BUNDLE.json` includes `network_audit.summary.matches: 0`.
+
+### Known pre-existing pnpm-install issue on lq-vps
+
+`pnpm install` on this build host (Debian 12 Docker) errors with `ERR_PNPM_EXOTIC_SUBDEP` for `@electron/node-gyp` (resolved via git) — `blockExoticSubdeps` rejects it inside `@electron-forge/cli@7.11.1`. The error is pre-existing and unrelated to Sprint 12; the .deb build happens on Crostini where the install completes despite the warning. Tracked but not blocking.
+
 ## Pending
 
-- **Sprint 11 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, run onboarding + practice-area selection + skill invocation + Commercial redline. SPRINT_LOG Sprint 11 entry has the step-by-step.
-- **Sprint 10 BACKLOG carry-forwards** still open — see `BACKLOG.md` for full list. Top items: top-right Goose mascot round-2, Commercial chat regression (doesn't load on click), app-icon raster pipeline, postinst prerm/postrm, MCP tool-card sizing, `oscar-memory` recipe wiring.
-- **GitHub Release `oscar-gc-sprint10`** — draft at `sarturko-maker/goose`. Promote to published when Arturs confirms install instructions are clean. (A Sprint 11 release will likely follow once dogfood lands.)
+- **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.
+- **Sprint 11 dogfood (Arturs's Chromebook)** — still open; rolls forward into Sprint 12 dogfood since Sprint 12 adds new flows on top.
+- **Sprint 10 BACKLOG carry-forwards** still open — see `TODO.md` for the full list. Top items: top-right Goose mascot round-2, Commercial chat regression (doesn't load on click), app-icon raster pipeline, postinst prerm/postrm, MCP tool-card sizing, `oscar-memory` recipe wiring.
+- **GitHub Release `oscar-gc-sprint10`** — draft at `sarturko-maker/goose`. Promote to published when Arturs confirms install instructions are clean. Sprint 11/12 release will likely follow once dogfood lands.
 - **next weekly upstream read** — due 2026-05-25. Decide skip / merge / wait per upstream release notes.
 
 ## Corrections

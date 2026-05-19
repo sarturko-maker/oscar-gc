@@ -665,6 +665,81 @@ Phased commits on `main` (no feature branches):
 
 ---
 
+### Sprint 12 — Matters, Forge, and the access model formalisation (closed 2026-05-19)
+
+**Goal**: introduce Matters as scoped containers, Forge as a meta-agent for skill + practice-area authoring, and formalise the per-agent access model (filesystem scope + network discipline). Close the "where does conversation history go?" gap surfaced in Sprint 10 dogfood. Plan at `/root/.claude/plans/brief-sprint-12-nested-whistle.md`.
+
+**Built** — nine commit-shaped phases on `main`. CLAUDE.md upstream-doc reference (Phase 0) lands before any code so subsequent phases inherit the doctrine — `goose-docs.ai` consultation reshaped the plan in plan mode (Top of Mind, Sandbox, Allowlist, MCP Roots findings).
+
+- **Phase 0** (`dbb511856`) — CLAUDE.md gains "Upstream Goose authoritative reference" section. Triggers consultation of `goose-docs.ai` when touching MCP / extension / recipe config, session / project / context preservation, or security / sandboxing / allowlisting. Oscar GC's CLAUDE.md / PROJECT.md / ADRs remain canonical for Oscar GC's own decisions; goose-docs.ai for upstream behaviour.
+
+- **Phase 1** (`1c1dcee93`) — 9 ADRs at decision time:
+  - **ADR-036** Matters data model: per-practice-area storage at `~/.config/oscar/state/<area-id>/matters/<slug>/` with `matter.md` + `history.md` + `notes.md` + `outputs/`; registry at `matters.json`. Keyed by practice-area id, NOT plugin slug (supersedes Sprint 11 stubs' convention).
+  - **ADR-037** Retires the 9 vendored matter-workspace stubs; 48 substantive bundled skills' matter paths rewrite to `$OSCAR_MATTER_DIR`. Recipe builder injects the env via oscar-fs extension envs. Apache modification provenance per ADR-035.
+  - **ADR-038** One matter ↔ at most one Goose session via `matters.json[slug].session_id` written on first chat. Session's `working_dir` IS the matter folder. No retroactive migration of pre-Sprint-12 sessions.
+  - **ADR-039** Forge in a sidebar header zone above the practice-area list (Settings stays in the footer; two system-affordance zones). Two-mode recipe (create-skill / create-area). oscar-fs scoped to `~/.agents/skills/` + `~/.config/oscar/`; no Developer, no memory, no onboarding, no redline. Create-area flow explicitly offers bundled-skill seeding per ADR-031.
+  - **ADR-040** Vendor `@modelcontextprotocol/server-filesystem@2026.1.14` (MIT) as the filesystem MCP. Bundled via `prepare-oscar-bundle.js`; registered at capability name `oscar-fs` per ADR-017.
+  - **ADR-041** Uniform recipe loadout convention: every practice-area recipe gets oscar-fs scoped to the matter folder; no Developer extension. Generic builder `buildPracticeAreaRecipe(area, matterFolder, resourcesRoot)` under `ui/desktop/src/components/oscar/recipe/`. Commercial composes its bespoke system prompt + redline MCP on top.
+  - **ADR-042** Network-egress discipline: three-layer position. (1) Per-MCP audited convention — no bundled MCP makes outbound calls (build-time grep audit in BUNDLE.json); (2) Goosed → MiniMax provider only; (3) Electron renderer CSP tightened + `webRequest.onBeforeRequest` blocking POST/PUT/PATCH/DELETE to non-localhost. `GOOSE_ALLOWLIST` activated against a bundled empty allowlist (no MCP installs via UI). OS-level enforcement deferred to Sprint 15+ bubblewrap.
+  - **ADR-043** Privileged matter — structural flag in `matters.json` and `matter.md` frontmatter; copper-accent UI signal; behaviourally identical. Sprint 13+ audit-log handoff.
+  - **ADR-044** Matter context via Top of Mind (Goose's `tom` platform extension at `crates/goose/src/agents/platform_extensions/tom.rs:13`). `GOOSE_MOIM_MESSAGE_FILE=~/.config/oscar/tom-active-matter.md` set at goosed-spawn; matters IPC writes/truncates on matter open / close / detach. Re-read every turn. Complements `$OSCAR_MATTER_DIR`.
+
+- **Phase 2** (`4b02ffef2`) — `oscar-fs` MCP bundle wiring + Top of Mind env wiring + build-time network audit. New `VENDORED_MCPS` table in `prepare-oscar-bundle.js`; `prepareVendoredMcps()` esbuilds the package's `dist/index.js` into `resources/mcps/oscar-fs/index.js`. `auditMcpNetworkSurface()` greps each bundled MCP for 5 outbound-call shapes and writes the report to `BUNDLE.json#network_audit`. `main.ts` ensures `~/.config/oscar/tom-active-matter.md` exists at every boot and sets `GOOSE_MOIM_MESSAGE_FILE` env before goosed spawn.
+
+- **Phase 3** (`5a95d052c`) — Matters layer (storage + IPC + UI + Top of Mind file writes). New `ui/desktop/src/components/oscar/matters/{types,useMatters,MatterRow,NewMatterDialog,MattersLanding}.tsx`. Zod schemas validated at IPC boundary (`oscar:matters:list|get|create|bind-session|archive|set-active|detach-active`). `set-active` writes the agent-reminder view of the matter to `tom-active-matter.md`; `detach-active` truncates. `PracticeAreaPlaceholder.tsx` mounts MattersLanding uniformly — Commercial special-case (direct OscarCommercialView mount) retired. Editorial-idiom CSS additions: modal chrome, button system, privileged accent strip, matter row chrome.
+
+- **Phase 4** (`a53ac7f3b`) — per-recipe access model + matter scope-down. Generic builder `buildPracticeAreaRecipe(opts)` constructs the standard shape: oscar-fs with `args: [matterFolder]` (matter scope-down — sibling matters are invisible) + envs `OSCAR_MATTER_DIR=<matter folder>`. Commercial composes on top: bespoke system prompt + redline extra extension. The other 12 areas (including Commercial Disputes — which had no bespoke recipe coming into Sprint 12) use the generic builder + oscar-fs only. Commercial system prompt updated for `${OSCAR_MATTER_DIR}/outputs/` output paths; dropped `developer__shell mkdir` fallback (no Developer per ADR-041). Onboarding recipe verified no-Developer baseline. `OscarCommercialView.tsx` deleted (unused after Phase 3).
+
+- **Phase 5** (`2a0384e27`) — Forge meta-agent. `ui/desktop/src/components/oscar/forge/{forgeRecipe,ForgeView,systemPrompt}.tsx`. New sidebar header zone in `OscarSidebar.tsx` above the practice-area list, divider, Sparkles icon; Settings stays in the footer. `/forge` route in `App.tsx`. Two-mode system prompt: (A) create-skill — interviews, drafts SKILL.md frontmatter + body, writes to `~/.agents/skills/<slug>/SKILL.md`; (B) create-area — interviews, offers bundled-skill seeding per ADR-031 mapping (Commercial → commercial-legal, Privacy → privacy-legal, etc.), refuses on id collision. HOME_DIR bridge through preload's appConfig (`window.electron.oscarHomeDir`) — renderer cannot resolve `$HOME` itself.
+
+- **Phase 6** (`ba5becba0`) — Sprint 11 stub retirement + skill env-var orchestrator pass. `scripts/sprint12-skill-path-rewrite.js` deletes the 9 matter-workspace stub directories and rewrites 48 substantive SKILL.md files (46 matter-folder refs + 6 matter-subpath refs). Apache modification provenance line inserted below each kept SKILL.md's Sprint 11 attribution. Idempotent (re-run is a no-op). Deferred: "## Matter workspaces" boilerplate paragraphs in skill bodies (Top of Mind compensates behaviourally; cleanup is Sprint 13 candidate); 16 skills reference practice-level state files (`_log.yaml`, `gap-tracker.yaml`) unaffected by ADR-037's matter-folder rewrite — Sprint 13+ if substantive skills exercise them.
+
+- **Phase 7** (`8770980d3`) — GOOSE_ALLOWLIST activation + renderer egress lockdown. `prepare-oscar-bundle.js` writes `src/resources/allowlist.yaml` (empty `extensions: []` per ADR-042 — no MCP installs via UI); `main.ts` sets `GOOSE_ALLOWLIST=file://<resourcesRoot>/allowlist.yaml` before goosed spawn. `index.html` CSP tightened: `connect-src 'self' http://127.0.0.1:* https://localhost:*` (drop generic `https:`), `font-src 'self' data:` (drop external fonts). Renderer `webRequest.onBeforeRequest` blocks POST/PUT/PATCH/DELETE to non-localhost (data-egress vectors blocked + logged); GET stays open so external images in chat content still render.
+
+- **Phase 8** (`c0796a9a3`) — `TODO.md` absorbs Sprint 10 BACKLOG carry-forwards + Sprint 11 carry-forwards + Sprint 12 deferrals + Sprint 15+ structural revisits. Format: `- **Topic** (origin sprint, target sprint) — description.`
+
+**Closes**
+
+Sprint 12's primary deliverables: Matters as first-class scoped containers; conversation history binds matter-to-session; privileged flag visibly signalled; Forge a distinct chrome surface for skill + practice-area authoring; access model formalised (filesystem MCP scope + network egress discipline + GOOSE_ALLOWLIST + renderer CSP). The Commercial chat flow now opens matters from a list (the Sprint 10 dogfood "where does conversation history go?" gap is closed).
+
+**Deferred / out-of-scope per Arturs's brief + plan-mode review**
+
+- bubblewrap / OS-level sandboxing — Sprint 15+.
+- Multi-provider Inference Gateway — when Oscar GC goes beyond MiniMax.
+- Audit-log infrastructure — Sprint 13 (ADR-043 hand-off).
+- SECURITY.md / threat-model writeup — Sprint 13.
+- Anthropic claude-for-legal managed-agent-cookbooks — later sprint.
+- Adeu redline-quality fix — Arturs has a separate fix to share.
+- Adeu MCP App diff preview — Sprint 13/14 (after redline-quality fix).
+- Bespoke Commercial Disputes recipe with redline/disputes-shaped tooling — Sprint 13+.
+- Multi-window per-matter Top of Mind — needs per-session-id file paths if/when multi-window lands.
+- "## Matter workspaces" boilerplate cleanup across 48 skills — Sprint 13 (Top of Mind compensates behaviourally for Sprint 12).
+- 16 skills' per-plugin state file references (`_log.yaml`, `gap-tracker.yaml`) — Sprint 13+ if exercised.
+- Pre-Sprint-12 session migration — explicit non-goal; orphan sessions remain accessible via Goose's built-in Sessions panel.
+
+**Carry-forwards for Sprint 13** — see `TODO.md` (Phase 8) for the full backlog. Anchor candidates: audit-log infrastructure (ADR-043 hand-off), adeu MCP App diff preview (gotoHuman pattern), "## Matter workspaces" boilerplate cleanup, SECURITY.md.
+
+**Dogfood install (deferred to Arturs's Chromebook)**. This sprint did all the changes on `lq-vps` but cannot perform the end-to-end install verification — the sandbox here has a pre-existing pnpm-install issue with `@electron-forge/cli@7.11.1`'s exotic subdep (`blockExoticSubdeps` rejects `@electron/node-gyp`), so the `.deb` build runs on Crostini. Steps for dogfood:
+1. From `/srv/projects/goose/ui/desktop`, run `pnpm install --no-frozen-lockfile` (on Crostini, where the install completes despite the warning) followed by `pnpm run bundle:oscar-linux`. The bundle script writes `src/resources/allowlist.yaml` and `src/resources/mcps/oscar-fs/index.js` and the `network_audit` section of `BUNDLE.json`.
+2. Install the new `.deb` on Crostini (replace prior install).
+3. Launch Oscar GC. Confirm: bundled skills symlink intact; `~/.config/oscar/state/` empty; `~/.config/oscar/tom-active-matter.md` exists (empty).
+4. Pick a practice area (e.g. Commercial). Confirm MattersLanding renders ("no matters yet" empty-state + "New matter" affordance). Click "New matter", fill the dialog with client="Acme", counterparty="Zenith", matter type="NDA", privileged=false; confirm `matter.md` written; matter row visible. Open the matter; confirm chat surface mounts and the agent has matter context without re-reading `matter.md` (Top of Mind verification).
+5. Run a redline. Confirm output writes to `<matter folder>/outputs/`.
+6. New matter with `privileged: true`. Confirm copper accent strip + PRIVILEGED badge.
+7. Open Forge from sidebar header. Ask: "Create a skill for board minute templates." Confirm `~/.agents/skills/board-minutes-drafter/SKILL.md` written.
+8. Open Forge again. Ask: "Add a new practice area called Tax." Confirm `profile.json` updated; sidebar shows Tax (after refresh).
+9. Try installing an extension via Extensions UI. Confirm blocked by empty `GOOSE_ALLOWLIST`.
+10. Confirm 9 matter-workspace stubs are gone; sample-check a few substantive bundled skills for `$OSCAR_MATTER_DIR`. 
+11. Network audit: open `BUNDLE.json` and confirm `network_audit.summary.matches === 0` (or document the matches as expected SDK transport text).
+
+**ADRs**: 036 (matters data model), 037 (supersede matter-workspace stubs + $OSCAR_MATTER_DIR), 038 (conversation-history-to-matter binding), 039 (Forge chrome surface + scope), 040 (oscar-fs vendor MCP), 041 (per-recipe loadout + matter scope-down), 042 (network-egress discipline + allowlist), 043 (privileged-matter structural flag), 044 (Top of Mind matter context). Nine ADRs, all at decision time, before implementing code (CLAUDE.md mandate).
+
+**Cross-repo SHAs**: `sarturko-maker/goose` only this sprint. `sarturko-maker/oscar-memory-mcp` and `sarturko-maker/oscar-onboarding-mcp` not touched. Sprint 12 commits on `goose`: `dbb511856` (CLAUDE.md), `1c1dcee93` (ADRs), `4b02ffef2` (Phase 2), `5a95d052c` (Phase 3), `a53ac7f3b` (Phase 4), `2a0384e27` (Phase 5), `ba5becba0` (Phase 6), `8770980d3` (Phase 7), `c0796a9a3` (Phase 8), plus this close-out commit. All pushed to origin.
+
+**Upstream-tracking**: no `upstream/main` merge this sprint. Next weekly read still due 2026-05-25. Phase 0's CLAUDE.md upstream-doc reference rule went live and immediately paid off in plan-mode (discovered Top of Mind, Sandbox, Allowlist, MCP Roots).
+
+---
+
 ### Sprint 11 — claude-for-legal repackaged as bundled in-house skill library (closed 2026-05-19)
 
 **Goal**: repackage Anthropic's open-source `claude-for-legal` (Apache 2.0, https://github.com/anthropics/claude-for-legal) into Oscar GC as a single bundled in-house skill library. A user installs Oscar GC, runs the existing unified onboarding once, ends up with Anthropic's skills loaded for the practice areas they selected. No per-plugin install. No per-plugin onboarding. In-house assumed throughout. Two Sprint 10 close-out carry-forwards fold in because they live in the same UX area: markdown not rendering in onboarding (`OscarChatMessage.tsx`) and "jumps to practice areas too soon" pacing complaint. Plan at `/root/.claude/plans/brief-sprint-11-ancient-wadler.md`.
