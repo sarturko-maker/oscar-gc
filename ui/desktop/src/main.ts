@@ -787,6 +787,22 @@ const ensureBundledSkillsLink = (resourcesRoot: string | null): void => {
 const oscarResourcesRoot = resolveOscarResourcesRoot();
 ensureBundledSkillsLink(oscarResourcesRoot);
 
+// Sprint 12 (ADR-042): point GOOSE_ALLOWLIST at the bundled local allowlist
+// so the Extensions UI cannot install arbitrary MCPs (only Oscar GC's
+// bundled MCPs ship — they register via recipes, not via the install flow).
+// Set on process.env so the existing getAllowList() consumer (main.ts:3122)
+// and goosed both see it.
+if (!process.env.GOOSE_ALLOWLIST) {
+  const allowlistFile = oscarResourcesRoot
+    ? path.join(oscarResourcesRoot, 'allowlist.yaml')
+    : path.resolve(__dirname, '..', 'src', 'resources', 'allowlist.yaml');
+  if (fsSync.existsSync(allowlistFile)) {
+    process.env.GOOSE_ALLOWLIST = `file://${allowlistFile}`;
+  } else {
+    log.warn('GOOSE_ALLOWLIST: bundled allowlist file missing', { allowlistFile });
+  }
+}
+
 // Sprint 12 (ADR-044): Top of Mind matter-context file. Stable path under
 // ~/.config/oscar/; matters IPC writes/truncates it on matter open/close.
 // goosed's tom platform extension reads it on every turn via
@@ -2460,6 +2476,45 @@ async function appMain() {
         'Content-Security-Policy': buildCSP(currentSettings.externalGoosed),
       },
     });
+  });
+
+  // Sprint 12 (ADR-042): renderer egress lockdown. The renderer's
+  // legitimate outbound is goosed (localhost). Block data-modifying methods
+  // (POST/PUT/PATCH/DELETE) to non-localhost destinations — these are the
+  // load-bearing data-egress vectors. Allow GET to externals so chat-content
+  // images can still render (CSP gates origin set; webRequest gates verb).
+  session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
+    const dataMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+    if (!dataMethods.has(details.method)) {
+      callback({ cancel: false });
+      return;
+    }
+    try {
+      const url = new URL(details.url);
+      const host = url.hostname;
+      const isLocal =
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        host === '::1' ||
+        host.endsWith('.localhost');
+      const isSafeProtocol =
+        url.protocol === 'file:' ||
+        url.protocol === 'data:' ||
+        url.protocol === 'blob:' ||
+        url.protocol === 'devtools:' ||
+        url.protocol === 'chrome-extension:';
+      if (isLocal || isSafeProtocol) {
+        callback({ cancel: false });
+        return;
+      }
+    } catch {
+      // Malformed URL → fall through and block.
+    }
+    log.warn('Renderer outbound blocked by ADR-042 egress filter', {
+      url: details.url,
+      method: details.method,
+    });
+    callback({ cancel: true });
   });
 
   // Migrate old settings format if needed (one-time migration)

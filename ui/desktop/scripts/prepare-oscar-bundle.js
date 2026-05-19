@@ -51,6 +51,18 @@ const NETWORK_AUDIT_PATTERNS = [
   { name: 'node_fetch', regex: /['"]node-fetch['"]/g },
 ];
 
+// Sprint 12 (ADR-042): GOOSE_ALLOWLIST file content. Empty extensions list —
+// no MCP install commands are permitted via the Extensions UI. Our 4 bundled
+// MCPs register via recipes, not via the install flow, so the empty list
+// does not affect them. Sprint 15+ structural revisit per ADR-042 if/when
+// community-tier MCPs land.
+const ALLOWLIST_YAML = `# Sprint 12 (ADR-042): Oscar GC's GOOSE_ALLOWLIST. Empty extensions list —
+# no MCP install commands are permitted via the Extensions UI. Bundled MCPs
+# (oscar-fs, oscar-memory, oscar-onboarding, redline) register via recipes,
+# not via the install flow — unaffected by this list.
+extensions: []
+`;
+
 // --- Paths --------------------------------------------------------------
 
 const UI_DESKTOP = path.resolve(__dirname, '..');
@@ -335,6 +347,10 @@ async function main() {
   };
   fs.writeFileSync(path.join(RESOURCES, 'BUNDLE.json'), JSON.stringify(summary, null, 2));
   console.log(`Wrote ${path.join(RESOURCES, 'BUNDLE.json')}`);
+  // Sprint 12 (ADR-042): allowlist.yaml at the resources root for
+  // GOOSE_ALLOWLIST consumption.
+  fs.writeFileSync(path.join(RESOURCES, 'allowlist.yaml'), ALLOWLIST_YAML);
+  console.log(`Wrote ${path.join(RESOURCES, 'allowlist.yaml')}`);
 }
 
 main().catch((err) => {
