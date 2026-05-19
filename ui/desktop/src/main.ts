@@ -2172,6 +2172,87 @@ ipcMain.handle('oscar:matters:lookup-session', async (_event, sessionIdRaw: unkn
   }
 });
 
+// Sprint 17 (ADR-059, ADR-061): Integrations registry + per-area state.
+// Vendor data read from skills/in-house-legal/<plugin>/.mcp.json files
+// (the same source-of-truth the upstream claude-for-legal ships). The
+// hand-curated INTEGRATIONS_OVERLAY in renderer-land joins on entry id.
+//
+// Path resolution mirrors ensureBundledSkillsLink above:
+// - Packaged: <resourcesRoot>/skills/in-house-legal/<plugin>/.mcp.json
+// - Dev:      /srv/projects/goose/skills/in-house-legal/<plugin>/.mcp.json
+
+const inHouseLegalRoot = (): string =>
+  oscarResourcesRoot
+    ? path.join(oscarResourcesRoot, 'skills', 'in-house-legal')
+    : '/srv/projects/goose/skills/in-house-legal';
+
+interface VendorMcpEntry {
+  id: string;
+  plugin_slug: string;
+  type: string;
+  url?: string;
+  title: string;
+  description: string;
+}
+
+ipcMain.handle('oscar:integrations:list-available', async () => {
+  const root = inHouseLegalRoot();
+  const out: VendorMcpEntry[] = [];
+  let pluginDirs: import('fs').Dirent[];
+  try {
+    pluginDirs = await fs.readdir(root, { withFileTypes: true });
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') {
+      log.warn('oscar:integrations:list-available: skills root missing', {
+        root,
+      });
+      return out;
+    }
+    log.warn('oscar:integrations:list-available: readdir failed', {
+      err: errorMessage(err, 'Unknown error'),
+      root,
+    });
+    return out;
+  }
+  for (const dirent of pluginDirs) {
+    if (!dirent.isDirectory()) continue;
+    const pluginSlug = dirent.name;
+    const mcpPath = path.join(root, pluginSlug, '.mcp.json');
+    let raw: string;
+    try {
+      raw = await fs.readFile(mcpPath, 'utf8');
+    } catch (err) {
+      if ((err as { code?: string }).code === 'ENOENT') continue;
+      log.warn('oscar:integrations:list-available: read failed', {
+        err: errorMessage(err, 'Unknown error'),
+        mcpPath,
+      });
+      continue;
+    }
+    let parsed: { mcpServers?: Record<string, unknown> };
+    try {
+      parsed = JSON.parse(raw) as { mcpServers?: Record<string, unknown> };
+    } catch (err) {
+      log.warn('oscar:integrations:list-available: parse failed', {
+        err: errorMessage(err, 'Unknown error'),
+        mcpPath,
+      });
+      continue;
+    }
+    const servers = parsed.mcpServers ?? {};
+    for (const [id, value] of Object.entries(servers)) {
+      if (typeof value !== 'object' || value === null) continue;
+      const v = value as { type?: unknown; url?: unknown; title?: unknown; description?: unknown };
+      const type = typeof v.type === 'string' ? v.type : 'http';
+      const url = typeof v.url === 'string' ? v.url : undefined;
+      const title = typeof v.title === 'string' ? v.title : id;
+      const description = typeof v.description === 'string' ? v.description : '';
+      out.push({ id, plugin_slug: pluginSlug, type, url, title, description });
+    }
+  }
+  return out;
+});
+
 // Handle menu bar icon visibility
 ipcMain.handle('set-menu-bar-icon', async (_event, show: boolean) => {
   updateSettings((s) => {

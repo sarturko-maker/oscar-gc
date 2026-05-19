@@ -235,6 +235,32 @@ type ElectronAPI = {
       name: string;
     } | null>;
   };
+  // Sprint 17 (ADR-059, ADR-061): Integrations registry + per-area state.
+  // listAvailable reads vendor .mcp.json files from skills/in-house-legal/;
+  // list returns installed entries for one area; install appends an entry
+  // (idempotent on duplicate id).
+  integrations: {
+    listAvailable: () => Promise<
+      Array<{
+        id: string;
+        plugin_slug: string;
+        type: string;
+        url?: string;
+        title: string;
+        description: string;
+      }>
+    >;
+    list: (
+      areaId: string,
+    ) => Promise<
+      Array<{ id: string; added_at: string; trust_acknowledged: boolean }>
+    >;
+    install: (
+      areaId: string,
+      entryId: string,
+      trustAcknowledged: boolean,
+    ) => Promise<{ ok: boolean; already_installed?: boolean }>;
+  };
 };
 
 type AppConfigAPI = {
@@ -424,6 +450,17 @@ const electronAPI: ElectronAPI = {
     detachActive: () => ipcRenderer.invoke('oscar:matters:detach-active'),
     lookupSession: (sessionId: string) =>
       ipcRenderer.invoke('oscar:matters:lookup-session', sessionId),
+  },
+  integrations: {
+    listAvailable: () => ipcRenderer.invoke('oscar:integrations:list-available'),
+    list: (areaId: string) => ipcRenderer.invoke('oscar:integrations:list', areaId),
+    install: (areaId: string, entryId: string, trustAcknowledged: boolean) =>
+      ipcRenderer.invoke(
+        'oscar:integrations:install',
+        areaId,
+        entryId,
+        trustAcknowledged,
+      ),
   },
 };
 
