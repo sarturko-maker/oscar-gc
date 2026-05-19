@@ -1,0 +1,51 @@
+--- a/adeu/redline/engine.py
++++ b/adeu/redline/engine.py
+@@ -13,7 +13,7 @@
+ from docx.text.paragraph import Paragraph
+ from docx.text.run import Run
+ 
+-from adeu.diff import trim_common_context
++from adeu.diff import generate_edits_from_text, trim_common_context
+ from adeu.markup import format_ambiguity_error
+ from adeu.models import (
+     AcceptChange,
+@@ -1634,6 +1634,39 @@
+                 proxy_edit._active_mapper_ref = active_mapper
+                 return proxy_edit
+ 
++        # Oscar GC vendor patch (ADR-045, Sprint 13): word-diff narrowing on
++        # the batch path. When the LLM emits a wide MODIFICATION pair, split
++        # it into word-granular sub-edits via the existing word-level diff
++        # (generate_edits_from_text — until now invoked only on the
++        # diff_docx_files path). Same shape as the hyperlink and table-cell
++        # splitters above; apply_edits already iterates over list returns.
++        # Deletion criterion: upstream adeu releases this fix and we repin.
++        if effective_op == EditOperationType.MODIFICATION and final_target and final_new:
++            word_edits = generate_edits_from_text(final_target, final_new)
++            if len(word_edits) > 1:
++                sub_edits: List[ModifyText] = []
++                comment_attached = False
++                for sub in word_edits:
++                    if sub.target_text and sub.new_text:
++                        sub_op = EditOperationType.MODIFICATION
++                    elif sub.target_text:
++                        sub_op = EditOperationType.DELETION
++                    elif sub.new_text:
++                        sub_op = EditOperationType.INSERTION
++                    else:
++                        continue
++                    sub._match_start_index = effective_start_idx + (sub._match_start_index or 0)
++                    sub._internal_op = sub_op
++                    sub._active_mapper_ref = active_mapper
++                    if not comment_attached and edit.comment:
++                        sub.comment = edit.comment
++                        comment_attached = True
++                    else:
++                        sub.comment = None
++                    sub_edits.append(sub)
++                if sub_edits:
++                    return sub_edits
++
+         proxy_edit = ModifyText(
+             type="modify",
+             target_text=final_target,

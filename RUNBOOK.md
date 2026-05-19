@@ -939,6 +939,36 @@ Expected boot effects (verify):
 
 `pnpm install` on this build host (Debian 12 Docker) errors with `ERR_PNPM_EXOTIC_SUBDEP` for `@electron/node-gyp` (resolved via git) — `blockExoticSubdeps` rejects it inside `@electron-forge/cli@7.11.1`. The error is pre-existing and unrelated to Sprint 12; the .deb build happens on Crostini where the install completes despite the warning. Tracked but not blocking.
 
+## Sprint 13 — adeu batch-path word-diff vendor-patch (2026-05-19, lq-vps)
+
+ADR-045. Patches the installed adeu==1.6.9 in the runtime venv so `process_document_batch` invokes adeu's existing `generate_edits_from_text` (word-level diff via diff-match-patch) on the MODIFICATION branch of `_pre_resolve_heuristic_edit`. Produces word-granular `<w:ins>`/`<w:del>` in OOXML instead of wholesale-sentence wraps.
+
+**Patch file**: `docs/redline/adeu-1.6.9-batch-path-word-diff.patch` (committed; 51 lines).
+
+**Apply procedure** (replay if the venv is rebuilt or reinstalled):
+
+```bash
+cd /srv/projects/oscar-runtime/python/adeu-venv/lib/python3.12/site-packages
+patch -p1 < /srv/projects/goose/docs/redline/adeu-1.6.9-batch-path-word-diff.patch
+```
+
+**Verify the patch is in place**:
+
+```bash
+/srv/projects/oscar-runtime/python/adeu-venv/bin/python -c "
+from adeu.diff import generate_edits_from_text
+edits = generate_edits_from_text('within thirty (30) days', 'within fourteen (14) days')
+assert len(edits) >= 2, f'expected sub-edits, got {len(edits)}'
+print('patch verified: word-diff yields', len(edits), 'sub-edits on canonical example')
+"
+```
+
+**Deletion criterion**: upstream adeu releases a version with this fix (or an equivalent opt-in flag) and we repin `adeu==<new-version>`. ADR-045 tracks the upstream PR status.
+
+**No new apt deps**. Patch only edits existing Python code in the venv.
+
+**`.deb` impact**: Sprint 10's bundling copies the venv into the Electron resources directory. Rebuilding `.deb` after applying the patch carries the patched code into the bundle (Sprint 13 Phase 6).
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.
