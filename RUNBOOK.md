@@ -1083,6 +1083,77 @@ Smoke-tested at 88s/100s per single tuple (Sarah Chen × Doc 1 × with-Ralph) �
 
 `runs/` is `.gitignore`d; only `reports/sprint-23-baseline.md` (the curated closing report) is committed.
 
+## Sprint 24-A — Lavern → Oscar LLP rebrand (2026-05-21, lq-vps)
+
+**ADR**: 078 (rebrand decision + Lavern-name reservation for Sprint 24-B+C pipeline + ADR-029 trust-bypass dual-prefix coexistence window + read-time lazy migration shape + Apache 2.0 attribution discipline).
+
+**Host-state changes** (path + namespace renames; legacy paths preserved for migration helpers; Sprint 25 cleanup removes the helpers):
+
+| Old | New | Migration mechanism |
+|---|---|---|
+| `~/.config/oscar/state/lavern/partners.json` | `~/.config/oscar/state/oscar-llp/partners.json` | Atomic `fs.rename` at first call to `readOscarLlpRegistry()` (one-shot, idempotent, interrupt-safe). No-op when new exists or legacy absent. |
+| `~/Documents/Oscar GC/Lavern/<slug>/` | `~/Documents/Oscar GC/Oscar LLP/<slug>/` | Atomic per-slug `fs.rename` at first call to `oscar:llp:ensure-dir` for that slug. Carries `.goose/memory/` and any user-saved files with the working dir (same inode move on the same volume). |
+| IPC channel `oscar:lavern:ensure-dir` (+ `:bind-session`, `:lookup-state`, `:list-partner-states`) | `oscar:llp:*` equivalents | Renderer surface `window.electron.lavern.*` → `window.electron.llp.*`. |
+| Route `/lavern` | `/oscar-llp` | No backstop redirect — sidebar + landing surfaces updated to new route directly. |
+| Recipe title prefix `Lavern —` | `Oscar LLP —` | ADR-029 trust-bypass widens to three-way OR (`Oscar GC` \|\| `Lavern —` \|\| `Oscar LLP —`); both prefixes bypass through Sprint 24-A. Sprint 25 cleanup drops `Lavern —`. |
+
+**Migration log lines to grep for** (one-shot per host, then quiet):
+
+```
+oscar:llp registry migrated from legacy lavern path
+oscar:llp working dir migrated from legacy lavern path
+```
+
+Failure modes (handled defensively; logged at WARN):
+
+```
+oscar:llp legacy registry migration failed
+oscar:llp legacy working-dir migration failed
+```
+
+If both new and legacy paths exist (manual-copy edge case), the new path wins + no rename happens — DO NOT clobber.
+
+**Post-migration verification** (per host, after first launch under Sprint 24-A):
+
+```bash
+ls -la ~/.config/oscar/state/oscar-llp/partners.json    # present
+ls -la ~/.config/oscar/state/lavern/partners.json       # ENOENT (renamed)
+ls -la ~/Documents/Oscar\ GC/Oscar\ LLP/                # populated per partner
+ls -la ~/Documents/Oscar\ GC/Lavern/                    # ENOENT (renamed)
+```
+
+**Renamed test scripts** (Sprint 22 + Sprint 23 regression harnesses; pre-existing behaviour identical, only firm-name strings + filename changed):
+
+```bash
+node ui/desktop/scripts/test-oscar-llp-agents.js      # was test-lavern-agents.js (~$0.04, ~36 s, 3/3 partners)
+node ui/desktop/scripts/test-oscar-llp-revision.js    # was test-lavern-revision.js (~$0.02, ~15 s, c3 PASS)
+```
+
+`TRANSCRIPTS_DIR` also renamed: `ui/desktop/tests/lavern-transcripts/` → `ui/desktop/tests/oscar-llp-transcripts/`. Old transcripts (if present) stay under the legacy directory name — they are test artifacts, not production data; not migrated.
+
+**Eval directory name UNCHANGED** per ADR-077: `evals/lavern-jv/` stays. The Lavern-baselined eval directory and its `NOTICE.lavern.md` / `RUBRIC.lavern-original.md` / `runs/` structure are genuinely Lavern's attribution lineage and not subject to the Sprint 24-A rebrand. Only the synthesized-partner firm strings inside `evals/lavern-jv/scripts/lib-recipe.js` renamed (`at Lavern` → `at Oscar LLP`; recipe title prefix `Lavern —` → `Oscar LLP —`).
+
+**Spot-check eval** (1-tuple, ~$0.07, ~221 s; confirms rename did not break the eval substrate):
+
+```bash
+node evals/lavern-jv/scripts/run-eval.js \
+  --partners sarah-chen --docs doc1-borrowmoney --configs without-ralph
+# REPORT.md shows recipe title "Oscar LLP — Sarah Chen" in the manifest;
+# partner exit 0; judge ok. Sarah×Doc1 0/12 recall is a Sprint 23
+# pre-existing quality issue (carry to Sprint 24-B+C iteration), NOT a
+# Sprint 24-A regression.
+```
+
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode` branch):
+
+- `022a45e15` — ADR-078 at decision time
+- `1f1efa3db` — trust-bypass widening (three-way OR)
+- `24188101f` — mechanical sweep (atomic, 31 files)
+- `1da0c328c` — tests + evals + NOTICE re-section
+- close-out SHA (this commit) — SPRINT_LOG / PROJECT.md / RUNBOOK
+
+No sibling repo modified. Lavern source unchanged at `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.

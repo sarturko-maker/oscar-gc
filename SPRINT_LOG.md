@@ -14,6 +14,61 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 24-A — Lavern → Oscar LLP rebrand (closed 2026-05-21 on code)
+
+**Goal**: rebrand the 10-partner sidebar bench from "Lavern" (Sprint 21 placeholder) to "Oscar LLP" — the in-house standard for a multi-partner law-firm structure — and reserve the "Lavern" name for upstream-credit attribution on Sprint 24-B+C's contract-analysis pipeline port (Watchman → Reader → Curator; substance Lavern's own evals validated). Self-contained UI/state/path rename. No Rust core touch. No partner-content edits (Sprint 24-B+C handles content iteration). Apache 2.0 attribution preserved verbatim per §6.
+
+**Architectural call** (`docs/adr/078-sprint24-rebrand-lavern-to-oscar-llp.md`): firm name "Oscar LLP" (over "Oscar GC LLP" doubling and "Oscar Limited Liability Partnership" formality); IPC namespace `oscar:llp:*` (terse vs `oscar:oscar-llp:*` literal mirror); read-time lazy migration via atomic `fs.rename` mirroring [[ADR-047]] matters-registry backup pattern + [[ADR-032]] schema v1→v2 precedent; [[ADR-029]] trust-bypass widens to three-way OR (`Oscar GC` || `Lavern —` || `Oscar LLP —`) so Sprint 23 sessions resume cleanly through the rename window; Sprint 25 cleanup drops `Lavern —` recognition once no live host has legacy data.
+
+**Built** — one ADR, five commits, atomic mechanical sweep, regression-test rename:
+
+- **ADR-078** (44 lines, committed `022a45e15` BEFORE any code per CLAUDE.md): rebrand decision + Lavern-reservation for Sprint 24-B+C + dual-prefix trust-bypass coexistence window + read-time lazy migration shape + Apache 2.0 attribution discipline.
+- **Trust-bypass widening** (commit `1f1efa3db`): `ui/desktop/src/preload.ts:441-465` — both `hasAcceptedRecipeBefore` and `recordRecipeHash` get the three-way OR. Lands BEFORE the rename so Sprint 23 partner sessions bound to `Lavern — <name>` resume without trust dialog, AND post-rename `Oscar LLP — <name>` sessions bypass immediately.
+- **Mechanical sweep** (commit `24188101f`, single atomic 31-file diff gated by `tsc --noEmit` + `eslint --max-warnings 0`):
+  - Directory rename `git mv ui/desktop/src/components/oscar/lavern/` → `oscar-llp/`.
+  - File renames: `LavernRoster.tsx` → `OscarLLPRoster.tsx`, `buildLavernPartnerRecipe.ts` → `buildOscarLLPPartnerRecipe.ts`, `useLavernPartners.ts` → `useOscarLLPPartners.ts`. KEEP filenames: `partners.ts`, `userIdentityBlock.ts`, `prompts/<slug>.ts`, `prompts/raw/<slug>.ts.original`.
+  - Symbol renames inside moved files + main.ts: `LAVERN_PARTNERS → OSCAR_LLP_PARTNERS`, `LavernPartner → OscarLLPPartner`, `buildLavernPartnerRecipe → buildOscarLLPPartnerRecipe`, `LavernRoster → OscarLLPRoster`, `useLavernPartners → useOscarLLPPartners`, `readLavernRegistry → readOscarLlpRegistry`, `lavernWorkingDir → oscarLlpWorkingDir`, etc. (~17 symbol renames).
+  - IPC namespace `oscar:lavern:*` → `oscar:llp:*`; renderer surface `window.electron.lavern.*` → `window.electron.llp.*`.
+  - State-file + working-dir read-time lazy migration in `main.ts`: new `OSCAR_LLP_DIR`, `OSCAR_LLP_STATE_DIR`, `OSCAR_LLP_REGISTRY_PATH`, `oscarLlpWorkingDir()` constants alongside `LEGACY_LAVERN_REGISTRY_PATH` + `LEGACY_LAVERN_DIR`. New helpers `migrateLegacyLavernRegistry()` (called at top of `readOscarLlpRegistry`) + `migrateLegacyLavernWorkingDir(slug)` (called at top of the `oscar:llp:ensure-dir` handler). POSIX-atomic `fs.rename` carries `.goose/memory/` with the working dir; idempotent + interrupt-safe; no-op when new exists or legacy absent.
+  - Sidebar eyebrow `Lavern` → `Oscar LLP`, route `/lavern` → `/oscar-llp` (`ChatHistoryTree.tsx` + `App.tsx`).
+  - Page strings: `OscarLLPRoster.tsx` eyebrow + blurb ("Consult one of Oscar LLP's specialist partners...").
+  - Recipe title `Lavern — ${partner.name}` → `Oscar LLP — ${partner.name}` + description (`buildOscarLLPPartnerRecipe.ts:129-130`).
+  - 10 partner prompt bodies: `at Lavern — a 50-person multidisciplinary legal firm` → `at Oscar LLP — ...`; `separate from other Lavern partners` → `...other Oscar LLP partners`; file-header `partner persona for Lavern firm-mode` → `for Oscar LLP firm-mode`. KEEP `Lifted from github.com/AnttiHero/lavern` (Apache 2.0 attribution) and `The Shem → Lavern firm rename` (Sprint 21 lineage).
+  - Sub-recipe description `Pre-delivery verification for Lavern partner analyses` → `...for Oscar LLP partner analyses` (`sub-recipes/verification-pass.yaml`).
+- **Test scripts + evals + NOTICE re-section** (commit `1da0c328c`):
+  - `git mv ui/desktop/scripts/test-lavern-agents.js` → `test-oscar-llp-agents.js`; `test-lavern-revision.js` → `test-oscar-llp-revision.js`. Internal `TRANSCRIPTS_DIR`, recipe-title fixtures, persona identity strings, tmp working-dir prefixes updated.
+  - `evals/lavern-jv/scripts/lib-recipe.js`: synthesized partner-roster firm strings rename only; `SPRINT_22_DIRECTIVE` + `RALPH_DIRECTIVE` constants frozen; eval directory name `evals/lavern-jv/` KEEP per [[ADR-077]] (the eval baseline IS Lavern's).
+  - `NOTICE`: per-section heading reframe + path refs update (`.../lavern/` → `.../oscar-llp/`) + trademark notice expanded to explain Sprint 24-A reservation. Apache 2.0 §6 body content (copyright, license, commit SHA, source-prompt mapping, transformation policy) untouched.
+
+**Tests** (real MiniMax invocations per CLAUDE.md):
+- `node ui/desktop/scripts/test-oscar-llp-agents.js` — **3/3 PASS** on first run (~36 s wall-clock, ~$0.04). Sarah Chen / Helena Voss / Aisha Khan all invoked Tier-A MCPs + verification-pass.
+- `node ui/desktop/scripts/test-oscar-llp-revision.js` — **PASS via path B** (silent neutral substitution; no Section-99.9 fabrication detected) on first run (~15 s, ~$0.02). Within Sprint 23's documented 4/5 PASS distribution.
+- `node evals/lavern-jv/scripts/run-eval.js --partners sarah-chen --docs doc1-borrowmoney --configs without-ralph` — **1/1 partner exit 0, 1/1 judge ok** (~221 s, ~$0.07). Recipe transcript confirms title `Oscar LLP — Sarah Chen` + description `at Oscar LLP — Sprint 23 eval (...)`. Sarah×Doc1 0/12 recall is the Sprint 23 pre-existing quality issue documented for Sprint 24-B+C iteration, not a Sprint 24-A regression.
+
+Total Sprint 24-A LLM spend: **~$0.13** against the brief's ~$0.20 envelope.
+
+**Deferred** — none. Full scope landed. Brief's drop-order (4 fallback tiers) untouched.
+
+**Carry-forwards**:
+- **Sprint 25 cleanup**: drop `Lavern —` from the trust-bypass three-way OR + delete `LEGACY_LAVERN_REGISTRY_PATH` / `LEGACY_LAVERN_DIR` constants + the two migration helpers in `main.ts` once we're confident no live host still has legacy data. Single tiny commit at that point.
+- **Sprint 24-B+C** (sequenced after this sprint per brief): Lavern Pipeline port (Watchman → Reader → Curator as recipe + sub-recipes) lives inside the Oscar LLP firm surface; recipe title likely `Oscar LLP — Lavern Pipeline`. Cross-partner iteration with Claude-as-judge on Sarah Chen + Diana Park + Aisha Khan trio. Sprint 21-23 carry-forwards from the prior brief intact (300s timeout, judge MISSING/MISSED synonym, Sarah×Doc1 quality, document-reader CUAD parsing, doc-text-in-delegate token waste, `oscar-fs` scope leak).
+- **Repo dir name `/srv/projects/oscar-gc-lavern/`**: deliberately NOT renamed per ADR-078 (repo identity stays; rebrand is user-facing). `DEV_RESOURCES_ROOT` in `buildOscarLLPPartnerRecipe.ts:27` still references `/srv/projects/oscar-gc-lavern/...` — correct.
+- **Goose binary path `/srv/projects/goose/target/release/goose`**: pre-existing inconsistency (binary at `goose` path while sources at `oscar-gc-lavern` path). Sprint 24-A scope does not address; out of brief.
+- **Pre-existing 17 `tsc --noEmit` errors** (Sprint 22 workspace-install carry — missing `@radix-ui/*`, `yaml`, `@testing-library/dom`, plus seven `implicitly any` lint hits) unchanged through Sprint 24-A. Resolves when a clean `pnpm install` runs on a host without the `ERR_PNPM_EXOTIC_SUBDEP` workaround.
+
+**ADRs**: 078.
+
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode`):
+- `022a45e15` — ADR-078 at decision time, before any code change (CLAUDE.md mandate)
+- `1f1efa3db` — trust-bypass three-way OR (ADR-029 widening; dual-prefix coexistence window)
+- `24188101f` — mechanical sweep (single atomic 31-file diff)
+- `1da0c328c` — test scripts + evals + NOTICE re-section (+ real-MiniMax regression run)
+- close-out SHA (this commit) — SPRINT_LOG / PROJECT.md / RUNBOOK
+
+No sibling repo modified this sprint. Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
+
+---
+
 ### Sprint 23 — Ralph Loop (Shape A) + Lavern-baselined eval (closed 2026-05-20 on code)
 
 **Goal**: turn Sprint 22's `verification-pass` sub-recipe from advisory to enforcing (gate-and-revise / Ralph Loop), and run the substantive measurement of whether that discipline measurably improves grounding behaviour. Pair sprint: piece 1 was load-bearing; piece 2 was the honest test of piece 1. ADR-077's eval harness is the substantive measurement; the dogfood test is the regression catch.
