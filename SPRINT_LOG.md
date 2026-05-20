@@ -67,7 +67,7 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
   - `0b392bc29` — ADR-076 + ADR-077 at decision time, before any code change (CLAUDE.md mandate)
   - `70d82658d` — Piece 1: Ralph Loop wiring (10 partner prompts + max_turns + new dogfood test) + characterization across 5 runs
   - `b3fca0ef1` — Piece 2: eval scaffolding (docs, rubric, prompts, runner) at SHA before any run executed
-  - Final close-out commit + this SPRINT_LOG entry + sprint-23-baseline.md (SHA backfilled below)
+  - `645846e1c` — Close-out: `reports/sprint-23-baseline.md` + this SPRINT_LOG entry + PROJECT.md Sprint Index row 23 + RUNBOOK Sprint 23 section
 - No sibling repo modified this sprint. Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
 
 ---
