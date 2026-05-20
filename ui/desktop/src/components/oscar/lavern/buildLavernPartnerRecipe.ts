@@ -19,6 +19,10 @@ import { renderUserIdentityBlock } from './userIdentityBlock';
 
 const DEV_NODE_CMD = '/usr/bin/node';
 const DEV_OSCAR_FS_BUNDLE = '/srv/projects/goose/ui/desktop/src/resources/mcps/oscar-fs/index.js';
+// Sprint 22 (ADR-074, ADR-075): Lavern Tier-A MCPs and the verification-pass
+// sub-recipe live alongside the rest of the bundle resources. Dev-time paths
+// point at this checkout; runtime paths resolve via resourcesRoot.
+const DEV_RESOURCES_ROOT = '/srv/projects/oscar-gc-lavern/ui/desktop/src/resources';
 
 function resolveNodeCmd(resourcesRoot: string | null): string {
   return resourcesRoot ? `${resourcesRoot}/node/bin/node` : DEV_NODE_CMD;
@@ -27,6 +31,52 @@ function resolveNodeCmd(resourcesRoot: string | null): string {
 function resolveOscarFsBundle(resourcesRoot: string | null): string {
   return resourcesRoot ? `${resourcesRoot}/mcps/oscar-fs/index.js` : DEV_OSCAR_FS_BUNDLE;
 }
+
+function resolveLavernMcpBundle(resourcesRoot: string | null, name: string): string {
+  const root = resourcesRoot ?? DEV_RESOURCES_ROOT;
+  return `${root}/mcps/${name}/index.js`;
+}
+
+function resolveSubRecipePath(resourcesRoot: string | null, name: string): string {
+  const root = resourcesRoot ?? DEV_RESOURCES_ROOT;
+  return `${root}/sub-recipes/${name}.yaml`;
+}
+
+// Sprint 22 (ADR-074): six Tier-A MCPs attach to every Lavern partner recipe.
+// Per-partner curation deferred (uniform loadout for the dogfood); see ADR-074
+// rationale.
+const LAVERN_TIER_A_MCPS: ReadonlyArray<{ name: string; description: string; timeout: number }> = [
+  {
+    name: 'oscar-knowledge-base',
+    description: 'Search bundled legal-corpus knowledge base (SaaS precedents, M&A playbook, GDPR baselines).',
+    timeout: 30,
+  },
+  {
+    name: 'oscar-document-reader',
+    description: 'Structured navigation of bundled sample documents — list_documents, read_document_section, search_document, defined terms, tables.',
+    timeout: 30,
+  },
+  {
+    name: 'oscar-risk-pricing',
+    description: 'Benchmark a clause value (liability cap, indemnity basket, survival, etc.) against mid-market US distributions.',
+    timeout: 30,
+  },
+  {
+    name: 'oscar-baselines',
+    description: 'Record observations and check values against accumulated baseline distributions.',
+    timeout: 30,
+  },
+  {
+    name: 'oscar-grounding-verifier',
+    description: 'Mechanically verify citation grounding (section refs + quoted text) against a document. Zero LLM cost.',
+    timeout: 30,
+  },
+  {
+    name: 'oscar-document-checks',
+    description: 'Computational structure + formatting checks: heading hierarchy, numbering, cross-references, defined-term consistency.',
+    timeout: 30,
+  },
+];
 
 export interface BuildLavernPartnerRecipeOptions {
   partner: LavernPartner;
@@ -42,18 +92,30 @@ export interface BuildLavernPartnerRecipeOptions {
 }
 
 export function buildLavernPartnerRecipe(opts: BuildLavernPartnerRecipeOptions): Recipe {
+  const nodeCmd = resolveNodeCmd(opts.resourcesRoot);
+  const lavernMcpExtensions: ExtensionConfig[] = LAVERN_TIER_A_MCPS.map((mcp) => ({
+    type: 'stdio',
+    name: mcp.name,
+    description: mcp.description,
+    cmd: nodeCmd,
+    args: [resolveLavernMcpBundle(opts.resourcesRoot, mcp.name)],
+    envs: {},
+    timeout: mcp.timeout,
+  }));
+
   const extensions: NonNullable<Recipe['extensions']> = [
     {
       type: 'stdio',
       name: 'oscar-fs',
       description: `Filesystem scoped to ${opts.partner.name}'s working folder.`,
-      cmd: resolveNodeCmd(opts.resourcesRoot),
+      cmd: nodeCmd,
       args: [resolveOscarFsBundle(opts.resourcesRoot), opts.workingDir],
       envs: {},
       timeout: 30,
     },
     ...(opts.enabledPlatformExtensions ?? []),
     buildTavilyExtension(),
+    ...lavernMcpExtensions,
   ];
 
   const identityBlock = renderUserIdentityBlock(opts.user, opts.corporate);
@@ -68,6 +130,17 @@ export function buildLavernPartnerRecipe(opts: BuildLavernPartnerRecipeOptions):
     description: `${opts.partner.specialism} specialist at Lavern, consulted by your in-house team.`,
     instructions,
     extensions,
+    // Sprint 22 (ADR-074): verification-pass sub-recipe enables `delegate()`
+    // invocation via the auto-injected summon extension (Goose recipe/mod.rs
+    // ensures summon when sub_recipes is non-empty).
+    sub_recipes: [
+      {
+        name: 'verification-pass',
+        path: resolveSubRecipePath(opts.resourcesRoot, 'verification-pass'),
+        description:
+          'Pre-delivery citation-grounding + structural-check pass. Invoke before delivering substantive analysis.',
+      },
+    ],
     settings: {
       goose_provider: 'minimax',
       goose_model: 'MiniMax-M2.5',

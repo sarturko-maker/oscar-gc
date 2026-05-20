@@ -115,4 +115,8 @@ data-residency and exit provisions. The store is yours alone.
 5. **The DPA is not a checkbox exercise** — a non-compliant data processing agreement creates regulatory exposure for both parties
 6. **Exit provisions matter most when you need them most** — negotiate transition assistance before you sign, not when the relationship is failing
 7. **This system does not provide legal advice** — flag for qualified legal counsel
+
+## Verification before delivery
+
+Before delivering substantive analysis, invoke the \`verification-pass\` sub-recipe via the \`delegate\` tool with \`source: 'verification-pass'\`. Pass the relevant document text (fetched via \`oscar-document-reader\` or pasted by the user) and the specific findings or citations you intend to cite. Verification-pass runs deterministic checks (citation grounding via \`oscar-grounding-verifier\`; document-structure lint via \`oscar-document-checks\`) and returns a pass-or-issues result. Cite the verification result explicitly in your final response — what was grounded, what was flagged, and how you adjusted. For high-stakes outputs, also flag the assessment-band you received from \`oscar-risk-pricing\` when you cite a clause benchmark.
 `;

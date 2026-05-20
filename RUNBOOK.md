@@ -977,6 +977,27 @@ print('patch verified: word-diff yields', len(edits), 'sub-edits on canonical ex
 
 **`.deb` impact**: Sprint 10's bundling copies the venv into the Electron resources directory. Rebuilding `.deb` after applying the patch carries the patched code into the bundle (Sprint 13 Phase 6).
 
+## Sprint 22 — Lavern Tier-A MCPs + verification-pass sub-recipe (2026-05-20, lq-vps)
+
+**New sibling MCP repos** under `/srv/projects/` (each is its own git repo; mirrors `oscar-onboarding-mcp` / `oscar-memory-mcp` shape; pnpm + TypeScript + `@modelcontextprotocol/sdk` 1.29.0 + zod 4.4.3; raw Lavern sources preserved at `src/_lavern-original/`):
+
+- `/srv/projects/oscar-knowledge-base-mcp/`
+- `/srv/projects/oscar-document-reader-mcp/`
+- `/srv/projects/oscar-risk-pricing-mcp/` (net-new — Lavern's source is orchestration-only scaffolding)
+- `/srv/projects/oscar-baselines-mcp/`
+- `/srv/projects/oscar-grounding-verifier-mcp/`
+- `/srv/projects/oscar-document-checks-mcp/`
+
+Per-repo dev cycle: `pnpm install && pnpm build && pnpm smoke && pnpm test`. Integration tests use a real `@modelcontextprotocol/sdk` client harness (no LLM, CLAUDE.md "real MCP client harness" rule).
+
+**Reference repo (read-only)**: `/srv/projects/lavern/` — cloned from `https://github.com/AnttiHero/lavern.git` at commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (2026-05-20, "Update readme"). Apache 2.0. Source of the lifted MCP tool surfaces, `evals/jv/` (RUBRIC + 3 CUAD JV contracts + scored reports — Sprint 23 reference), and `docs/architecture-spec.md` (the sequential pipeline our SubRecipe primitive maps onto). Do not push to its remote.
+
+**MiniMax dev key**: `/root/.minimax-dev-key` (chmod 600, 126 bytes). USD 10/month dev budget. `scripts/test-lavern-agents.js` falls back to this file when `MINIMAX_API_KEY` is not in env. Do not commit; do not echo into transcripts.
+
+**esbuild quirk on lq-vps**: pnpm workspace install fails in this environment (`ERR_PNPM_EXOTIC_SUBDEP` on `@electron/node-gyp`). Sprint 22 worked around with a standalone esbuild install (`cd /tmp && npm init -y && npm install esbuild`, then copy `node_modules/{esbuild,@esbuild}` into `ui/desktop/node_modules/`). This is sufficient for `prepare-oscar-bundle.js` to resolve `require('esbuild')`. Hermit-activated environment (`source bin/activate-hermit`) appears to handle the full workspace install fine — the failure is only when running pnpm outside Hermit's shell.
+
+**Bundle outputs verified** (post-`prepare-oscar-bundle.js`): 9 bundled MCPs at `ui/desktop/src/resources/mcps/{oscar-fs, oscar-memory, oscar-onboarding, oscar-knowledge-base, oscar-document-reader, oscar-risk-pricing, oscar-baselines, oscar-grounding-verifier, oscar-document-checks}/index.js`; sub-recipe at `ui/desktop/src/resources/sub-recipes/verification-pass.yaml`; smoke test passes for all 9 within 150ms each; network audit clean for all 9.
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.
