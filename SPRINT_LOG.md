@@ -71,10 +71,18 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 - Sprint 23 work (per-partner eval harness).
 - `userIdentityBlock` retro-fit into practice-area recipes — the gap exists in in-house mode too but widening this sprint balloons scope.
 
+**Crostini dogfood** (closed 2026-05-20): `.deb` built on lq-vps via `scripts/build-oscar-deb.sh` (260 MB, sha256 `d4b1b6fc...035c5e`). Draft release `oscar-gc-sprint21` on `sarturko-maker/goose` with the `.deb` attached + release notes covering the 8-step partner-roster walk. Arturs `dpkg -r` + `dpkg -i` cycle on Crostini passed; Lavern roster renders, partners chat in character, identity cascade visible. Three dogfood-surfaced carry-forwards captured in `TODO.md` "Sprint 21 dogfood findings" and the [[lavern-multi-session-collab-sprint]] memory:
+
+1. **Per-partner conversation history** — current `partners.json` binds one `session_id` per partner; every click resumes the same session ("one long convo"). Expected: multi-session per partner, sidebar mirrors Sprint 19 PA → Matter → Session pattern (Lavern → Partner → Session). Same future sprint validates Sprint 19's in-house tree which shipped on code but is Crostini-untested.
+2. **@-mention partners from chat** — `ChatInput.tsx:1285` already has @-mention popover infra (today scoped to files); Goose's `summon` platform extension (`crates/goose/src/agents/platform_extensions/summon.rs`) already exposes the LLM-side delegate mechanism with `SourceType::{Subrecipe,Recipe,Agent}` discovery. Sprint 24 hook-up scope is small.
+3. **Multi-agent project collaboration** (e.g., M&A transaction with Sarah Chen lead + James Okafor on IP + Helena Voss on tax) — reverses the brief's original out-of-scope; Goose has `Recipe.sub_recipes` + `subagent_handler` substrate. Sprint 24 design pass needed: keep partners as recipes (Sprint 21 shape; add `sub_recipes` to a parent "Project" recipe) OR migrate to agent files at `~/.agents/agents/<slug>.md`. Sprint 22's MCP-attachment design will force the answer.
+
 **Carry-forwards**:
 - **Sprint 22 architecture is committed** in ADR-073 — Sprint 22 starts from the translation table, not from a blank plan-mode.
-- **Headless screenshot evidence** (`docs/screenshots/sprint-21/`) — capture sidebar + `/lavern` roster via `scripts/capture-oscar.sh` once the build refreshes. Not blocking sprint close; the build refresh happens during the .deb workflow.
-- **Crostini dogfood** — `.deb` build + draft release + 8-step exit criteria walk by Arturs.
+- **Sprint 23 confirmed needed** (per-partner eval harness; Lavern's `evals/` empty).
+- **Sprint 24 candidate** — the three dogfood findings above as one composite sprint, sequenced after 22 + 23.
+- **Headless screenshot evidence** (`docs/screenshots/sprint-21/`) — non-blocking; would be captured on the next .deb iteration.
+- **`userIdentityBlock` retro-fit into practice-area recipes** — same identity-injection gap exists in in-house mode; small follow-on.
 
 **ADRs**: 071, 072, 073.
 
