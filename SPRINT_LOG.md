@@ -14,7 +14,7 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
-### Sprint 21 — Lavern firm-mode (closed 2026-05-20 on code; commit `<pending>`)
+### Sprint 21 — Lavern firm-mode (closed 2026-05-20 on code; commit `8dec6a7b8`)
 
 **Goal**: demo Oscar GC's ability to host a parallel "firm" alongside the in-house practice. A new `Lavern` sidebar entry opens a roster of 10 invented specialist-partner agents the lawyer can consult by name — each their own Goose recipe, their own working_dir, their own memory. Identity (lawyer name + employer + industry) cascades from the existing profile.json; matter-specific context does not. Native Goose chat — no custom UI primitives, no orchestration. Arturs's framing: "this is a demo, a prototype." Crostini-installable `.deb` is the sprint-end artefact; per-prompt evals are confirmed needed (Lavern shipped none) and slated for Sprint 23.
 
