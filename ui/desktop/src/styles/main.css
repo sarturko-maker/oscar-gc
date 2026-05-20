@@ -1210,14 +1210,34 @@ pre:has(> code.bg-inline-code) {
 }
 
 .oscar__right-pane-body {
+  /* Sprint M2: body is a vertical stack of section stubs/components.
+     Per-section padding lives on .oscar__panel-section, so this container
+     drops the M1 italic-placeholder padding. */
   flex: 1;
-  padding: 24px 18px;
-  color: var(--ink-faint);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.oscar__panel-section {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.oscar__panel-section:last-child {
+  border-bottom: none;
+}
+
+.oscar__panel-section-title {
+  display: block;
+}
+
+.oscar__panel-section-stub-body {
+  margin-top: 6px;
   font-family: var(--serif);
   font-style: italic;
-  font-size: 13px;
-  line-height: 1.6;
-  overflow-y: auto;
+  font-size: 11px;
+  color: var(--ink-faint);
 }
 
 .oscar__sidebar-list {

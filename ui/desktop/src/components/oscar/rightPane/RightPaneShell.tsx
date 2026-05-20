@@ -1,18 +1,25 @@
-// Sprint M1 (ADR-069): docked right-pane host. Empty body in M1 — M2
-// wires the section registry that mounts here. Width/visibility logic
-// lives in AppLayout (mirrors how the sidebar's drag state lives there);
-// this component owns chrome and toggle affordance only.
+// Sprint M1 (ADR-069): docked right-pane host (chrome + toggle).
+// Sprint M2 (ADR-070): body becomes a vertical stack of section stubs
+// driven by the resolved `sections` list (override ?? shape default).
+// AppLayout owns the width drag state and visibility resolution; this
+// component owns chrome + composition rendering only.
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  sectionRegistry,
+  type PanelSectionId,
+} from './sections/registry';
 
 interface RightPaneShellProps {
   isExpanded: boolean;
   onToggle: () => void;
+  sections: PanelSectionId[];
 }
 
 export default function RightPaneShell({
   isExpanded,
   onToggle,
+  sections,
 }: RightPaneShellProps) {
   const ChevIcon = isExpanded ? ChevronRight : ChevronLeft;
   const toggleLabel = isExpanded ? 'Collapse right pane' : 'Expand right pane';
@@ -41,7 +48,10 @@ export default function RightPaneShell({
       </div>
       {isExpanded && (
         <div className="oscar__right-pane-body">
-          Right pane — coming in M2
+          {sections.map((id) => {
+            const Section = sectionRegistry[id];
+            return <Section key={id} sectionId={id} />;
+          })}
         </div>
       )}
     </aside>

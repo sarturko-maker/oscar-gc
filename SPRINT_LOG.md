@@ -14,6 +14,58 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 20-M2 — Section registry + per-area composition (closed 2026-05-20 on code; commit `<HEAD>`)
+
+**Goal**: third sub-sprint (M2) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Turn M1's inert pane body into a data-driven stack of section stubs whose composition is per-area: `PracticeAreaShape.defaultPanelSections` overridden by `area_overrides.panel_sections`. No real section bodies — M3 fills MatterFacts + History, M4 Playbooks, M5 Skills. M2 is the wiring sprint.
+
+**Built** — one commit, one ADR at decision time, default composition confirmed by Arturs in plan-mode AskUserQuestion:
+
+- **ADR-070** (`docs/adr/070-panel-sections-declarative.md`, 37 lines): `PanelSectionId` as a closed 8-member literal union (`MatterFacts | ProgrammeFacts | Skills | Playbooks | Redlining | Forum | Deadlines | History`). `PracticeAreaShape.defaultPanelSections: PanelSectionId[]` required on all 13 bundled shapes. `area_overrides.panel_sections` narrows from M0's `string[]` → `PanelSectionId[]`. Resolution: `override ?? shape default ?? Forge fall-through` (`entry_noun.singular === 'Programme' ? [ProgrammeFacts, Skills, Playbooks] : [MatterFacts, Skills, Playbooks]`). Component registry indirection (M2 maps every ID to `PanelSectionStub`; M3+ swap individual entries to real bodies without `RightPaneShell` change). Alternatives rejected: open string IDs (LLM-controllable surface); one renderer per area (13-way switch, ADR-047 already settled this); composition on user-added-area shape (ADR-067 made profile.json the durable surface).
+
+- **Default composition confirmed via AskUserQuestion** (plan-mode, this session): proposed 13-area table accepted unchanged. 9 areas get 4 sections (trio + one area-specific layer), 3 areas get 3 sections (trio only — corporate / employment / ip / product), 1 area gets 5 (regulatory-disputes: trio + Forum + Deadlines). History stays in the enum but appears in no default — M3 will decide whether it joins universal defaults or stays opt-in.
+
+- **New `rightPane/sections/` module** (`ui/desktop/src/components/oscar/rightPane/sections/`): `registry.ts` (closed `PANEL_SECTION_IDS` const + `PanelSectionId` type + `isPanelSectionId` guard + `SECTION_META` title/comingIn lookup + `sectionRegistry` ID → ComponentType map); `PanelSectionStub.tsx` (single shared placeholder, prop-driven, `data-section-id` attribute for Playwright addressability + eyebrow title + faint italic "coming in MN" body). The registry shape accepts both eager `ComponentType` and `LazyExoticComponent<ComponentType>` — M3+ can swap to `React.lazy()` for heavier bodies without an interface change.
+
+- **New `useActiveAreaSections` hook** (`ui/desktop/src/components/oscar/rightPane/useActiveAreaSections.ts`): pure derivation from `(areaId, profile)` — no IPC. Resolution order: `area_overrides.panel_sections.filter(isPanelSectionId)` (stale-string-guard) → `PRACTICE_AREA_SHAPES[areaId].defaultPanelSections` → `entry_noun`-driven Forge fall-through. Returns `[]` when `areaId === null` so quick-chat / unresolved-pending renders nothing.
+
+- **`useRightPaneVisibility` extended** (`useRightPaneVisibility.ts`): state widened from `boolean | null` to `MatterLookup | null | undefined` — `undefined` = pending; `null` = lookup-resolved-no-matter; `MatterLookup` = matter-bound. Return type adds `areaId: string | null` extracted from the existing `matters.lookupSession` response (no second IPC call). Mount-decision logic semantically unchanged.
+
+- **`RightPaneShell` body becomes a stack** (`RightPaneShell.tsx`): new required `sections: PanelSectionId[]` prop; body renders `sections.map((id) => { const Section = sectionRegistry[id]; return <Section sectionId={id} />; })`. M1 chrome (header eyebrow + chevron toggle) preserved verbatim.
+
+- **`AppLayout` wires the composition** (`AppLayout.tsx`): one new line — `const paneSections = useActiveAreaSections(paneVis.areaId);` — and `sections={paneSections}` threaded into the existing `<RightPaneShell />` element. M1's drag/persist primitive untouched.
+
+- **Per-area `defaultPanelSections`** (`practiceAreaShapes.ts`): required field added to `PracticeAreaShape` interface; populated on all 13 area constants per the confirmed table. TS catches any new area entry missing the field.
+
+- **Type narrowing on overrides** (`useOscarProfile.ts`): `OscarAreaOverrides.panel_sections: string[] → PanelSectionId[]` (M0's permissive comment retired). Additive: `OscarUserProfilePracticeArea.entry_noun?: { singular, plural } | null` — Sprint 19 P4 already writes this on Forge-created entries; M2 adds the read-side type for the Forge fall-through.
+
+- **CSS `.oscar__panel-section*` family** (`main.css`): `.oscar__right-pane-body` becomes a flex-column layout container (M1's inert-italic padding/colours dropped, moved per-section). New `.oscar__panel-section` (14/18px padding + hairline rule between sections) and `.oscar__panel-section-stub-body` (11px italic serif in `var(--ink-faint)`).
+
+- **Visual verification harness** (`ui/desktop/scripts/capture-m2.js` + `scripts/capture-m2.sh`): Playwright/CDP under Xvfb, clones M1's pattern. Pre-seeds profile.json with Commercial + Privacy + IP practice areas + one matter per area via `window.electron.matters.create`. Drives 5 states: (a) Commercial default, (b) Privacy default, (c) IP default, (e) collapsed-rail-only on IP, then quits, mutates profile.json on disk to set `area_overrides.panel_sections: ['Skills', 'Playbooks']` on Commercial + clears the sticky `isRightPaneExpanded` from settings (so step e's collapse doesn't carry), relaunches, (d) Commercial overridden. Section presence asserted in-flight via `Array.from(document.querySelectorAll('.oscar__panel-section')).map((el) => el.dataset.sectionId)` — logged to stdout for harness audit. PNGs at `docs/screenshots/sprint-m2/`.
+
+**Verification** (in this session):
+- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0). Direct invocation because `pnpm exec` triggers a `verify-deps-before-run` pre-step that fails on a pnpm 11 cross-platform-bin symlink (`goose-binary-win32-x64/bin/goose.exe` — Linux host, Windows binary absent). Same workaround applied for `pnpm run make`: invoked `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` directly.
+- ADR-070 line count: 37 (target ≤50).
+- Build refreshed: `out/Oscar-GC-linux-x64/oscar-gc` 206MB; `out/make/zip/linux/x64/Oscar-GC-linux-x64-1.34.0.zip` 370MB.
+- Visual harness produced 5 PNGs at 1440×900. Section IDs match exactly per state: `[MatterFacts,Skills,Playbooks,Redlining]` / `[ProgrammeFacts,Skills,Playbooks,Deadlines]` / `[MatterFacts,Skills,Playbooks]` / `[]` (collapsed) / `[Skills,Playbooks]` (overridden).
+- Commit-trailer hygiene per CLAUDE.md: `git log -1 --pretty=full` will be re-verified post-commit.
+- No Rust touch, no new IPCs, no sibling-repo changes.
+- Pre-existing `ui/pnpm-workspace.yaml` working-tree modification (Sprint 17b carry) left untouched — same posture as M0 + M1.
+
+**Deferred** — push to `origin/main` not executed in this session; commit sits local on `main` awaiting Arturs's push (auto-mode classifier blocks default-branch pushes).
+
+**Carry-forwards** (master-brief sub-sprints):
+- **M3 — Matter Facts + History sections** (first real bodies; reads `~/Documents/Oscar GC/<Area>/<Matter>/` + Top of Mind). ADR-071. Decision-point at start: whether History joins universal defaults (currently absent per the M2-confirmed table).
+- **M4 — Playbooks subsystem** (upload, three-layer injection). ADR-072.
+- **M5 — Skills visibility + per-area scoping**. ADR-074.
+- **M6–M8** unchanged from M1 carry.
+- **Crostini dogfood E1 (M0 description_override) + M1 visual states + M2 section composition** all wait for M8's single end-to-end dogfood.
+- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
+- **QuickChatButton `starting` state stuck after success** (M1 carry) — visible in M2 screenshots (sidebar shows multiple "New Chat" rows under Quick Chats from prior harness runs; session-store wasn't cleaned alongside `~/.config/oscar` + `~/Documents/Oscar GC`). Trivial fork-hygiene fix; out of M2 scope.
+
+**ADRs**: 070.
+
+---
+
 ### Sprint 20-M1 — Docked right pane shell (closed 2026-05-20 on code; commit `00afd7353`)
 
 **Goal**: second sub-sprint (M1) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Land the structural right-pane primitive — empty body, resizable, collapsible, route-aware visibility — so M2's section registry and M3+'s real bodies have a mount point. CC visual verification on lq-vps only; no .deb build, no Crostini dogfood until M8.

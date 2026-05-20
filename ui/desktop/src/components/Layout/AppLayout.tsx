@@ -10,6 +10,7 @@ import { NavigationProvider, useNavigationContext } from './NavigationContext';
 import { OscarSidebar } from '../oscar/OscarSidebar';
 import RightPaneShell from '../oscar/rightPane/RightPaneShell';
 import { useRightPaneVisibility } from '../oscar/rightPane/useRightPaneVisibility';
+import { useActiveAreaSections } from '../oscar/rightPane/useActiveAreaSections';
 import {
   NAV_DIMENSIONS,
   RIGHT_PANE_CHEVRON_RAIL_WIDTH,
@@ -94,6 +95,7 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
   }, []);
 
   const paneVis = useRightPaneVisibility(isRightPaneExpanded);
+  const paneSections = useActiveAreaSections(paneVis.areaId);
 
   const isResizable =
     !isHorizontalNav && !isCondensedIconOnly && effectiveNavigationMode === 'push' && isNavExpanded;
@@ -409,6 +411,7 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
             <RightPaneShell
               isExpanded={paneVis.isExpanded}
               onToggle={() => setIsRightPaneExpanded(!paneVis.isExpanded)}
+              sections={paneSections}
             />
             {paneVis.isExpanded && (
               <div

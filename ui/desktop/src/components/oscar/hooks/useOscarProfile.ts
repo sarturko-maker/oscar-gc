@@ -1,23 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PracticeArea } from '../practiceAreas';
+import type { PanelSectionId } from '../rightPane/sections/registry';
 
 // Sprint 20 (ADR-067): per-area overrides persisted in profile.json as the
 // durable surface for Forge-driven agent edits. Schema-version-4 addition.
 // M0 wires description_override end-to-end; later sprints wire the rest:
-// M2 panel_sections, M4 playbooks, M5 enabled_skills, M7 enabled_mcps.
-// Field types start permissive (string[] for slug/id arrays) so M0 stays
-// scope-bounded; later sprints narrow to enums/literal unions as they land.
+// M2 panel_sections (now PanelSectionId[]), M4 playbooks, M5 enabled_skills,
+// M7 enabled_mcps. Remaining string-array fields stay permissive until their
+// sprint narrows them to enums (per ADR-070's pattern).
 export interface OscarAreaOverrides {
   description_override?: string;
-  panel_sections?: string[];
+  panel_sections?: PanelSectionId[];
   enabled_skills?: { mode: 'all' | 'allow' | 'deny'; slugs: string[] };
   enabled_mcps?: { mode: 'all' | 'allow' | 'deny'; ids: string[] };
   playbooks?: { always_on: string[]; on_demand: string[] };
 }
 
+// Sprint 19 P4 (ADR-066 D4): Forge-created practice areas capture an entry
+// noun on profile.json (bundled areas use the shape's entryNoun, not this).
+// Sprint M2 (ADR-070) reads this field in the section-composition fall-through
+// when no PRACTICE_AREA_SHAPES entry exists for the area.
 export interface OscarUserProfilePracticeArea extends PracticeArea {
   area_profile?: Record<string, string> | null;
   area_overrides?: OscarAreaOverrides;
+  entry_noun?: { singular: string; plural: string } | null;
 }
 
 // Sprint 15 (ADR-051): schema v3 company_context block. Optional on the

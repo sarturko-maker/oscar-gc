@@ -1,4 +1,7 @@
 // Sprint M1 (ADR-069): right-pane visibility.
+// Sprint M2 (ADR-070): extended to expose areaId from the matters.lookupSession
+// response, so the composition hook can resolve defaultPanelSections without a
+// second IPC call.
 //
 // Defaults: pane is on for matter-bound /pair sessions, off elsewhere
 // (Hub, MattersLanding, Forge, Settings, quick-chats). Explicit user
@@ -17,9 +20,22 @@ export interface RightPaneVisibility {
   isMounted: boolean;
   /** true → render body; false → collapsed (chevron rail only) */
   isExpanded: boolean;
+  /** active matter's area_id when matter-bound; null otherwise (quick-chat, unresolved) */
+  areaId: string | null;
 }
 
-const HIDDEN: RightPaneVisibility = { isMounted: false, isExpanded: false };
+interface MatterLookup {
+  area_id: string;
+  area_name: string;
+  slug: string;
+  name: string;
+}
+
+const HIDDEN: RightPaneVisibility = {
+  isMounted: false,
+  isExpanded: false,
+  areaId: null,
+};
 
 export function useRightPaneVisibility(
   isRightPaneExpanded: boolean | null,
@@ -33,23 +49,25 @@ export function useRightPaneVisibility(
     ? new URLSearchParams(search).get('resumeSessionId')
     : null;
 
-  // null = lookup not resolved yet; false = quick-chat (no binding);
-  // true = matter-bound. Cached per sessionId to avoid re-querying.
-  const [isMatterBound, setIsMatterBound] = useState<boolean | null>(null);
+  // undefined = lookup pending; null = lookup resolved no-matter (quick-chat);
+  // MatterLookup = matter-bound. Cached per sessionId to avoid re-querying.
+  const [matterRow, setMatterRow] = useState<MatterLookup | null | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     if (!sessionId) {
-      setIsMatterBound(null);
+      setMatterRow(undefined);
       return;
     }
     let cancelled = false;
-    setIsMatterBound(null);
+    setMatterRow(undefined);
     (async () => {
       try {
         const res = await window.electron.matters.lookupSession(sessionId);
-        if (!cancelled) setIsMatterBound(res !== null);
+        if (!cancelled) setMatterRow(res);
       } catch {
-        if (!cancelled) setIsMatterBound(false);
+        if (!cancelled) setMatterRow(null);
       }
     })();
     return () => {
@@ -61,9 +79,14 @@ export function useRightPaneVisibility(
 
   // Don't flash during the async lookup — render nothing until we know
   // whether the session is matter-bound. Same posture as MatterBackButton.
-  if (isMatterBound === null) return HIDDEN;
+  if (matterRow === undefined) return HIDDEN;
 
+  const isMatterBound = matterRow !== null;
   const routeDefault = isMatterBound;
   const isExpanded = isRightPaneExpanded ?? routeDefault;
-  return { isMounted: true, isExpanded };
+  return {
+    isMounted: true,
+    isExpanded,
+    areaId: matterRow?.area_id ?? null,
+  };
 }
