@@ -1292,6 +1292,32 @@ pre:has(> code.bg-inline-code) {
   color: var(--copper);
 }
 
+/* Sprint 19 (ADR-066 D3): "+ New chat" button. Mirrors Forge/Integrations
+   utility-item visual register, but rendered as <button>, so a small
+   reset for browser defaults is necessary. */
+.oscar__sidebar-item--quickchat {
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  font: inherit;
+}
+
+.oscar__sidebar-item--quickchat:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* Sprint 19 (ADR-066 D3): Hub-level quick-chat CTA spacing. */
+.oscar__hub-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+}
+
 /* ── Onboarding chat (Sprint 6, ADR-013) ───────────────────────────── */
 
 .oscar__chat-shell {

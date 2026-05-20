@@ -261,6 +261,13 @@ type ElectronAPI = {
       trustAcknowledged: boolean,
     ) => Promise<{ ok: boolean; already_installed?: boolean }>;
   };
+  // Sprint 19 (ADR-066 D1): unscoped quick-chat working_dir. ensure-dir is
+  // idempotent (mkdir recursive); get-dir is a pure getter for partitioning
+  // the sidebar's Quick-chats vs matter-bound session groups.
+  quickChats: {
+    ensureDir: () => Promise<{ ok: boolean; path: string }>;
+    getDir: () => Promise<string>;
+  };
 };
 
 type AppConfigAPI = {
@@ -461,6 +468,10 @@ const electronAPI: ElectronAPI = {
         entryId,
         trustAcknowledged,
       ),
+  },
+  quickChats: {
+    ensureDir: () => ipcRenderer.invoke('oscar:quick-chats:ensure-dir'),
+    getDir: () => ipcRenderer.invoke('oscar:quick-chats:get-dir'),
   },
 };
 

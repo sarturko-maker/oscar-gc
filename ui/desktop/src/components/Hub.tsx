@@ -1,5 +1,6 @@
 import type { View, ViewOptions } from '../utils/navigationUtils';
 import OscarHubBanner from './oscar/OscarHubBanner';
+import QuickChatButton from './oscar/quickchat/QuickChatButton';
 
 export default function Hub({
   setView: _setView,
@@ -19,6 +20,12 @@ export default function Hub({
           In-house legal agent platform. Practice areas as primary units,
           memory as the spine.
         </p>
+        {/* Sprint 19 (ADR-066 D3): Hub-level quick-chat affordance. The
+            sidebar always shows "+ New chat" too; this surface is the
+            first-launch entry. */}
+        <div className="oscar__hub-actions">
+          <QuickChatButton variant="hub" />
+        </div>
       </div>
     </div>
   );

@@ -1794,6 +1794,13 @@ import { kindLabel } from './components/oscar/matters/practiceAreaShapes';
 
 const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
 const OSCAR_DOCUMENTS_DIR = path.join(os.homedir(), 'Documents', 'Oscar GC');
+// Sprint 19 (ADR-066 D1): dedicated working_dir for unscoped quick-chat
+// sessions. Co-located with matter content (same volume) but dot-hidden so
+// it's invisible in Finder/file-manager. Memory MCP only creates
+// `.goose/memory/` on agent write; an unscoped session that never writes
+// locally leaves this directory empty. Top of Mind stays empty for quick
+// chats via the existing `oscar:matters:detach-active` IPC.
+const OSCAR_QUICK_CHATS_DIR = path.join(OSCAR_DOCUMENTS_DIR, '.quick-chats');
 
 // area_id → display name. Kept here (small static table) rather than
 // importing practiceAreas.ts from renderer code into the main bundle.
@@ -2144,6 +2151,25 @@ ipcMain.handle('oscar:matters:detach-active', async () => {
     return { ok: false };
   }
 });
+
+// Sprint 19 (ADR-066 D1): quick-chat working_dir provisioning. ensure-dir
+// is idempotent (mkdir recursive); get-dir is a pure getter for renderer
+// filtering of session lists. The QuickChatButton calls ensure-dir before
+// `createSession`; ChatHistoryTree calls get-dir to partition sessions
+// into the Quick-chats vs matter-bound groups.
+ipcMain.handle('oscar:quick-chats:ensure-dir', async () => {
+  try {
+    await fs.mkdir(OSCAR_QUICK_CHATS_DIR, { recursive: true });
+    return { ok: true, path: OSCAR_QUICK_CHATS_DIR };
+  } catch (err) {
+    log.warn('oscar:quick-chats:ensure-dir failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { ok: false, path: OSCAR_QUICK_CHATS_DIR };
+  }
+});
+
+ipcMain.handle('oscar:quick-chats:get-dir', () => OSCAR_QUICK_CHATS_DIR);
 
 // Sprint 14 (ADR-047): reverse lookup — given a session_id (from BaseChat),
 // find the matter bound to it. Used by the matter back-button affordance to
