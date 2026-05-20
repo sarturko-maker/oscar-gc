@@ -14,7 +14,38 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
-### Sprint 19 — Chat history + memory: PA → Matter/Programme → Session, plus unscoped Quick chats (closed 2026-05-20 on code; commits `a1776aabb`, `fce0b8590`, `d38e3e9b3`, `2edbfaaf0`, `a6226ba89`, this commit)
+### Sprint 19b — Dogfood patches: matter chat-history resume + Goose chat-topic surface removed + sidebar visual hierarchy (closed 2026-05-20 on code; commit `a283c3757`; release `oscar-gc-sprint19` promoted to Latest)
+
+**Goal**: Sprint 19's Crostini dogfood (Arturs, build sha `86e6c5b88…`) surfaced four findings against the sidebar tree + quick-chat UX. (1) Conversation history disappeared in matters — clicking a matter row resumed the bound session but the chat was empty. (2) Matter rows visually identical to practice-area rows — the nesting didn't read; no plan for 100s-of-matters scenario. (3) "Popular chat topics" on the empty chat surface showed upstream Goose's dev-audience defaults (organize photos / units of geese / tamagotchi). (4) Restated (1).
+
+**Built** — one patch commit + release republish:
+
+- **Pre-existing matter-resume bug, root-caused** (`MattersLanding.tsx`). Sprint 12's `openMatter` always called `createSession(workingDir, { recipe })` and re-bound `matters.json[slug].session_id` to the new id. The conditional `if (matter.session_id !== session.id)` rebind-guard was dead code because `createSession` always returns a fresh id. Every matter open orphaned prior conversation. ADR-038 intended resume-on-existing; Sprint 19's sidebar exposed the contract gap by surfacing `session_id` directly. Fix: when `matter.session_id` is set AND `getSession({ path: { session_id } })` returns a row, dispatch `ADD_ACTIVE_SESSION` + navigate to `/pair?resumeSessionId=...` immediately — skip recipe build entirely (the existing session has its recipe baked in, with whatever extensions/integrations were active when it spawned). Fall through to the existing fresh-spawn path when `session_id` is null or the bound session has been deleted out-of-band. New `getSession` import from `../../../api`.
+
+- **`PopularChatTopics` removed from `BaseChat`** (`BaseChat.tsx`). The conditional `!recipe && showPopularTopics` branch (line ~471) rendered upstream Goose's three hard-coded suggestions to any session without a recipe — including Sprint 19's quick-chat path. Per CLAUDE.md inverted-defaults doctrine ("no upstream branding surfaces"), the block is gone. Also removed the now-dead `showPopularTopics?: boolean` prop and the computed `showPopularTopics` const. The `PopularChatTopics.tsx` component file stays in the tree (dead code; not deleted to keep upstream Goose's i18n message-extract step from breaking on the missing `defineMessages` block; flagged for cleanup in a future fork-hygiene sweep).
+
+- **Sidebar tree visual hierarchy + trim** (`ChatHistoryTree.tsx`, `main.css`). Matter rows: 11px italic, faded (`var(--ink-faint)`), gap 8px, padding 32px (bullet supplies the indent visually) with a leading `·` bullet in mono editorial — clearly subordinate to area rows (13px sans-editorial 500 weight). Hover lifts to `var(--ink)`. Active matter row uses copper-glow + 500 weight + copper border-left (matches active practice-area style). New `MAX_VISIBLE_MATTERS_PER_AREA = 10` cap in `ChatHistoryTree`. When `matters.length > 10`, render the 10 most-recent (already sorted by `last_accessed_at` desc in `useChatHistory`) plus a "+ N more — view all" link in copper that navigates to `/practice/:areaId`. Full list with stakeholder grouping lives on the area landing as today; no scrolling-tree compromise in the sidebar.
+
+**Verification** (in this session):
+- `pnpm exec tsc --noEmit` on `ui/desktop`: clean.
+- Bundle audit: extracted `app.asar` from rebuilt .deb, confirmed `PopularChatTopics` is 0× in compiled JS (component never imported), `view all` appears 1× (new overflow link), `resumeSessionId` 15× (resume path bundled).
+- Build sha `321fd177f26450746c3b16f8510f06db3d906118a68917490a5b4bbc460f21c2` (260,154,416 bytes). Uploaded to `oscar-gc-sprint19` draft release; download from `https://github.com/sarturko-maker/goose/releases` matched local build.
+
+**Pre-existing-bug note**: the `MattersLanding.openMatter` regression was latent since Sprint 12. Pre-Sprint-19 dogfood didn't catch it because the only path back to a matter was through MattersLanding itself, which silently rebound every time — lawyers never had a "see my prior conversation" expectation because the UI gave them no affordance. Sprint 19's sidebar surfaced `session_id` directly, which exposed the gap. Worth a SPRINT_LOG note for context if upstream-PR-worthy patches around session-binding semantics ever come up.
+
+**Deferred** — Crostini dogfood E1–E8 continues. Findings against this build will queue as Sprint 20 / 19c carries.
+
+**Carry-forwards** (for Sprint 20+):
+- **Crostini E1–E8 dogfood** against `321fd177…`.
+- **`PopularChatTopics.tsx` deletion** — dead component file + i18n message definitions stay in the tree for now. Fork-hygiene cleanup candidate.
+- **`MattersLanding.openMatter` integration-refresh question** — resuming a matter session today doesn't re-run the integrations / secrets gate. If the lawyer adds an integration to an area after the matter's session was first spawned, the existing session won't pick it up until the session is deleted + re-spawned. Acceptable today (new integrations apply to new sessions); worth a future ADR if this becomes load-bearing.
+- **More work to do** (Arturs's framing) — captured for next-sprint brief.
+
+**ADRs**: none. Surgical patches against Sprint 19's ADR-066 design; no architectural decision changed.
+
+---
+
+### Sprint 19 — Chat history + memory: PA → Matter/Programme → Session, plus unscoped Quick chats (closed 2026-05-20 on code; commits `a1776aabb`, `fce0b8590`, `d38e3e9b3`, `2edbfaaf0`, `a6226ba89`, `cbc882bb7`)
 
 **Goal**: two parallel chat-entry paths plus minimum sidebar hierarchy — matter-scoped (open practice area → matters/programmes → bound session) and unscoped quick-chat from any view (one click). Sidebar replaces its flat practice-area list with a PA → Matter → Session tree plus a Quick chats sibling group. Vocabulary tuned per area: Privacy / Regulatory / AI Governance read as "Programmes"; the other 10 stay "Matters". Lean on Goose's native primitives — sessions in `sessions.db`, Memory MCP's lazy `.goose/memory/` creation, Top of Mind's empty-file no-injection. No Rust core touch, no schema additions. Plan at `/root/.claude/plans/sprint-chat-history-memoized-hummingbird.md`.
 
