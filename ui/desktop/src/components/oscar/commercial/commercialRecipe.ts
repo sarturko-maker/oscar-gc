@@ -1,7 +1,10 @@
 import type { ExtensionConfig, Recipe } from '../../../api';
 import { SYSTEM_PROMPT } from './systemPrompt';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
-import type { OscarCompanyContext } from '../hooks/useOscarProfile';
+import type {
+  OscarAreaOverrides,
+  OscarCompanyContext,
+} from '../hooks/useOscarProfile';
 
 const DEV_REDLINE_VENV_BIN = '/srv/projects/oscar-runtime/python/adeu-venv/bin/adeu-server';
 
@@ -31,6 +34,9 @@ export function buildCommercialRecipe(
   // Sprint 18 (ADR-065): user-enabled platform extensions threaded from
   // MattersLanding.openMatter (ConfigContext.extensionsList snapshot).
   enabledPlatformExtensions: ExtensionConfig[] = [],
+  // Sprint 20 (ADR-067): per-area overrides from profile.json; M0 wires
+  // description_override through to the generic builder.
+  areaOverrides: OscarAreaOverrides | null = null,
 ): Recipe {
   return buildPracticeAreaRecipe({
     area: {
@@ -46,6 +52,7 @@ export function buildCommercialRecipe(
     systemPrompt: SYSTEM_PROMPT,
     companyContext,
     enabledPlatformExtensions,
+    areaOverrides,
     extraExtensions: [
       {
         type: 'stdio',

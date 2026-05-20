@@ -11,7 +11,10 @@
 import type { ExtensionConfig, Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
 import { buildTavilyExtension } from '../onboarding/onboardingRecipe';
-import type { OscarCompanyContext } from '../hooks/useOscarProfile';
+import type {
+  OscarAreaOverrides,
+  OscarCompanyContext,
+} from '../hooks/useOscarProfile';
 import { renderCompanyContextBlock } from './companyContextBlock';
 
 const DEV_NODE_CMD = '/usr/bin/node';
@@ -54,6 +57,13 @@ export interface BuildPracticeAreaRecipeOptions {
   // turn 1. Null when v2-migrated stub (captured_via="needs-re-intake")
   // or when intake hasn't run; OscarOnboardingGuard catches that case.
   companyContext?: OscarCompanyContext | null;
+  // Sprint 20 (ADR-067): per-area overrides from profile.json. M0 reads
+  // description_override (replaces area.body in recipe description and
+  // prepends a "## About this practice area" block to instructions).
+  // Other override fields (panel_sections, enabled_skills, enabled_mcps,
+  // playbooks) thread through the type but are consumed by later sprints
+  // (M2, M5, M7, M4 respectively).
+  areaOverrides?: OscarAreaOverrides | null;
 }
 
 const defaultSystemPrompt = (
@@ -137,13 +147,20 @@ export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): R
     opts.systemPrompt ??
     defaultSystemPrompt(opts.area, opts.workingDir, opts.stateFolder);
   const companyBlock = renderCompanyContextBlock(opts.companyContext);
-  const instructions = companyBlock
-    ? `${companyBlock}\n\n${baseInstructions}`
-    : baseInstructions;
+  // Sprint 20 (ADR-067): description_override prepends a dedicated block
+  // above the base instructions for both generic and bespoke (Commercial)
+  // system prompts. Absent override → block omitted → no behaviour change.
+  const descriptionOverride = opts.areaOverrides?.description_override;
+  const areaDescriptionBlock = descriptionOverride
+    ? `## About this practice area\n${descriptionOverride}`
+    : null;
+  const instructions = [companyBlock, areaDescriptionBlock, baseInstructions]
+    .filter((s): s is string => Boolean(s))
+    .join('\n\n');
   return {
     version: '1.0.0',
     title: `Oscar GC — ${opts.area.name}`,
-    description: opts.area.body,
+    description: descriptionOverride ?? opts.area.body,
     instructions,
     extensions,
     settings: {

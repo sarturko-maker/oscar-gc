@@ -1,8 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PracticeArea } from '../practiceAreas';
 
+// Sprint 20 (ADR-067): per-area overrides persisted in profile.json as the
+// durable surface for Forge-driven agent edits. Schema-version-4 addition.
+// M0 wires description_override end-to-end; later sprints wire the rest:
+// M2 panel_sections, M4 playbooks, M5 enabled_skills, M7 enabled_mcps.
+// Field types start permissive (string[] for slug/id arrays) so M0 stays
+// scope-bounded; later sprints narrow to enums/literal unions as they land.
+export interface OscarAreaOverrides {
+  description_override?: string;
+  panel_sections?: string[];
+  enabled_skills?: { mode: 'all' | 'allow' | 'deny'; slugs: string[] };
+  enabled_mcps?: { mode: 'all' | 'allow' | 'deny'; ids: string[] };
+  playbooks?: { always_on: string[]; on_demand: string[] };
+}
+
 export interface OscarUserProfilePracticeArea extends PracticeArea {
   area_profile?: Record<string, string> | null;
+  area_overrides?: OscarAreaOverrides;
 }
 
 // Sprint 15 (ADR-051): schema v3 company_context block. Optional on the
@@ -45,7 +60,7 @@ export interface OscarCompanyContext {
 }
 
 export interface OscarUserProfile {
-  schema_version: 1 | 2 | 3;
+  schema_version: 1 | 2 | 3 | 4;
   completed_at: string;
   user: {
     name: string | null;

@@ -18,6 +18,7 @@ import { useConfig } from '../../ConfigContext';
 import { getSession, type Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
 import type {
+  OscarAreaOverrides,
   OscarCompanyContext,
   OscarUserProfile,
 } from '../hooks/useOscarProfile';
@@ -147,6 +148,12 @@ export default function MattersLanding({ area }: MattersLandingProps) {
         | null;
       const companyContext: OscarCompanyContext | null =
         profile?.company_context ?? null;
+      // Sprint 20 (ADR-067): pick area_overrides from profile for the area
+      // being opened. Forge-driven edits land here in M6/M7; M0 wires only
+      // description_override so absent overrides are the no-op default.
+      const areaOverrides: OscarAreaOverrides | null =
+        profile?.practice_areas.find((pa) => pa.id === area.id)
+          ?.area_overrides ?? null;
 
       // Sprint 17 (ADR-061): merge lawyer-added integrations into the
       // recipe's extension array. Unknown ids and bundled-tier entries
@@ -181,6 +188,7 @@ export default function MattersLanding({ area }: MattersLandingProps) {
               companyContext,
               installedConfigs,
               enabledPlatformExtensions,
+              areaOverrides,
             )
           : buildPracticeAreaRecipe({
               area,
@@ -191,6 +199,7 @@ export default function MattersLanding({ area }: MattersLandingProps) {
               companyContext,
               extraExtensions: installedConfigs,
               enabledPlatformExtensions,
+              areaOverrides,
             });
 
       // Sprint 17 (P6): if any installed integration declares an env_key
