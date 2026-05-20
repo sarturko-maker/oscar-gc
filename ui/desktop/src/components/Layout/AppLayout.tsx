@@ -8,7 +8,14 @@ import ChatSessionsContainer from '../ChatSessionsContainer';
 import { useChatContext } from '../../contexts/ChatContext';
 import { NavigationProvider, useNavigationContext } from './NavigationContext';
 import { OscarSidebar } from '../oscar/OscarSidebar';
-import { NAV_DIMENSIONS, Z_INDEX } from './constants';
+import RightPaneShell from '../oscar/rightPane/RightPaneShell';
+import { useRightPaneVisibility } from '../oscar/rightPane/useRightPaneVisibility';
+import {
+  NAV_DIMENSIONS,
+  RIGHT_PANE_CHEVRON_RAIL_WIDTH,
+  RIGHT_PANE_DIMENSIONS,
+  Z_INDEX,
+} from './constants';
 import { cn } from '../../utils';
 import { UserInput } from '../../types/message';
 
@@ -45,6 +52,8 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
     navigationPosition,
     isHorizontalNav,
     isCondensedIconOnly,
+    isRightPaneExpanded,
+    setIsRightPaneExpanded,
   } = useNavigationContext();
 
   const [navWidth, setNavWidth] = useState<number | null>(null);
@@ -62,6 +71,29 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
       }
     });
   }, []);
+
+  // Sprint M1 (ADR-069): right-pane width state. Absolute px (no
+  // CONDENSED baseline). Loaded from electron settings on mount; persisted
+  // on mouseup of the resize handle. Default DEFAULT_WIDTH on first launch.
+  const [rightPaneWidth, setRightPaneWidth] = useState<number>(
+    RIGHT_PANE_DIMENSIONS.DEFAULT_WIDTH
+  );
+  const rightPaneWidthRef = useRef<number>(RIGHT_PANE_DIMENSIONS.DEFAULT_WIDTH);
+
+  useEffect(() => {
+    window.electron.getSetting('rightPaneWidth').then((stored) => {
+      if (stored !== null && stored !== undefined) {
+        const clamped = Math.min(
+          RIGHT_PANE_DIMENSIONS.MAX_WIDTH,
+          Math.max(RIGHT_PANE_DIMENSIONS.MIN_WIDTH, stored)
+        );
+        setRightPaneWidth(clamped);
+        rightPaneWidthRef.current = clamped;
+      }
+    });
+  }, []);
+
+  const paneVis = useRightPaneVisibility(isRightPaneExpanded);
 
   const isResizable =
     !isHorizontalNav && !isCondensedIconOnly && effectiveNavigationMode === 'push' && isNavExpanded;
@@ -122,6 +154,58 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
       document.body.style.userSelect = '';
     };
   }, [onMouseMove, onMouseUp]);
+
+  // Sprint M1 (ADR-069): right-pane drag system. Mirrors the sidebar's
+  // drag/persist with direction: -1 (LEFT-drag widens the pane). Two
+  // independent dragStateRefs keep the handlers clean — concurrent drags
+  // on both edges would be impossible anyway (one mouse). Persists
+  // absolute width (no CONDENSED baseline to subtract).
+  const paneDragStateRef = useRef<{
+    startX: number;
+    startWidth: number;
+  } | null>(null);
+
+  const onPaneMouseMove = useCallback((e: MouseEvent) => {
+    if (!paneDragStateRef.current) return;
+    const delta = (e.clientX - paneDragStateRef.current.startX) * -1;
+    const newWidth = Math.min(
+      RIGHT_PANE_DIMENSIONS.MAX_WIDTH,
+      Math.max(RIGHT_PANE_DIMENSIONS.MIN_WIDTH, paneDragStateRef.current.startWidth + delta)
+    );
+    rightPaneWidthRef.current = newWidth;
+    setRightPaneWidth(newWidth);
+  }, []);
+
+  const onPaneMouseUp = useCallback(() => {
+    paneDragStateRef.current = null;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    window.removeEventListener('mousemove', onPaneMouseMove);
+    window.removeEventListener('mouseup', onPaneMouseUp);
+    void window.electron.setSetting('rightPaneWidth', rightPaneWidthRef.current);
+  }, [onPaneMouseMove]);
+
+  const onPaneHandleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      paneDragStateRef.current = {
+        startX: e.clientX,
+        startWidth: rightPaneWidthRef.current,
+      };
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      window.addEventListener('mousemove', onPaneMouseMove);
+      window.addEventListener('mouseup', onPaneMouseUp);
+    },
+    [onPaneMouseMove, onPaneMouseUp]
+  );
+
+  useEffect(() => {
+    return () => {
+      window.removeEventListener('mousemove', onPaneMouseMove);
+      window.removeEventListener('mouseup', onPaneMouseUp);
+    };
+  }, [onPaneMouseMove, onPaneMouseUp]);
 
   if (!chatContext) {
     throw new Error('AppLayoutContent must be used within ChatProvider');
@@ -299,6 +383,44 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
 
         {/* Main content */}
         {mainContent}
+
+        {/* Sprint M1 (ADR-069): docked right pane. Renders only when on a
+            matter-bound /pair session by default; sticky toggle overrides.
+            Resize handle on the LEFT edge (between chat and pane). */}
+        {paneVis.isMounted && (
+          <motion.div
+            key="right-pane"
+            initial={false}
+            animate={{
+              width: paneVis.isExpanded
+                ? rightPaneWidth
+                : RIGHT_PANE_CHEVRON_RAIL_WIDTH,
+            }}
+            transition={{ type: 'spring', stiffness: 400, damping: 40 }}
+            style={{
+              maxWidth: RIGHT_PANE_DIMENSIONS.MAX_WIDTH,
+              minWidth: paneVis.isExpanded
+                ? RIGHT_PANE_DIMENSIONS.MIN_WIDTH
+                : RIGHT_PANE_CHEVRON_RAIL_WIDTH,
+              height: '100%',
+            }}
+            className="relative flex-shrink-0 overflow-visible h-full"
+          >
+            <RightPaneShell
+              isExpanded={paneVis.isExpanded}
+              onToggle={() => setIsRightPaneExpanded(!paneVis.isExpanded)}
+            />
+            {paneVis.isExpanded && (
+              <div
+                onMouseDown={onPaneHandleMouseDown}
+                data-testid="oscar-right-pane-handle"
+                className="absolute top-0 -left-1 w-2 h-full z-20 cursor-col-resize group flex items-center justify-center"
+              >
+                <div className="w-px h-full bg-border-subtle opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {/* Overlay mode navigation */}

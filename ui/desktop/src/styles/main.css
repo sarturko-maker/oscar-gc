@@ -1152,6 +1152,74 @@ pre:has(> code.bg-inline-code) {
   border-right: 1px solid var(--rule);
 }
 
+/* Sprint M1 (ADR-069): docked right pane shell. Mirrors the sidebar's
+   paper-deep background and rule border, but on the right edge. M1 ships
+   the chrome only; M2 mounts the section registry into the body. */
+.oscar__right-pane {
+  background: var(--paper-deep);
+  border-left: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.oscar__right-pane[data-state='collapsed'] {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.oscar__right-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--rule-light);
+  flex-shrink: 0;
+  min-height: 48px;
+}
+
+.oscar__right-pane[data-state='collapsed'] .oscar__right-pane-header {
+  padding: 14px 0;
+  border-bottom: none;
+  justify-content: center;
+  width: 100%;
+}
+
+.oscar__right-pane-title {
+  /* Inherits .oscar__eyebrow tokens (mono editorial copper); bare variant
+     skips the trailing rule because the header already carries a border. */
+}
+
+.oscar__right-pane-toggle {
+  background: transparent;
+  border: none;
+  color: var(--ink-faint);
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.oscar__right-pane-toggle:hover {
+  color: var(--copper);
+  background: var(--paper-edge);
+}
+
+.oscar__right-pane-body {
+  flex: 1;
+  padding: 24px 18px;
+  color: var(--ink-faint);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
 .oscar__sidebar-list {
   display: flex;
   flex-direction: column;

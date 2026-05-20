@@ -1697,6 +1697,9 @@ const validSettingKeys: Set<string> = new Set([
   'sessionSharing',
   'seenAnnouncementIds',
   'navExpandedWidth',
+  // Sprint M1 (ADR-069): right-pane width + sticky toggle.
+  'rightPaneWidth',
+  'isRightPaneExpanded',
 ]);
 
 ipcMain.handle('set-setting', (_event, key: SettingKey, value: unknown) => {

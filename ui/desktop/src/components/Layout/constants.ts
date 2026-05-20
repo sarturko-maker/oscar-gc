@@ -13,6 +13,18 @@ export const NAV_DIMENSIONS = {
   MAX_NAV_WIDTH: 600,
 } as const;
 
+// Sprint M1 (ADR-069): right pane dimensions. No CONDENSED state — the
+// pane is either expanded (within MIN..MAX) or collapsed to a chevron rail.
+export const RIGHT_PANE_DIMENSIONS = {
+  MIN_WIDTH: 240,
+  MAX_WIDTH: 520,
+  DEFAULT_WIDTH: 320,
+} as const;
+
+// Width of the chevron-only rail when the pane is collapsed; large enough
+// for the toggle button to remain clickable.
+export const RIGHT_PANE_CHEVRON_RAIL_WIDTH = 32;
+
 export const Z_INDEX = {
   /** Header controls (menu button, etc.) */
   HEADER: 100,

@@ -50,6 +50,11 @@ interface NavigationContextValue {
   isOverlayMode: boolean;
   isChatExpanded: boolean;
   setIsChatExpanded: (expanded: boolean) => void;
+  // Sprint M1 (ADR-069): right-pane sticky toggle. null = honor route
+  // default (true on matter-bound /pair, false elsewhere); explicit boolean
+  // sticks across routes and restarts. Persisted via electron settings.
+  isRightPaneExpanded: boolean | null;
+  setIsRightPaneExpanded: (expanded: boolean) => void;
 }
 
 const NavigationContext = createContext<NavigationContextValue | null>(null);
@@ -125,6 +130,25 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
     return stored !== 'false';
   });
 
+  // Sprint M1 (ADR-069): right-pane sticky toggle. Async-loaded from
+  // electron settings on mount (no localStorage source — new key, no
+  // lazy-migration). Initial null is intentional: null = honor route default.
+  const [isRightPaneExpanded, setIsRightPaneExpandedState] = useState<
+    boolean | null
+  >(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    window.electron.getSetting('isRightPaneExpanded').then((v) => {
+      if (!cancelled && v !== null && v !== undefined) {
+        setIsRightPaneExpandedState(v);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${RESPONSIVE_BREAKPOINT - 1}px)`);
     const onChange = () => setIsBelowBreakpoint(window.innerWidth < RESPONSIVE_BREAKPOINT);
@@ -165,6 +189,11 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
   const setIsChatExpanded = useCallback((expanded: boolean) => {
     setIsChatExpandedState(expanded);
     localStorage.setItem('navigation_chat_expanded', String(expanded));
+  }, []);
+
+  const setIsRightPaneExpanded = useCallback((expanded: boolean) => {
+    setIsRightPaneExpandedState(expanded);
+    void window.electron.setSetting('isRightPaneExpanded', expanded);
   }, []);
 
   const isNavExpandedRef = useRef(isNavExpanded);
@@ -229,6 +258,8 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
     isOverlayMode,
     isChatExpanded,
     setIsChatExpanded,
+    isRightPaneExpanded,
+    setIsRightPaneExpanded,
   };
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;

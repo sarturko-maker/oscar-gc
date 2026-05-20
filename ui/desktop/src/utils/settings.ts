@@ -47,6 +47,13 @@ export interface Settings {
   sessionSharing: SessionSharingConfig;
   seenAnnouncementIds: string[];
   navExpandedWidth: number | null;
+
+  // Sprint M1 (ADR-069): right-pane state. rightPaneWidth is absolute px
+  // (no CONDENSED baseline; the pane has only expanded vs collapsed).
+  // isRightPaneExpanded null = honor route default (true on matter-bound
+  // /pair, false elsewhere); explicit boolean sticks across routes/restarts.
+  rightPaneWidth: number | null;
+  isRightPaneExpanded: boolean | null;
 }
 
 export type SettingKey = keyof Settings;
@@ -90,6 +97,8 @@ export const defaultSettings: Settings = {
   },
   seenAnnouncementIds: [],
   navExpandedWidth: null,
+  rightPaneWidth: null,
+  isRightPaneExpanded: null,
 };
 
 export function getKeyboardShortcuts(settings: Settings): KeyboardShortcuts {
