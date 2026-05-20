@@ -1,0 +1,20 @@
+{
+  "doc_id": "doc3-veoneer",
+  "doc_file": "docs/veoneer_02_21_2020.txt",
+  "doc_label": "Veoneer × Nissin JV Amendment & Termination",
+  "contract_type": "JV amendment / wind-down",
+  "char_count": 8259,
+  "article_count_approx": 6,
+  "note": "Wind-down amendment to an existing JV — terminates Veoneer parties' involvement in two JVs (VNBJ, VNBZ), preserves Autoliv AB's role in ANRA. This is a JV-related document but not a fresh JV.",
+  "items": [
+    { "id": "doc3-1", "severity": "RED", "where": "Article 1.d", "risk": "No general release of pre-closing claims — Veoneer parties cease to be parties but liability for pre-closing breach SURVIVES" },
+    { "id": "doc3-2", "severity": "major", "where": "Article 3", "risk": "Conditional effectiveness on TWO closings (VNBJ + VNBZ) — what if only one closes? Document is ambiguous" },
+    { "id": "doc3-3", "severity": "major", "where": "(D), Article 1.c", "risk": "ANRA wind-down obligations continue indefinitely for Nissin + Autoliv AB" },
+    { "id": "doc3-4", "severity": "minor", "where": "Article 1 (last para)", "risk": "D&O indemnification carve-out continues but only for pre-closing liabilities" },
+    { "id": "doc3-5", "severity": "minor", "where": "implicit", "risk": "No governing law in the Amendment itself — inherits from underlying JV which is not attached" },
+    { "id": "doc3-6", "severity": "minor", "where": "Article 1.d", "risk": "Tail liability for representations + warranties + covenants — pre-closing only, narrow" },
+    { "id": "doc3-7", "severity": "minor", "where": "implicit", "risk": "No specified mechanism for resolving disputes about whether a breach was pre- or post-closing" }
+  ],
+  "qualitative_tone": "should flag survival of pre-closing liability as the single biggest risk. Synthesis should be SHORT because the doc is narrow — overproducing concerns on a wind-down is a sign of generic blather. A junior would flag every word; a senior would flag 2-3 things.",
+  "overproduction_threshold": 6
+}

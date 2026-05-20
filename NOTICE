@@ -94,5 +94,30 @@ framing) and is not used to imply endorsement.
 
 ----------------------------------------------------------------------------
 
+Lavern eval baseline (Sprint 23)
+Copyright 2025-2026 Antti Innanen.
+Licensed under the Apache License, Version 2.0.
+https://github.com/AnttiHero/lavern
+
+The fixtures under `evals/lavern-jv/` (three CUAD JV-flavoured contracts —
+borrowmoneycom_06_11_2020, sibannac_12_04_2017, veoneer_02_21_2020 — plus
+the 29-item pre-registered scoring rubric at `RUBRIC.lavern-original.md`)
+are lifted verbatim from Lavern's `evals/jv/` directory. Sprint 23 pulled
+at the same upstream commit as Sprint 21:
+
+  Upstream commit: 7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd
+  Upstream date:   2026-05-20
+  Pull date:       2026-05-20
+
+The Oscar GC adaptation (`RUBRIC.adapted.md` + the runner under
+`evals/lavern-jv/scripts/`) is Sprint 23 work and not lifted; see
+`evals/lavern-jv/NOTICE.lavern.md` for the per-file mapping and the
+adaptation policy (per ADR-077). Lavern's human-baseline scores in the
+EVAL_REPORT_V*.md files are NOT lifted — they were graded on `gemma2:2b`
+through Lavern's pipeline, whereas Oscar GC runs on `MiniMax-M2.5` doing
+partner-style consultation; direct score comparison is informational only.
+
+----------------------------------------------------------------------------
+
 ADR-035 records the attribution scheme for this fork. Future Apache 2.0
 dependencies added to Oscar GC append entries here.

@@ -1,0 +1,22 @@
+{
+  "doc_id": "doc2-sibannac",
+  "doc_file": "docs/sibannac_12_04_2017.txt",
+  "doc_label": "Bravatek × Sibannac Strategic Alliance Agreement",
+  "contract_type": "strategic alliance / commission",
+  "char_count": 8380,
+  "clause_count_approx": 12,
+  "note": "Labelled 'Strategic Alliance' but is effectively a commission/referral agreement.",
+  "items": [
+    { "id": "doc2-1", "severity": "RED", "where": "cl 4", "risk": "Commission unilaterally set by COMPANY in 10-20% range — Bravatek has no certainty on fee" },
+    { "id": "doc2-2", "severity": "major", "where": "cl 4", "risk": "NET 30 from CLIENT payment received — Bravatek bears credit/collection risk" },
+    { "id": "doc2-3", "severity": "major", "where": "cl 7", "risk": "Termination on 90 days notice by either party — convenience kill switch, no ramp-down protection" },
+    { "id": "doc2-4", "severity": "major", "where": "cl 1", "risk": "Non-exclusive arrangement — leads not protected, Bravatek can be cut out" },
+    { "id": "doc2-5", "severity": "major", "where": "implicit", "risk": "No minimum performance / no exclusivity protections either way" },
+    { "id": "doc2-6", "severity": "minor", "where": "cl 10", "risk": "Mutual indemnification limited to negligence + intentional misconduct + breach — narrow" },
+    { "id": "doc2-7", "severity": "minor", "where": "implicit", "risk": "No IP ownership clause for materials created during cooperation" },
+    { "id": "doc2-8", "severity": "minor", "where": "cl 7", "risk": "Auto-renewal with 90-day opt-out — modest dark-pattern risk" },
+    { "id": "doc2-9", "severity": "minor", "where": "implicit", "risk": "No specification of how leads are tracked / disputed" },
+    { "id": "doc2-10", "severity": "minor", "where": "cl 9", "risk": "Texas governing law + no venue clause — could be ambiguous for non-TX parties" }
+  ],
+  "qualitative_tone": "should approach the doc as a commission/referral agreement notwithstanding its 'Strategic Alliance' framing"
+}
