@@ -54,6 +54,16 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 **ADRs**: 074, 075.
 
+**Pushed SHAs**:
+- `sarturko-maker/goose` lavern-firm-mode: `ab713bbeb` (Sprint 22 substrate) + `08a5381a7` (ADRs 074 + 075).
+- `sarturko-maker/oscar-knowledge-base-mcp`: `6021489cd99394c95c9cb0fbac825d0b8d7812f5`.
+- `sarturko-maker/oscar-document-reader-mcp`: `f01e5799dda362af9bfc7c2c33ded33cb8beaf15`.
+- `sarturko-maker/oscar-risk-pricing-mcp`: `420afe6b0f0f6794c3b37f1d83b89281377e9468`.
+- `sarturko-maker/oscar-baselines-mcp`: `8acf5c1a44d20002db302567fcac46b8ac5f1c2d`.
+- `sarturko-maker/oscar-grounding-verifier-mcp`: `74dec70c6d262ad8d6bd41f840a68ed2b8672fdc`.
+- `sarturko-maker/oscar-document-checks-mcp`: `c144f95a43a4d47796f74483d8426eab5eb956f6`.
+- Lavern source pinned at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
+
 ---
 
 
