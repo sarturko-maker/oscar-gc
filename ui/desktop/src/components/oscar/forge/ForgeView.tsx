@@ -8,10 +8,13 @@ import { useNavigate } from 'react-router-dom';
 import { createSession } from '../../../sessions';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { AppEvents } from '../../../constants/events';
+import { useConfig } from '../../ConfigContext';
+import { deriveEnabledPlatformExtensions } from '../recipe/enabledPlatformExtensions';
 import { buildForgeRecipe } from './forgeRecipe';
 
 export default function ForgeView() {
   const navigate = useNavigate();
+  const { extensionsList } = useConfig();
   const [error, setError] = useState<string | null>(null);
   const startedRef = useRef(false);
 
@@ -29,7 +32,15 @@ export default function ForgeView() {
         if (!homeDir) {
           throw new Error('Home directory unavailable');
         }
-        const recipe = buildForgeRecipe(homeDir, window.electron.oscarResourcesRoot);
+        // Sprint 18 (ADR-063, ADR-065): user's enabled platform extensions
+        // thread through; forgeRecipe force-adds code_execution + Extension
+        // Manager on top.
+        const enabledPlatformExtensions = deriveEnabledPlatformExtensions(extensionsList);
+        const recipe = buildForgeRecipe(
+          homeDir,
+          window.electron.oscarResourcesRoot,
+          enabledPlatformExtensions,
+        );
         const session = await createSession(homeDir, { recipe });
         if (cancelled) return;
         window.dispatchEvent(
@@ -49,6 +60,9 @@ export default function ForgeView() {
     return () => {
       cancelled = true;
     };
+    // extensionsList is the recipe-time snapshot; we don't re-build Forge if
+    // the user toggles an extension mid-session — those land on the next launch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   if (error) {

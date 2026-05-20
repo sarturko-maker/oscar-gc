@@ -10,6 +10,7 @@ import { AppEvents } from '../../../constants/events';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { buildCommercialRecipe } from '../commercial/commercialRecipe';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
+import { deriveEnabledPlatformExtensions } from '../recipe/enabledPlatformExtensions';
 import { buildExtensionFromIntegration } from '../integrations/buildExtensionFromIntegration';
 import { ensureRecipeSecrets } from '../onboarding/ensureRecipeSecrets';
 import RecipeSecretsModal from '../onboarding/RecipeSecretsModal';
@@ -126,6 +127,15 @@ export default function MattersLanding({ area }: MattersLandingProps) {
           (e): e is NonNullable<Recipe['extensions']>[number] => e !== null,
         );
 
+      // Sprint 18 (ADR-063, ADR-065): thread the user's enabled platform
+      // extensions (Memory, Top of Mind, Apps, Todo, Summon, Chat Recall,
+      // Extension Manager, Auto Visualiser by default) into the recipe so
+      // the agent has them at turn 1. Toggles in Extensions Settings take
+      // effect on the next matter open.
+      const enabledPlatformExtensions = deriveEnabledPlatformExtensions(
+        config.extensionsList,
+      );
+
       // Commercial composes its bespoke system prompt + redline MCP on top
       // via buildCommercialRecipe; the other 12 areas use the generic shape.
       const recipe =
@@ -136,6 +146,7 @@ export default function MattersLanding({ area }: MattersLandingProps) {
               resourcesRoot,
               companyContext,
               installedConfigs,
+              enabledPlatformExtensions,
             )
           : buildPracticeAreaRecipe({
               area,
@@ -145,6 +156,7 @@ export default function MattersLanding({ area }: MattersLandingProps) {
               resourcesRoot,
               companyContext,
               extraExtensions: installedConfigs,
+              enabledPlatformExtensions,
             });
 
       // Sprint 17 (P6): if any installed integration declares an env_key

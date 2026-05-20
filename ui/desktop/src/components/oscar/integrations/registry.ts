@@ -39,6 +39,29 @@ export const INTEGRATIONS_OVERLAY: Readonly<Record<string, IntegrationOverlay>> 
     overlay_args: [],
   },
 
+  // Sprint 18 (ADR-064): Tavily as transparent bundled web search.
+  // Wired recipe-time by buildTavilyExtension() since Sprint 15 (ADR-052);
+  // this overlay entry surfaces it in the Integrations catalog so the
+  // lawyer sees the provider name and hostname honestly. Bundled tier →
+  // Always-on badge, no Add button, all 13 areas (joinOverlayOnly default).
+  Tavily: {
+    id: 'Tavily',
+    license: 'proprietary',
+    subscription_type: 'free',
+    security_tier: 'bundled',
+    env_keys: ['TAVILY_API_KEY'],
+    service_endpoint_host: 'mcp.tavily.com',
+    maintenance_signal: { last_updated_iso: null, source: 'manual-stub' },
+    facts_note:
+      'Web search wired into every practice-area agent. Queries and any URLs the agent fetches via tavily-extract leave the device to mcp.tavily.com under Tavily\'s TOS.',
+    overlay_title: 'Tavily web search',
+    overlay_description:
+      'Regulatory-currency lookups + open-web research. Always loaded by every practice-area agent — listed here for transparency.',
+    overlay_url: 'https://mcp.tavily.com/mcp/',
+    overlay_cmd: null,
+    overlay_args: [],
+  },
+
   // Sprint 17 seed: CourtListener (Free Law Project).
   // Appears in litigation-legal/.mcp.json + ip-legal/.mcp.json. Free
   // public-data US court records — no subscription, no auth handshake

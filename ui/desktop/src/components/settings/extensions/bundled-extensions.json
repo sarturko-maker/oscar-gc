@@ -4,7 +4,7 @@
     "name": "developer",
     "display_name": "Developer",
     "description": "General development tools useful for software engineering.",
-    "enabled": true,
+    "enabled": false,
     "type": "builtin",
     "env_keys": [],
     "timeout": 300,
@@ -26,7 +26,7 @@
     "name": "autovisualiser",
     "display_name": "Auto Visualiser",
     "description": "Data visualization and UI generation tools",
-    "enabled": false,
+    "enabled": true,
     "type": "builtin",
     "env_keys": [],
     "timeout": 300,
@@ -37,7 +37,7 @@
     "name": "memory",
     "display_name": "Memory",
     "description": "Teach goose your preferences as you go.",
-    "enabled": false,
+    "enabled": true,
     "type": "builtin",
     "env_keys": [],
     "timeout": 300,
@@ -51,6 +51,18 @@
     "enabled": false,
     "type": "builtin",
     "env_keys": [],
+    "bundled": true
+  },
+  {
+    "id": "tavily",
+    "name": "tavily",
+    "display_name": "Web search (Tavily)",
+    "description": "Web search via Tavily. Queries (and any URLs the agent fetches via tavily-extract) go to mcp.tavily.com.",
+    "enabled": true,
+    "type": "streamable_http",
+    "uri": "https://mcp.tavily.com/mcp/?tavilyApiKey=${TAVILY_API_KEY}",
+    "env_keys": ["TAVILY_API_KEY"],
+    "timeout": 30,
     "bundled": true
   }
 ]

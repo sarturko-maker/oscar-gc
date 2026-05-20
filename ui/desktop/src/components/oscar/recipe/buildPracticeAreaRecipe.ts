@@ -8,7 +8,7 @@
 // - oscar-fs allowed-directories narrows to the matter folder (matter
 //   scope-down). Sibling matters in the same area are not visible.
 
-import type { Recipe } from '../../../api';
+import type { ExtensionConfig, Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
 import { buildTavilyExtension } from '../onboarding/onboardingRecipe';
 import type { OscarCompanyContext } from '../hooks/useOscarProfile';
@@ -40,8 +40,14 @@ export interface BuildPracticeAreaRecipeOptions {
   // anchors the agent to the practice-area scope when omitted.
   systemPrompt?: string;
   // Commercial passes the redline MCP; everywhere else this is empty.
-  // Extra extensions append AFTER oscar-fs.
+  // Extra extensions append AFTER oscar-fs and the platform-extension set.
   extraExtensions?: Recipe['extensions'];
+  // Sprint 18 (ADR-065): platform extensions the user has enabled in
+  // config.yaml (Extensions Settings page). Threaded by call sites from
+  // ConfigContext.extensionsList → deriveEnabledPlatformExtensions. The
+  // recipe carries them explicitly because resolve_extensions_for_new_session
+  // returns recipe extensions only when a recipe is in play.
+  enabledPlatformExtensions?: ExtensionConfig[];
   // Sprint 15 (ADR-053): company_context block injected at recipe-build
   // time. Renders to a markdown "## About this company" block prepended
   // to instructions — the load-bearing wire that briefs the agent at
@@ -117,6 +123,10 @@ export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): R
       },
       timeout: 30,
     },
+    // Sprint 18 (ADR-063, ADR-065): the user's enabled platform extensions
+    // (Memory, Top of Mind, Apps, Todo, Summon, Extension Manager, Chat
+    // Recall, Auto Visualiser by default — flip on/off in Extensions UI).
+    ...(opts.enabledPlatformExtensions ?? []),
     ...(opts.extraExtensions ?? []),
     // Sprint 16 (ADR-057): Tavily attached unconditionally; env_keys +
     // URI substitution resolve the key at session-spawn from env or

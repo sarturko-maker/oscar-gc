@@ -78,7 +78,8 @@ pub static PLATFORM_EXTENSIONS: Lazy<HashMap<&'static str, PlatformExtensionDef>
                 display_name: "Chat Recall",
                 description:
                     "Search past conversations and load session summaries for contextual memory",
-                default_enabled: false,
+                // Oscar GC ADR-063: lawyers benefit from recall across matters.
+                default_enabled: true,
                 unprefixed_tools: false,
                 hidden: false,
                 client_factory: |ctx| Box::new(chatrecall::ChatRecallClient::new(ctx).unwrap()),
@@ -154,7 +155,9 @@ pub static PLATFORM_EXTENSIONS: Lazy<HashMap<&'static str, PlatformExtensionDef>
                 name: developer::EXTENSION_NAME,
                 display_name: "Developer",
                 description: "Write and edit files, and execute shell commands",
-                default_enabled: true,
+                // Oscar GC ADR-063: shell + filesystem-write is an escape hatch
+                // for in-house lawyers; named-exclusion default-off.
+                default_enabled: false,
                 unprefixed_tools: true,
                 hidden: false,
                 client_factory: |ctx| Box::new(developer::DeveloperClient::new(ctx).unwrap()),

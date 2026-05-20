@@ -14,6 +14,42 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 18 — Permissive default loadout: in-house lawyer defaults + transparent web search (closed 2026-05-20 on code; this commit)
+
+**Goal**: flip Oscar GC's extension defaults from upstream's developer-leaning shape to permissive-default-with-named-exclusions, with the agent's first turn already briefed and capable. Web search becomes default-on with the provider honestly named on its card. Closes the Sprint 17b carry "lawyer-default loadout" framing surfaced during Crostini dogfood.
+
+**Built** — three ADRs at decision time + targeted edits across Rust core, UI bundled defaults, recipe builders, Integrations registry, and two call sites:
+
+- **P0 — Three ADRs** (`docs/adr/063` permissive default loadout, `064` Tavily transparent bundled web search, `065` recipe builders consume config.yaml platforms). The three ADRs are coupled — the exit criterion fails if any one is dropped. ADR-063 records the named-exclusion doctrine (Default ON: Memory, Top of Mind, Chat Recall, Apps, Todo, Summon, Extension Manager, Auto Visualiser; Default OFF: Developer, Computer Controller, Tutorial, Code Mode). ADR-064 puts Tavily on both visibility surfaces (Extensions Settings + Integrations) with `mcp.tavily.com` named in copy. ADR-065 picks the TS-side merge over a Rust-core `resolve_extensions_for_new_session` change — recipe builders thread `enabledPlatformExtensions` derived from `ConfigContext.extensionsList`.
+
+- **P1 — Rust-core default flip** (`crates/goose/src/agents/platform_extensions/mod.rs`). Two independent line edits: `chatrecall.default_enabled: false → true` (lawyers benefit from recall across matters); `developer.default_enabled: true → false` (shell + filesystem-write is the access-model exclusion per ADR-041). Inline comments cite ADR-063. Migration tests (`config::migrations`) unaffected — no test logic asserts these particular flags.
+
+- **P2 — UI defaults flip + Tavily card** (`ui/desktop/src/components/settings/extensions/bundled-extensions.json`). `memory.enabled` and `autovisualiser.enabled` flipped `false → true`; `developer.enabled` flipped `false` (defence-in-depth — Rust migration is authoritative but JSON consistency matters). New Tavily entry: `type: streamable_http`, `display_name: "Web search (Tavily)"`, description names the provider + the `tavily-extract` fetch caveat. `ExtensionList.getSubtitle` already renders the URI as the visible command line for `streamable_http` (`ExtensionList.tsx:155-162`) — no card-component change needed.
+
+- **P3 — Integrations registry: Tavily entry** (`ui/desktop/src/components/oscar/integrations/registry.ts`). New `Tavily` entry, `security_tier: 'bundled'` (matches `oscar-fs`'s Always-on treatment), `service_endpoint_host: 'mcp.tavily.com'`, `subscription_type: 'free'`, `env_keys: ['TAVILY_API_KEY']`, `facts_note` calls out queries + tavily-extract egress. `loadRegistry.joinOverlayOnly` already gives bundled-tier entries all-13-areas scope; no loader change needed.
+
+- **P4 — Recipe builders thread `enabledPlatformExtensions`** (`buildPracticeAreaRecipe.ts`, `commercialRecipe.ts`, `forgeRecipe.ts` + new `recipe/enabledPlatformExtensions.ts` helper). The helper filters `FixedExtensionEntry[]` to `enabled === true && (type === 'platform' || type === 'builtin')` and strips the `enabled` field. Both types are included because `extension_manager.add_extension` (`extension_manager.rs:851`) treats `Platform` and `Builtin` configs as the same in-process class. Recipe extensions order: oscar-fs → platforms → extraExtensions → tavily. Forge additionally force-includes `code_execution` + `Extension Manager` via `ensureForgePlatforms()` — even if disabled in config.yaml — because Forge's purpose is wiring new agents and managing extensions.
+
+- **P5 — Two call sites updated**: `MattersLanding.openMatter` derives `enabledPlatformExtensions` from its `useConfig()` snapshot and threads through both `buildCommercialRecipe` (new 6th param) and `buildPracticeAreaRecipe.opts`. `ForgeView` uses the same pattern via its own `useConfig()` consumer.
+
+**Verification** (in this session):
+- `pnpm exec tsc --noEmit` on `ui/desktop`: clean.
+- `cargo check -p goose`: clean (Rust touch compiles; warnings unchanged).
+- Migration test suite (`cargo test -p goose --lib config::migrations`): all three tests pass (`test_migrate_platform_extensions_empty_config`, `..._preserves_enabled_state`, `..._idempotent`). The "preserves enabled state" test was the one to watch — it sets `todo.enabled: false` and asserts re-migration preserves that; unaffected by developer/chatrecall flips.
+- Inspected: `bundled-extensions.json` + Rust migration interact correctly — `developer` (in both layers) lands as the Rust flag (false); `memory`/`autovisualiser` (UI-only) land as the JSON flag (true); no double-spawn for Tavily because `resolve_extensions_for_new_session` returns recipe extensions only when a recipe is in play (extensions.rs:169).
+
+**Deferred** — runtime gate (Crostini dogfood validation) to Sprint 18b: build the .deb, push to draft release, verify on Arturs's Crostini that (a) Extensions Settings shows the new default loadout on first launch, (b) Tavily card renders with hostname on both Extensions and Integrations surfaces, (c) opening a matter loads the platform extensions into the agent's tool surface (verify via "what tools do you have?"), (d) toggling Tutorial on → next matter open includes tutorial tools, (e) Forge tool surface includes `code_execution` + `Extension Manager` regardless of user toggles.
+
+**Carry-forwards**:
+- **Crostini dogfood E1–E5** → Sprint 18b (same shape as Sprint 17b's carry).
+- **Sprint 17b F3 (Tavily silence — "force-cite ≥2 dimensions")** still open. Not addressed in this sprint (scope was loadout, not intake prompt levers); carries to Sprint 19.
+- **Upstream PR candidate**: per-recipe `force_platform_extensions: string[]` declaration on the Recipe schema, picked up by `resolve_extensions_for_new_session`. Would let Forge's two force-on platforms live in the Recipe definition rather than in `ensureForgePlatforms()`. ADR-065 references this as a Sprint 19+ candidate.
+- **Sprint 16 carry "platform-extension trim"** is closed in spirit by ADR-065 — recipe builders now consume the user's enabled-platform state. The Rust-core merge variant remains a possible upstream PR (separate from the trim itself).
+
+**ADRs**: 063, 064, 065.
+
+---
+
 ### Sprint 17b — Crostini dogfood patches: pnpm 11 overrides + Vite React dedupe + paid-wrapper visible-only + dropdown filtered to user areas (closed 2026-05-20 on code; commits `46642a0c9`, `9845e4f37`, `3209ebb5d`, this commit)
 
 **Goal**: get Sprint 17 launching on Arturs's Crostini and surface dogfood findings against the lawyer-shape exit criteria.

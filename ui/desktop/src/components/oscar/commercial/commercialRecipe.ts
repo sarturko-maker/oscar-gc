@@ -1,4 +1,4 @@
-import type { Recipe } from '../../../api';
+import type { ExtensionConfig, Recipe } from '../../../api';
 import { SYSTEM_PROMPT } from './systemPrompt';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
 import type { OscarCompanyContext } from '../hooks/useOscarProfile';
@@ -28,6 +28,9 @@ export function buildCommercialRecipe(
   resourcesRoot: string | null,
   companyContext: OscarCompanyContext | null,
   installedConfigs: NonNullable<Recipe['extensions']> = [],
+  // Sprint 18 (ADR-065): user-enabled platform extensions threaded from
+  // MattersLanding.openMatter (ConfigContext.extensionsList snapshot).
+  enabledPlatformExtensions: ExtensionConfig[] = [],
 ): Recipe {
   return buildPracticeAreaRecipe({
     area: {
@@ -42,6 +45,7 @@ export function buildCommercialRecipe(
     resourcesRoot,
     systemPrompt: SYSTEM_PROMPT,
     companyContext,
+    enabledPlatformExtensions,
     extraExtensions: [
       {
         type: 'stdio',
