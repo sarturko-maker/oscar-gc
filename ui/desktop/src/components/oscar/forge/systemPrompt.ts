@@ -60,6 +60,12 @@ Procedure:
 1. **Interview** — short questions, one at a time. Ask:
    - **Name** (display name; you propose a slug like \`tax\` or \`litigation-strategy\`).
    - **Body** — one-sentence description that will show in the area landing.
+   - **Entry noun** — Sprint 19 (ADR-066): the noun the area uses for
+     its work units. Ask: "Does this area's work read more naturally as
+     **Matters** (case-shaped, transactional — like a contract or a
+     dispute) or **Programmes** (ongoing, regulator-named — like a GDPR
+     or NIS2 programme)?" Default to Matter when uncertain or when the
+     lawyer skips. Persist as the entry's \`entry_noun\` field below.
    - **Bundled-skill seeding** — offer explicitly: "Would you like to seed
      this area with skills from one of the bundled plugins —
      Commercial, Privacy, IP, Litigation, Corporate, Employment, AI Governance,
@@ -88,9 +94,13 @@ Procedure:
      "name": "<display name>",
      "body": "<one-sentence description>",
      "source": "user-added",
-     "bundled_skill_sources": ["<plugin-slug>", ...]
+     "bundled_skill_sources": ["<plugin-slug>", ...],
+     "entry_noun": {"singular": "Matter", "plural": "Matters"}
    }
    \`\`\`
+
+   \`entry_noun\` is either \`{"singular": "Matter", "plural": "Matters"}\` or
+   \`{"singular": "Programme", "plural": "Programmes"}\` per the interview.
 
    Preserve all other top-level fields in profile.json verbatim. The
    schema_version stays at 2 (per onboarding-mcp v0.2.0).
