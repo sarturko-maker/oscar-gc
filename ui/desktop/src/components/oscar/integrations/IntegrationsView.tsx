@@ -1,19 +1,26 @@
-// Sprint 17 (ADR-060): top-level Integrations view. Unfiltered registry.
-// Each card has a target-area <select> dropdown next to the Add button so
-// the lawyer picks which practice-area agent gets the new integration.
+// Sprint 17 (ADR-060), Sprint 17b dogfood fix: top-level Integrations view.
+// Unfiltered registry — every entry visible for transparency, regardless
+// of the user's selected practice areas. Each card has a target-area
+// <select> dropdown next to the Add button, and the dropdown is scoped
+// to the **user's selected practice areas** (profile.json `practice_areas[]`
+// via usePracticeAreas) intersected with the entry's `relevant_areas`.
+// Sprint 17 first pass showed all 13 catalog areas which doesn't match
+// the lawyer's actual loadout.
 //
-// Per-area-tab variant (IntegrationsPerArea) handles the filtered view;
-// this top-level view shares the same IntegrationCard / ConfirmAddModal
-// components.
+// Per-area-tab variant (IntegrationsPerArea) handles the per-area
+// filtered list; this top-level view shares IntegrationCard +
+// ConfirmAddModal.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PRACTICE_AREAS } from '../practiceAreas';
+import { usePracticeAreas } from '../hooks/usePracticeAreas';
+import { PRACTICE_AREAS, type PracticeArea } from '../practiceAreas';
 import type { Integration, InstalledIntegration } from './types';
 import { loadIntegrationsRegistry } from './loadRegistry';
 import IntegrationCard from './IntegrationCard';
 import ConfirmAddModal from './ConfirmAddModal';
 
 export default function IntegrationsView() {
+  const userAreas = usePracticeAreas();
   const [registry, setRegistry] = useState<Integration[] | null>(null);
   const [installedByArea, setInstalledByArea] = useState<
     Record<string, InstalledIntegration[]>
@@ -25,9 +32,12 @@ export default function IntegrationsView() {
     areaId: string;
   } | null>(null);
 
+  // Sprint 17b: pull the installed list only for the user's actual
+  // practice areas — the top-level view's Installed badge is computed
+  // against the current target area, so we only need those entries.
   const refreshInstalled = useCallback(async (): Promise<void> => {
     const out: Record<string, InstalledIntegration[]> = {};
-    for (const area of PRACTICE_AREAS) {
+    for (const area of userAreas) {
       try {
         out[area.id] = await window.electron.integrations.list(area.id);
       } catch {
@@ -35,7 +45,7 @@ export default function IntegrationsView() {
       }
     }
     setInstalledByArea(out);
-  }, []);
+  }, [userAreas]);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,15 +54,6 @@ export default function IntegrationsView() {
         const r = await loadIntegrationsRegistry();
         if (cancelled) return;
         setRegistry(r);
-        // Default each entry's target area to its first relevant area,
-        // or "commercial" as a fallback. Bundled entries have no target
-        // picker; this map is ignored for them.
-        const defaults: Record<string, string> = {};
-        for (const e of r) {
-          if (e.security_tier === 'bundled') continue;
-          defaults[e.id] = e.relevant_areas[0] ?? PRACTICE_AREAS[0].id;
-        }
-        setTargetByEntry(defaults);
       } catch (err) {
         if (!cancelled) {
           setLoadError((err as Error).message ?? 'Could not load registry.');
@@ -64,6 +65,47 @@ export default function IntegrationsView() {
       cancelled = true;
     };
   }, [refreshInstalled]);
+
+  // The list of areas the dropdown may target for a given entry: the
+  // intersection of the user's selected practice areas with the entry's
+  // relevant_areas. Cross-area entries (Slack, Google Drive) get the full
+  // user-area list; commercial-only entries (e.g. trusted CourtListener
+  // surfacing in disputes areas) get whichever user-areas overlap. If the
+  // intersection is empty, the entry isn't usefully addable from the top
+  // level — Add stays disabled.
+  const targetOptionsForEntry = useCallback(
+    (entry: Integration): PracticeArea[] => {
+      const intersect = userAreas.filter((a) =>
+        entry.relevant_areas.includes(a.id),
+      );
+      // Fallback: if relevant_areas is empty (overlay-only bundled entries
+      // hit a different code path; this shouldn't trigger for non-bundled
+      // entries), allow any user area so the dropdown still renders.
+      return intersect.length > 0 ? intersect : [...userAreas];
+    },
+    [userAreas],
+  );
+
+  // Initialise / sync targetByEntry once both registry and userAreas are
+  // known. Default each entry to the first valid user area.
+  useEffect(() => {
+    if (!registry) return;
+    setTargetByEntry((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const e of registry) {
+        if (e.security_tier === 'bundled') continue;
+        const opts = targetOptionsForEntry(e);
+        if (opts.length === 0) continue;
+        const existing = next[e.id];
+        if (!existing || !opts.find((a) => a.id === existing)) {
+          next[e.id] = opts[0].id;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [registry, targetOptionsForEntry]);
 
   const handleConfirmAdd = async (
     entry: Integration,
@@ -84,13 +126,6 @@ export default function IntegrationsView() {
       },
     [installedByArea, targetByEntry],
   );
-
-  const areaForEntry = (entry: Integration): { id: string; name: string } => {
-    const areaId = targetByEntry[entry.id] ?? PRACTICE_AREAS[0].id;
-    const area =
-      PRACTICE_AREAS.find((a) => a.id === areaId) ?? PRACTICE_AREAS[0];
-    return { id: area.id, name: area.name };
-  };
 
   return (
     <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
@@ -115,34 +150,33 @@ export default function IntegrationsView() {
           <div className="oscar__integration-list mt-4 overflow-y-auto min-h-0">
             {registry.map((e) => {
               const targetId = targetByEntry[e.id];
-              // Bundled entries: no target picker (always-on across all areas).
+              const opts = targetOptionsForEntry(e);
+              // Bundled entries: no target picker (always-on across all
+              // user areas). Non-bundled with empty intersection: still
+              // show the entry (transparency) but the dropdown lists
+              // nothing — Add is essentially inert; that's honest.
               const picker =
-                e.security_tier === 'bundled' ? undefined : (
-                  <select
-                    className="oscar__integration-target-select"
-                    value={targetId ?? PRACTICE_AREAS[0].id}
-                    onChange={(ev) =>
-                      setTargetByEntry((m) => ({
-                        ...m,
-                        [e.id]: ev.target.value,
-                      }))
-                    }
-                    aria-label={`Target area for ${e.title}`}
-                  >
-                    {(e.relevant_areas.length > 0
-                      ? e.relevant_areas
-                      : PRACTICE_AREAS.map((a) => a.id)
-                    ).map((aid) => {
-                      const area = PRACTICE_AREAS.find((a) => a.id === aid);
-                      if (!area) return null;
-                      return (
-                        <option key={aid} value={aid}>
+                e.security_tier === 'bundled' || opts.length === 0
+                  ? undefined
+                  : (
+                    <select
+                      className="oscar__integration-target-select"
+                      value={targetId ?? opts[0].id}
+                      onChange={(ev) =>
+                        setTargetByEntry((m) => ({
+                          ...m,
+                          [e.id]: ev.target.value,
+                        }))
+                      }
+                      aria-label={`Target area for ${e.title}`}
+                    >
+                      {opts.map((area) => (
+                        <option key={area.id} value={area.id}>
                           {area.name}
                         </option>
-                      );
-                    })}
-                  </select>
-                );
+                      ))}
+                    </select>
+                  );
               return (
                 <IntegrationCard
                   key={e.id}
@@ -150,8 +184,9 @@ export default function IntegrationsView() {
                   installed={isInstalledForCurrentTarget(e)}
                   areaPicker={picker}
                   onClickAdd={() => {
-                    const { id } = areaForEntry(e);
-                    setPending({ entry: e, areaId: id });
+                    const areaId = targetByEntry[e.id] ?? opts[0]?.id;
+                    if (!areaId) return;
+                    setPending({ entry: e, areaId });
                   }}
                 />
               );
@@ -163,14 +198,15 @@ export default function IntegrationsView() {
       {pending && (
         <ConfirmAddModal
           entry={pending.entry}
-          area={{
-            id: pending.areaId,
-            name:
-              PRACTICE_AREAS.find((a) => a.id === pending.areaId)?.name ??
-              pending.areaId,
-            body: '',
-            source: 'default',
-          }}
+          area={
+            userAreas.find((a) => a.id === pending.areaId) ??
+            PRACTICE_AREAS.find((a) => a.id === pending.areaId) ?? {
+              id: pending.areaId,
+              name: pending.areaId,
+              body: '',
+              source: 'default',
+            }
+          }
           onCancel={() => setPending(null)}
           onConfirm={() => handleConfirmAdd(pending.entry, pending.areaId)}
         />

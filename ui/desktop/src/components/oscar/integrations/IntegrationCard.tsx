@@ -1,11 +1,16 @@
-// Sprint 17 (ADR-060): single integration card. Three states:
+// Sprint 17 (ADR-060): single integration card. Four states:
 // - bundled: Always-on badge in place of Add (oscar-fs).
+// - paid-subscription: card visible with honest labels, Add replaced with
+//   a "Subscription — not yet installable" badge (Sprint 17b dogfood:
+//   upstream Goose's MCP OAuth client_id `goose-docs.ai/oauth/client-
+//   metadata.json` isn't registered with Ironclad/DocuSign/etc., so
+//   wiring them into the recipe breaks matter open; deferred to Sprint
+//   18+ when a real OAuth client lands).
 // - installed (post-Add): Installed badge; click is a no-op in Sprint 17.
-// - addable (trusted or community): Add button → opens ConfirmAddModal.
+// - addable (trusted or community-non-paid): Add → ConfirmAddModal.
 //
-// Top-level Integrations view (P4) passes an optional onSelectArea
-// dropdown (the per-card target-area picker). Per-area view doesn't pass
-// it — area is already the active practice area.
+// Top-level Integrations view (P4) passes an optional areaPicker
+// dropdown; per-area view doesn't pass it (area is fixed).
 
 import type * as React from 'react';
 import type { Integration } from './types';
@@ -14,6 +19,7 @@ import {
   HostTag,
   InstalledBadge,
   LicenseTag,
+  PendingAuthBadge,
   SubscriptionTag,
   TierBadge,
 } from './Tags';
@@ -34,6 +40,13 @@ export default function IntegrationCard({
   onClickAdd,
 }: IntegrationCardProps) {
   const isBundled = entry.security_tier === 'bundled';
+  // Sprint 17b: paid-subscription wrappers (Ironclad, DocuSign) require
+  // OAuth that upstream Goose's MCP-OAuth client isn't trusted to perform.
+  // Show them honestly for transparency but make Add unavailable in this
+  // sprint. Trusted-tier and free/account-only community tier stay
+  // installable.
+  const isPaidNotYetInstallable =
+    entry.subscription_type === 'requires-paid-subscription';
 
   return (
     <div className="oscar__integration-card">
@@ -57,9 +70,11 @@ export default function IntegrationCard({
       </div>
 
       <div className="oscar__integration-card-actions">
-        {areaPicker}
+        {!isPaidNotYetInstallable && areaPicker}
         {isBundled ? (
           <AlwaysOnBadge />
+        ) : isPaidNotYetInstallable ? (
+          <PendingAuthBadge />
         ) : installed ? (
           <InstalledBadge />
         ) : (

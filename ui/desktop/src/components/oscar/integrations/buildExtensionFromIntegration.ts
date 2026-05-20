@@ -37,6 +37,21 @@ export function buildExtensionFromEntry(
     return null;
   }
 
+  // Sprint 17b: paid-subscription wrappers require OAuth that upstream
+  // Goose's MCP-OAuth client (`goose-docs.ai/oauth/client-metadata.json`)
+  // isn't trusted to perform — wiring them into the recipe breaks matter
+  // open with a 'not a trusted client' error. UI marks them visible-only,
+  // but defence in depth: if a stale installed_integrations.json carries
+  // one (e.g. from a Sprint 17 install before this gate landed), skip it
+  // at recipe-build time.
+  if (entry.subscription_type === 'requires-paid-subscription') {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `integrations: paid-subscription entry "${entry.id}" cannot be wired into the recipe in Sprint 17b (OAuth client_id mismatch). Skipping; Sprint 18+ revisits.`,
+    );
+    return null;
+  }
+
   if (entry.transport === 'streamable_http') {
     if (!entry.url) {
       // eslint-disable-next-line no-console

@@ -65,3 +65,18 @@ export function AlwaysOnBadge() {
 export function InstalledBadge() {
   return <span className="oscar__integration-status">Installed</span>;
 }
+
+// Sprint 17b: paid-subscription wrappers are visible-only — upstream Goose
+// MCP-OAuth client_id (`goose-docs.ai/oauth/client-metadata.json`) isn't
+// trusted by Ironclad/DocuSign/etc., so wiring them into a recipe breaks
+// matter open. Sprint 18+ revisits when a real OAuth client lands.
+export function PendingAuthBadge() {
+  return (
+    <span
+      className="oscar__integration-status oscar__integration-status--pending"
+      title="Subscription required — installation flow lands in a later release"
+    >
+      Subscription — not yet installable
+    </span>
+  );
+}

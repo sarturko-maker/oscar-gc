@@ -1975,6 +1975,17 @@ pre:has(> code.bg-inline-code) {
   padding: 8px 4px;
 }
 
+/* Sprint 17b: paid-subscription wrappers — visible-only state until
+   real MCP OAuth lands in Sprint 18+. Slightly stronger ink than the
+   default ink-faint so the deferred state reads clearly without
+   becoming a call-to-action. */
+.oscar__integration-status--pending {
+  color: var(--ink-muted);
+  padding: 8px 10px;
+  border: 1px dashed var(--paper-edge);
+  border-radius: 2px;
+}
+
 .oscar__integration-prompt {
   margin-top: 8px;
   font-family: var(--sans-editorial);
