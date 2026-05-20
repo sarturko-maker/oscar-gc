@@ -14,7 +14,7 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
-### Sprint 20-M2 — Section registry + per-area composition (closed 2026-05-20 on code; commit `<HEAD>`)
+### Sprint 20-M2 — Section registry + per-area composition (closed 2026-05-20 on code; commit `1c0d3370e`)
 
 **Goal**: third sub-sprint (M2) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Turn M1's inert pane body into a data-driven stack of section stubs whose composition is per-area: `PracticeAreaShape.defaultPanelSections` overridden by `area_overrides.panel_sections`. No real section bodies — M3 fills MatterFacts + History, M4 Playbooks, M5 Skills. M2 is the wiring sprint.
 
