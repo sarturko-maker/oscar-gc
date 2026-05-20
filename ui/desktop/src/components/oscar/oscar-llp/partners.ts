@@ -1,6 +1,7 @@
-// Sprint 21 (ADR-071): Lavern firm-mode partner registry. Single source of
-// truth for the 10 partners — slug, display name, specialism, blurb, and the
-// lifted-and-adapted Lavern prompt body (see ADR-072).
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode
+// partner registry. Single source of truth for the 10 partners — slug, display
+// name, specialism, blurb, and the lifted-and-adapted Lavern prompt body (see
+// ADR-072; "Lavern" here is the upstream-source attribution, not the firm name).
 
 import { sarahChenPrompt } from './prompts/sarah-chen';
 import { marcusWebbPrompt } from './prompts/marcus-webb';
@@ -13,7 +14,7 @@ import { robertSinclairPrompt } from './prompts/robert-sinclair';
 import { aishaKhanPrompt } from './prompts/aisha-khan';
 import { thomasSchmidtPrompt } from './prompts/thomas-schmidt';
 
-export interface LavernPartner {
+export interface OscarLLPPartner {
   // kebab-case slug used for working-dir, state-file key, URL segment
   slug: string;
   // Display name shown as the partner card title and in the chat title
@@ -27,7 +28,7 @@ export interface LavernPartner {
   systemPrompt: string;
 }
 
-export const LAVERN_PARTNERS: readonly LavernPartner[] = [
+export const OSCAR_LLP_PARTNERS: readonly OscarLLPPartner[] = [
   {
     slug: 'sarah-chen',
     name: 'Sarah Chen',
@@ -106,6 +107,6 @@ export const LAVERN_PARTNERS: readonly LavernPartner[] = [
   },
 ];
 
-export function partnerBySlug(slug: string): LavernPartner | undefined {
-  return LAVERN_PARTNERS.find((p) => p.slug === slug);
+export function partnerBySlug(slug: string): OscarLLPPartner | undefined {
+  return OSCAR_LLP_PARTNERS.find((p) => p.slug === slug);
 }

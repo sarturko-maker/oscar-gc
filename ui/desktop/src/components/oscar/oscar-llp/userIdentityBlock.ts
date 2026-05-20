@@ -1,6 +1,6 @@
-// Sprint 21 (ADR-071): renderer for the "## About the in-house lawyer you are
-// advising" markdown block prepended to every Lavern partner recipe's
-// instructions at session-spawn time.
+// Sprint 21 (ADR-071) + Sprint 24-A (ADR-078): renderer for the "## About the
+// in-house lawyer you are advising" markdown block prepended to every Oscar
+// LLP partner recipe's instructions at session-spawn time.
 //
 // Counterpart to companyContextBlock.ts (Sprint 15, ADR-053): companyContextBlock
 // briefs the partner on the *company*; userIdentityBlock briefs the partner on

@@ -106,17 +106,18 @@ export default function ChatHistoryTree() {
         </div>
       )}
 
-      {/* Sprint 21 (ADR-071): Lavern firm-mode. Sits between Quick chats
-          (ephemeral, scope-less) and Practice areas (in-house work) — the
-          natural conceptual progression. Single-row group; the 10-partner
-          roster lives on /lavern, not inline in the sidebar. */}
+      {/* Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP
+          firm-mode. Sits between Quick chats (ephemeral, scope-less) and
+          Practice areas (in-house work) — the natural conceptual progression.
+          Single-row group; the 10-partner roster lives on /oscar-llp, not
+          inline in the sidebar. */}
       <div className="oscar__sidebar-group">
-        <div className="oscar__eyebrow oscar__sidebar-eyebrow">Lavern</div>
+        <div className="oscar__eyebrow oscar__sidebar-eyebrow">Oscar LLP</div>
         <Link
-          to="/lavern"
+          to="/oscar-llp"
           className={cn(
             'oscar__sidebar-item',
-            pathname.startsWith('/lavern') && 'oscar__sidebar-item--active',
+            pathname.startsWith('/oscar-llp') && 'oscar__sidebar-item--active',
           )}
         >
           Browse partners

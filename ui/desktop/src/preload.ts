@@ -268,11 +268,11 @@ type ElectronAPI = {
     ensureDir: () => Promise<{ ok: boolean; path: string }>;
     getDir: () => Promise<string>;
   };
-  // Sprint 21 (ADR-071): Lavern firm-mode. Per-partner working_dir + state
-  // file binding partner slug → session_id for resume-on-existing. The
-  // canonical partner roster is renderer-side at lavern/partners.ts; main
-  // owns only the session-id binding shape.
-  lavern: {
+  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode.
+  // Per-partner working_dir + state file binding partner slug → session_id for
+  // resume-on-existing. The canonical partner roster is renderer-side at
+  // oscar-llp/partners.ts; main owns only the session-id binding shape.
+  llp: {
     ensureDir: (slug: string) => Promise<{ ok: boolean; path: string }>;
     bindSession: (slug: string, sessionId: string) => Promise<{ ok: boolean }>;
     lookupState: (
@@ -506,20 +506,21 @@ const electronAPI: ElectronAPI = {
     ensureDir: () => ipcRenderer.invoke('oscar:quick-chats:ensure-dir'),
     getDir: () => ipcRenderer.invoke('oscar:quick-chats:get-dir'),
   },
-  // Sprint 21 (ADR-071): Lavern firm-mode. Per-partner working_dir provisioning
-  // + per-partner session-binding registry. The canonical partner roster lives
-  // in renderer-land at components/oscar/lavern/partners.ts; main owns only the
-  // session_id binding (so re-opening a partner from the roster resumes prior
-  // chat — mirrors MattersLanding.openMatter:121-138 pattern).
-  lavern: {
+  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode.
+  // Per-partner working_dir provisioning + per-partner session-binding
+  // registry. The canonical partner roster lives in renderer-land at
+  // components/oscar/oscar-llp/partners.ts; main owns only the session_id
+  // binding (so re-opening a partner from the roster resumes prior chat —
+  // mirrors MattersLanding.openMatter:121-138 pattern).
+  llp: {
     ensureDir: (slug: string) =>
-      ipcRenderer.invoke('oscar:lavern:ensure-dir', slug),
+      ipcRenderer.invoke('oscar:llp:ensure-dir', slug),
     bindSession: (slug: string, sessionId: string) =>
-      ipcRenderer.invoke('oscar:lavern:bind-session', slug, sessionId),
+      ipcRenderer.invoke('oscar:llp:bind-session', slug, sessionId),
     lookupState: (slug: string) =>
-      ipcRenderer.invoke('oscar:lavern:lookup-state', slug),
+      ipcRenderer.invoke('oscar:llp:lookup-state', slug),
     listPartnerStates: () =>
-      ipcRenderer.invoke('oscar:lavern:list-partner-states'),
+      ipcRenderer.invoke('oscar:llp:list-partner-states'),
   },
 };
 

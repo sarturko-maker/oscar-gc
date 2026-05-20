@@ -1805,19 +1805,33 @@ const OSCAR_DOCUMENTS_DIR = path.join(os.homedir(), 'Documents', 'Oscar GC');
 // chats via the existing `oscar:matters:detach-active` IPC.
 const OSCAR_QUICK_CHATS_DIR = path.join(OSCAR_DOCUMENTS_DIR, '.quick-chats');
 
-// Sprint 21 (ADR-071): Lavern firm-mode per-partner working_dir + state file.
-// Each partner gets ~/Documents/Oscar GC/Lavern/<slug>/ as their working_dir;
-// Goose Memory's agent-working-dir meta scoping isolates memory per partner
-// automatically. The state file at ~/.config/oscar/state/lavern/partners.json
-// binds partner slugs to session_ids so re-opening a partner from the roster
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode
+// per-partner working_dir + state file. Each partner gets
+// ~/Documents/Oscar GC/Oscar LLP/<slug>/ as their working_dir; Goose Memory's
+// agent-working-dir meta scoping isolates memory per partner automatically.
+// The state file at ~/.config/oscar/state/oscar-llp/partners.json binds
+// partner slugs to session_ids so re-opening a partner from the roster
 // resumes the prior chat (mirrors matters.json[slug].session_id pattern).
-const OSCAR_LAVERN_DIR = path.join(OSCAR_DOCUMENTS_DIR, 'Lavern');
-const OSCAR_LAVERN_STATE_DIR = path.join(OSCAR_STATE_DIR, 'lavern');
-const OSCAR_LAVERN_REGISTRY_PATH = path.join(
-  OSCAR_LAVERN_STATE_DIR,
+const OSCAR_LLP_DIR = path.join(OSCAR_DOCUMENTS_DIR, 'Oscar LLP');
+const OSCAR_LLP_STATE_DIR = path.join(OSCAR_STATE_DIR, 'oscar-llp');
+const OSCAR_LLP_REGISTRY_PATH = path.join(
+  OSCAR_LLP_STATE_DIR,
   'partners.json',
 );
-const lavernWorkingDir = (slug: string) => path.join(OSCAR_LAVERN_DIR, slug);
+const oscarLlpWorkingDir = (slug: string) => path.join(OSCAR_LLP_DIR, slug);
+
+// Sprint 24-A (ADR-078): legacy Lavern-named paths from Sprint 21-23. Migrated
+// read-time at first read (registry) / first ensure-dir per slug (working dir)
+// via atomic fs.rename — mirrors ADR-047 matters-registry backup pattern and
+// ADR-032 schema v1→v2 lazy migration. Idempotent + interrupt-safe. Sprint 25
+// cleanup removes these constants + the migration helpers once we're confident
+// no live host still has legacy data.
+const LEGACY_LAVERN_REGISTRY_PATH = path.join(
+  OSCAR_STATE_DIR,
+  'lavern',
+  'partners.json',
+);
+const LEGACY_LAVERN_DIR = path.join(OSCAR_DOCUMENTS_DIR, 'Lavern');
 
 // area_id → display name. Kept here (small static table) rather than
 // importing practiceAreas.ts from renderer code into the main bundle.
@@ -2188,21 +2202,53 @@ ipcMain.handle('oscar:quick-chats:ensure-dir', async () => {
 
 ipcMain.handle('oscar:quick-chats:get-dir', () => OSCAR_QUICK_CHATS_DIR);
 
-// Sprint 21 (ADR-071): Lavern partner registry. Per-partner session_id
-// binding for resume-on-existing (mirrors matters.json's session_id field
-// but minimal — no archive, no stakeholders, no display fields; the
-// canonical partner registry is renderer-side at lavern/partners.ts).
-interface LavernPartnerState {
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP partner
+// registry. Per-partner session_id binding for resume-on-existing (mirrors
+// matters.json's session_id field but minimal — no archive, no stakeholders,
+// no display fields; the canonical partner registry is renderer-side at
+// oscar-llp/partners.ts).
+interface OscarLLPPartnerState {
   session_id: string | null;
 }
-type LavernRegistry = Record<string, LavernPartnerState>;
+type OscarLLPRegistry = Record<string, OscarLLPPartnerState>;
 
-const readLavernRegistry = async (): Promise<LavernRegistry> => {
+// Sprint 24-A (ADR-078): one-shot read-time migration from the legacy
+// ~/.config/oscar/state/lavern/partners.json path. POSIX-atomic fs.rename;
+// safe across interrupted boots. No-op when new path already exists or legacy
+// is absent.
+const migrateLegacyLavernRegistry = async (): Promise<void> => {
   try {
-    const raw = await fs.readFile(OSCAR_LAVERN_REGISTRY_PATH, 'utf8');
+    await fs.access(OSCAR_LLP_REGISTRY_PATH);
+    return;
+  } catch {
+    // new path missing; check legacy
+  }
+  try {
+    await fs.access(LEGACY_LAVERN_REGISTRY_PATH);
+  } catch {
+    return;
+  }
+  try {
+    await fs.mkdir(OSCAR_LLP_STATE_DIR, { recursive: true });
+    await fs.rename(LEGACY_LAVERN_REGISTRY_PATH, OSCAR_LLP_REGISTRY_PATH);
+    log.info('oscar:llp registry migrated from legacy lavern path', {
+      from: LEGACY_LAVERN_REGISTRY_PATH,
+      to: OSCAR_LLP_REGISTRY_PATH,
+    });
+  } catch (err) {
+    log.warn('oscar:llp legacy registry migration failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+  }
+};
+
+const readOscarLlpRegistry = async (): Promise<OscarLLPRegistry> => {
+  await migrateLegacyLavernRegistry();
+  try {
+    const raw = await fs.readFile(OSCAR_LLP_REGISTRY_PATH, 'utf8');
     const parsed = JSON.parse(raw) as unknown;
     if (typeof parsed !== 'object' || parsed === null) return {};
-    const result: LavernRegistry = {};
+    const result: OscarLLPRegistry = {};
     for (const [slug, value] of Object.entries(
       parsed as Record<string, unknown>,
     )) {
@@ -2219,31 +2265,67 @@ const readLavernRegistry = async (): Promise<LavernRegistry> => {
     return result;
   } catch (err) {
     if ((err as { code?: string }).code === 'ENOENT') return {};
-    log.warn('oscar:lavern registry read failed', {
+    log.warn('oscar:llp registry read failed', {
       err: errorMessage(err, 'Unknown error'),
     });
     return {};
   }
 };
 
-const writeLavernRegistry = async (registry: LavernRegistry): Promise<void> => {
-  await fs.mkdir(OSCAR_LAVERN_STATE_DIR, { recursive: true });
+const writeOscarLlpRegistry = async (registry: OscarLLPRegistry): Promise<void> => {
+  await fs.mkdir(OSCAR_LLP_STATE_DIR, { recursive: true });
   await fs.writeFile(
-    OSCAR_LAVERN_REGISTRY_PATH,
+    OSCAR_LLP_REGISTRY_PATH,
     JSON.stringify(registry, null, 2),
     'utf8',
   );
 };
 
-ipcMain.handle('oscar:lavern:ensure-dir', async (_event, slugRaw: unknown) => {
+// Sprint 24-A (ADR-078): one-shot per-slug migration of legacy
+// ~/Documents/Oscar GC/Lavern/<slug>/ working dirs to the Oscar LLP path.
+// fs.rename is atomic on the same volume and carries .goose/memory/ + any
+// user-saved files with it as a single inode move. No-op when new exists or
+// legacy is absent.
+const migrateLegacyLavernWorkingDir = async (slug: string): Promise<void> => {
+  const newDir = oscarLlpWorkingDir(slug);
+  try {
+    await fs.access(newDir);
+    return;
+  } catch {
+    // new missing; check legacy
+  }
+  const legacyDir = path.join(LEGACY_LAVERN_DIR, slug);
+  try {
+    await fs.access(legacyDir);
+  } catch {
+    return;
+  }
+  try {
+    await fs.mkdir(OSCAR_LLP_DIR, { recursive: true });
+    await fs.rename(legacyDir, newDir);
+    log.info('oscar:llp working dir migrated from legacy lavern path', {
+      slug,
+      from: legacyDir,
+      to: newDir,
+    });
+  } catch (err) {
+    log.warn('oscar:llp legacy working-dir migration failed', {
+      slug,
+      err: errorMessage(err, 'Unknown error'),
+    });
+  }
+};
+
+ipcMain.handle('oscar:llp:ensure-dir', async (_event, slugRaw: unknown) => {
   const slug = safeSlug(slugRaw);
   if (!slug) return { ok: false, path: '' };
-  const dir = lavernWorkingDir(slug);
+  await migrateLegacyLavernWorkingDir(slug);
+  const dir = oscarLlpWorkingDir(slug);
   try {
     await fs.mkdir(dir, { recursive: true });
     return { ok: true, path: dir };
   } catch (err) {
-    log.warn('oscar:lavern:ensure-dir failed', {
+    log.warn('oscar:llp:ensure-dir failed', {
       slug,
       err: errorMessage(err, 'Unknown error'),
     });
@@ -2252,7 +2334,7 @@ ipcMain.handle('oscar:lavern:ensure-dir', async (_event, slugRaw: unknown) => {
 });
 
 ipcMain.handle(
-  'oscar:lavern:bind-session',
+  'oscar:llp:bind-session',
   async (_event, slugRaw: unknown, sessionIdRaw: unknown) => {
     const slug = safeSlug(slugRaw);
     if (
@@ -2262,25 +2344,25 @@ ipcMain.handle(
     ) {
       return { ok: false };
     }
-    const registry = await readLavernRegistry();
+    const registry = await readOscarLlpRegistry();
     registry[slug] = { session_id: sessionIdRaw };
-    await writeLavernRegistry(registry);
+    await writeOscarLlpRegistry(registry);
     return { ok: true };
   },
 );
 
 ipcMain.handle(
-  'oscar:lavern:lookup-state',
+  'oscar:llp:lookup-state',
   async (_event, slugRaw: unknown) => {
     const slug = safeSlug(slugRaw);
     if (!slug) return null;
-    const registry = await readLavernRegistry();
+    const registry = await readOscarLlpRegistry();
     return registry[slug] ?? null;
   },
 );
 
-ipcMain.handle('oscar:lavern:list-partner-states', async () =>
-  readLavernRegistry(),
+ipcMain.handle('oscar:llp:list-partner-states', async () =>
+  readOscarLlpRegistry(),
 );
 
 // Sprint 14 (ADR-047): reverse lookup — given a session_id (from BaseChat),

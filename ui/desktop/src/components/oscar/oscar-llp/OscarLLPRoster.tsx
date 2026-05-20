@@ -1,10 +1,11 @@
-// Sprint 21 (ADR-071): Lavern firm-mode roster page. Mounted at /lavern.
-// Lists the 10 partner cards labeled "[Name] ([Specialism])"; each card's
-// click handler mirrors MattersLanding.openMatter resume-on-existing pattern:
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode
+// roster page. Mounted at /oscar-llp. Lists the 10 partner cards labeled
+// "[Name] ([Specialism])"; each card's click handler mirrors
+// MattersLanding.openMatter resume-on-existing pattern:
 //   1. matters.detachActive()           — clear Top of Mind (partners are not matters)
-//   2. lavern.ensureDir(slug)           — ~/Documents/Oscar GC/Lavern/<slug>/
-//   3. lavern.lookupState(slug)         — if bound session_id + still exists, resume
-//   4. else buildLavernPartnerRecipe → createSession → lavern.bindSession
+//   2. llp.ensureDir(slug)              — ~/Documents/Oscar GC/Oscar LLP/<slug>/
+//   3. llp.lookupState(slug)            — if bound session_id + still exists, resume
+//   4. else buildOscarLLPPartnerRecipe → createSession → llp.bindSession
 //   5. dispatch ADD_ACTIVE_SESSION + navigate /pair?resumeSessionId=…
 
 import { useState } from 'react';
@@ -16,19 +17,19 @@ import { getSession } from '../../../api';
 import { useConfig } from '../../ConfigContext';
 import { useOscarProfile } from '../hooks/useOscarProfile';
 import { deriveEnabledPlatformExtensions } from '../recipe/enabledPlatformExtensions';
-import { buildLavernPartnerRecipe } from './buildLavernPartnerRecipe';
-import { useLavernPartners, type LavernPartnerWithState } from './useLavernPartners';
-import type { LavernPartner } from './partners';
+import { buildOscarLLPPartnerRecipe } from './buildOscarLLPPartnerRecipe';
+import { useOscarLLPPartners, type OscarLLPPartnerWithState } from './useOscarLLPPartners';
+import type { OscarLLPPartner } from './partners';
 
-export default function LavernRoster() {
+export default function OscarLLPRoster() {
   const navigate = useNavigate();
   const config = useConfig();
   const { profile } = useOscarProfile();
-  const { partners, loading, error, refresh } = useLavernPartners();
+  const { partners, loading, error, refresh } = useOscarLLPPartners();
   const [opening, setOpening] = useState<string | null>(null);
   const [openError, setOpenError] = useState<string | null>(null);
 
-  const openPartner = async (partner: LavernPartner): Promise<void> => {
+  const openPartner = async (partner: OscarLLPPartner): Promise<void> => {
     setOpening(partner.slug);
     setOpenError(null);
     try {
@@ -36,7 +37,7 @@ export default function LavernRoster() {
       // is empty for the partner session (mirrors Forge + Quick chats).
       await window.electron.matters.detachActive();
 
-      const { ok, path: workingDir } = await window.electron.lavern.ensureDir(partner.slug);
+      const { ok, path: workingDir } = await window.electron.llp.ensureDir(partner.slug);
       if (!ok || !workingDir) {
         throw new Error('Failed to provision partner working directory');
       }
@@ -44,7 +45,7 @@ export default function LavernRoster() {
       // Resume-on-existing: if a session is already bound AND still exists
       // server-side, navigate to it without rebuilding the recipe. Same
       // pattern as MattersLanding.openMatter:121-138.
-      const state = await window.electron.lavern.lookupState(partner.slug);
+      const state = await window.electron.llp.lookupState(partner.slug);
       if (state?.session_id) {
         const existing = await getSession({
           path: { session_id: state.session_id },
@@ -67,7 +68,7 @@ export default function LavernRoster() {
       }
 
       const enabledPlatformExtensions = deriveEnabledPlatformExtensions(config.extensionsList);
-      const recipe = buildLavernPartnerRecipe({
+      const recipe = buildOscarLLPPartnerRecipe({
         partner,
         workingDir,
         resourcesRoot: window.electron.oscarResourcesRoot,
@@ -78,7 +79,7 @@ export default function LavernRoster() {
       });
 
       const session = await createSession(workingDir, { recipe });
-      await window.electron.lavern.bindSession(partner.slug, session.id);
+      await window.electron.llp.bindSession(partner.slug, session.id);
       window.dispatchEvent(
         new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
           detail: { sessionId: session.id, initialMessage: undefined },
@@ -99,12 +100,12 @@ export default function LavernRoster() {
   return (
     <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
       <div className="flex flex-col max-w-3xl flex-1 min-h-0 py-12">
-        <div className="oscar__eyebrow">Lavern</div>
+        <div className="oscar__eyebrow">Oscar LLP</div>
         <h1 className="oscar__matters-title">Partners</h1>
         <p className="oscar__matters-body">
-          Consult one of Lavern's specialist partners alongside your in-house practice. Each partner
-          has their own memory and their own posture — pick the right specialism for the question on
-          your mind.
+          Consult one of Oscar LLP's specialist partners alongside your in-house practice. Each
+          partner has their own memory and their own posture — pick the right specialism for the
+          question on your mind.
         </p>
 
         {loading && <p className="oscar__matters-empty mt-8">Loading partners…</p>}
@@ -113,7 +114,7 @@ export default function LavernRoster() {
         {!loading && !error && (
           <div className="oscar__matters-list flex flex-col mt-6 overflow-y-auto min-h-0">
             {partners.map((row) => (
-              <LavernPartnerRow
+              <OscarLLPPartnerRow
                 key={row.partner.slug}
                 row={row}
                 opening={opening === row.partner.slug}
@@ -130,13 +131,13 @@ export default function LavernRoster() {
   );
 }
 
-interface LavernPartnerRowProps {
-  row: LavernPartnerWithState;
+interface OscarLLPPartnerRowProps {
+  row: OscarLLPPartnerWithState;
   opening: boolean;
-  onOpen: (partner: LavernPartner) => void;
+  onOpen: (partner: OscarLLPPartner) => void;
 }
 
-function LavernPartnerRow({ row, opening, onOpen }: LavernPartnerRowProps) {
+function OscarLLPPartnerRow({ row, opening, onOpen }: OscarLLPPartnerRowProps) {
   const status = row.session_id ? 'Resume' : 'Start chat';
   // Reuses the matter-row CSS family (Sprint 12+ pattern at MatterRow.tsx);
   // the partner card has the same visual shape as a matter card so the two

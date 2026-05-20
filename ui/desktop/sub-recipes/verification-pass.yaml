@@ -1,6 +1,6 @@
 version: "1.0.0"
 title: "Verification Pass"
-description: "Pre-delivery verification for Lavern partner analyses. Cross-references citations against source documents (grounding-verifier) and lints structural claims (document-checks). Returns a pass/issues summary the parent partner cites in its final response."
+description: "Pre-delivery verification for Oscar LLP partner analyses. Cross-references citations against source documents (grounding-verifier) and lints structural claims (document-checks). Returns a pass/issues summary the parent partner cites in its final response."
 
 instructions: |
   You are running a verification pass on a parent partner's draft analysis before it is delivered.
