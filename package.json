@@ -1,0 +1,31 @@
+{
+  "name": "oscar-knowledge-base-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Legal-corpus search MCP for Oscar GC's Lavern partners. Structural lift from github.com/AnttiHero/lavern (Apache-2.0; commit 7c2efe61). Three read-only tools: search_knowledge_base (synonym-expanded substring search), list_knowledge_base_collections, get_knowledge_base_entry. Sprint 22 ships with a small in-memory placeholder corpus; real corpus curation is a future sprint.",
+  "license": "Apache-2.0",
+  "author": "s-arturko",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oscar-knowledge-base-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "smoke": "node ./smoke.mjs",
+    "test": "node ./tests/integration.test.mjs",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@0.21.2 node ./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "=1.29.0",
+    "zod": "=4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "=25.8.0",
+    "typescript": "=6.0.3"
+  }
+}
