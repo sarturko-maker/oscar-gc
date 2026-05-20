@@ -1,12 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Plug, Settings, Sparkles } from 'lucide-react';
 import { cn } from '../../utils';
-import { usePracticeAreas } from './hooks/usePracticeAreas';
 import QuickChatButton from './quickchat/QuickChatButton';
+import ChatHistoryTree from './sidebar/ChatHistoryTree';
 
 export function OscarSidebar() {
   const { pathname } = useLocation();
-  const areas = usePracticeAreas();
 
   return (
     <aside className="oscar oscar__sidebar flex flex-col w-full h-full min-h-0">
@@ -40,28 +39,9 @@ export function OscarSidebar() {
           Integrations
         </Link>
       </div>
-      <nav className="oscar__sidebar-list flex-1 overflow-y-auto">
-        <div className="oscar__eyebrow oscar__sidebar-eyebrow">Practice Areas</div>
-        {areas.map((area, idx) => {
-          const path = `/practice/${area.id}`;
-          const isActive = pathname === path;
-          return (
-            <Link
-              key={area.id}
-              to={path}
-              className={cn(
-                'oscar__sidebar-item',
-                isActive && 'oscar__sidebar-item--active'
-              )}
-            >
-              <span className="oscar__sidebar-item-num">
-                {String(idx + 1).padStart(2, '0')}
-              </span>
-              {area.name}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Sprint 19 (ADR-066 D2): replaces the flat practice-area list with
+          a PA→Matter→Session tree + Quick chats sibling group. */}
+      <ChatHistoryTree />
       {/* Sprint 10: Settings affordance — upstream Goose's settings surface
           was unrouted in the Oscar GC rebrand. Restore from the sidebar footer. */}
       <div className="oscar__sidebar-footer">
