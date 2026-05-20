@@ -1,0 +1,31 @@
+{
+  "name": "oscar-baselines-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Quality-baseline tracker MCP for Oscar GC's Lavern partners. Adapter lift of Lavern's baselines.ts (Apache-2.0; commit 7c2efe61) — decoupled from SessionReportCard consumption. Tools: record_observation, list_baselines, get_baseline, check_against_baseline. Baselines persist to OSCAR_BASELINES_DIR if set, otherwise in-memory only.",
+  "license": "Apache-2.0",
+  "author": "s-arturko",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oscar-baselines-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "smoke": "node ./smoke.mjs",
+    "test": "node ./tests/integration.test.mjs",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@0.21.2 node ./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "=1.29.0",
+    "zod": "=4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "=25.8.0",
+    "typescript": "=6.0.3"
+  }
+}
