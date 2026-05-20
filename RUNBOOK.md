@@ -1150,7 +1150,7 @@ node evals/lavern-jv/scripts/run-eval.js \
 - `1f1efa3db` — trust-bypass widening (three-way OR)
 - `24188101f` — mechanical sweep (atomic, 31 files)
 - `1da0c328c` — tests + evals + NOTICE re-section
-- close-out SHA (this commit) — SPRINT_LOG / PROJECT.md / RUNBOOK
+- `349966f9d` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK
 
 No sibling repo modified. Lavern source unchanged at `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
 

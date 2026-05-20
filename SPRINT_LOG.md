@@ -63,7 +63,7 @@ Total Sprint 24-A LLM spend: **~$0.13** against the brief's ~$0.20 envelope.
 - `1f1efa3db` — trust-bypass three-way OR (ADR-029 widening; dual-prefix coexistence window)
 - `24188101f` — mechanical sweep (single atomic 31-file diff)
 - `1da0c328c` — test scripts + evals + NOTICE re-section (+ real-MiniMax regression run)
-- close-out SHA (this commit) — SPRINT_LOG / PROJECT.md / RUNBOOK
+- `349966f9d` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK
 
 No sibling repo modified this sprint. Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
 
