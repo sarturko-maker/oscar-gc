@@ -438,16 +438,28 @@ const electronAPI: ElectronAPI = {
   // triple-prefix. Both prefixes mark bundled recipes; the migration to a
   // recipe.metadata.bundled marker (ADR-029 "Sprint 15+ migration" note) still
   // applies when community recipes eventually land.
+  // Sprint 24-A (ADR-078): widened again to recognize "Oscar LLP —" as the
+  // production prefix for the rebranded firm-mode recipes. Dual-prefix window:
+  // "Lavern —" stays through Sprint 24-A so pre-rebrand sessions still resume
+  // cleanly; Sprint 25 cleanup drops "Lavern —" once the rename is fully through.
   hasAcceptedRecipeBefore: (recipe: Recipe) => {
     const title = recipe?.title ?? '';
-    if (title.startsWith('Oscar GC') || title.startsWith('Lavern —')) {
+    if (
+      title.startsWith('Oscar GC') ||
+      title.startsWith('Lavern —') ||
+      title.startsWith('Oscar LLP —')
+    ) {
       return Promise.resolve(true);
     }
     return ipcRenderer.invoke('has-accepted-recipe-before', recipe);
   },
   recordRecipeHash: (recipe: Recipe) => {
     const title = recipe?.title ?? '';
-    if (title.startsWith('Oscar GC') || title.startsWith('Lavern —')) {
+    if (
+      title.startsWith('Oscar GC') ||
+      title.startsWith('Lavern —') ||
+      title.startsWith('Oscar LLP —')
+    ) {
       return Promise.resolve(true);
     }
     return ipcRenderer.invoke('record-recipe-hash', recipe);
