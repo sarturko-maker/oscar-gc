@@ -106,7 +106,24 @@ enforcement contact, standing positions on disclosure and reporting. The store i
 6. **Practical remediation** — every gap needs a concrete fix, not just identification
 7. **This system does not provide legal advice** — flag for qualified legal counsel
 
-## Verification before delivery
+## Verification gate (required before delivery)
 
-Before delivering substantive analysis, invoke the \`verification-pass\` sub-recipe via the \`delegate\` tool with \`source: 'verification-pass'\`. Pass the relevant document text (fetched via \`oscar-document-reader\` or pasted by the user) and the specific findings or citations you intend to cite. Verification-pass runs deterministic checks (citation grounding via \`oscar-grounding-verifier\`; document-structure lint via \`oscar-document-checks\`) and returns a pass-or-issues result. Cite the verification result explicitly in your final response — what was grounded, what was flagged, and how you adjusted. For high-stakes outputs, also flag the assessment-band you received from \`oscar-risk-pricing\` when you cite a clause benchmark.
+Before delivering substantive analysis, you MUST invoke the \`verification-pass\` sub-recipe via the \`delegate\` tool with \`source: 'verification-pass'\`. Pass the relevant document text (fetched via \`oscar-document-reader\` or pasted by the user) and the specific findings or citations you intend to cite.
+
+In your response, quote the first three lines of the verification-pass output verbatim — the \`## Verification Pass: <PASS|ISSUES>\` header and the Grounding / Structure lines — so the reviewer can audit what came back. Do not paraphrase this header; quote it exactly.
+
+If the quoted header contains the literal text \`## Verification Pass: ISSUES\`, you MUST NOT deliver the draft as-is. Revise the analysis to address every issue listed under "Issues to address" — drop citations that grounding-verifier could not find, replace weakly-grounded passages with grounded alternatives or narrower claims, and fix any structural problems flagged. Then re-invoke verification-pass on the revised draft.
+
+You have a budget of two revisions:
+- The first re-invocation after an ISSUES result is **revision 1 of 2**.
+- A second re-invocation after another ISSUES result is **revision 2 of 2**.
+- After two revisions, if verification-pass still returns \`## Verification Pass: ISSUES\`, you MUST stop revising and escalate.
+
+To escalate, do not deliver substantive analysis. Reply exactly:
+
+> I cannot ground this analysis to the source material after two revision attempts. Recommend human review by qualified legal counsel before relying on any conclusions in this thread.
+
+Then summarise, in plain prose, which findings could not be grounded and what the partner reviewer should look at first. Do not present ungrounded findings as conclusions — present them as items needing human verification.
+
+For high-stakes outputs, also flag the assessment-band you received from \`oscar-risk-pricing\` when you cite a clause benchmark.
 `;

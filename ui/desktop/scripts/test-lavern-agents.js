@@ -154,6 +154,10 @@ function buildPartnerRecipeYaml(partner, workingDir) {
   lines.push('settings:');
   lines.push('  goose_provider: "minimax"');
   lines.push('  goose_model: "MiniMax-M2.5"');
+  // Sprint 23 (ADR-076): substrate safety ceiling — matches production
+  // buildLavernPartnerRecipe.ts so the Sprint 22 test substrate stays
+  // aligned. 12 turns ≈ initial response + 2 revisions + escalation.
+  lines.push('  max_turns: 12');
   lines.push('');
   return lines.join('\n');
 }

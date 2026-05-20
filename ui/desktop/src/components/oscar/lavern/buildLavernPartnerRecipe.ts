@@ -144,6 +144,11 @@ export function buildLavernPartnerRecipe(opts: BuildLavernPartnerRecipeOptions):
     settings: {
       goose_provider: 'minimax',
       goose_model: 'MiniMax-M2.5',
+      // Sprint 23 (ADR-076): substrate safety ceiling for the Ralph Loop
+      // gate-and-revise discipline. Caps the worst case where the LLM enters
+      // an uncapped revision loop on ISSUES; sized for "initial response +
+      // 2 revisions + escalation" with tool turns in between.
+      max_turns: 12,
     },
   };
 }
