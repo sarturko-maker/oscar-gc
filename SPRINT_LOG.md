@@ -14,6 +14,55 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 17b — Crostini dogfood patches: pnpm 11 overrides + Vite React dedupe + paid-wrapper visible-only + dropdown filtered to user areas (closed 2026-05-20 on code; commits `46642a0c9`, `9845e4f37`, `3209ebb5d`, this commit)
+
+**Goal**: get Sprint 17 launching on Arturs's Crostini and surface dogfood findings against the lawyer-shape exit criteria.
+
+**Built** — three patch commits, four build/upload cycles to localise the bugs:
+
+- **Build #1 (Sprint 17 close commit `e994f37cf`)**: shipped Sprint 17 as planned. Launched on Crostini → `TypeError: Cannot read properties of null (reading 'useRef')` on every load. Renderer crashed before the React tree mounted.
+
+- **Build #2 (commit `46642a0c9` — pnpm-workspace overrides)**: at session start the working tree carried spurious unstaged changes to `ui/pnpm-lock.yaml` (overrides removed) + `ui/pnpm-workspace.yaml` (auto-appended `allowBuilds:` stub) — pnpm 11+ silently dropped the React version pin because `pnpm.overrides` in `package.json` is ignored under the new config schema. Moved overrides + `onlyBuiltDependencies` into `ui/pnpm-workspace.yaml` (the pnpm 11+ home) and reinstalled. Necessary but not sufficient: launching the rebuild still crashed on `useRef`.
+
+- **Build #3 (commit `9845e4f37` — Vite `resolve.dedupe`)**: extracted `index-B3JEIkFg.js` from the failing bundle and grepped for the React dispatcher object literal — `{H:null,A:null,T:null,S:null}` appeared **twice**, confirming two physical React copies in the same chunk. Root cause: pnpm 11+ produces a *hybrid* linker layout — top-level packages land as real directories under `ui/node_modules/<name>/` (1094 of them, zero symlinks at this depth) AND `ui/desktop/node_modules/react` is a symlink into `ui/node_modules/.pnpm/react@19.2.4/...`. Vite resolves `react` from two absolute paths; Rollup treats them as distinct module ids; both copies inline. react-dom flips the dispatcher on one copy, components import the other, `A.H` reads null, every `useRef` (including react-router-dom's internals on first render) throws. Fix: `resolve.dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime']` in `vite.renderer.config.mts`. Verified post-rebuild: single dispatcher in `index-BSLnMHlZ.js`. Launch reached intake successfully on this build.
+
+- **Build #4 (commit `3209ebb5d` — paid-wrapper visible-only + dropdown filter)**: Crostini dogfood with build #3 surfaced three findings (Arturs, 2026-05-19):
+  - **F1 — Adding Ironclad/DocuSign broke matter open.** P5's recipe merge wired installed integrations into the per-matter recipe; on session spawn, goose-server's MCP-OAuth used client_id `https://goose-docs.ai/oauth/client-metadata.json` which Ironclad rejects ("not a trusted client"). Session never finished; "model not loading." Affects every `requires-paid-subscription` SaaS wrapper since none of them are registered to Goose's MCP-OAuth client.
+  - **F2 — Top-level Integrations target dropdown listed all 13 catalog areas.** Lawyer's loadout is the practice areas they picked at intake; the dropdown was pulling from the static `PRACTICE_AREAS` array.
+  - **F3 — Intake regulatory hypothesis emitted `(from my knowledge)` provenance suffix** — Tavily silent. `grep -c tavily ~/.local/state/goose/logs/llm_request.{0,1}.jsonl` returned `1` in each → Tavily extension loaded + exposed `tavily-search` to the LLM. MiniMax-M2.5's tool-choice, not a wire-through bug. The intake still produced an industry-correct hypothesis (REACH/WEEE/RoHS/UKCA/LkSG/AI Act/Modern Slavery/Late Payment — exact match for industrial cable distribution × UK+IE+DE from training data).
+
+  Fixes for F1 + F2 in this commit:
+
+  - `IntegrationCard.tsx` — new visible-only state for `subscription_type === 'requires-paid-subscription'`: Add button replaced with a dashed-border "Subscription — not yet installable" badge. `requires-account` (Slack, Google Drive) + `free` (CourtListener) + bundled (`oscar-fs` Always-on) stay installable.
+  - `IntegrationsView.tsx` — target dropdown reads from `usePracticeAreas()` (which already returned the profile's selected areas, falling back to all 13 only when no profile). Per-entry options are the intersection of user areas × entry's `relevant_areas`. Cross-area entries (Slack/GDrive) → all user areas; commercial-only → only user areas that intersect commercial-legal.
+  - `buildExtensionFromIntegration.ts` — defence in depth: skips `requires-paid-subscription` entries at recipe-build time even if a stale `installed_integrations.json` carries one from before this gate landed. Pairs with the `rm -f ~/.config/oscar/state/*/installed_integrations.json` unblock command for the previous build's broken state.
+
+  F3 deferred: same lever as Sprint 16 / 17's open carry — "force-cite ≥2 dimensions" prompt nudge, which has second-order risk on hypothesis steering and warrants a separate sprint's eval-iteration.
+
+**Verification** (in this session):
+- Dedupe held across builds #3 and #4: `grep -c 'H:null,A:null,T:null,S:null'` on the renderer chunk = `1` each time.
+- `pnpm exec tsc --noEmit` clean after every patch.
+- Onboarding intake completed end-to-end on build #4 (Arturs's transcript captured the right profile).
+- Goose-server `~/.local/state/goose/logs/llm_request.N.jsonl` shows `tavily` is in the tools surface; the LLM just didn't call it for the hypothesis turn.
+
+**Deferred** — lawyer-dogfood exit criteria E1, E3, E4, E5 not yet formally validated against build #4 in this session. The .deb is on the draft release; Arturs continues testing on his own cadence:
+
+- **E1 — Per-area Extensions tab subset visible.** Build #4 ships the visible-only paid-wrapper state; the subset under Commercial is Slack + Google Drive + Ironclad (visible-only) + DocuSign (visible-only) + oscar-fs (Always-on). IP gets CourtListener + Slack + Google Drive + oscar-fs.
+- **E3 — Top-level dropdown** now filtered to Arturs's three areas. Visual confirmation outstanding.
+- **E4 — CourtListener / Slack / Google Drive Add → matter open works.** Untested in this session; CourtListener (free public-data MCP) is the safest first end-to-end test.
+- **E5 — Honest-labelling qualitative gate.** Outstanding.
+
+**Carry-forwards** (Sprint 18+):
+
+- **Real MCP-OAuth client registration with SaaS vendors** (or alternative auth path) — without a trusted client_id, `requires-paid-subscription` entries stay visible-only. Several paths: register Goose's client with each vendor's developer programme; ship a per-vendor user-runs-this-script auth flow; or accept that proprietary wrappers stay catalog-only until the user brings their own credentials.
+- **Tavily silence (F3 carry, Sprint 16b → Sprint 17b → Sprint 18)** — prompt lever "force-cite ≥2 dimensions" in `docs/sprint-15/self-assessment.md`. Needs iter-3 eval against the regulatory-fit axis (Sprint 16b infrastructure).
+- **`llm_request.2.jsonl` permission-denied finding** — one of the rotating goose-server log files was created with ownership that locked Arturs's shell out. Likely a transient process-user issue; flag for separate investigation if it recurs.
+- **pnpm 11 hoisted-linker fragility** — `resolve.dedupe` in `vite.renderer.config.mts` is the surgical fix, but the underlying 1094-real-dirs disk layout means other peer-dep-style packages could trip the same bundle-twice issue (e.g. if we add MUI or Emotion). Worth a Sprint 18+ check whether to force `node-linker=isolated` in `.npmrc` for deterministic single-copy resolution.
+
+**ADRs**: none for Sprint 17b — all fixes are surgical patches against Sprint 17's design (ADRs 059–062 stand unchanged). pnpm 11 + Vite dedupe captured as inline comments in `pnpm-workspace.yaml` and `vite.renderer.config.mts` rather than an ADR, because it's an upstream-config workaround, not an Oscar GC architectural decision.
+
+---
+
 ### Sprint 17 — Integrations (see and add) (closed 2026-05-19 on code; Crostini dogfood E1–E5 = Sprint 17b; commits `dc0125f05`, `7f5696e0d`, `7058aadc1`, `65ad7f1a4`, `c6b239b31`, `a20333606`, `4bbf11c8e`, this commit)
 
 **Goal**: a lawyer opens a practice area, sees a clear list of MCPs labelled honestly (license, subscription, what-it-connects-to), and clicks Add to wire one into the agent in a few clicks. Same registry, two surfaces: per-area filtered Integrations tab + top-level Integrations sidebar entry. Plan at `/root/.claude/plans/sprint-mcp-marketplace-breezy-lagoon.md`. Brief flagged "marketplace" naming; plan-mode AskUserQuestion settled on **Integrations** (lawyer-natural; corporate-IT vocabulary; "operator marketplace" reserved for a future product). The first sprint where Oscar GC stops *suppressing* the upstream Extensions UI and starts shipping a transparent in-house-shaped surface — `GOOSE_ALLOWLIST=extensions: []` stays in place; this is a parallel sanctioned path.

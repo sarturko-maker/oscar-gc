@@ -2,23 +2,37 @@
 
 Append-only. Format: `- **Topic** (origin sprint, optional target sprint) — one-line description.` Move to `SPRINT_LOG.md` when picked up.
 
-## Sprint 17 — shipped on code; runtime gates → Sprint 17b
+## Sprint 17b — closed on code 2026-05-20; lawyer-dogfood validation continues
 
-Shipped P0–P6 on `main` (commits `dc0125f05`, `7f5696e0d`, `7058aadc1`, `65ad7f1a4`, `c6b239b31`, `a20333606`, `4bbf11c8e`); four ADRs (059, 060, 061, 062 — amends 042). Integrations surface live: per-area filtered tab + top-level sidebar entry. 6-entry seed (oscar-fs / CourtListener / Slack / Google Drive / Ironclad / DocuSign). RecipeSecretsModal gate generalised for the per-matter spawn path.
+Three patch commits on top of Sprint 17: `46642a0c9` (pnpm-workspace overrides), `9845e4f37` (Vite resolve.dedupe — true root cause of the useRef crash), `3209ebb5d` (paid-wrapper visible-only + dropdown filtered to user areas, from Crostini dogfood findings F1+F2).
 
-Sprint 17 carry-forwards (target Sprint 17b unless noted):
+Sprint 17b dogfood findings + status:
 
-- **Crostini E1–E5 dogfood (Sprint 17b)** — build `.deb` via `scripts/build-oscar-deb.sh` on lq-vps; push to draft release `oscar-gc-sprint17`; Arturs runs the five exit criteria on a fresh Crostini install. E1 (per-area tabs visible across 3 areas with correct subsets); E2 (Ironclad Add in Commercial → trust prompt → entry on disk); E3 (top-level Integrations + target-area picker writes to chosen area); E4 (matter opens with installed integration in recipe → agent reports tool surface includes it); E5 (honest-labelling qualitative gate).
-- **OpenContracts / Open Legal Compliance MCP / US Legal MCP** (Sprint 17 brief, deferred) — zero references in `/srv/projects/goose`. Sprint 18 candidates pending hand-verified metadata (license, URL, security posture). Adding them is a one-line edit to `INTEGRATIONS_OVERLAY`.
-- **Removal / round-2 / edit flow for installed integrations** (Sprint 17, target Sprint 18) — schema supports the array shape; the UI's `Installed` button is non-interactive in Sprint 17. Sprint 18 adds `oscar:integrations:uninstall` IPC + remove-button UX.
-- **Multi-area Add in one click** (Sprint 17, target Sprint 18) — top-level Integrations target dropdown is single-area. Sprint 18+ "apply to all 13" / "apply to these areas" affordance.
-- **OAuth flows for commercial wrappers** (Sprint 17, target Sprint 18+ conditional) — Sprint 17 models authentication as "SaaS owns first-call auth" surfaced in the trust prompt. If a wrapper grows an `env_keys`-based auth path, the existing `ensureRecipeSecrets` gate picks it up.
-- **Real-time `maintenance_signal`** (Sprint 17, target Sprint 18+) — overlay's `maintenance_signal.last_updated_iso` is a hand-stub today. Populating from GitHub readmes / service status pages is automation work.
-- **Chat-driven Add via a Forge MCP tool** (Sprint 17, target Sprint 18+) — IPC `oscar:integrations:install` is in place; Sprint 18+ optional layer wraps it as a tool the Forge agent calls (Sprint 17 keeps Forge as auto-spawn-chat unchanged per ADR-039).
-- **Settings UI for Tavily-key rotation** (Sprint 16 carry, deferred from Sprint 17 P4 due to scope creep, target Sprint 18) — small surface; `RecipeSecretsModal` is entry-only.
-- **Platform-extension trim** (Sprint 16 carry, conditional on iter-3 numbers from Sprint 16b) — still conditional; not picked up Sprint 17.
+- **F1 — Paid-wrapper OAuth (closed in 17b via visible-only state)**. Real underlying carry below.
+- **F2 — Top-level dropdown filter (closed in 17b)**. Dropdown now reads `usePracticeAreas()` × entry's `relevant_areas`.
+- **F3 — Tavily silent during intake (open, carries to Sprint 18)**. Confirmed extension loads and exposes tools (`grep -c tavily ~/.local/state/goose/logs/llm_request.N.jsonl` = 1 each). MiniMax-M2.5's tool-choice. Same prompt lever as Sprint 16's open carry: "force-cite ≥2 dimensions" in `docs/sprint-15/self-assessment.md`.
+
+Sprint 17/17b carry-forwards still open (target Sprint 18+ unless noted):
+
+- **Lawyer-dogfood E1/E3/E4/E5 validation against Sprint 17b3 .deb** (Sprint 17b → ongoing) — E1 visible-subset confirmation, E3 dropdown filter visible confirmation, E4 CourtListener/Slack/GDrive Add → matter open works end-to-end (CourtListener is the safest first test — free public-data MCP, no OAuth), E5 honest-labelling qualitative gate. .deb is on the draft release; Arturs continues on own cadence.
+- **Real MCP-OAuth client registration with SaaS vendors** (Sprint 17b F1 root cause, target Sprint 18+) — without a trusted client_id, `requires-paid-subscription` entries (Ironclad, DocuSign) stay visible-only. Paths: register Goose's MCP-OAuth client with each vendor's developer programme; ship per-vendor user-runs-this-script auth; or accept proprietary wrappers stay catalog-only until the user brings their own credentials. Each path is itself a Sprint-sized piece of work.
+- **Tavily silence (Sprint 16 → 16b → 17b → 18)** — prompt lever "force-cite ≥2 dimensions". Has second-order risk (oversteer hypothesis), needs iter-3 eval against the Sprint 16b regulatory-fit axis. Sprint 18 candidate.
+- **pnpm 11 hoisted-linker fragility** (Sprint 17b open) — Vite `resolve.dedupe` is the surgical fix in `vite.renderer.config.mts` for React + react-dom + jsx-runtime. Other peer-dep-style packages we add later could trip the same bundle-twice issue. Worth a Sprint 18+ check whether to force `node-linker=isolated` in `.npmrc` for deterministic single-copy resolution across the workspace.
+- **`llm_request.2.jsonl` permission-denied** (Sprint 17b minor finding) — one rotating goose-server log file landed with ownership that locked Arturs's shell out. Investigate if it recurs.
+- **OpenContracts / Open Legal Compliance MCP / US Legal MCP** (Sprint 17 brief, deferred) — zero references in `/srv/projects/goose`. Sprint 18+ candidates pending hand-verified metadata (license, URL, security posture). Adding them is a one-line edit to `INTEGRATIONS_OVERLAY`.
+- **Removal / round-2 / edit flow for installed integrations** (Sprint 17, target Sprint 18) — schema supports the array shape; the UI's `Installed` button is non-interactive. Sprint 18 adds `oscar:integrations:uninstall` IPC + remove-button UX.
+- **Multi-area Add in one click** (Sprint 17, target Sprint 18) — top-level Integrations target dropdown is single-area. Sprint 18+ "apply to all" / "apply to these areas" affordance.
+- **`requires-account` community-tier auth UX** (Sprint 17b refinement, target Sprint 18) — Slack/Google Drive stay installable in 17b, but their OAuth flows haven't been end-to-end tested. If they also fail with the goose-docs.ai client_id mismatch, may need to drop them to visible-only too. Untested at sprint close.
+- **Real-time `maintenance_signal`** (Sprint 17, target Sprint 18+) — overlay's `maintenance_signal.last_updated_iso` is a hand-stub. Populating from GitHub readmes / service status pages is automation work.
+- **Chat-driven Add via a Forge MCP tool** (Sprint 17, target Sprint 18+) — IPC `oscar:integrations:install` is in place; Sprint 18+ optional layer wraps it as a tool the Forge agent calls.
+- **Settings UI for Tavily-key rotation** (Sprint 16 carry, target Sprint 18) — small surface; `RecipeSecretsModal` is entry-only.
+- **Platform-extension trim** (Sprint 16 carry, conditional on iter-3 numbers from Sprint 16b) — still conditional.
 - **Upstream PR for ADR-058's secret_discovery generalisation** (Sprint 16 carry, target Sprint 18) — small standalone work.
 - **bubblewrap / OS-level sandboxing** (Sprint 12 ADR-042, Sprint 17 ADR-062 reaffirms) — community-tier Integrations installs widen runtime egress under recorded consent; bubblewrap becomes more load-bearing in proportion to community-tier usage.
+
+## Sprint 17 — shipped on code; superseded by Sprint 17b
+
+Shipped P0–P6 on `main` (commits `dc0125f05`, `7f5696e0d`, `7058aadc1`, `65ad7f1a4`, `c6b239b31`, `a20333606`, `4bbf11c8e`); four ADRs (059, 060, 061, 062 — amends 042). Integrations surface live: per-area filtered tab + top-level sidebar entry. 6-entry seed (oscar-fs / CourtListener / Slack / Google Drive / Ironclad / DocuSign). RecipeSecretsModal gate generalised for the per-matter spawn path. Crostini dogfood + bug-fixing folded into Sprint 17b above.
 
 ## Sprint 15 — shipped Stage 1 + Stage 2 dogfood on Crostini; carry-forwards → Sprint 16
 
