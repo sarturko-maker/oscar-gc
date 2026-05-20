@@ -14,6 +14,46 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 20 — M0: `area_overrides` schema foundation for the right-panel master brief (closed 2026-05-20 on code; commits `acec6c9cc` here, sibling `oscar-onboarding-mcp` `158e34d7`)
+
+**Goal**: first sub-sprint (M0) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Introduce the per-area override surface in `profile.json` that every later sub-sprint persists into. No UI change. Behaviour-neutral at default (absent overrides → empty merge layer → identical recipe). Reconciles the master brief's "agent = recipe; modify agent = modify recipe" framing with Oscar GC's runtime-built recipes — Forge edits land in profile.json's new `area_overrides` block, recipe builders apply it as the final merge layer (registry default → user-added entry → override). Recipes stay transient; no on-disk recipe YAMLs.
+
+**Built** — one commit each in two repos, two ADRs at decision time:
+
+- **ADR-067** (`docs/adr/067-area-overrides-persistence-surface.md`): `area_overrides` on `profile.json.practice_areas[i]` is the durable surface for Forge-driven agent edits (description, panel sections, skills, MCPs, playbooks — each optional). Recipe builders read it as the final merge layer; M0 wires `description_override` only, later sprints wire the rest (M2 panel_sections, M4 playbooks, M5 enabled_skills, M7 enabled_mcps). Alternatives rejected: per-area YAML on disk (forks runtime-built recipes); separate `overrides.json` (splits writers).
+
+- **ADR-068** (`docs/adr/068-profile-schema-v4-area-overrides.md`): profile schema v3 → v4. Additive `area_overrides` field, all keys optional. Absent reads as `undefined`. Non-destructive migration chain: V4? → V3 → migrateV3ToV4 → V4; same fall-through to V2/V1.
+
+- **Sibling repo** `sarturko-maker/oscar-onboarding-mcp` (SHA `158e34d7`): `src/schema.ts` adds `AreaOverridesSchema` (five optional fields: description_override, panel_sections, enabled_skills, enabled_mcps, playbooks); `PracticeAreaSchemaV4` extends V2 with optional area_overrides; `ProfileSchemaV3` exposed explicitly; `ProfileSchema` becomes the V4 alias; new `migrateV3ToV4` bumps schema_version. `src/store.ts` read chain extends. `smoke.mjs` round-trips a profile carrying area_overrides on Commercial (description_override + enabled_mcps allow-list) and adds an explicit v3→v4 read-time migration test.
+
+- **Renderer side**: `useOscarProfile.ts` gains `OscarAreaOverrides` interface; `OscarUserProfilePracticeArea` gains optional `area_overrides`; `schema_version` literal widens to `1 | 2 | 3 | 4`. `buildPracticeAreaRecipe.ts` accepts `areaOverrides?: OscarAreaOverrides | null` — when `description_override` is set, prepends a new `## About this practice area` block (between the company block and the base system prompt) and replaces the recipe's top-level `description`. Works uniformly for generic areas and Commercial's bespoke `SYSTEM_PROMPT`. `commercialRecipe.ts` adds the seventh positional param `areaOverrides` and threads through. `MattersLanding.openMatter` reads the matching practice_areas entry's overrides from profile and passes them to both builders.
+
+**Verification** (in this session):
+- `tsc --noEmit` on `ui/desktop`: clean (exit 0).
+- `tsc` on sibling repo: clean.
+- `node smoke.mjs` on sibling repo: OK (`finalize_profile` round-trips area_overrides; v2→v4 + v3→v4 migrations both produce schema_version: 4 with `area_overrides === undefined` on absent inputs).
+- No Rust core touch.
+- No runtime behaviour change at default — absent overrides → null companyBlock + null areaDescriptionBlock → instructions unchanged from Sprint 19's shape.
+- ADR line counts: 48 / 37 (target ≤50).
+- Pre-existing `ui/pnpm-workspace.yaml` modification (Sprint 17b pnpm 11+ surface) left untouched; not part of M0 scope.
+
+**Deferred** — push to `origin/main` not executed in this session; commit `acec6c9cc` sits local on `main` awaiting Arturs's push (auto-mode classifier blocks default-branch pushes). The sibling repo push to `origin/main` (`158e34d7`) did land.
+
+**Carry-forwards** (master-brief sub-sprints, each its own dogfoodable sprint):
+- **M1 — Docked right pane shell** (resizable, collapsible, persisted width).
+- **M2 — Section registry + per-area composition** (config-driven; sketches `defaultPanelSections` per area).
+- **M3 — Matter Facts + History sections** (first real bodies; reads matter folder).
+- **M4 — Playbooks subsystem** (upload, three-layer injection).
+- **M5 — Skills visibility + per-area scoping** (prompt-level scoping; ADR-074).
+- **M6 — Skills upload + Forge review (Mode C)** (deep-link entry; clarifying questions).
+- **M7 — Forge modify area (Mode D)** (description / enabled_skills / enabled_mcps via override deltas + Zod IPC validation).
+- **M8 — Forge delete area (Mode E)** (renderer-confirm modal; archive-don't-delete).
+- **Crostini dogfood E1** (M0): hand-edit a profile to set `area_overrides.description_override` on Commercial; open a Commercial matter; verify the override appears in the agent's `## About this practice area` block. Carries into M1's b-sprint as the first runtime gate for the master brief.
+
+**ADRs**: 067, 068.
+
+---
+
 ### Sprint 19b — Dogfood patches: matter chat-history resume + Goose chat-topic surface removed + sidebar visual hierarchy (closed 2026-05-20 on code; commit `a283c3757`; release `oscar-gc-sprint19` promoted to Latest)
 
 **Goal**: Sprint 19's Crostini dogfood (Arturs, build sha `86e6c5b88…`) surfaced four findings against the sidebar tree + quick-chat UX. (1) Conversation history disappeared in matters — clicking a matter row resumed the bound session but the chat was empty. (2) Matter rows visually identical to practice-area rows — the nesting didn't read; no plan for 100s-of-matters scenario. (3) "Popular chat topics" on the empty chat surface showed upstream Goose's dev-audience defaults (organize photos / units of geese / tamagotchi). (4) Restated (1).
