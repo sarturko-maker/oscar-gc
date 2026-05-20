@@ -83,6 +83,12 @@ export default function MattersLanding({ area }: MattersLandingProps) {
 
   const groups = useMemo(() => groupByStakeholder(matters), [matters]);
   const shape = getPracticeAreaShape(area.id);
+  // Sprint 19 (ADR-066 D4): per-area entry noun (Matter / Programme). Fall
+  // back to Matter when an area has no shape registered (Forge can register
+  // its own; pre-shape-era areas wouldn't render this surface anyway).
+  const noun = shape?.entryNoun ?? { singular: 'Matter', plural: 'Matters' };
+  const nounSingularLc = noun.singular.toLowerCase();
+  const nounPluralLc = noun.plural.toLowerCase();
 
   // Sprint 14: stakeholder autocomplete source — prior values in this area,
   // case-insensitive deduped.
@@ -233,7 +239,7 @@ export default function MattersLanding({ area }: MattersLandingProps) {
     <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
       <div className="flex flex-col max-w-3xl flex-1 min-h-0 py-12">
         <div className="oscar__eyebrow">{area.name}</div>
-        <h1 className="oscar__matters-title">Matters</h1>
+        <h1 className="oscar__matters-title">{noun.plural}</h1>
         <p className="oscar__matters-body">{area.body}</p>
 
         <div className="oscar__matters-actions mt-6 mb-4">
@@ -242,15 +248,17 @@ export default function MattersLanding({ area }: MattersLandingProps) {
             onClick={() => setShowNew(true)}
             className="oscar__button oscar__button--primary"
           >
-            New matter
+            New {nounSingularLc}
           </button>
         </div>
 
-        {loading && <p className="oscar__matters-empty">Loading matters…</p>}
+        {loading && (
+          <p className="oscar__matters-empty">Loading {nounPluralLc}…</p>
+        )}
         {!loading && error && <p className="oscar__matters-error">{error}</p>}
         {!loading && !error && matters.length === 0 && (
           <p className="oscar__matters-empty">
-            No matters yet in {area.name}. Start by creating one.
+            No {nounPluralLc} yet in {area.name}. Start by creating one.
           </p>
         )}
 

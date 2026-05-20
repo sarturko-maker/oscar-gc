@@ -56,6 +56,8 @@ export default function NewMatterDialog({
 }: NewMatterDialogProps) {
   const initialKind = shape.kind.options[0]?.value ?? 'other';
   const initialRole: PartyRole = shape.counterparty?.defaultRole ?? 'counterparty';
+  // Sprint 19 (ADR-066 D4): per-area entry noun.
+  const nounSingularLc = shape.entryNoun.singular.toLowerCase();
 
   const [name, setName] = useState('');
   const [subjectLabel, setSubjectLabel] = useState('');
@@ -132,7 +134,11 @@ export default function NewMatterDialog({
     try {
       await onCreate(input);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create matter');
+      setError(
+        err instanceof Error
+          ? err.message
+          : `Failed to create ${nounSingularLc}`,
+      );
       setSubmitting(false);
     }
   };
@@ -146,7 +152,7 @@ export default function NewMatterDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="oscar__eyebrow">{area.name}</div>
-        <h2 className="oscar__modal-title">New matter</h2>
+        <h2 className="oscar__modal-title">New {nounSingularLc}</h2>
 
         <label className="oscar__field">
           <span className="oscar__field-label">Name</span>
@@ -302,10 +308,12 @@ export default function NewMatterDialog({
             }}
             disabled={submitting}
           />
-          <span className="oscar__field-label">Privileged matter</span>
+          <span className="oscar__field-label">
+            Privileged {nounSingularLc}
+          </span>
           {!privilegedTouched && (
             <span className="oscar__field-hint">
-              Defaulted from matter kind. Override as needed.
+              Defaulted from {nounSingularLc} kind. Override as needed.
             </span>
           )}
         </label>
@@ -339,7 +347,7 @@ export default function NewMatterDialog({
             disabled={submitting}
             className="oscar__button oscar__button--primary"
           >
-            {submitting ? 'Creating…' : 'Create matter'}
+            {submitting ? 'Creating…' : `Create ${nounSingularLc}`}
           </button>
         </div>
       </div>

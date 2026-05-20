@@ -48,8 +48,24 @@ export interface ExtrasField {
   enumValues?: KindOption[];
 }
 
+// Sprint 19 (ADR-066 D4): per-area entry noun. Privacy / Regulatory /
+// AI Governance read more naturally as "Programmes" (GDPR / NIS2 / DORA /
+// AI Act); the other 10 areas keep "Matter". Forge-created areas pick
+// their own noun per the area-create system prompt.
+export interface EntryNoun {
+  singular: string;
+  plural: string;
+}
+
+export const MATTER_NOUN: EntryNoun = { singular: 'Matter', plural: 'Matters' };
+export const PROGRAMME_NOUN: EntryNoun = {
+  singular: 'Programme',
+  plural: 'Programmes',
+};
+
 export interface PracticeAreaShape {
   areaId: string;
+  entryNoun: EntryNoun;
   subject: SubjectSlot;
   counterparty?: CounterpartySlot;
   stakeholder: StakeholderSlot;
@@ -112,6 +128,7 @@ const CORPORATE_ROLES: PartyRoleOption[] = [
 
 const COMMERCIAL: PracticeAreaShape = {
   areaId: 'commercial',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Contract / matter title',
     type: 'contract',
@@ -158,6 +175,7 @@ const COMMERCIAL: PracticeAreaShape = {
 
 const COMMERCIAL_DISPUTES: PracticeAreaShape = {
   areaId: 'commercial-disputes',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Dispute title',
     type: 'contract',
@@ -195,6 +213,7 @@ const COMMERCIAL_DISPUTES: PracticeAreaShape = {
 
 const CORPORATE: PracticeAreaShape = {
   areaId: 'corporate',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Entity',
     type: 'entity',
@@ -244,6 +263,7 @@ const CORPORATE: PracticeAreaShape = {
 
 const EMPLOYMENT: PracticeAreaShape = {
   areaId: 'employment',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Employee / candidate',
     type: 'person',
@@ -297,6 +317,7 @@ const EMPLOYMENT: PracticeAreaShape = {
 
 const EMPLOYMENT_DISPUTES: PracticeAreaShape = {
   areaId: 'employment-disputes',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Claimant (employee or ex-employee)',
     type: 'person',
@@ -338,6 +359,7 @@ const EMPLOYMENT_DISPUTES: PracticeAreaShape = {
 
 const PRIVACY: PracticeAreaShape = {
   areaId: 'privacy',
+  entryNoun: PROGRAMME_NOUN,
   subject: {
     label: 'Subject',
     type: 'person',
@@ -357,7 +379,7 @@ const PRIVACY: PracticeAreaShape = {
     placeholder: 'Salesforce / ICO / RecRanker',
   },
   kind: {
-    label: 'Matter kind',
+    label: 'Programme type',
     options: [
       { value: 'dsr_access', label: 'DSR — access' },
       { value: 'dsr_erasure', label: 'DSR — erasure' },
@@ -417,6 +439,7 @@ const PRIVACY: PracticeAreaShape = {
 
 const IP: PracticeAreaShape = {
   areaId: 'ip',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Asset',
     type: 'mark',
@@ -461,6 +484,7 @@ const IP: PracticeAreaShape = {
 
 const IP_DISPUTES: PracticeAreaShape = {
   areaId: 'ip-disputes',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Asset',
     type: 'mark',
@@ -498,6 +522,7 @@ const IP_DISPUTES: PracticeAreaShape = {
 
 const REGULATORY: PracticeAreaShape = {
   areaId: 'regulatory',
+  entryNoun: PROGRAMME_NOUN,
   subject: {
     label: 'Obligation / regime',
     type: 'obligation',
@@ -517,7 +542,7 @@ const REGULATORY: PracticeAreaShape = {
     placeholder: 'FCA',
   },
   kind: {
-    label: 'Matter kind',
+    label: 'Programme type',
     options: [
       { value: 'authorisation', label: 'Authorisation / licensing' },
       { value: 'notification', label: 'Notification / filing' },
@@ -539,6 +564,7 @@ const REGULATORY: PracticeAreaShape = {
 
 const REGULATORY_DISPUTES: PracticeAreaShape = {
   areaId: 'regulatory-disputes',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Obligation / regime',
     type: 'obligation',
@@ -574,6 +600,7 @@ const REGULATORY_DISPUTES: PracticeAreaShape = {
 
 const PRODUCT: PracticeAreaShape = {
   areaId: 'product',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Product / feature',
     type: 'product',
@@ -624,6 +651,7 @@ const PRODUCT: PracticeAreaShape = {
 
 const AI_GOVERNANCE: PracticeAreaShape = {
   areaId: 'ai-governance',
+  entryNoun: PROGRAMME_NOUN,
   subject: {
     label: 'System / model / dataset',
     type: 'model',
@@ -682,6 +710,7 @@ const AI_GOVERNANCE: PracticeAreaShape = {
 
 const COSEC: PracticeAreaShape = {
   areaId: 'cosec',
+  entryNoun: MATTER_NOUN,
   subject: {
     label: 'Entity',
     type: 'entity',
