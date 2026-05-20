@@ -14,6 +14,64 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 23 — Ralph Loop (Shape A) + Lavern-baselined eval (closed 2026-05-20 on code)
+
+**Goal**: turn Sprint 22's `verification-pass` sub-recipe from advisory to enforcing (gate-and-revise / Ralph Loop), and run the substantive measurement of whether that discipline measurably improves grounding behaviour. Pair sprint: piece 1 was load-bearing; piece 2 was the honest test of piece 1. ADR-077's eval harness is the substantive measurement; the dogfood test is the regression catch.
+
+**Architectural call** (`docs/adr/076-sprint23-ralph-loop-prompt-borne-gate.md`): **Shape A — prompt-borne**. The substrate question was settled by direct reading of Goose's core: `delegate()` returns `CallToolResult::success(vec![Content::text(text)])` (summon.rs); `run_subagent_task()` returns `Result<String, anyhow::Error>` (subagent_handler.rs:48); `Recipe.retry: Option<RetryConfig>` is shell-failure semantics, not semantic revision. Shape B (substrate-borne) would cost ~100-150 LOC of Rust core across `summon.rs` + `agent.rs` + Recipe schema — violates CLAUDE.md "do not modify the Rust core unless absolutely necessary" and creates upstream-merge debt every Goose pull. The LLM's natural session loop handles revisions as next turns when the prompt enumerates revision counts as concrete sequence steps; `Recipe.settings.max_turns = 12` provides substrate safety ceiling against runaway loops.
+
+**Built** — two ADRs, single-paragraph prompt swap across 10 partner files, eval substrate, dogfood test:
+
+- **ADR-076** (36 lines): Sprint 23 Ralph Loop, Shape A. Decision: replace (not append) Sprint 22's "Verification before delivery" paragraph with the Ralph Loop paragraph; revision-count tracking inline; `max_turns: 12` safety ceiling. Rationale: substrate evidence, transcript-auditable design.
+- **ADR-077** (36 lines): Sprint 23 eval baseline + judge + A/B methodology. Decision: copy (not symlink) Lavern fixtures; verbatim rubric preserved + adapted version drops pipeline metrics + adds 4 Oscar-GC global axes; Sprint 22 directive frozen at SHA `08a5381a7` as the without-Ralph constant; 3 partners × 3 docs × 2 configs = 18 partner runs + 18 batched judge calls; Lavern human baseline informational not gating.
+- **Ten partner prompt files** at `ui/desktop/src/components/oscar/lavern/prompts/*.ts` — Sprint 22's "Verification before delivery" paragraph replaced verbatim by the Ralph Loop paragraph. Discipline: literal ISSUES marker detection + verbatim-quote of verification-pass header (transcript-auditable) + 2-revision budget enumerated as concrete sequence steps + exact escalation phrase. Sprint 21 raws at `prompts/raw/*.ts.original` unchanged (verification gate is Oscar-GC-specific augmentation, not part of the Lavern adaptation lineage).
+- **`max_turns: 12`** wired into production `buildLavernPartnerRecipe.ts:settings` and mirrored in `scripts/test-lavern-agents.js:buildPartnerRecipeYaml()` so Sprint 22's test substrate stays aligned with production.
+- **`ui/desktop/scripts/test-lavern-revision.js`** (new) — single-partner (Sarah Chen) deliberately-ungrounded prompt ("Quote section 99.9 of the bundled M&A playbook verbatim..."). Hard-gates on c3 (no Section-99.9 fabrication detected via markdown header or inline attribution); c1 / c2 / c4 are soft-info diagnostics (Ralph Loop traversal observed, explicit acknowledgment OR escalation observed). Reflects that multiple valid paths (path A explicit acknowledgment, path B silent neutral substitution, path C draft-then-verify-revise, path D escalation) all achieve the fails-closed outcome.
+- **`evals/lavern-jv/`** — new self-contained eval directory: 3 CUAD JV-flavoured contracts (borrowmoney 21,454 chars, sibannac 8,380, veoneer 8,259) copied verbatim from Lavern + verbatim `RUBRIC.lavern-original.md` (28 items across 3 docs — Doc 1: 12, Doc 2: 10, Doc 3: 7; ADR-075's "12-item" was Doc 1 alone). Adapted rubric drops Watchman/pipeline metrics, adds 4 Oscar-GC global axes (`grounded_citations` 0-1, `verification_pass_cited` boolean, `revision_behaviour` boolean|null, `partner_tone_fit` 0-2) + Doc-3-specific `overproduction_flag`. Apache 2.0 attribution at `evals/lavern-jv/NOTICE.lavern.md` + top-level NOTICE Lavern-eval-baseline section.
+- **Runner** at `evals/lavern-jv/scripts/{run-eval,lib-recipe,lib-judge,lib-report}.js` (245+214+199+192 = 850 LOC across 4 files, each under CLAUDE.md's 300-line cap). `lib-recipe.js` carries frozen `SPRINT_22_DIRECTIVE` constant (verbatim Sprint 22 verification paragraph, inline SHA `08a5381a7`) and `RALPH_DIRECTIVE` constant for the A/B; recipe builder mirrors Sprint 22's `test-lavern-agents.js` shape. `lib-judge.js` builds a judge recipe per (partner × doc × config), invokes via `goose run --recipe`, extracts JSON, validates against schema (manual since no Zod in this Node entrypoint), retries once on parse failure. `lib-report.js` collates with 1000-resample bootstrap CIs and computes with-Ralph vs without-Ralph Δ_grounded on grounding-touched rubric items.
+
+**Tests**:
+
+- `node ui/desktop/scripts/test-lavern-agents.js` (Sprint 22 regression) — **3/3 PASS** on the second of two runs (first run had Aisha skipping verification-pass on a happy-path question; same LLM variance documented at Sprint 22 close).
+- `node ui/desktop/scripts/test-lavern-revision.js` (Sprint 23 dogfood) — **characterized across 5 runs: 4/5 PASS**. Three paths observed: A (explicit acknowledgment that section 99.9 doesn't exist + grounded alternative), B (silent substitution with a generic label like "Quoted Text (Playbook Entry)"), X (fabrication — `## Section 99.9 Verbatim` header over content from chunk `ma-playbook-reps-survival-005`). The 1/5 fabrication shows Shape A's discipline does not reliably force verification-pass invocation; when bypassed, the partner can still mislabel attribution.
+- `node evals/lavern-jv/scripts/run-eval.js` (Sprint 23 eval) — full sweep executed: **14/18 partner runs succeeded** (4 with-Ralph timeouts at the 300s partner-call ceiling — Sarah×Doc 3, Helena×Docs 1-3); **17/18 judge calls succeeded** (1 PARSE_FAILED where judge wrote "MISSING" instead of "MISSED"). Wall-clock 2679.8 s (~45 min); cost ~$1.40 against $10/PCM dev-key.
+
+**Substantive Sprint 23 result — Δ_grounded NEGATIVE**:
+
+| Metric | Value |
+|---|---|
+| Δ_grounded (with-Ralph − without-Ralph) on grounding-touched items | **-3.8pp** |
+| with-Ralph mean recall (grounding-touched, n=9) | 33.3%, 95% CI [13.8%, 57.3%] |
+| without-Ralph mean recall (grounding-touched, n=8) | 37.1%, 95% CI [20.1%, 66.8%] |
+| Mean `grounded_citations` (with-Ralph) | 0.71 |
+| Mean `grounded_citations` (without-Ralph) | 0.96 |
+| Mean `hallucination_count` (both configs) | 0.00 |
+| `verification_pass_cited` rate | 7/9 with-Ralph; 7/8 without-Ralph |
+
+**The brief's exit criterion fires:** "If they don't [score higher with Ralph], that's the signal that Shape A wasn't enough and the next sprint reconsiders Shape B or a different shape entirely." Sprint 24 reopens the architectural call with this data. The closing report at `evals/lavern-jv/reports/sprint-23-baseline.md` records the per-tuple table, the timeout-confounding analysis (4 of 9 with-Ralph runs hit the 300s budget — Ralph Loop's revision discipline is overflowing the partner-call envelope on complex docs), and three Sprint 24 options (Shape B substrate-borne; Shape A-tightened; hybrid with extended timeout + selective ISSUES).
+
+**Deferred** — none. The full default scope (3×3×2 = 18 runs) executed without invoking the brief's drop-order. The 4 timeouts and 1 judge parse failure are data artifacts captured in the report; not deferrals.
+
+**Carry-forwards**:
+- **Sprint 24 reconsiders Shape A vs Shape B** with the Δ_grounded = -3.8pp evidence. Three options sketched in the closing report. Brief's drop-order from Sprint 23 is consumed.
+- **Partner-call timeout** is too tight at 300s for Ralph Loop runs on complex documents. Sprint 24 implementation candidate: either raise to 600s (cheap, doesn't fix root cause) or tune Ralph Loop's revision conditions to fire less often.
+- **Judge schema can accept "MISSING" as synonym for "MISSED"** (1/18 parse failure on Helena × Doc 2 × without-Ralph). Trivial robustness fix in `lib-judge.js:VALID_VERDICTS`.
+- **Sarah Chen × Doc 1 quality problem** (both configs 0/12 recall, both quoted adjacent clauses cl 38-39 non-pooling / cl 40 intangibles / cl 17 capital instead of rubric items cl 32-33 indemnification / cl 19 unanimous consent / cl 20-22 asymmetric capital). Independent of Sprint 23 scope; partner-prompt or partner-roster review for Sprint 24+.
+- **`oscar-document-reader` not exercised in this eval** — ships with a placeholder corpus (3 sample SaaS+NDA docs); CUDD docs read from user-message paste instead. Future eval iteration could teach document-reader to parse plain-text CUAD docs.
+- **Token waste from doc-text-in-delegate-args** — verification-pass receives the doc twice (once in the partner user prompt, again in the delegate() args). Per ADR-074, sub-recipes don't inherit parent extensions; a Rust-core SubRecipe schema extension would fix it. Sprint 24 evidence candidate if Shape B is selected (the schema work overlaps).
+
+**ADRs**: 076 (Ralph Loop, Shape A), 077 (eval baseline + judge + A/B).
+
+**Pushed SHAs**:
+- `sarturko-maker/goose` lavern-firm-mode:
+  - `0b392bc29` — ADR-076 + ADR-077 at decision time, before any code change (CLAUDE.md mandate)
+  - `70d82658d` — Piece 1: Ralph Loop wiring (10 partner prompts + max_turns + new dogfood test) + characterization across 5 runs
+  - `b3fca0ef1` — Piece 2: eval scaffolding (docs, rubric, prompts, runner) at SHA before any run executed
+  - Final close-out commit + this SPRINT_LOG entry + sprint-23-baseline.md (SHA backfilled below)
+- No sibling repo modified this sprint. Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
+
+---
+
 ### Sprint 22 — Lavern Tier-A MCPs + verification-pass sub-recipe (closed 2026-05-20 on code)
 
 **Goal**: ship the architectural substrate ADR-073 promised — six Tier-A Lavern MCPs lifted (or adapted) as Goose stdio extensions, plus a `verification-pass` sub-recipe — and wire every Lavern partner recipe to use them via the Path A (per-partner) attachment shape. Without this, Sprint 21's partners are personas without grounding; with it, they invoke real MCPs and call a deterministic verification pass before delivering.

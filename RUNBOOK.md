@@ -998,6 +998,91 @@ Per-repo dev cycle: `pnpm install && pnpm build && pnpm smoke && pnpm test`. Int
 
 **Bundle outputs verified** (post-`prepare-oscar-bundle.js`): 9 bundled MCPs at `ui/desktop/src/resources/mcps/{oscar-fs, oscar-memory, oscar-onboarding, oscar-knowledge-base, oscar-document-reader, oscar-risk-pricing, oscar-baselines, oscar-grounding-verifier, oscar-document-checks}/index.js`; sub-recipe at `ui/desktop/src/resources/sub-recipes/verification-pass.yaml`; smoke test passes for all 9 within 150ms each; network audit clean for all 9.
 
+## Sprint 23 — Ralph Loop (Shape A) + Lavern-baselined eval (2026-05-20, lq-vps)
+
+**ADRs**: 076 (Ralph Loop, Shape A — prompt-borne gate-and-revise discipline; revision-count tracking inline; `Recipe.settings.max_turns = 12` safety ceiling). 077 (eval baseline lift + rubric adaptation + MiniMax-as-judge methodology + frozen Sprint 22 directive constant for the without-Ralph A/B leg).
+
+**Piece 1 — Ralph Loop wiring** (commit `70d82658d`)
+
+- Sprint 22's "Verification before delivery" paragraph REPLACED in all 10 partner prompt files at `ui/desktop/src/components/oscar/lavern/prompts/*.ts` by the Ralph Loop paragraph (verbatim from ADR-076). The new paragraph requires verbatim-quote of the verification-pass header (`## Verification Pass: <PASS|ISSUES>`), enforces a 2-revision budget enumerated as concrete sequence steps, and gives an exact escalation phrase. Sprint 21 `prompts/raw/*.ts.original` untouched (verification gate is Oscar-GC-specific augmentation, not part of the Lavern adaptation lineage).
+- `max_turns: 12` added to production `buildLavernPartnerRecipe.ts:settings` and mirrored in `scripts/test-lavern-agents.js:buildPartnerRecipeYaml()`. Acts as substrate safety ceiling against runaway revision loops.
+
+**Piece 1 — Dogfood test** (`ui/desktop/scripts/test-lavern-revision.js`, new)
+
+Single-partner (Sarah Chen) test with the deliberately ungrounded prompt: *"Quote section 99.9 of the bundled M&A playbook verbatim..."* Verdict gates on a single hard-gate criterion (c3: no attribution fabrication detected — markdown `## Section 99.9 ...` headers or inline `Section 99.9 verbatim/states/contemplates/...` attribution). Three soft-info diagnostics (c1 ISSUES returned, c2 ≥2 verify headers, c4 explicit acknowledgment OR escalation) are printed but do not gate verdict — multiple valid paths (explicit acknowledgment / silent neutral substitution / draft-then-verify-revise / escalation) all achieve the same fails-closed outcome.
+
+Run:
+
+```bash
+node ui/desktop/scripts/test-lavern-revision.js
+SKIP_MINIMAX_TESTS=1 node ui/desktop/scripts/test-lavern-revision.js  # CI bypass
+```
+
+Single transcript persisted at `ui/desktop/tests/lavern-transcripts/sarah-chen-revision-<ts>.log`. Cost: ~$0.05 per run. Observed variance across 5 runs: 4 PASS (paths A / B), 1 FAIL (path X — `## Section 99.9 Verbatim` fabrication over content actually retrieved from chunk `ma-playbook-reps-survival-005`). Shape A's discipline does not always force verification-pass invocation; when bypassed, the partner can still mislabel attribution.
+
+**Piece 1 — Sprint 22 regression** (no commit; verification only)
+
+`node ui/desktop/scripts/test-lavern-agents.js` continues passing 3/3 partners on the second of two runs (first run had Aisha skip verification-pass on a happy-path question — same LLM variance Sprint 22 documented when closing at "3/3 PASS after directive sharpening"). Per partner: ~15s wall-clock, ~$0.02. Skip via `SKIP_MINIMAX_TESTS=1`.
+
+**Piece 2 — Lavern eval substrate** (commit `b3fca0ef1`)
+
+New self-contained directory at `/srv/projects/oscar-gc-lavern/evals/lavern-jv/`. Apache 2.0 attribution at `evals/lavern-jv/NOTICE.lavern.md` + top-level `NOTICE` Lavern-eval-baseline section. Lavern SHA `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (same as Sprint 22 lift).
+
+Layout:
+
+```
+evals/lavern-jv/
+├── README.md                   ← reproducibility recipe
+├── NOTICE.lavern.md            ← per-directory Apache 2.0 attribution
+├── RUBRIC.lavern-original.md   ← verbatim copy from Lavern (28-item)
+├── RUBRIC.adapted.md           ← Oscar GC adaptation (drops pipeline metrics; adds 4 axes)
+├── docs/*.txt                  ← 3 CUAD JV contracts copied from Lavern
+├── rubric/{doc1,doc2,doc3,extra-axes}.json
+├── prompts/{judge-system,partner-question}.md
+├── scripts/{run-eval,lib-recipe,lib-judge,lib-report}.js
+├── runs/                       ← gitignored except .gitkeep
+└── reports/sprint-23-baseline.md  ← curated closing report (promoted at sprint close)
+```
+
+**Piece 2 — Eval invocation**
+
+```bash
+# Full sweep — 3 partners × 3 docs × 2 configs = 18 partner runs + 18 judge calls
+node evals/lavern-jv/scripts/run-eval.js
+
+# Subsets per ADR-077 drop-order
+node evals/lavern-jv/scripts/run-eval.js --configs with-ralph                  # drop A/B (9 runs)
+node evals/lavern-jv/scripts/run-eval.js --partners sarah-chen                 # reduce to 1 partner × 3 docs × 2 configs (6 runs)
+node evals/lavern-jv/scripts/run-eval.js --partners sarah-chen --docs doc1-borrowmoney --configs with-ralph  # debug
+
+# Re-score saved transcripts (no partner re-runs; useful after judge prompt edits)
+node evals/lavern-jv/scripts/run-eval.js --judge-only --from-run evals/lavern-jv/runs/<ts>
+
+# CI bypass
+SKIP_MINIMAX_TESTS=1 node evals/lavern-jv/scripts/run-eval.js
+```
+
+Cost / wall-clock envelope (full sweep, max scope):
+
+| Shape | Partner calls | Judge calls | Total | $ ballpark | Wall-clock |
+|---|---|---|---|---|---|
+| Min (1×3, judge-only)               | 3   | 3   | 6   | $0.05-0.20  | ~3 min   |
+| Mid (3×3, no A/B)                   | 9   | 9   | 18  | $0.15-0.60  | ~10 min  |
+| **Max (3×3×2)**                     | **18**  | **18**  | **36**  | **~$1.50-2.50** | **~30 min** |
+
+Smoke-tested at 88s/100s per single tuple (Sarah Chen × Doc 1 × with-Ralph) — partner+judge, exit 0. Full-sweep cost projection updated against $10/PCM dev-key envelope: still comfortably under.
+
+**Frozen Sprint 22 baseline**: `lib-recipe.js` exports `SPRINT_22_DIRECTIVE` constant carrying Sprint 22's verification paragraph verbatim, inline-cited at SHA `08a5381a7`. This decouples the eval's without-Ralph leg from live production prompts — future sprints can rerun against the same fixed without-Ralph baseline even after Ralph Loop directive evolves.
+
+**Per-run output paths** (`runs/<ISO-timestamp>/`):
+
+- `transcripts/<partner>-<doc>-<config>.log` — full partner stdout+stderr
+- `scores/<partner>-<doc>-<config>.json` — judge result (ok / parsed / error / raw_stdout / recipe_path)
+- `manifest.json` — Lavern SHA, Sprint 22 baseline SHA, Oscar GC SHA, model, wall-clock, counts, CLI args
+- `REPORT.md` — collated per-tuple table + with-Ralph vs without-Ralph Δ_grounded + global axis deltas + interpretation
+
+`runs/` is `.gitignore`d; only `reports/sprint-23-baseline.md` (the curated closing report) is committed.
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.
