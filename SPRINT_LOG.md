@@ -14,6 +14,47 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 19 — Chat history + memory: PA → Matter/Programme → Session, plus unscoped Quick chats (closed 2026-05-20 on code; commits `a1776aabb`, `fce0b8590`, `d38e3e9b3`, `2edbfaaf0`, `a6226ba89`, this commit)
+
+**Goal**: two parallel chat-entry paths plus minimum sidebar hierarchy — matter-scoped (open practice area → matters/programmes → bound session) and unscoped quick-chat from any view (one click). Sidebar replaces its flat practice-area list with a PA → Matter → Session tree plus a Quick chats sibling group. Vocabulary tuned per area: Privacy / Regulatory / AI Governance read as "Programmes"; the other 10 stay "Matters". Lean on Goose's native primitives — sessions in `sessions.db`, Memory MCP's lazy `.goose/memory/` creation, Top of Mind's empty-file no-injection. No Rust core touch, no schema additions. Plan at `/root/.claude/plans/sprint-chat-history-memoized-hummingbird.md`.
+
+**Built** — five commits on `main`, one ADR at decision time:
+
+- **Phase 0 — ADR-066** (`a1776aabb`) — `docs/adr/066-quick-chat-and-sidebar-grouping.md`. Three coupled decisions captured before any code: D1 unscoped working_dir = `~/Documents/Oscar GC/.quick-chats/` (dot-hidden, same volume as matters; Memory MCP's lazy creation makes the dir safe); D2 sidebar grouped tree (Quick chats group + always-rendered practice areas with active-area auto-expand); D3 quick-chat button at sidebar header + Hub home; D4 `entryNoun: { singular, plural }` additive field on `PracticeAreaShape`.
+
+- **Phase 1 — Per-area entry noun** (`fce0b8590`) — `practiceAreaShapes.ts` gains `EntryNoun` interface + `MATTER_NOUN` / `PROGRAMME_NOUN` consts; `PracticeAreaShape.entryNoun` is required (TS catches new areas without a noun). 13-area assignment per D4: Privacy / Regulatory / AI Governance → Programme; other 10 (including all four Disputes per Arturs's framing) → Matter. Privacy + Regulatory `kind.label` updated to "Programme type" (from "Matter kind"); AI Governance keeps "Workstream" (area-natural). Threaded through `MattersLanding` (title, "New X" button, empty/loading copy, modal-shape-error path) and `NewMatterDialog` (modal title, privileged label/hint, submit button, error message).
+
+- **Phase 2 — Quick-chat entry path** (`d38e3e9b3`) — `OSCAR_QUICK_CHATS_DIR = path.join(OSCAR_DOCUMENTS_DIR, '.quick-chats')` in `main.ts`. Two new IPCs: `oscar:quick-chats:ensure-dir` (idempotent `fs.mkdir({recursive: true})`, returns absolute path) and `oscar:quick-chats:get-dir` (pure getter for renderer filtering). Exposed via preload as `window.electron.quickChats.{ensureDir,getDir}`. New `QuickChatButton` component with `variant: 'sidebar' | 'hub'`. Onclick path: `matters.detachActive()` (truncate Top of Mind per ADR-044) → `quickChats.ensureDir()` → `createSession(quickChatsDir)` with **no recipe** (server resolves extensions from `config.yaml` enabled set per `extensions.rs:125-143`, so the lawyer's full Sprint 18 permissive-default loadout is on) → dispatch `ADD_ACTIVE_SESSION` → navigate to `/pair?resumeSessionId=...`. Sidebar header gets "+ New chat" above Forge; Hub home gets a "Start a quick chat" CTA below the subtitle (Hub had zero action buttons before). Small CSS for button reset (`.oscar__sidebar-item--quickchat`) and Hub action spacing.
+
+- **Phase 3 — Sidebar chat-history tree** (`2edbfaaf0`) — `useChatHistory` hook joins three data sources in parallel: `listSessions({throwOnError:false})` + `quickChats.getDir()` + `matters.list(areaId)` × N (N = user's curated practice-area count). Partitions sessions into a Quick-chats group (working_dir starts with `.quick-chats/`) and per-area matter rows (joined via `matters.json[slug].session_id`). Subscribes to `SESSION_CREATED / DELETED / RENAMED / FORKED` events to refresh the tree live. `ChatHistoryTree` component renders the grouped view: Quick chats group sits above the always-rendered practice-areas group; active practice area auto-expands its matters (others stay collapsed). Click handlers: area row → `/practice/:areaId`; matter row → `matters.setActive` (repopulates ToM per ADR-044) + dispatch `ADD_ACTIVE_SESSION` + navigate to `/pair`; matter row with no session → navigate to `/practice/:areaId` (fall-through); session row (quick-chats group only) → dispatch + navigate (no ToM to restore). `OscarSidebar` swaps its flat practice-area list for `<ChatHistoryTree />`; header (QuickChat + Forge + Integrations) and footer (Settings) unchanged.
+
+- **Phase 4 — Forge create-area noun hook** (`a6226ba89`) — `forge/systemPrompt.ts` gains one interview question in Mode B (create practice area): "Does this area's work read more naturally as Matters (case-shaped, transactional) or Programmes (ongoing, regulator-named)?" Default Matter when uncertain. The captured noun is persisted on the `practice_areas` entry in `profile.json` as `entry_noun: { singular, plural }`. Captured-but-inert today (user-added areas still fall through MattersLanding's no-shape branch — a follow-up sprint reads this field when wiring shape-from-profile for user-added areas).
+
+**Verification** (in this session):
+- `pnpm exec tsc --noEmit` on `ui/desktop`: clean after every phase.
+- Brief-vs-reality drift check resolved: "Sessions in this matter" view is moot today (`matters.json[slug].session_id` is single-valued per ADR-038); sidebar PA → Matter → Session navigation is the actual deliverable. "Compliance" in the brief = "Regulatory" in Oscar's 13-area set.
+- Memory MCP behaviour confirmed against `crates/goose-mcp/src/memory/mod.rs:156-172, 189, 216-217, 239`: reads silently fall back when local `.goose/memory/` is absent; writes lazily create on `remember_memory(is_global:false)`. Perfect fit for the `.quick-chats/` scratch dir contract.
+- Top of Mind truncation path verified: `oscar:matters:detach-active` already truncates `~/.config/oscar/tom-active-matter.md`; `QuickChatButton` invokes it before session spawn. No new IPC needed.
+- No Rust core touch. No `sessions.db` schema additions. No new persistence backends.
+
+**Deferred** — three items:
+- **Crostini dogfood (exit criteria 1–8)** carries to Sprint 19b. Build .deb on lq-vps via `scripts/build-oscar-deb.sh`, push to draft release, Arturs runs: (1) Quick chat from Hub + sidebar; (2) Commercial matter open; (3) Privacy reads "Programmes"; (4) per-matter memory isolation (tell Matter A "remember LCD is 2026-Q3"; switch to Matter B; ask LCD — must not bleed); (5) unscoped chat has global memory only; (6) ToM toggles per matter / quick chat; (7) native session UX (rename, resume, delete) intact; (8) Arturs's qualitative "yes, this is how I'd navigate my work" gate.
+- **Forge-area shape wiring** — Phase 4 captures the noun on user-added areas but `MattersLanding`'s `getPracticeAreaShape(area.id)` still returns undefined for user-added areas, falling through to the no-shape error path. A future sprint extends `usePracticeAreas` or `MattersLanding` to derive a minimal shape (subject as free-text, single kind option, no extras) from `profile.json.practice_areas[].entry_noun` when no PRACTICE_AREA_SHAPES entry exists.
+- **Sprint 17b F3 (Tavily silence — "force-cite ≥2 dimensions")** still open. Not touched this sprint (scope was chat-history, not intake prompt levers); carries to Sprint 20.
+
+**Carry-forwards**:
+- **Crostini dogfood E1–E8** (Sprint 19b) — runtime gate.
+- **Forge-area shape wiring** (Sprint 20+) — read `entry_noun` from profile and synthesise a minimal `PracticeAreaShape` so user-added areas can host matters/programmes.
+- **Multi-session per matter** — today's binding is 1:1 (`matters.json[slug].session_id`). Lawyers who want parallel threads on the same matter would need an array shape. Out of scope; future.
+- **"Promote unscoped to matter" flow** — exploratory chat → realise it's load-bearing → convert to a matter mid-conversation. Out of scope; useful future.
+- **Quick-chats group pagination** — today renders all unscoped sessions flat. If usage accumulates, add a "Show all" affordance / archive policy. Out of scope.
+- **Sidebar manual-expand of inactive areas** — today only the active area's matters expand. Some lawyers may want to expand other areas without leaving their current chat. Add a chevron toggle if dogfood surfaces the gap.
+- **Upstream PR for `force_platform_extensions` on the Recipe schema** — Sprint 18 carry-forward; orthogonal to this sprint but stays open.
+
+**ADRs**: 066.
+
+---
+
 ### Sprint 18 — Permissive default loadout: in-house lawyer defaults + transparent web search (closed 2026-05-20 on code; this commit)
 
 **Goal**: flip Oscar GC's extension defaults from upstream's developer-leaning shape to permissive-default-with-named-exclusions, with the agent's first turn already briefed and capable. Web search becomes default-on with the provider honestly named on its card. Closes the Sprint 17b carry "lawyer-default loadout" framing surfaced during Crostini dogfood.
