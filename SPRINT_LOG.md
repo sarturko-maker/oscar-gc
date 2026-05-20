@@ -14,6 +14,53 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 20-M1 — Docked right pane shell (closed 2026-05-20 on code; commit `00afd7353`)
+
+**Goal**: second sub-sprint (M1) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Land the structural right-pane primitive — empty body, resizable, collapsible, route-aware visibility — so M2's section registry and M3+'s real bodies have a mount point. CC visual verification on lq-vps only; no .deb build, no Crostini dogfood until M8.
+
+**Built** — one commit, one ADR at decision time:
+
+- **ADR-069** (`docs/adr/069-right-pane-layout-primitive.md`, 36 lines): right pane = flex sibling of chat in `AppLayout`; drag/persist mirrors the sidebar's `AppLayout.tsx:66-115` with `direction: -1` (LEFT-drag widens); absolute-width persistence via electron settings (no CONDENSED baseline). Visibility uses `matters.lookupSession(sessionId)` — same probe MatterBackButton.tsx:29 uses — because both matter chats and quick-chats live at `/pair?resumeSessionId=…`. Single sticky boolean `isRightPaneExpanded: boolean | null`; `null` = honor route default (on in matter, off in quick-chat); explicit boolean sticks across routes and restarts. Alternatives rejected: localStorage-only persistence; per-route-class booleans; reusing the nav-position 'right' branch (different concept — relocates same nav rather than adding a second pane).
+
+- **Brief-vs-reality drift surfaced and resolved (Arturs, via AskUserQuestion):** the M1 brief's "detect via `pathname.match(/^\/practice\//)` AND resumeSessionId" doesn't match the running tree — matter chats navigate to `/pair?resumeSessionId=…`, not `/practice/:areaId?resumeSessionId=…`. The right primitive is `matters.lookupSession()` (already exposed via preload at lines 231-237). Single-sticky-boolean toggle model picked over per-route-class booleans.
+
+- **Settings** (`ui/desktop/src/utils/settings.ts` + `main.ts` `validSettingKeys`): two new keys, `rightPaneWidth: number | null` (absolute px, defaults `null` → `DEFAULT_WIDTH` 320) and `isRightPaneExpanded: boolean | null` (default `null` → route default). Both added to `validSettingKeys` for prototype-pollution defence (parity with `navExpandedWidth`).
+
+- **NavigationContext** (`Layout/NavigationContext.tsx`): extended with `isRightPaneExpanded` + `setIsRightPaneExpanded`. Async-loaded from `getSetting('isRightPaneExpanded')` on mount (no localStorage source — new key, no lazy-migration). Setter writes to context state + `setSetting` in one go.
+
+- **New rightPane/ module** (`ui/desktop/src/components/oscar/rightPane/`): `RightPaneShell.tsx` (paper-deep header with "Loadout" eyebrow + chevron toggle from lucide ChevronLeft/Right, faint `"Right pane — coming in M2"` italic body); `useRightPaneVisibility.ts` (route + `matters.lookupSession` decision, null-until-resolved pattern to avoid pane-flash). Body is intentionally inert — M2 wires the section registry.
+
+- **AppLayout** (`Layout/AppLayout.tsx`): second drag system parallel to the sidebar's (independent `paneDragStateRef`; `direction: -1`; clamp `[240, 520]`; persists absolute width via `setSetting('rightPaneWidth', newWidth)`). Pane motion.div mounts as a flex sibling AFTER `mainContent` inside the inner flex wrapper. Resize handle on the LEFT edge with `data-testid="oscar-right-pane-handle"` for Playwright addressability. Collapsed pane animates to `RIGHT_PANE_CHEVRON_RAIL_WIDTH = 32` (just enough for the chevron to remain clickable).
+
+- **CSS** (`styles/main.css`): `.oscar__right-pane*` class family — paper-deep background, `border-left: 1px solid var(--rule)`, header with bottom rule, mono editorial eyebrow, copper hover on the toggle. Collapsed state strips header padding + border for the rail-only look.
+
+- **Constants** (`Layout/constants.ts`): `RIGHT_PANE_DIMENSIONS` (`MIN_WIDTH: 240, MAX_WIDTH: 520, DEFAULT_WIDTH: 320`) + `RIGHT_PANE_CHEVRON_RAIL_WIDTH: 32`.
+
+- **Visual verification harness** (`ui/desktop/scripts/capture-m1.js` + `scripts/capture-m1.sh`): Playwright over CDP, sibling to the existing `capture.js` / `capture-oscar.sh` pair. Pre-seeds `profile.json` (schema v4 with Commercial in `practice_areas`); creates a test matter via the renderer's `window.electron.matters.create` IPC; drives 7 states in sequence — Hub `/` → open Commercial matter → drag to 480 → drag to 240 → quick-chat → navigate back + collapse via chevron → quit + relaunch + reopen matter (persistence). Drag math verified in-flight (`drag target=480 start=320 final=480`; `target=240 start=480 final=240`). Toggle click via direct DOM `.click()` to bypass the extension-load toast's z-stack. PNGs at `docs/screenshots/sprint-m1/`. The harness also reveals a latent QuickChatButton bug: `setStarting(false)` only fires on failure, so the sidebar shows "STARTING…" indefinitely after a successful quick-chat (visible in screenshots; flagged as a fork-hygiene carry — not in M1 scope).
+
+**Verification** (in this session):
+- `pnpm exec tsc --noEmit` on `ui/desktop`: clean (exit 0).
+- ADR-069 line count: 36 (target ≤50).
+- `pnpm run make --targets=@electron-forge/maker-zip` succeeded; packaged binary at `ui/desktop/out/Oscar-GC-linux-x64/oscar-gc` (206MB).
+- Visual harness on Xvfb produced 7 PNGs at the expected dimensions (1440x900); pixel sampling at y=450 confirmed pane widths transition correctly between states (default ~320 → wide ~440-480 → narrow ~240 → collapsed/quick-chat rail ~30-60px → persisted rail ~30-60px after restart).
+- Commit-trailer hygiene per CLAUDE.md: `git log -1 --pretty=full` confirms no `Co-Authored-By: ... anthropic.com`.
+- No Rust touch. No new IPCs. No sibling-repo changes.
+- Pre-existing `ui/pnpm-workspace.yaml` modification (Sprint 17b pnpm 11+ surface) left untouched, not part of M1 scope (mirrors M0's stance).
+
+**Deferred** — push to `origin/main` not executed in this session; commit `00afd7353` sits local on `main` awaiting Arturs's push (auto-mode classifier blocks default-branch pushes).
+
+**Carry-forwards** (master-brief sub-sprints):
+- **M2 — Section registry + per-area composition** (config-driven `PanelSectionId` enum; `PracticeAreaShape.defaultPanelSections`; reads `area_overrides.panel_sections`). ADR-070.
+- **M3 — Matter Facts + History sections** (first real bodies; reads `~/Documents/Oscar GC/<Area>/<Matter>/` + Top of Mind). ADR-071.
+- **M4–M8** unchanged from M0 carry.
+- **Crostini dogfood E1** (M0 description_override) and the new **M1 visual states on Crostini** both wait for M8's single end-to-end dogfood.
+- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
+- **QuickChatButton `starting` state stuck after success** — latent bug visible in M1 screenshots (sidebar shows "STARTING…" indefinitely after a successful quick-chat). Trivial fix; defer to a fork-hygiene sweep.
+
+**ADRs**: 069.
+
+---
+
 ### Sprint 20 — M0: `area_overrides` schema foundation for the right-panel master brief (closed 2026-05-20 on code; commits `acec6c9cc` here, sibling `oscar-onboarding-mcp` `158e34d7`)
 
 **Goal**: first sub-sprint (M0) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Introduce the per-area override surface in `profile.json` that every later sub-sprint persists into. No UI change. Behaviour-neutral at default (absent overrides → empty merge layer → identical recipe). Reconciles the master brief's "agent = recipe; modify agent = modify recipe" framing with Oscar GC's runtime-built recipes — Forge edits land in profile.json's new `area_overrides` block, recipe builders apply it as the final merge layer (registry default → user-added entry → override). Recipes stay transient; no on-disk recipe YAMLs.
