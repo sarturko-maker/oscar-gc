@@ -32,6 +32,11 @@ import type { Session } from '../../../api';
 const sessionDisplayName = (s: Session): string =>
   s.name && s.name.trim().length > 0 ? s.name : 'Untitled session';
 
+// Sprint 19b: cap visible matters per area at the 10 most-recent. Areas
+// with more matters show a "+ N more — view all" link that navigates to
+// the area landing (full list, scrollable, with grouping by stakeholder).
+const MAX_VISIBLE_MATTERS_PER_AREA = 10;
+
 export default function ChatHistoryTree() {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
@@ -123,7 +128,7 @@ export default function ChatHistoryTree() {
               </Link>
               {expanded && (
                 <div className="oscar__sidebar-matters">
-                  {matters.map((m) => {
+                  {matters.slice(0, MAX_VISIBLE_MATTERS_PER_AREA).map((m) => {
                     const isActiveMatter =
                       m.session?.id === activeSessionId && activeSessionId !== null;
                     return (
@@ -137,6 +142,9 @@ export default function ChatHistoryTree() {
                         )}
                         title={m.matter.name}
                       >
+                        <span className="oscar__sidebar-item-matter-bullet">
+                          ·
+                        </span>
                         <span className="oscar__sidebar-item-label">
                           {m.matter.name}
                         </span>
@@ -148,6 +156,18 @@ export default function ChatHistoryTree() {
                       </button>
                     );
                   })}
+                  {matters.length > MAX_VISIBLE_MATTERS_PER_AREA && (
+                    <Link
+                      to={`/practice/${area.id}`}
+                      className="oscar__sidebar-item oscar__sidebar-item--matter oscar__sidebar-item--more"
+                    >
+                      <span className="oscar__sidebar-item-matter-bullet">·</span>
+                      <span className="oscar__sidebar-item-label">
+                        + {matters.length - MAX_VISIBLE_MATTERS_PER_AREA} more
+                        — view all
+                      </span>
+                    </Link>
+                  )}
                 </div>
               )}
             </div>

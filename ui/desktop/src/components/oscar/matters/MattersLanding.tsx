@@ -15,7 +15,7 @@ import { buildExtensionFromIntegration } from '../integrations/buildExtensionFro
 import { ensureRecipeSecrets } from '../onboarding/ensureRecipeSecrets';
 import RecipeSecretsModal from '../onboarding/RecipeSecretsModal';
 import { useConfig } from '../../ConfigContext';
-import type { Recipe } from '../../../api';
+import { getSession, type Recipe } from '../../../api';
 import type { PracticeArea } from '../practiceAreas';
 import type {
   OscarCompanyContext,
@@ -108,6 +108,34 @@ export default function MattersLanding({ area }: MattersLandingProps) {
       if (!active.ok || !active.working_dir || !active.state_folder) {
         throw new Error('Failed to activate matter');
       }
+
+      // Sprint 19b: if the matter already has a bound session and that
+      // session still exists in goose-server's DB, resume it rather than
+      // spawning a fresh one. Spawning every click was a pre-Sprint-19
+      // bug (the matters.json[slug].session_id rebound to a fresh session
+      // each time, orphaning prior conversation). ADR-038 intended
+      // resume-on-existing; this restores that contract. Falls through to
+      // the existing fresh-spawn path when session_id is null or the bound
+      // session has been deleted out-of-band.
+      if (matter.session_id) {
+        const existing = await getSession({
+          path: { session_id: matter.session_id },
+          throwOnError: false,
+        });
+        if (existing.data) {
+          window.dispatchEvent(
+            new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
+              detail: { sessionId: matter.session_id, initialMessage: undefined },
+            }),
+          );
+          navigate(
+            `/pair?resumeSessionId=${encodeURIComponent(matter.session_id)}`,
+            { state: { disableAnimation: true } },
+          );
+          return;
+        }
+      }
+
       const { working_dir: workingDir, state_folder: stateFolder } = active;
       const resourcesRoot = window.electron.oscarResourcesRoot;
       // Sprint 15 (ADR-053): company_context block prepended to recipe

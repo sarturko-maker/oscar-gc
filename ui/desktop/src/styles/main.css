@@ -1364,9 +1364,44 @@ pre:has(> code.bg-inline-code) {
 }
 
 .oscar__sidebar-item--matter {
-  font-size: 12px;
-  padding-left: 46px; /* 16 base + 30 indent under area row */
-  color: var(--ink-light);
+  font-size: 11px;
+  font-style: italic;
+  font-weight: 400;
+  padding: 6px 16px 6px 32px; /* tighter than area rows; bullet supplies the indent */
+  color: var(--ink-faint);
+  gap: 8px;
+}
+
+.oscar__sidebar-item--matter:hover {
+  color: var(--ink);
+  background: var(--paper-edge);
+}
+
+.oscar__sidebar-item--matter.oscar__sidebar-item--active {
+  color: var(--ink);
+  font-weight: 500;
+  background: var(--copper-glow);
+  border-left-color: var(--copper);
+}
+
+.oscar__sidebar-item-matter-bullet {
+  font-family: var(--mono-editorial);
+  color: var(--ink-faint);
+  flex-shrink: 0;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 1;
+  width: 12px;
+  text-align: center;
+}
+
+.oscar__sidebar-item--more {
+  color: var(--copper);
+  text-decoration: none;
+}
+
+.oscar__sidebar-item--more .oscar__sidebar-item-matter-bullet {
+  color: var(--copper);
 }
 
 .oscar__sidebar-item-label {
