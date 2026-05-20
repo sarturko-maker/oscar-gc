@@ -1,5 +1,5 @@
 // Sprint 23 (ADR-077): synthesized partner-recipe builder for the
-// Lavern-baselined eval. Mirrors `ui/desktop/scripts/test-lavern-agents.js`
+// Lavern-baselined eval. Mirrors `ui/desktop/scripts/test-oscar-llp-agents.js`
 // shape; adds support for the with-Ralph vs without-Ralph A/B by selecting
 // between SPRINT_22_DIRECTIVE (frozen at SHA 08a5381a7 — the without-Ralph
 // baseline) and RALPH_DIRECTIVE (the Sprint 23 paragraph — the with-Ralph
@@ -33,21 +33,21 @@ const PARTNERS = {
     name: 'Sarah Chen',
     specialism: 'M&A',
     identity:
-      'You are Sarah Chen, an M&A Specialist at Lavern — a 50-person multidisciplinary legal firm. You think in transaction mechanics: conditions precedent, reps and warranties, indemnification baskets, escrow holdbacks, closing checklists.',
+      'You are Sarah Chen, an M&A Specialist at Oscar LLP — a 50-person multidisciplinary legal firm. You think in transaction mechanics: conditions precedent, reps and warranties, indemnification baskets, escrow holdbacks, closing checklists.',
   },
   'helena-voss': {
     slug: 'helena-voss',
     name: 'Helena Voss',
     specialism: 'Privacy & Data Protection',
     identity:
-      'You are Helena Voss, a Privacy & Data Protection Specialist at Lavern. You think in data flows, lawful bases, processor obligations, and cross-border transfer mechanisms.',
+      'You are Helena Voss, a Privacy & Data Protection Specialist at Oscar LLP. You think in data flows, lawful bases, processor obligations, and cross-border transfer mechanisms.',
   },
   'aisha-khan': {
     slug: 'aisha-khan',
     name: 'Aisha Khan',
     specialism: 'Commercial Litigation',
     identity:
-      'You are Aisha Khan, a Commercial Litigation Specialist at Lavern. You think in cause of action, burden of proof, remedies, discovery, and forum strategy.',
+      'You are Aisha Khan, a Commercial Litigation Specialist at Oscar LLP. You think in cause of action, burden of proof, remedies, discovery, and forum strategy.',
   },
 };
 
@@ -84,7 +84,7 @@ const SPRINT_22_DIRECTIVE = [
 ].join('\n');
 
 // Sprint 23 Ralph Loop directive (ADR-076). Must stay in lockstep with the
-// verbatim paragraph in ui/desktop/src/components/oscar/lavern/prompts/*.ts.
+// verbatim paragraph in ui/desktop/src/components/oscar/oscar-llp/prompts/*.ts.
 const RALPH_DIRECTIVE = [
   '',
   '## Verification gate (required before delivery)',
@@ -143,8 +143,8 @@ function buildPartnerRecipeYaml(partnerSlug, docId, workingDir, config) {
 
   const lines = [
     'version: "1.0.0"',
-    `title: "Lavern — ${partner.name}"`,
-    `description: "${yamlEscape(partner.specialism)} specialist at Lavern — Sprint 23 eval (${docId}, ${config})."`,
+    `title: "Oscar LLP — ${partner.name}"`,
+    `description: "${yamlEscape(partner.specialism)} specialist at Oscar LLP — Sprint 23 eval (${docId}, ${config})."`,
     'prompt: |',
   ];
   for (const line of question.split('\n')) lines.push(`  ${line}`);

@@ -3,7 +3,7 @@
 // Per CLAUDE.md: "Pipeline tests must NOT mock LLM calls."
 //
 // For three representative partners, this script:
-//   1. Builds a synthesized partner recipe YAML (subset of buildLavernPartnerRecipe's
+//   1. Builds a synthesized partner recipe YAML (subset of buildOscarLLPPartnerRecipe's
 //      output) — six Tier-A MCPs + verification-pass sub-recipe + partner identity
 //      + verification-pass invocation directive.
 //   2. Invokes `goose run --recipe <partner>.yaml -t "<test question>"` with the
@@ -12,11 +12,11 @@
 //        a. ≥1 Tier-A MCP tool was invoked.
 //        b. The verification-pass sub-recipe was delegated to.
 //
-// Transcripts dump to tests/lavern-transcripts/<slug>-<timestamp>.log.
+// Transcripts dump to tests/oscar-llp-transcripts/<slug>-<timestamp>.log.
 //
 // Invocation:
-//   node ui/desktop/scripts/test-lavern-agents.js
-//   GOOSE_BIN=/path/to/goose node ui/desktop/scripts/test-lavern-agents.js
+//   node ui/desktop/scripts/test-oscar-llp-agents.js
+//   GOOSE_BIN=/path/to/goose node ui/desktop/scripts/test-oscar-llp-agents.js
 //
 // This test costs real MiniMax API tokens. Skip in CI by setting SKIP_MINIMAX_TESTS=1.
 
@@ -30,7 +30,7 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const RESOURCES = path.join(REPO_ROOT, 'ui', 'desktop', 'src', 'resources');
 const MCPS_DIR = path.join(RESOURCES, 'mcps');
 const SUB_RECIPE = path.join(RESOURCES, 'sub-recipes', 'verification-pass.yaml');
-const TRANSCRIPTS_DIR = path.join(REPO_ROOT, 'ui', 'desktop', 'tests', 'lavern-transcripts');
+const TRANSCRIPTS_DIR = path.join(REPO_ROOT, 'ui', 'desktop', 'tests', 'oscar-llp-transcripts');
 const NODE_CMD = '/usr/bin/node';
 
 function fail(msg) {
@@ -81,7 +81,7 @@ const PARTNERS = [
     name: 'Sarah Chen',
     specialism: 'M&A',
     identity:
-      'You are Sarah Chen, an M&A Specialist at Lavern — a 50-person multidisciplinary legal firm. You think in transaction mechanics: conditions precedent, reps and warranties, indemnification baskets, escrow holdbacks, closing checklists.',
+      'You are Sarah Chen, an M&A Specialist at Oscar LLP — a 50-person multidisciplinary legal firm. You think in transaction mechanics: conditions precedent, reps and warranties, indemnification baskets, escrow holdbacks, closing checklists.',
     question:
       'What is the market norm for representation survival periods in mid-market US M&A (deal value USD 25-500m)? Cite the knowledge-base if you find a relevant precedent.',
   },
@@ -90,7 +90,7 @@ const PARTNERS = [
     name: 'Helena Voss',
     specialism: 'Privacy & Data Protection',
     identity:
-      "You are Helena Voss, a Privacy & Data Protection Specialist at Lavern. You think in data flows, lawful bases, processor obligations, and cross-border transfer mechanisms.",
+      "You are Helena Voss, a Privacy & Data Protection Specialist at Oscar LLP. You think in data flows, lawful bases, processor obligations, and cross-border transfer mechanisms.",
     question:
       'Under GDPR Article 28(3), what are the mandatory processor-contract terms? Use the knowledge-base to ground your answer.',
   },
@@ -99,7 +99,7 @@ const PARTNERS = [
     name: 'Aisha Khan',
     specialism: 'Commercial Litigation',
     identity:
-      'You are Aisha Khan, a Commercial Litigation Specialist at Lavern. You think in cause of action, burden of proof, remedies, discovery, and forum strategy.',
+      'You are Aisha Khan, a Commercial Litigation Specialist at Oscar LLP. You think in cause of action, burden of proof, remedies, discovery, and forum strategy.',
     question:
       'What is a typical termination-cure-period for a commercial SaaS MSA in the US, and what risk band does 60 days fall into? Use the risk-pricing tool to benchmark.',
   },
@@ -119,8 +119,8 @@ function yamlEscape(s) {
 function buildPartnerRecipeYaml(partner, workingDir) {
   const lines = [
     'version: "1.0.0"',
-    `title: "Lavern — ${partner.name}"`,
-    `description: "${yamlEscape(partner.specialism)} specialist at Lavern — Sprint 22 agent-operation test fixture."`,
+    `title: "Oscar LLP — ${partner.name}"`,
+    `description: "${yamlEscape(partner.specialism)} specialist at Oscar LLP — Sprint 22 agent-operation test fixture."`,
     `prompt: "${yamlEscape(partner.question)}"`,
     'instructions: |',
   ];
@@ -155,7 +155,7 @@ function buildPartnerRecipeYaml(partner, workingDir) {
   lines.push('  goose_provider: "minimax"');
   lines.push('  goose_model: "MiniMax-M2.5"');
   // Sprint 23 (ADR-076): substrate safety ceiling — matches production
-  // buildLavernPartnerRecipe.ts so the Sprint 22 test substrate stays
+  // buildOscarLLPPartnerRecipe.ts so the Sprint 22 test substrate stays
   // aligned. 12 turns ≈ initial response + 2 revisions + escalation.
   lines.push('  max_turns: 12');
   lines.push('');
@@ -171,7 +171,7 @@ ensureDir(TRANSCRIPTS_DIR);
 const results = [];
 for (const partner of PARTNERS) {
   console.log(`\n=== Partner: ${partner.name} (${partner.slug}) ===`);
-  const workingDir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `lavern-${partner.slug}-`));
+  const workingDir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `oscar-llp-${partner.slug}-`));
   const recipePath = path.join(workingDir, `${partner.slug}.yaml`);
   fs.writeFileSync(recipePath, buildPartnerRecipeYaml(partner, workingDir));
   console.log(`recipe: ${recipePath}`);

@@ -61,9 +61,9 @@
 //     (budget is initial + 2 revisions). Does not exit non-zero.
 //
 // Invocation:
-//   node ui/desktop/scripts/test-lavern-revision.js
-//   GOOSE_BIN=/path/to/goose node ui/desktop/scripts/test-lavern-revision.js
-//   SKIP_MINIMAX_TESTS=1 node ui/desktop/scripts/test-lavern-revision.js
+//   node ui/desktop/scripts/test-oscar-llp-revision.js
+//   GOOSE_BIN=/path/to/goose node ui/desktop/scripts/test-oscar-llp-revision.js
+//   SKIP_MINIMAX_TESTS=1 node ui/desktop/scripts/test-oscar-llp-revision.js
 //
 // This test costs real MiniMax API tokens (~$0.05 — a revision loop costs
 // ~3x a happy-path partner turn).
@@ -78,7 +78,7 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const RESOURCES = path.join(REPO_ROOT, 'ui', 'desktop', 'src', 'resources');
 const MCPS_DIR = path.join(RESOURCES, 'mcps');
 const SUB_RECIPE = path.join(RESOURCES, 'sub-recipes', 'verification-pass.yaml');
-const TRANSCRIPTS_DIR = path.join(REPO_ROOT, 'ui', 'desktop', 'tests', 'lavern-transcripts');
+const TRANSCRIPTS_DIR = path.join(REPO_ROOT, 'ui', 'desktop', 'tests', 'oscar-llp-transcripts');
 const NODE_CMD = '/usr/bin/node';
 
 function fail(msg) {
@@ -124,14 +124,14 @@ for (const m of TIER_A_MCPS) {
 }
 
 // Sarah Chen — M&A specialist. Mirror of the partner shape from
-// test-lavern-agents.js but with the Ralph Loop directive (ADR-076)
+// test-oscar-llp-agents.js but with the Ralph Loop directive (ADR-076)
 // instead of Sprint 22's invocation-only directive.
 const PARTNER = {
   slug: 'sarah-chen-revision',
   name: 'Sarah Chen',
   specialism: 'M&A',
   identity:
-    'You are Sarah Chen, an M&A Specialist at Lavern — a 50-person multidisciplinary legal firm. You think in transaction mechanics: conditions precedent, reps and warranties, indemnification baskets, escrow holdbacks, closing checklists.',
+    'You are Sarah Chen, an M&A Specialist at Oscar LLP — a 50-person multidisciplinary legal firm. You think in transaction mechanics: conditions precedent, reps and warranties, indemnification baskets, escrow holdbacks, closing checklists.',
   // Two grounding traps: section 99.9 does not exist in any bundled corpus;
   // the "recommended band" framing invites a fabricated benchmark.
   question:
@@ -170,8 +170,8 @@ function yamlEscape(s) {
 function buildPartnerRecipeYaml(partner, workingDir) {
   const lines = [
     'version: "1.0.0"',
-    `title: "Lavern — ${partner.name}"`,
-    `description: "${yamlEscape(partner.specialism)} specialist at Lavern — Sprint 23 Ralph Loop dogfood fixture."`,
+    `title: "Oscar LLP — ${partner.name}"`,
+    `description: "${yamlEscape(partner.specialism)} specialist at Oscar LLP — Sprint 23 Ralph Loop dogfood fixture."`,
     `prompt: "${yamlEscape(partner.question)}"`,
     'instructions: |',
   ];
@@ -213,7 +213,7 @@ function buildPartnerRecipeYaml(partner, workingDir) {
 fs.mkdirSync(TRANSCRIPTS_DIR, { recursive: true });
 
 console.log(`=== Sprint 23 Ralph Loop dogfood — ${PARTNER.name} ===`);
-const workingDir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `lavern-${PARTNER.slug}-`));
+const workingDir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), `oscar-llp-${PARTNER.slug}-`));
 const recipePath = path.join(workingDir, `${PARTNER.slug}.yaml`);
 fs.writeFileSync(recipePath, buildPartnerRecipeYaml(PARTNER, workingDir));
 console.log(`recipe:   ${recipePath}`);
