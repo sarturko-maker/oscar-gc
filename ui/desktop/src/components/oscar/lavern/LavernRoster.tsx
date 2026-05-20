@@ -1,0 +1,160 @@
+// Sprint 21 (ADR-071): Lavern firm-mode roster page. Mounted at /lavern.
+// Lists the 10 partner cards labeled "[Name] ([Specialism])"; each card's
+// click handler mirrors MattersLanding.openMatter resume-on-existing pattern:
+//   1. matters.detachActive()           — clear Top of Mind (partners are not matters)
+//   2. lavern.ensureDir(slug)           — ~/Documents/Oscar GC/Lavern/<slug>/
+//   3. lavern.lookupState(slug)         — if bound session_id + still exists, resume
+//   4. else buildLavernPartnerRecipe → createSession → lavern.bindSession
+//   5. dispatch ADD_ACTIVE_SESSION + navigate /pair?resumeSessionId=…
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createSession } from '../../../sessions';
+import { AppEvents } from '../../../constants/events';
+import { errorMessage } from '../../../utils/conversionUtils';
+import { getSession } from '../../../api';
+import { useConfig } from '../../ConfigContext';
+import { useOscarProfile } from '../hooks/useOscarProfile';
+import { deriveEnabledPlatformExtensions } from '../recipe/enabledPlatformExtensions';
+import { buildLavernPartnerRecipe } from './buildLavernPartnerRecipe';
+import { useLavernPartners, type LavernPartnerWithState } from './useLavernPartners';
+import type { LavernPartner } from './partners';
+
+export default function LavernRoster() {
+  const navigate = useNavigate();
+  const config = useConfig();
+  const { profile } = useOscarProfile();
+  const { partners, loading, error, refresh } = useLavernPartners();
+  const [opening, setOpening] = useState<string | null>(null);
+  const [openError, setOpenError] = useState<string | null>(null);
+
+  const openPartner = async (partner: LavernPartner): Promise<void> => {
+    setOpening(partner.slug);
+    setOpenError(null);
+    try {
+      // Partners are not matters. Detach the active matter so Top of Mind
+      // is empty for the partner session (mirrors Forge + Quick chats).
+      await window.electron.matters.detachActive();
+
+      const { ok, path: workingDir } = await window.electron.lavern.ensureDir(partner.slug);
+      if (!ok || !workingDir) {
+        throw new Error('Failed to provision partner working directory');
+      }
+
+      // Resume-on-existing: if a session is already bound AND still exists
+      // server-side, navigate to it without rebuilding the recipe. Same
+      // pattern as MattersLanding.openMatter:121-138.
+      const state = await window.electron.lavern.lookupState(partner.slug);
+      if (state?.session_id) {
+        const existing = await getSession({
+          path: { session_id: state.session_id },
+          throwOnError: false,
+        });
+        if (existing.data) {
+          window.dispatchEvent(
+            new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
+              detail: {
+                sessionId: state.session_id,
+                initialMessage: undefined,
+              },
+            })
+          );
+          navigate(`/pair?resumeSessionId=${encodeURIComponent(state.session_id)}`, {
+            state: { disableAnimation: true },
+          });
+          return;
+        }
+      }
+
+      const enabledPlatformExtensions = deriveEnabledPlatformExtensions(config.extensionsList);
+      const recipe = buildLavernPartnerRecipe({
+        partner,
+        workingDir,
+        resourcesRoot: window.electron.oscarResourcesRoot,
+        user: profile?.user ?? null,
+        corporate: profile?.corporate ?? null,
+        companyContext: profile?.company_context ?? null,
+        enabledPlatformExtensions,
+      });
+
+      const session = await createSession(workingDir, { recipe });
+      await window.electron.lavern.bindSession(partner.slug, session.id);
+      window.dispatchEvent(
+        new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
+          detail: { sessionId: session.id, initialMessage: undefined },
+        })
+      );
+      navigate(`/pair?resumeSessionId=${encodeURIComponent(session.id)}`, {
+        state: { disableAnimation: true },
+      });
+      // Keep the roster's badge in sync for the next visit; harmless if the
+      // SESSION_CREATED listener has already fired.
+      void refresh();
+    } catch (err) {
+      setOpenError(errorMessage(err, 'Failed to open partner session'));
+      setOpening(null);
+    }
+  };
+
+  return (
+    <div className="oscar flex flex-col h-full min-h-0 px-16 relative overflow-hidden">
+      <div className="flex flex-col max-w-3xl flex-1 min-h-0 py-12">
+        <div className="oscar__eyebrow">Lavern</div>
+        <h1 className="oscar__matters-title">Partners</h1>
+        <p className="oscar__matters-body">
+          Consult one of Lavern's specialist partners alongside your in-house practice. Each partner
+          has their own memory and their own posture — pick the right specialism for the question on
+          your mind.
+        </p>
+
+        {loading && <p className="oscar__matters-empty mt-8">Loading partners…</p>}
+        {!loading && error && <p className="oscar__matters-error mt-8">{error}</p>}
+
+        {!loading && !error && (
+          <div className="oscar__matters-list flex flex-col mt-6 overflow-y-auto min-h-0">
+            {partners.map((row) => (
+              <LavernPartnerRow
+                key={row.partner.slug}
+                row={row}
+                opening={opening === row.partner.slug}
+                onOpen={openPartner}
+              />
+            ))}
+          </div>
+        )}
+
+        {opening && <p className="oscar__matters-opening mt-4">Opening {opening}…</p>}
+        {openError && <p className="oscar__matters-error mt-4">{openError}</p>}
+      </div>
+    </div>
+  );
+}
+
+interface LavernPartnerRowProps {
+  row: LavernPartnerWithState;
+  opening: boolean;
+  onOpen: (partner: LavernPartner) => void;
+}
+
+function LavernPartnerRow({ row, opening, onOpen }: LavernPartnerRowProps) {
+  const status = row.session_id ? 'Resume' : 'Start chat';
+  // Reuses the matter-row CSS family (Sprint 12+ pattern at MatterRow.tsx);
+  // the partner card has the same visual shape as a matter card so the two
+  // surfaces feel like siblings, not different products.
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(row.partner)}
+      disabled={opening}
+      className="oscar__matter-row w-full text-left flex items-center justify-between gap-4 py-4 px-2 transition-colors"
+    >
+      <div className="flex flex-col min-w-0">
+        <span className="oscar__matter-row-name truncate">
+          {row.partner.name} ({row.partner.specialism})
+        </span>
+        <div className="oscar__matter-row-meta">{row.partner.blurb}</div>
+      </div>
+      <div className="oscar__matter-row-time">{status}</div>
+    </button>
+  );
+}

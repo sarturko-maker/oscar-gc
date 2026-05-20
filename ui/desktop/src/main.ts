@@ -1805,6 +1805,20 @@ const OSCAR_DOCUMENTS_DIR = path.join(os.homedir(), 'Documents', 'Oscar GC');
 // chats via the existing `oscar:matters:detach-active` IPC.
 const OSCAR_QUICK_CHATS_DIR = path.join(OSCAR_DOCUMENTS_DIR, '.quick-chats');
 
+// Sprint 21 (ADR-071): Lavern firm-mode per-partner working_dir + state file.
+// Each partner gets ~/Documents/Oscar GC/Lavern/<slug>/ as their working_dir;
+// Goose Memory's agent-working-dir meta scoping isolates memory per partner
+// automatically. The state file at ~/.config/oscar/state/lavern/partners.json
+// binds partner slugs to session_ids so re-opening a partner from the roster
+// resumes the prior chat (mirrors matters.json[slug].session_id pattern).
+const OSCAR_LAVERN_DIR = path.join(OSCAR_DOCUMENTS_DIR, 'Lavern');
+const OSCAR_LAVERN_STATE_DIR = path.join(OSCAR_STATE_DIR, 'lavern');
+const OSCAR_LAVERN_REGISTRY_PATH = path.join(
+  OSCAR_LAVERN_STATE_DIR,
+  'partners.json',
+);
+const lavernWorkingDir = (slug: string) => path.join(OSCAR_LAVERN_DIR, slug);
+
 // area_id → display name. Kept here (small static table) rather than
 // importing practiceAreas.ts from renderer code into the main bundle.
 const AREA_DISPLAY_NAMES: Record<string, string> = {
@@ -2173,6 +2187,101 @@ ipcMain.handle('oscar:quick-chats:ensure-dir', async () => {
 });
 
 ipcMain.handle('oscar:quick-chats:get-dir', () => OSCAR_QUICK_CHATS_DIR);
+
+// Sprint 21 (ADR-071): Lavern partner registry. Per-partner session_id
+// binding for resume-on-existing (mirrors matters.json's session_id field
+// but minimal — no archive, no stakeholders, no display fields; the
+// canonical partner registry is renderer-side at lavern/partners.ts).
+interface LavernPartnerState {
+  session_id: string | null;
+}
+type LavernRegistry = Record<string, LavernPartnerState>;
+
+const readLavernRegistry = async (): Promise<LavernRegistry> => {
+  try {
+    const raw = await fs.readFile(OSCAR_LAVERN_REGISTRY_PATH, 'utf8');
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== 'object' || parsed === null) return {};
+    const result: LavernRegistry = {};
+    for (const [slug, value] of Object.entries(
+      parsed as Record<string, unknown>,
+    )) {
+      if (!safeSlug(slug)) continue;
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        'session_id' in value
+      ) {
+        const sid = (value as { session_id?: unknown }).session_id;
+        result[slug] = { session_id: typeof sid === 'string' ? sid : null };
+      }
+    }
+    return result;
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') return {};
+    log.warn('oscar:lavern registry read failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return {};
+  }
+};
+
+const writeLavernRegistry = async (registry: LavernRegistry): Promise<void> => {
+  await fs.mkdir(OSCAR_LAVERN_STATE_DIR, { recursive: true });
+  await fs.writeFile(
+    OSCAR_LAVERN_REGISTRY_PATH,
+    JSON.stringify(registry, null, 2),
+    'utf8',
+  );
+};
+
+ipcMain.handle('oscar:lavern:ensure-dir', async (_event, slugRaw: unknown) => {
+  const slug = safeSlug(slugRaw);
+  if (!slug) return { ok: false, path: '' };
+  const dir = lavernWorkingDir(slug);
+  try {
+    await fs.mkdir(dir, { recursive: true });
+    return { ok: true, path: dir };
+  } catch (err) {
+    log.warn('oscar:lavern:ensure-dir failed', {
+      slug,
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { ok: false, path: dir };
+  }
+});
+
+ipcMain.handle(
+  'oscar:lavern:bind-session',
+  async (_event, slugRaw: unknown, sessionIdRaw: unknown) => {
+    const slug = safeSlug(slugRaw);
+    if (
+      !slug ||
+      typeof sessionIdRaw !== 'string' ||
+      sessionIdRaw.length === 0
+    ) {
+      return { ok: false };
+    }
+    const registry = await readLavernRegistry();
+    registry[slug] = { session_id: sessionIdRaw };
+    await writeLavernRegistry(registry);
+    return { ok: true };
+  },
+);
+
+ipcMain.handle(
+  'oscar:lavern:lookup-state',
+  async (_event, slugRaw: unknown) => {
+    const slug = safeSlug(slugRaw);
+    if (!slug) return null;
+    const registry = await readLavernRegistry();
+    return registry[slug] ?? null;
+  },
+);
+
+ipcMain.handle('oscar:lavern:list-partner-states', async () =>
+  readLavernRegistry(),
+);
 
 // Sprint 14 (ADR-047): reverse lookup — given a session_id (from BaseChat),
 // find the matter bound to it. Used by the matter back-button affordance to

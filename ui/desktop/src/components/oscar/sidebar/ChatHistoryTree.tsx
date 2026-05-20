@@ -76,7 +76,6 @@ export default function ChatHistoryTree() {
       // already carries its recipe; resume uses the bound config.
       await window.electron.matters.setActive(areaId, m.matter.slug);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('matters.setActive failed', err);
     }
     openSession(m.session.id);
@@ -106,6 +105,23 @@ export default function ChatHistoryTree() {
           ))}
         </div>
       )}
+
+      {/* Sprint 21 (ADR-071): Lavern firm-mode. Sits between Quick chats
+          (ephemeral, scope-less) and Practice areas (in-house work) — the
+          natural conceptual progression. Single-row group; the 10-partner
+          roster lives on /lavern, not inline in the sidebar. */}
+      <div className="oscar__sidebar-group">
+        <div className="oscar__eyebrow oscar__sidebar-eyebrow">Lavern</div>
+        <Link
+          to="/lavern"
+          className={cn(
+            'oscar__sidebar-item',
+            pathname.startsWith('/lavern') && 'oscar__sidebar-item--active',
+          )}
+        >
+          Browse partners
+        </Link>
+      </div>
 
       <div className="oscar__sidebar-group">
         <div className="oscar__eyebrow oscar__sidebar-eyebrow">Practice areas</div>

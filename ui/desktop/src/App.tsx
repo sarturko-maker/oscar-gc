@@ -25,6 +25,7 @@ import Hub from './components/Hub';
 import PracticeAreaPlaceholder from './components/oscar/PracticeAreaPlaceholder';
 import ForgeView from './components/oscar/forge/ForgeView';
 import IntegrationsView from './components/oscar/integrations/IntegrationsView';
+import LavernRoster from './components/oscar/lavern/LavernRoster';
 import OscarOnboardingGuard from './components/oscar/onboarding/OscarOnboardingGuard';
 import { UserInput } from './types/message';
 
@@ -702,6 +703,7 @@ export function AppInner() {
               <Route path="practice/:areaId" element={<PracticeAreaPlaceholder />} />
               <Route path="forge" element={<ForgeView />} />
               <Route path="integrations" element={<IntegrationsView />} />
+              <Route path="lavern" element={<LavernRoster />} />
               <Route
                 path="shared-session"
                 element={

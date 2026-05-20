@@ -14,6 +14,72 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 21 — Lavern firm-mode (closed 2026-05-20 on code; commit `<pending>`)
+
+**Goal**: demo Oscar GC's ability to host a parallel "firm" alongside the in-house practice. A new `Lavern` sidebar entry opens a roster of 10 invented specialist-partner agents the lawyer can consult by name — each their own Goose recipe, their own working_dir, their own memory. Identity (lawyer name + employer + industry) cascades from the existing profile.json; matter-specific context does not. Native Goose chat — no custom UI primitives, no orchestration. Arturs's framing: "this is a demo, a prototype." Crostini-installable `.deb` is the sprint-end artefact; per-prompt evals are confirmed needed (Lavern shipped none) and slated for Sprint 23.
+
+**Three-sprint roadmap committed in plan-mode** (`/root/.claude/plans/lucky-whistling-rainbow.md`) after Arturs redirected the initial single-sprint plan: Sprint 21 = personas + sidebar shell (this sprint); Sprint 22 = Lavern MCPs and connectors adapted to Goose primitives (sub-recipes for verification/adversarial passes, 6 Tier-A stdio MCPs to lift, Tier-B/C concepts mapped or deferred per ADR-073's translation table); Sprint 23 = per-partner eval harness (5 questions × 3 judges × 10 partners against MiniMax-M2.5; pattern from Sprint 15 ADR-054). Sprint 21's personas are deliberately written to *not* assume orchestrator invocation so Sprint 22's sub-recipe augmentation can slot in additively (one paragraph appended; no re-adaptation).
+
+**Built** — three ADRs, ten partner personas (raw + adapted), recipe + IPC + UI wiring, NOTICE updated:
+
+- **ADR-071** (`docs/adr/071-lavern-firm-mode.md`, 47 lines): structural decision. Sidebar group with eyebrow `Lavern` slots between Quick chats and Practice areas in `ChatHistoryTree.tsx`; single child row → `/lavern` route. `LavernRoster.tsx` renders 10 partner cards `[Name] ([Specialism])`. Click handler mirrors `MattersLanding.openMatter:104-138` resume-on-existing: `matters.detachActive()` → `lavern.ensureDir(slug)` → `lavern.lookupState(slug)` → resume-or-fresh-spawn → dispatch `ADD_ACTIVE_SESSION` + navigate `/pair?resumeSessionId=`. Per-partner working_dir at `~/Documents/Oscar GC/Lavern/<slug>/`; Goose Memory's `agent-working-dir` meta scoping (`crates/goose-mcp/src/memory/mod.rs:21-29,165-184`) gives automatic isolation. Partner→session binding state file at `~/.config/oscar/state/lavern/partners.json` (minimal — `{slug: { session_id: string | null }}`; no archive/stakeholders). Identity cascade via new `userIdentityBlock.ts` (Lavern-only this sprint; same gap exists in practice-area recipes, carried forward).
+
+- **ADR-072** (`docs/adr/072-lavern-prompt-adaptation.md`, 47 lines): prompt-lift policy. Raw originals stay at `prompts/raw/<slug>.ts.original` (checked in; Apache 2.0 attribution; `.ts.original` extension keeps TS/eslint off them). Adapted versions at `prompts/<slug>.ts`. Mechanical transforms applied at vendor-time, captured here: (1) `The Shem` → `Lavern` rename; (2) `Debate Board Protocol` sections + debate-board channel references stripped; (3) orchestrator-invocation framing stripped; (4) `Output Format` JSON-requirement sections stripped; (5) `**Personality Axes**` numerics stripped (qualitative voice preserved); (6) first-line rename to include partner name; (7) Memory Protocol rewritten from Lavern's `memory-system` MCP to Goose Memory's `remember_memory`/`retrieve_memories`. Preserved: persona archetype, multi-phase analysis framework, Key Principles, the "this system does not provide legal advice" hedge.
+
+- **ADR-073** (`docs/adr/073-lavern-mcps-deferred-to-sprint-22.md`, 51 lines): the architecture commitment for Sprint 22, written now so Sprint 21's persona-lift aligns with it. Translation table tiers Lavern's 21 MCPs as A (7 portable: knowledge-base, baselines, document-reader, grounding-verifier, document-checks, risk-pricing, legal-md-compiler — Sprint 22 lifts as stdio MCPs); B (5 concepts mapping to Goose primitives: evaluator-gate → pre-delivery `SubRecipe`, debate-board → ad-hoc sub-recipe invocation, handoff → `SubRecipe`, approval-gate → UI affordance, workflow-engine → recipe templates); C (8 internal: feedback-loop, memory-system, pre-engagement, quality-check, report-card, scoring-engine, session-replay-testing, verification-engine — already covered by Goose, by Oscar GC's intake, or deferred). The "10-pass verification pipeline" of Lavern's README is marketing, not their actual design — `docs/architecture-spec.md` describes a Router → sequential pipeline with one mandatory Evaluator Gate, which Goose's `SubRecipe` primitive matches cleanly.
+
+- **10 lifted-and-adapted partner prompts** (`ui/desktop/src/components/oscar/lavern/prompts/`):
+  - `sarah-chen.ts` from `ma-specialist.ts` (M&A; archetype "The Dealmaker")
+  - `marcus-webb.ts` from `contract-specialist.ts` (Commercial Contracts; "The Surgeon")
+  - `daniel-reeves.ts` from `litigation-partner.ts` (Litigation; "The Gladiator")
+  - `priya-patel.ts` from `employment-counsel.ts` (Employment; "The Advocate")
+  - `james-okafor.ts` from `ip-specialist.ts` (IP; "The Inventor")
+  - `helena-voss.ts` from `tax-counsel.ts` (Tax; "The Architect")
+  - `diana-park.ts` from `privacy-counsel.ts` (Privacy; "The Guardian")
+  - `robert-sinclair.ts` from `capital-markets.ts` (Capital Markets; "The Speedster")
+  - `aisha-khan.ts` from `tech-transactions.ts` (Tech Transactions; "The Technologist") — swapped in for Banking & Finance per Plan-agent feedback flagging specialism overlap
+  - `thomas-schmidt.ts` from `regulatory-counsel.ts` (Regulatory; "The Sentinel")
+  - 10 raw `.ts.original` files committed alongside for diff-against-upstream provenance.
+
+- **Partner registry** (`partners.ts`): single source-of-truth `LAVERN_PARTNERS: readonly LavernPartner[]` 10-tuple (`{ slug, name, specialism, blurb, systemPrompt }`); `partnerBySlug(slug)` lookup helper. Imported by `LavernRoster.tsx` for card rendering and by `buildLavernPartnerRecipe.ts` for prompt assembly.
+
+- **Identity cascade helper** (`userIdentityBlock.ts`): mirrors `companyContextBlock.ts` shape. Renders `## About the in-house lawyer you are advising` from `profile.user.{name,role_label}` + `profile.corporate.{name,industry,size_band}`. Returns null when both name fields are absent (graceful degradation — partner just opens with company context only).
+
+- **Recipe builder** (`buildLavernPartnerRecipe.ts`): composes `Recipe` with title `Lavern — ${partner.name}` (trust-bypass-friendly per the preload widening below), description `${partner.specialism} specialist at Lavern, consulted by your in-house team.`, instructions stacked `[userIdentityBlock, companyContextBlock, partner.systemPrompt]`, extensions `[oscar-fs(workingDir) + ...enabledPlatformExtensions + Tavily]`, settings pinned to MiniMax-M2.5. No separate state folder (partners simpler than matters; no matter.md / history.md).
+
+- **IPC + main process** (`main.ts`): four new handlers — `oscar:lavern:ensure-dir(slug)`, `oscar:lavern:bind-session(slug, sessionId)`, `oscar:lavern:lookup-state(slug)`, `oscar:lavern:list-partner-states()` — mirroring `oscar:quick-chats:*` and a subset of `oscar:matters:*` shapes. New constants `OSCAR_LAVERN_DIR`, `OSCAR_LAVERN_STATE_DIR`, `OSCAR_LAVERN_REGISTRY_PATH` and `lavernWorkingDir(slug)` helper. Registry read/write helpers `readLavernRegistry`/`writeLavernRegistry` (slug-validated against `safeSlug`; ENOENT-tolerant; atomic-write via mkdir-then-writeFile).
+
+- **Preload `lavern` namespace** (`preload.ts`): `window.electron.lavern.{ensureDir, bindSession, lookupState, listPartnerStates}`. ElectronAPI type extended. **Trust-bypass widened** (lines 422-435): `recipe.title.startsWith('Oscar GC') || startsWith('Lavern —')` — extends ADR-029's title-prefix policy to recognize Sprint 21's partner-recipe titles without forcing a bureaucratic `Oscar GC — Lavern — <name>` triple-prefix. The "Sprint 15+ migration to recipe.metadata.bundled" note still applies when community recipes eventually land.
+
+- **`useLavernPartners` hook** (`useLavernPartners.ts`): joins static `LAVERN_PARTNERS` with `lavern.listPartnerStates()` IPC; subscribes to `SESSION_CREATED/DELETED/RENAMED` so the roster's Resume-vs-Start badge follows live state without parent re-render. Mirrors `useChatHistory.ts` event-subscription pattern.
+
+- **`LavernRoster.tsx`** (the `/lavern` page): outer `oscar` container; eyebrow `Lavern` + h1 `Partners` + body description. Reuses `oscar__matter-row*` CSS family so partner cards have the same visual shape as matter cards (sibling surfaces, not different products). Status column shows "Resume" if `session_id` exists, "Start chat" otherwise. Click handler runs the resume-or-fresh-spawn flow described in ADR-071.
+
+- **Sidebar group** (`ChatHistoryTree.tsx`): new `oscar__sidebar-group` between Quick chats and Practice areas; eyebrow `Lavern`, single child row "Browse partners" linking to `/lavern`. Visual rhythm matches the other two tree groups. 17-line insertion.
+
+- **Route registration** (`App.tsx`): one-line `<Route path="lavern" element={<LavernRoster />} />` added next to `forge` and `integrations`. One-line import added.
+
+- **`NOTICE` updated**: new Lavern attribution paragraph with upstream HEAD SHA `7c2efe61524b` (2026-05-20) + per-slug source mapping + adaptation summary + trademark hedge per Apache 2.0 §6.
+
+**Verification** (in this session):
+- `pnpm typecheck` (tsc --noEmit): clean (exit 0).
+- `pnpm lint:check` (typecheck + eslint --max-warnings 0 + i18n:check): clean (exit 0). One incidental cleanup: 8 pre-existing `// eslint-disable-next-line no-console` directives across 4 files (`buildExtensionFromIntegration.ts`, `loadRegistry.ts`, `QuickChatButton.tsx`, `useChatHistory.ts`) were flagged as unused by ESLint and auto-removed via `pnpm lint --fix` + `pnpm format`. Pre-Sprint-21 tech debt; cleaning was required for Sprint 21 to pass the gate.
+- Crostini dogfood deferred to post-build: per the plan, after `.deb` builds and uploads to draft release Arturs walks the 8-step exit criteria (sidebar group renders → roster → 10 cards → Daniel Reeves chats in character with identity awareness → memory isolation per partner → resume flow).
+
+**Deferred** (per plan, by design):
+- Sprint 22 work (Tier-A MCP lift + sub-recipe wiring + partner prompt augmentation).
+- Sprint 23 work (per-partner eval harness).
+- `userIdentityBlock` retro-fit into practice-area recipes — the gap exists in in-house mode too but widening this sprint balloons scope.
+
+**Carry-forwards**:
+- **Sprint 22 architecture is committed** in ADR-073 — Sprint 22 starts from the translation table, not from a blank plan-mode.
+- **Headless screenshot evidence** (`docs/screenshots/sprint-21/`) — capture sidebar + `/lavern` roster via `scripts/capture-oscar.sh` once the build refreshes. Not blocking sprint close; the build refresh happens during the .deb workflow.
+- **Crostini dogfood** — `.deb` build + draft release + 8-step exit criteria walk by Arturs.
+
+**ADRs**: 071, 072, 073.
+
+---
+
 ### Sprint 20-M2 — Section registry + per-area composition (closed 2026-05-20 on code; commit `1c0d3370e`)
 
 **Goal**: third sub-sprint (M2) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Turn M1's inert pane body into a data-driven stack of section stubs whose composition is per-area: `PracticeAreaShape.defaultPanelSections` overridden by `area_overrides.panel_sections`. No real section bodies — M3 fills MatterFacts + History, M4 Playbooks, M5 Skills. M2 is the wiring sprint.

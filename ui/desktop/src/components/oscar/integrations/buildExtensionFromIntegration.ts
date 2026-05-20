@@ -7,15 +7,12 @@ import type { Integration } from './types';
 import { loadIntegrationsRegistry } from './loadRegistry';
 
 export async function buildExtensionFromIntegration(
-  entryId: string,
+  entryId: string
 ): Promise<NonNullable<Recipe['extensions']>[number] | null> {
   const registry = await loadIntegrationsRegistry();
   const entry = registry.find((e) => e.id === entryId);
   if (!entry) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `integrations: installed entry "${entryId}" not in registry; skipping`,
-    );
+    console.warn(`integrations: installed entry "${entryId}" not in registry; skipping`);
     return null;
   }
   return buildExtensionFromEntry(entry);
@@ -24,16 +21,13 @@ export async function buildExtensionFromIntegration(
 // Pure form, exported for unit-testability and use by callers that
 // already hold an Integration object.
 export function buildExtensionFromEntry(
-  entry: Integration,
+  entry: Integration
 ): NonNullable<Recipe['extensions']>[number] | null {
   // Bundled entries are not addable; if we ever hit this branch for a
   // bundled entry, something installed it incorrectly — return null and
   // let the caller skip it.
   if (entry.security_tier === 'bundled') {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `integrations: bundled entry "${entry.id}" should not be installed; skipping`,
-    );
+    console.warn(`integrations: bundled entry "${entry.id}" should not be installed; skipping`);
     return null;
   }
 
@@ -45,16 +39,14 @@ export function buildExtensionFromEntry(
   // one (e.g. from a Sprint 17 install before this gate landed), skip it
   // at recipe-build time.
   if (entry.subscription_type === 'requires-paid-subscription') {
-    // eslint-disable-next-line no-console
     console.warn(
-      `integrations: paid-subscription entry "${entry.id}" cannot be wired into the recipe in Sprint 17b (OAuth client_id mismatch). Skipping; Sprint 18+ revisits.`,
+      `integrations: paid-subscription entry "${entry.id}" cannot be wired into the recipe in Sprint 17b (OAuth client_id mismatch). Skipping; Sprint 18+ revisits.`
     );
     return null;
   }
 
   if (entry.transport === 'streamable_http') {
     if (!entry.url) {
-      // eslint-disable-next-line no-console
       console.warn(`integrations: entry "${entry.id}" has no url; skipping`);
       return null;
     }
@@ -70,10 +62,7 @@ export function buildExtensionFromEntry(
   // stdio fallback — present for schema symmetry. No installable stdio
   // entries in the Sprint 17 seed set (oscar-fs is bundled, no Add).
   if (!entry.cmd) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `integrations: stdio entry "${entry.id}" has no cmd; skipping`,
-    );
+    console.warn(`integrations: stdio entry "${entry.id}" has no cmd; skipping`);
     return null;
   }
   return {

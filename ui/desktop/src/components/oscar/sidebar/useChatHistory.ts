@@ -45,9 +45,7 @@ const SUBSCRIBED_EVENTS: AppEvents[] = [
 export function useChatHistory(): ChatHistory {
   const areas = usePracticeAreas();
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [matterByArea, setMatterByArea] = useState<Record<string, MatterEntry[]>>(
-    {},
-  );
+  const [matterByArea, setMatterByArea] = useState<Record<string, MatterEntry[]>>({});
   const [quickChatsDir, setQuickChatsDir] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +67,6 @@ export function useChatHistory(): ChatHistory {
       setMatterByArea(byArea);
       setQuickChatsDir(dir);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('useChatHistory refresh failed', err);
       setError(err instanceof Error ? err.message : 'Failed to load history');
     } finally {
@@ -106,9 +103,7 @@ export function useChatHistory(): ChatHistory {
 
     const quickChatsList: Session[] = qcPrefix
       ? sessions.filter(
-          (s) =>
-            s.working_dir === qcPrefix ||
-            s.working_dir.startsWith(qcPrefix + '/'),
+          (s) => s.working_dir === qcPrefix || s.working_dir.startsWith(qcPrefix + '/')
         )
       : [];
     // Most-recent first.
@@ -118,11 +113,11 @@ export function useChatHistory(): ChatHistory {
       const matters = matterByArea[area.id] ?? [];
       // Mirror MattersLanding's ordering: most-recently-accessed first.
       const sorted = [...matters].sort((a, b) =>
-        b.last_accessed_at.localeCompare(a.last_accessed_at),
+        b.last_accessed_at.localeCompare(a.last_accessed_at)
       );
       const rows: ChatHistoryMatter[] = sorted.map((matter) => ({
         matter,
-        session: matter.session_id ? sessionById.get(matter.session_id) ?? null : null,
+        session: matter.session_id ? (sessionById.get(matter.session_id) ?? null) : null,
       }));
       return { area, matters: rows };
     });

@@ -268,6 +268,20 @@ type ElectronAPI = {
     ensureDir: () => Promise<{ ok: boolean; path: string }>;
     getDir: () => Promise<string>;
   };
+  // Sprint 21 (ADR-071): Lavern firm-mode. Per-partner working_dir + state
+  // file binding partner slug → session_id for resume-on-existing. The
+  // canonical partner roster is renderer-side at lavern/partners.ts; main
+  // owns only the session-id binding shape.
+  lavern: {
+    ensureDir: (slug: string) => Promise<{ ok: boolean; path: string }>;
+    bindSession: (slug: string, sessionId: string) => Promise<{ ok: boolean }>;
+    lookupState: (
+      slug: string,
+    ) => Promise<{ session_id: string | null } | null>;
+    listPartnerStates: () => Promise<
+      Record<string, { session_id: string | null }>
+    >;
+  };
 };
 
 type AppConfigAPI = {
@@ -419,14 +433,21 @@ const electronAPI: ElectronAPI = {
   // the user installed. The dialog gates user-installed-from-untrusted-source
   // recipes, which Oscar GC won't have until the community-skills tier opens
   // (Sprint 15+).
+  // Sprint 21 (ADR-071): widened to also recognize "Lavern —" so partner
+  // recipes (Lavern firm-mode) bypass the dialog without needing an "Oscar GC"
+  // triple-prefix. Both prefixes mark bundled recipes; the migration to a
+  // recipe.metadata.bundled marker (ADR-029 "Sprint 15+ migration" note) still
+  // applies when community recipes eventually land.
   hasAcceptedRecipeBefore: (recipe: Recipe) => {
-    if (recipe?.title?.startsWith('Oscar GC')) {
+    const title = recipe?.title ?? '';
+    if (title.startsWith('Oscar GC') || title.startsWith('Lavern —')) {
       return Promise.resolve(true);
     }
     return ipcRenderer.invoke('has-accepted-recipe-before', recipe);
   },
   recordRecipeHash: (recipe: Recipe) => {
-    if (recipe?.title?.startsWith('Oscar GC')) {
+    const title = recipe?.title ?? '';
+    if (title.startsWith('Oscar GC') || title.startsWith('Lavern —')) {
       return Promise.resolve(true);
     }
     return ipcRenderer.invoke('record-recipe-hash', recipe);
@@ -472,6 +493,21 @@ const electronAPI: ElectronAPI = {
   quickChats: {
     ensureDir: () => ipcRenderer.invoke('oscar:quick-chats:ensure-dir'),
     getDir: () => ipcRenderer.invoke('oscar:quick-chats:get-dir'),
+  },
+  // Sprint 21 (ADR-071): Lavern firm-mode. Per-partner working_dir provisioning
+  // + per-partner session-binding registry. The canonical partner roster lives
+  // in renderer-land at components/oscar/lavern/partners.ts; main owns only the
+  // session_id binding (so re-opening a partner from the roster resumes prior
+  // chat — mirrors MattersLanding.openMatter:121-138 pattern).
+  lavern: {
+    ensureDir: (slug: string) =>
+      ipcRenderer.invoke('oscar:lavern:ensure-dir', slug),
+    bindSession: (slug: string, sessionId: string) =>
+      ipcRenderer.invoke('oscar:lavern:bind-session', slug, sessionId),
+    lookupState: (slug: string) =>
+      ipcRenderer.invoke('oscar:lavern:lookup-state', slug),
+    listPartnerStates: () =>
+      ipcRenderer.invoke('oscar:lavern:list-partner-states'),
   },
 };
 
