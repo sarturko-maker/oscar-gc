@@ -14,6 +14,72 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 20-M4 — Playbooks subsystem (closed 2026-05-21 on code; commit `ec24d4710`)
+
+**Goal**: fifth sub-sprint (M4) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace the `PanelSectionStub` mapping for **Playbooks** with a real renderer: drag-drop upload → `~/.config/oscar/playbooks/<scope>/<filename>`; per-file always-on chip → file's extracted text injected into the matter's recipe instructions as a `## Playbooks in scope` block (Layer 1); on-demand files stay listed in the pane; agent reads them via oscar-fs + computercontroller (Layer 2).
+
+**Built** — one implementation commit + ADR-084 (storage convention) + ADR-085 (three-layer injection with reuse pivot) + visual harness on lq-vps:
+
+- **Mid-execution architecture pivot — reuse Goose's `computercontroller` instead of adding `pdf-parse` + `mammoth`.** Plan-mode landed on the two npm deps; Arturs flagged the CLAUDE.md "Reuse over rebuild — Goose" rule. Probing `crates/goose-mcp/src/computercontroller/` surfaced `pdf_tool.rs` (via `lopdf`) + `docx_tool.rs` (via `docx_rs`) with `extract_text` operations, exposed as MCP tools and spawnable standalone via `goosed mcp computercontroller`. CLAUDE.md decision: drop the npm deps; talk to the bundled MCP from the main process via `@modelcontextprotocol/sdk` stdio client (already in node_modules). Plan file at `/root/.claude/plans/please-read-m4-breif-starry-pascal.md` updated mid-flight to reflect the pivot.
+
+- **ADR-084** (`docs/adr/084-playbook-storage-convention.md`, 46 lines): filesystem at `~/.config/oscar/playbooks/<scope>/<filename>`; `<scope>` = `_global` (cross-area) or `<areaId>` (per-area; dirname equals `OscarUserProfilePracticeArea.id`). `area_overrides[areaId].playbooks.always_on` stores scoped relative paths like `["_global/foo.md"]`. Pane lists from disk via `fs.readdir`; no shadow registry. Underscore prefix on `_global` keeps it free of any future area-id named "global". Mirrors `~/.agents/skills/<slug>/SKILL.md` (Sprint 11) — filesystem-as-source-of-truth, Finder/Drive-sync-compatible.
+
+- **ADR-085** (`docs/adr/085-playbook-three-layer-injection.md`, 47 lines): three layers, two implemented in M4. Layer 1 (always-on) → `oscar:playbooks:render-block` IPC; main process spawns `goosed mcp computercontroller` for binary files (.pdf/.docx); text formats raw-read (.md/.txt/.html/.json/.yaml/.csv); per-file budget = `floor(cap / count)`; truncation at paragraph boundary with sentinel. Layer 2 (on-demand) → practice-area recipes carry narrowed `computercontroller` with `available_tools: ['pdf_tool', 'docx_tool']` only (ADR-017 discipline); oscar-fs widening covers text files. Layer 3 (semantic) deferred. Documents resume-path "next-open" semantics: toggle applies on fresh matter-open, already-bound sessions keep the recipe baked at spawn (Sprint 19b + ADR-038). Force-detach rejected.
+
+- **`playbookStore.ts`** (`ui/desktop/src/components/oscar/playbooks/playbookStore.ts`, main-process): `listPlaybooks(areaId, alwaysOn)` walks `_global` + per-area dirs, returns sorted `PlaybookEntry[]`; `extractText(absPath, cc?)` (text formats raw; html tag-strip; .pdf/.docx via passed-in `ComputerControllerClient`); `renderPlaybooksBlock(relPaths, charCap, goosedBin)` is the Layer 1 helper — one subprocess per build, multiple `tools/call`, killed at end. `ComputerControllerClient` wraps `StdioClientTransport` + `Client` from `@modelcontextprotocol/sdk` against `goosed mcp computercontroller`. Path-safety helpers (`sanitiseFilename`, `absPathForRel`) reject traversal attempts at the IPC boundary.
+
+- **`renderPlaybooksBlock.ts`** (`ui/desktop/src/components/oscar/recipe/renderPlaybooksBlock.ts`, renderer): thin async wrapper around `window.electron.playbooks.renderBlock(alwaysOn, cap)`; returns `string | null`. Mirrors `renderCompanyContextBlock` shape so the recipe builder's compose remains `[companyBlock, areaDescriptionBlock, playbooksBlock, baseInstructions].filter(Boolean).join('\n\n')`. Failure to extract degrades to "null" (no block) rather than failing the spawn.
+
+- **`buildPracticeAreaRecipe.ts` becomes async + inserts the block + widens oscar-fs**: new required `homeDir` option (mirrors `forgeRecipe.ts:68`); oscar-fs args gain `${homeDir}/.config/oscar/playbooks` (single parent dir; prefix-based check covers `_global` + every per-area subdir); new builtin extension entry `{ type: 'builtin', name: 'computercontroller', available_tools: ['pdf_tool', 'docx_tool'] }` narrowed per ADR-017; `playbooksBlock` inserted between `areaDescriptionBlock` and `baseInstructions`. `commercialRecipe.ts` cascades to async. `MattersLanding.openMatter` awaits both builders; reads `window.electron.oscarHomeDir` and throws early if unset.
+
+- **Five IPCs on main.ts** after the M3 right-pane block:
+  - `oscar:playbooks:list(areaId) → PlaybookEntry[]` — lazy-mkdir + readdir, alphabetical within scope.
+  - `oscar:playbooks:upload(areaId, scope, filename, bytes) → { ok, relPath } | { ok: false, code }` — sanitise via `path.basename`; reject non-allowlist ext; `wx` flag refuses overwrite (EEXIST).
+  - `oscar:playbooks:toggle-always-on(areaId, relPath, next) → { ok, alwaysOn, budgetCap } | { ok: false, code, extractedLength?, cap? }` — single-file budget check at toggle time; extract once via `ComputerControllerClient`; reject EBUDGET if extracted length > 8000; atomic profile.json temp+rename on accept.
+  - `oscar:playbooks:delete(areaId, relPath) → { ok }` — unlink + scrub the relPath from every area's `always_on` list.
+  - `oscar:playbooks:render-block(relPaths, charCap) → string | null` — Layer 1 injection helper called by `renderPlaybooksBlock` at recipe-build time.
+
+- **`window.electron.playbooks` preload bridge** with five matching methods + new `PlaybookEntry`, `UploadResult`, `ToggleAlwaysOnResult` ambient types.
+
+- **`PlaybooksSection.tsx`** consumes `useRightPaneCoords()` + `usePanelReader(window.electron.playbooks.list, [areaId])`. Drag-drop overlay doubles as click-to-browse (hidden `<input type="file">`); two-button confirm dialog for scope ("Area only" / "Global"); rows with `data-testid="playbooks-row-${relPath}"` + `data-scope` attribute, mono filename + scope label + size + always-on chip (`aria-pressed`) + delete X; budget warning row + EEXIST error row. Empty state copy: "No playbooks yet. Drop a file above."
+
+- **`sectionRegistry`** swap: `Playbooks: PlaybooksSection`; `SECTION_META.Playbooks.comingIn: 'M4'` deleted.
+
+- **CSS family `.oscar__playbooks-*`** (`ui/desktop/src/styles/main.css`): drop-zone with dashed rule + cream paper-edge hover; row layout (name 1fr + scope + size mono + chip + delete X); pill-shaped Always-on chip with copper accent in pressed state; budget warning banner with copper-bordered left rule + ink-faint italic. Editorial register matches LQdesign reference.
+
+- **Visual verification harness** (`ui/desktop/scripts/capture-m4.js` + `scripts/capture-m4.sh`): clones M3's pattern; widens `preflightCleanup` to wipe `~/.config/oscar/playbooks/`; five states with full IPC assertions including profile.json `always_on` field check and renderBlock content grep. State (d) overlays the `renderBlock` result as a temporary diagnostic `<div>` so the PNG carries visual evidence alongside the console-asserted contract.
+
+**Verification** (in this session):
+- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0).
+- ADR line counts: 46 (storage) / 47 (three-layer). Target ≤50.
+- `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` succeeded.
+- Visual harness produced 5 PNGs at 1440×900:
+  - (a) `playbooks-empty.png` — Playbooks section visible, drop zone + "No playbooks yet" stub copy.
+  - (b) `playbooks-listed-mixed-scope.png` — two rows with distinct `data-scope` ("global" + "area"), labels "Global" / "commercial".
+  - (c) `playbooks-always-on-toggled.png` — chip `aria-pressed="true"`; profile.json `area_overrides.commercial.playbooks.always_on === ["_global/nda-checklist.md"]` verified via `readAlwaysOnList`.
+  - (d) `playbooks-recipe-injection.png` — `renderBlock` returned 1029 chars containing `## Playbooks in scope` heading + `### nda-checklist.md (global)` filename header + NDA-checklist content. Diagnostic overlay shown in the PNG; harness asserts the string before screenshot.
+  - (e) `playbooks-budget-warning.png` — 50K-char `large-policy.md` rejected with `code: 'EBUDGET'`, `extractedLength: 56020`, `cap: 8000`; budget warning banner rendered; chip stays `aria-pressed="false"`.
+- Commit-trailer hygiene per CLAUDE.md: no `Co-Authored-By` trailer (verified post-commit).
+- **ADR slots taken at decision time: 084 + 085** (verified `ls docs/adr/` + `git log --all --diff-filter=A` before naming; main at 083, lavern-firm-mode at 082, next-free = 084).
+- No Rust touch. No sibling-repo changes. No new npm dependencies.
+- Parallel-session coordination: Xvfb :99 confirmed clear before harness run (Sprint 24 / `lavern-firm-mode` was idle on display).
+
+**Deferred** — push to `origin/main` happens after the close commit lands the SPRINT_LOG entry with this section's commit SHA.
+
+**Carry-forwards** (master-brief sub-sprints):
+- **M5 — Skills visibility + per-area scoping** (next). One ADR at decision time (skill scoping via prompt enumeration). M5 brief draft after this close commit at `/root/.claude/plans/sprint-m5-skills-visibility.md`.
+- **M6 — Skills upload + Forge review (Mode C)**.
+- **M7 — Forge area-modify (Mode D)** + ADR for Zod-validated profile.json writes.
+- **M8 — Forge delete-area (Mode E)** + the single end-to-end Crostini dogfood per Arturs's doctrine.
+- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
+- **QuickChatButton "STARTING…" stuck-state** (M1 carry) still open.
+- **`pnpm-workspace.yaml` allowBuilds: drift** inherits as unstaged each session.
+- **Crostini dogfood E1 (M0 description_override) + M1/M2/M3/M4 visual states** wait for M8.
+
+**ADRs**: 084, 085.
+
+---
+
 ### Sprint 20-M3 — Matter Facts + History real bodies (closed 2026-05-21 on code; commit `7b6586765`)
 
 **Goal**: fourth sub-sprint (M3) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace `PanelSectionStub` for **MatterFacts**, **ProgrammeFacts**, and **History** with real renderers backed by the same on-disk state the agent reads — `matter.md` (ADR-047), `~/.config/oscar/tom-active-matter.md` (ADR-044), and the goose-server session log via the existing `GET /sessions/{session_id}` route. No shadow store, no new persistence model, no file watchers (polled 2 s).
