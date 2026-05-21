@@ -6,7 +6,15 @@
 // PlaybooksSection uses. Mode change + per-slug toggle persist to
 // area_overrides.enabled_skills; resume semantics on next matter-open
 // (ADR-085) surfaced via chip tooltip.
-import { useCallback, useState } from 'react';
+//
+// Sprint 20-M6 (ADR-087): drop affordance. Drag a SKILL.md onto the zone
+// → IPC stages it under ~/.agents/skills/<slug>/SKILL.md → renderer
+// deep-links Forge to #/forge?reviewSkill=<absPath> where Mode C runs
+// the three-question interview (invocation / conflicts / area binding).
+// Mirrors M4 PlaybooksSection drop-zone (no scope picker — skills are
+// global-only).
+import { useCallback, useRef, useState, type DragEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRightPaneCoords } from '../RightPaneContext';
 import { usePanelReader } from './usePanelReader';
 import { SECTION_META, type PanelSectionProps } from './registry';
@@ -20,8 +28,22 @@ const MODE_LABEL: Record<SkillMode, string> = {
   deny: 'Deny',
 };
 
+const SKILL_FILE_EXT = '.md';
+
+// Mirror main.ts:1866 safeSlug regex; pre-flight reject before IPC.
+const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function deriveSlug(filename: string): string | null {
+  if (!filename.toLowerCase().endsWith(SKILL_FILE_EXT)) return null;
+  const stem = filename.slice(0, -SKILL_FILE_EXT.length);
+  if (stem.length === 0 || stem.length > 64) return null;
+  if (!SLUG_RE.test(stem)) return null;
+  return stem;
+}
+
 export default function SkillsSection({ sectionId }: PanelSectionProps) {
   const meta = SECTION_META[sectionId];
+  const navigate = useNavigate();
   const { areaId } = useRightPaneCoords();
   const { data, error } = usePanelReader<SkillsListResult>(
     async () => {
@@ -34,6 +56,56 @@ export default function SkillsSection({ sectionId }: PanelSectionProps) {
   const skills = data?.skills ?? [];
   const [busy, setBusy] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
+  const [stageError, setStageError] = useState<string | null>(null);
+  const [staging, setStaging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleStage = useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      const slug = deriveSlug(file.name);
+      if (!slug) {
+        setStageError(
+          `${file.name}: filename must be <kebab-slug>.md (lowercase a–z, 0–9, hyphens).`,
+        );
+        return;
+      }
+      setStageError(null);
+      setStaging(true);
+      try {
+        const content = await file.text();
+        const res = await window.electron.skills.stageForReview(slug, content);
+        if (!res.ok) {
+          setStageError(`${file.name}: ${res.message}`);
+          return;
+        }
+        navigate(
+          `/forge?reviewSkill=${encodeURIComponent(res.absPath)}`,
+          { state: { disableAnimation: true } },
+        );
+      } catch (err) {
+        setStageError(
+          `${file.name}: ${(err as Error).message ?? 'Unknown error'}`,
+        );
+      } finally {
+        setStaging(false);
+      }
+    },
+    [navigate],
+  );
+
+  const onDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      void handleStage(e.dataTransfer?.files ?? null);
+    },
+    [handleStage],
+  );
+
+  const onDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  }, []);
 
   const onSetMode = useCallback(
     async (next: SkillMode) => {
@@ -93,6 +165,34 @@ export default function SkillsSection({ sectionId }: PanelSectionProps) {
         {meta.title}
       </span>
       <div className="oscar__panel-section-body">
+        <div
+          className="oscar__skills-drop"
+          data-testid="skills-dropzone"
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Drop a SKILL.md or click to browse"
+          aria-busy={staging}
+        >
+          {staging
+            ? 'Staging…'
+            : 'Drop a SKILL.md — or click to browse.'}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".md"
+            style={{ display: 'none' }}
+            onChange={(e) => void handleStage(e.target.files)}
+            data-testid="skills-file-input"
+          />
+        </div>
+        {stageError && (
+          <p className="oscar__skills-upload-error" data-testid="skills-stage-error">
+            {stageError}
+          </p>
+        )}
         <SkillsModePill mode={mode} busy={busy} onSetMode={onSetMode} />
         {opError && (
           <p className="oscar__skills-error" data-testid="skills-error">

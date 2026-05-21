@@ -68,17 +68,24 @@ export function buildForgeRecipe(
   homeDir: string,
   resourcesRoot: string | null,
   enabledPlatformExtensions: ExtensionConfig[] = [],
+  // Sprint 20-M6 (ADR-087): when set, prepends a Mode-C activation preamble
+  // to SYSTEM_PROMPT. Threaded in from ForgeView via the ?reviewSkill=
+  // query param the drop affordance writes on stage-success.
+  reviewSkillPath?: string,
 ): Recipe {
   const skillsDir = `${homeDir}/.agents/skills`;
   const oscarConfigDir = `${homeDir}/.config/oscar`;
   const platforms = ensureForgePlatforms(enabledPlatformExtensions);
+  const preamble = reviewSkillPath
+    ? `[Begin in Mode C. Review the SKILL.md at: ${reviewSkillPath}]\n\n`
+    : '';
 
   return {
     version: '1.0.0',
     title: 'Oscar GC — Forge',
     description:
       'Meta-agent for Oscar GC. Creates new skills (writes SKILL.md to ~/.agents/skills/) and new practice areas (extends ~/.config/oscar/profile.json).',
-    instructions: SYSTEM_PROMPT,
+    instructions: preamble + SYSTEM_PROMPT,
     extensions: [
       {
         type: 'stdio',

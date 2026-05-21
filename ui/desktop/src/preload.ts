@@ -344,6 +344,13 @@ type ElectronAPI = {
       slug: string,
     ) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
     renderBlock: (areaId: string) => Promise<string | null>;
+    // Sprint 20-M6 (ADR-087): stage a lawyer-uploaded SKILL.md into
+    // ~/.agents/skills/<slug>/SKILL.md. Drop affordance in SkillsSection
+    // deep-links Forge to #/forge?reviewSkill=<absPath> on success.
+    stageForReview: (
+      slug: string,
+      content: string,
+    ) => Promise<StageForReviewResult>;
   };
 };
 
@@ -379,6 +386,18 @@ export interface SkillsListResult {
   mode: SkillMode;
   skills: SkillEntry[];
 }
+
+// Sprint 20-M6 (ADR-087): result shape for window.electron.skills.stageForReview.
+export type StageForReviewErrorCode =
+  | 'EBADSLUG'
+  | 'EBUNDLED_COLLISION'
+  | 'EBADFRONTMATTER'
+  | 'EEXIST'
+  | 'EIO';
+
+export type StageForReviewResult =
+  | { ok: true; absPath: string }
+  | { ok: false; code: StageForReviewErrorCode; message: string };
 
 type AppConfigAPI = {
   get: (key: string) => unknown;
@@ -608,6 +627,8 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.invoke('oscar:skills:delete', areaId, slug),
     renderBlock: (areaId: string) =>
       ipcRenderer.invoke('oscar:skills:render-block', areaId),
+    stageForReview: (slug: string, content: string) =>
+      ipcRenderer.invoke('oscar:skills:stage-for-review', slug, content),
   },
 };
 

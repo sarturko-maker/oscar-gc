@@ -1544,7 +1544,54 @@ pre:has(> code.bg-inline-code) {
 /* Sprint 20-M5 (ADR-086): Skills section. Same editorial register as
    Playbooks — copper accents, mono-editorial slugs, italic faint
    description copy, copper-accented pressed chip. The mode pill is a
-   three-segment connected toggle (All / Allow / Deny). */
+   three-segment connected toggle (All / Allow / Deny).
+
+   Sprint 20-M6 (ADR-087): drop zone mirrors .oscar__playbooks-drop —
+   dashed cream, copper hover, paper-edge background — but with no
+   scope-confirm modal (skills are global-only). EBUNDLED_COLLISION /
+   EEXIST / EBADFRONTMATTER errors surface in .oscar__skills-upload-error. */
+
+.oscar__skills-drop {
+  display: block;
+  width: 100%;
+  padding: 12px 10px;
+  background: transparent;
+  border: 1px dashed var(--rule);
+  border-radius: 3px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+  margin-bottom: 8px;
+}
+
+.oscar__skills-drop:hover,
+.oscar__skills-drop:focus {
+  border-color: var(--copper);
+  color: var(--copper);
+  background: var(--paper-edge);
+  outline: none;
+}
+
+.oscar__skills-drop[aria-busy='true'] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.oscar__skills-upload-error {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  background: var(--paper-edge);
+  border-left: 2px solid var(--copper);
+  border-radius: 0 3px 3px 0;
+}
 
 .oscar__skills-mode-pill {
   display: inline-flex;

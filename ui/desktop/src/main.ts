@@ -1825,6 +1825,10 @@ import {
   type SkillSlashCommand,
   type SkillsListResult,
 } from './components/oscar/skills/skillStore';
+import {
+  stageUserSkill,
+  type StageUserSkillResult,
+} from './components/oscar/skills/stageUserSkill';
 import { PRACTICE_AREAS } from './components/oscar/practiceAreas';
 
 const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
@@ -2803,6 +2807,34 @@ ipcMain.handle(
       if (mutated) await writeProfileFile(nextProfile);
     }
     return { ok: true };
+  },
+);
+
+// Sprint 20-M6 (ADR-087): stage a lawyer-uploaded SKILL.md into
+// ~/.agents/skills/<slug>/SKILL.md. Atomic via wx-flag (mirrors
+// oscar:playbooks:upload at main.ts:2376). Renderer drop-zone deep-links
+// Forge to #/forge?reviewSkill=<absPath> on success — Mode C reviews,
+// enriches, and binds.
+ipcMain.handle(
+  'oscar:skills:stage-for-review',
+  async (
+    _event,
+    slugRaw: unknown,
+    contentRaw: unknown,
+  ): Promise<StageUserSkillResult> => {
+    if (typeof slugRaw !== 'string') {
+      return { ok: false, code: 'EBADSLUG', message: 'Slug must be a string' };
+    }
+    if (typeof contentRaw !== 'string') {
+      return {
+        ok: false,
+        code: 'EBADFRONTMATTER',
+        message: 'SKILL.md content must be a string',
+      };
+    }
+    const root = inHouseLegalRoot();
+    const globalBundled = await readBundledInventory(root, allBundledPlugins());
+    return stageUserSkill(slugRaw, contentRaw, globalBundled);
   },
 );
 

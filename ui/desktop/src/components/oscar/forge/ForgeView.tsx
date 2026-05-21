@@ -4,7 +4,7 @@
 // title prefix (ADR-029).
 
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createSession } from '../../../sessions';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { AppEvents } from '../../../constants/events';
@@ -14,6 +14,11 @@ import { buildForgeRecipe } from './forgeRecipe';
 
 export default function ForgeView() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Sprint 20-M6 (ADR-087): deep-link entry from SkillsSection's drop
+  // affordance. When present, threads through to buildForgeRecipe which
+  // prepends a Mode-C activation preamble to SYSTEM_PROMPT.
+  const reviewSkillPath = searchParams.get('reviewSkill') ?? undefined;
   const { extensionsList } = useConfig();
   const [error, setError] = useState<string | null>(null);
   const startedRef = useRef(false);
@@ -40,6 +45,7 @@ export default function ForgeView() {
           homeDir,
           window.electron.oscarResourcesRoot,
           enabledPlatformExtensions,
+          reviewSkillPath,
         );
         const session = await createSession(homeDir, { recipe });
         if (cancelled) return;
