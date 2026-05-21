@@ -18,6 +18,7 @@ import type { OscarCompanyContext, OscarUserProfile } from '../hooks/useOscarPro
 import { buildTavilyExtension } from '../onboarding/onboardingRecipe';
 import { renderCompanyContextBlock } from '../recipe/companyContextBlock';
 import { renderUserIdentityBlock } from './userIdentityBlock';
+import { VERIFICATION_GATE_BLOCK } from './verificationGateBlock';
 
 const DEV_NODE_CMD = '/usr/bin/node';
 const DEV_OSCAR_FS_BUNDLE = '/srv/projects/goose/ui/desktop/src/resources/mcps/oscar-fs/index.js';
@@ -122,7 +123,12 @@ export function buildOscarLLPPartnerRecipe(opts: BuildOscarLLPPartnerRecipeOptio
 
   const identityBlock = renderUserIdentityBlock(opts.user, opts.corporate);
   const companyBlock = renderCompanyContextBlock(opts.companyContext);
-  const instructions = [identityBlock, companyBlock, opts.partner.systemPrompt.trim()]
+  const instructions = [
+    identityBlock,
+    companyBlock,
+    opts.partner.systemPrompt.trim(),
+    VERIFICATION_GATE_BLOCK,
+  ]
     .filter((s): s is string => Boolean(s))
     .join('\n\n');
 
