@@ -14,6 +14,87 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 20-M7 — Forge Mode D (modify area) + profile.json write validator (closed 2026-05-21 on code; commit `3addac12a`)
+
+**Goal**: eighth sub-sprint (M7) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Close the modify side: a lawyer asks Forge to change something about an existing practice area in plain English ("Add Google Drive to Commercial only"; "Change Commercial's description to mention escalation thresholds"; "Disable corporate-legal skills in Commercial") and the change confirms in chat before landing in `profile.json.practice_areas[i].area_overrides`. Two M7-specific deliverables beyond mirroring Mode B/C's read-modify-write: (1) **first consumer of `area_overrides.enabled_mcps`** — the field had been declarative since M0 (2 comments + 1 type def, zero runtime consumers); M7 wires the recipe-builder filter so MCP changes take effect on next matter open; (2) **defence-in-depth write validation** — Forge is an LLM and may write malformed JSON; M7 adds a main-process file watcher that Zod-parses every profile.json write and auto-reverts bad ones from a `.bak`.
+
+**Built** — one implementation commit + two ADRs (088 Forge Mode D, 089 profile.json write validation) + visual harness on lq-vps:
+
+- **Three plan-mode scope decisions locked via AskUserQuestion** (in this session): (1) Mode D entry surface = **both** (sidebar Forge button for free-text fallback + per-area "Edit" link in `RightPaneShell` header → deep-link `#/forge?modifyArea=<areaId>`, mirrors M6's `?reviewSkill=` precedent); (2) Zod location = **local** (`forge/areaOverrideSchema.ts`, ~60 lines, mirrors `OscarAreaOverrides` from `useOscarProfile.ts:11–17`; cross-repo import from `oscar-onboarding-mcp` rejected — sibling is private + ESM-only + no `.d.ts` + no `exports` field, not packaged for consumption; "re read claude.md" cross-check confirmed CLAUDE.md endorses Zod at boundaries directly); (3) Area-id resolve = **free-text + disambiguate** (deep-link supplies exact areaId via activation preamble; sidebar-button path has Forge read profile.json + fuzzy-match + ask if multiple matches, same conversational confirm pattern Mode B uses). All three matched the brief's recommended defaults.
+
+- **Pre-execution surface probe** (Phase 1 Explore agents + own file reads) confirmed:
+  - `systemPrompt.ts:10–13` "three modes" intro flips to "four modes"; Mode D slots between Mode C's close (`systemPrompt.ts:190`) and the "Things you never do" header.
+  - `forgeRecipe.ts:67–81` already passes oscar-fs `~/.config/oscar/` allowed-dir; no widening needed for profile.json writes. Activation-preamble pattern at lines 79–81 is the exact shape Mode D inherits.
+  - `ForgeView.tsx:17–21` `useSearchParams` block from M6 already reads `?reviewSkill=`; M7 adds a sibling `?modifyArea=` reader.
+  - `RightPaneShell.tsx:41–46` header has a static "Loadout" eyebrow + toggle chevron; areaId is passed in via props (since M3); the Edit link mounts conditionally between them.
+  - `MattersLanding.tsx:162–173` builds `trustedInstalled` → `installedConfigsRaw`. M7's `enabled_mcps` filter slots between those two lines.
+  - **ADR slots taken at decision time: 088 + 089.** Master plan reserved 076 + 077 (stale post-Lavern); confirmed 088 + 089 next-free via `ls docs/adr/` before naming.
+
+- **ADR-088** (`docs/adr/088-forge-mode-d-modify-area.md`, 46 lines): Mode D as the fourth numbered section in `SYSTEM_PROMPT`; two entry surfaces (sidebar free-text + per-area Edit link); deep-link `#/forge?modifyArea=<areaId>` with activation preamble `[Begin in Mode D. Modify the practice area: <areaId>]`; writes via `oscar-fs__write_file` (same tool/allowed-dir as B/C per brief's "same write tool" rule); mutate-in-place semantics preserve every untouched field on the area entry verbatim. Alternatives rejected: renderer-side area picker (splits responsibility); new MCP tool for writes (contradicts brief). Cites ADR-039, ADR-067, ADR-070, ADR-086, ADR-087, ADR-089.
+
+- **ADR-089** (`docs/adr/089-profile-write-validation-watcher.md`, 50 lines): main-process `fs.watch` on profile.json's parent directory (watches the dir, not the file, to survive pre-onboarding when profile.json doesn't yet exist); 100ms debounced handler reads + JSON-parses + Zod-parses via `ProfileForWriteValidationSchema`; valid writes refresh `.bak`, invalid writes revert from `.bak` (both atomic via temp+rename). Self-loop avoidance: SHA-256 of last validated content; matching events skip validation. Forge's Mode D step 7 reads back and surfaces rejection conversationally — no IPC toast channel. Alternatives rejected: patch vendored oscar-fs (fork-hygiene cost on upstream `@modelcontextprotocol/server-filesystem`); new dedicated MCP (contradicts "same write tool" rule); IPC toast (duplicates Forge's chat, jarring); cross-repo schema import (sibling not packaged for consumption). Cites ADR-039, ADR-067, ADR-068, ADR-088.
+
+- **`areaOverrideSchema.ts`** (`ui/desktop/src/components/oscar/forge/`, 65 lines): exports `AreaOverridesSchema` + `ProfileForWriteValidationSchema`. Mirrors `OscarAreaOverrides` in `useOscarProfile.ts:11–17`: `description_override?: z.string()`; `panel_sections?: z.array(z.string())` (kept permissive — main process doesn't have `PanelSectionId` enum bound; section-level validation happens at render time); `enabled_skills` / `enabled_mcps` discriminated on `mode: z.enum(['all','allow','deny'])`; `playbooks: { always_on, on_demand }`. Profile schema is minimal: validates `practice_areas[i].area_overrides` shape only; other fields `.passthrough()` so valid v3/v4/future-version profiles don't get rejected on shape drift.
+
+- **`profileWriteWatcher.ts`** (`ui/desktop/src/components/oscar/forge/`, ~170 LOC): `startProfileWriteWatcher({profilePath, backupPath}) → {stop()}`. Uses `fs.watch(parentDir, {persistent: false})` with a 100ms debounce; filters events by `filename === path.basename(profilePath)` to skip `.bak` / `.tmp` churn from our own atomic writes. Self-induced-loop guard: SHA-256 hash of last validated content tracked; events whose read-back content matches are skipped (catches both our own `.bak` write and our own revert). Bootstrap path: on init, if profile.json exists + parses valid + `.bak` absent, atomic-write `.bak` as initial backup. Pre-onboarding path: directory exists (created via `fs.mkdir(profileDir, {recursive: true})`), watcher idles until first valid write. Logging via `log` (`utils/logger`) — structured fields, no `console.log` (per CLAUDE.md "Logging" rule).
+
+- **`main.ts`** wireup (`OSCAR_PROFILE_BACKUP_PATH` constant next to existing `OSCAR_PROFILE_PATH` at line 2281; `startProfileWriteWatcher(...)` call inside `appMain()` right after `registerUpdateIpcHandlers()`). Five lines + one import. No new IPC handlers — the watcher communicates outcomes only via the .bak revert + subsequent reads.
+
+- **`systemPrompt.ts`** Mode D section (new, between Mode C step 7 and "Things you never do"; file grows 203 → 299 lines, under the 300 CLAUDE.md cap). Eight-step procedure: (1) identify area from activation preamble or free-text + fuzzy-match + disambiguate; (2) read profile.json + echo current `area_overrides`; (3) interview "which field(s) to change" with the closed menu (description / panel_sections / enabled_skills / enabled_mcps / playbooks) + valid section ids list + three modes for enabled_*; (4) compose override delta preserving non-touched fields verbatim; (5) confirm with before/after diff (text for description, side-by-side list for the others); (6) write via `oscar-fs__write_file`; (7) read back to confirm + retry-once + give-up policy if validator reverts; (8) close with the resume-semantics caveat (already-open sessions keep recipe baked at spawn). Line 10 intro: `**three modes**` → `**four modes**`.
+
+- **`forgeRecipe.ts`** signature: optional fifth param `modifyAreaId?: string`. Preamble construction extends to a three-way ternary — `reviewSkillPath` takes precedence; if absent, `modifyAreaId` produces `[Begin in Mode D. Modify the practice area: ${modifyAreaId}]\n\n`; if both absent, empty preamble. Extensions list, allowed-dirs, settings all unchanged.
+
+- **`ForgeView.tsx`** edits: read `modifyAreaId = searchParams.get('modifyArea') ?? undefined`; pass as fifth arg to `buildForgeRecipe(...)`. Three new lines.
+
+- **`RightPaneShell.tsx`** Edit-link affordance: import `Link` from `react-router-dom`; conditionally render `<Link to={\`/forge?modifyArea=${encodeURIComponent(areaId)}\`} className="oscar__right-pane-edit-link" data-testid="right-pane-edit-link">Edit</Link>` between the "Loadout" eyebrow and the toggle chevron when `isExpanded && areaId`. Hidden in quick-chat (no `areaId`) and on collapsed pane (no header content).
+
+- **`MattersLanding.tsx`** `enabled_mcps` filter: between `trustedInstalled` and the `installedConfigsRaw` build (lines 162–173), apply `area_overrides.enabled_mcps.mode` semantics — `'allow'` keeps only listed ids; `'deny'` drops them; `'all'` or absent → no filter (Sprint 18 permissive-default loadout doctrine preserved at default). Platform extensions (Memory, Tavily, ToM, etc.) bypass the filter — `enabled_mcps` only scopes installed integrations (community/trusted tier per Sprint 17 / ADR-061).
+
+- **`.oscar__right-pane-edit-link` CSS** (`styles/main.css`): tiny IBM Plex Mono italic in `var(--ink-faint)`; hover transitions to `var(--copper)` + underline. Margin-left: auto + margin-right: 8px slots the link between the left-anchored eyebrow and the right-anchored toggle. 18 lines.
+
+- **Visual harness** (`ui/desktop/scripts/capture-m7.js` + `scripts/capture-m7.sh`, cloned from M6 with M7-specific changes — `preflightCleanup` also wipes `~/.config/oscar/profile.json.bak`; states (d)/(e) directly mutate `area_overrides` via fs + spawn fresh matters to bypass the Sprint 19b session-resume short-circuit; state (f) deliberately writes invalid JSON and asserts the watcher reverts within 600ms). Live agent turns deferred to M8 per Arturs's doctrine.
+
+  States captured (PNGs at `docs/screenshots/sprint-m7/`):
+  - **(a) `edit-link-visible.png`** — Commercial / Test MSA Renewal open; right-pane header shows the Edit link with `href="#/forge?modifyArea=commercial"` and `title="Modify this practice area in Forge"`.
+  - **(b) `forge-mode-d-opens.png`** — `setRoute('#/forge?modifyArea=commercial')`; ForgeView redirects to `/pair?resumeSessionId=...`; chat surface mounts.
+  - **(c) `forge-mode-d-recipe-diagnostic.png`** — session metadata fetched via `/sessions/{id}`; `instructions` length 13,755 chars; starts with `[Begin in Mode D. Modify the practice area: commercial]\n\n`; contains all four Mode A/B/C/D section headers. Diagnostic overlay shows the first 800 chars.
+  - **(d) `description-override-applied.png`** — write `area_overrides.description_override = "Escalation thresholds: any indemnity cap > $500k or term > 3 years requires VP-Legal sign-off."` to commercial via fs; wait 400ms for the watcher to refresh `.bak`; create a fresh Commercial matter `test-desc-override`; open it; recipe.instructions includes the `## About this practice area` block (M0's wiring) with the override text.
+  - **(e) `enabled-mcps-filter.png`** — `electron.integrations.install('commercial', 'Google Drive', true)` succeeded (`{ok: true, already_installed: false}`); write `area_overrides.enabled_mcps = {mode: 'deny', ids: ['Google Drive']}`; create a fresh Commercial matter `test-mcp-filter`; open it; recipe.extensions = `[oscar-fs, computercontroller, analyze, apps, developer, skills, tom, Extension Manager, todo, summon, redline, tavily]` — Google Drive successfully filtered out. Diagnostic overlay shows the extension list.
+  - **(f) `validator-rejected-revert.png`** — pre-state hash (`6a8d2c40...`) matches `.bak` hash; write invalid `enabled_mcps = {mode: 'totally-not-a-mode', ids: 'not-an-array'}` directly to profile.json; wait 600ms (>100ms debounce + atomic revert); post-state hash equals pre-state hash — watcher reverted. Diagnostic overlay shows pre/post/.bak hash triplet.
+
+**Verification** (in this session):
+- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0).
+- ADR-088 line count: 46 (target ≤50).
+- ADR-089 line count: 50 (target ≤50; on the boundary).
+- `systemPrompt.ts` line count: 299 (target ≤300; mode trim landed three steps in — close paragraph + step 3 sub-bullets + step 7 retry policy).
+- `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` succeeded (`out/Oscar-GC-linux-x64/oscar-gc` = 206,036,184 bytes).
+- Visual harness: 6 PNGs at 1440×900 with per-state console assertions all green:
+  - (a) `editLinkInfo={"text":"Edit","href":"#/forge?modifyArea=commercial","title":"Modify this practice area in Forge"}`.
+  - (b) `forgeHash="#/pair?resumeSessionId=..."`; `arrivedAtPair=true`.
+  - (c) `instructionsLen=13755`; `hasModeD=true`; all four Mode A/B/C/D section headers present.
+  - (d) `hasAboutBlock=true`; `hasOverrideText=true` (override text in recipe.instructions).
+  - (e) `googleDrivePresent=false`; extensions list = 12 entries, Google Drive absent.
+  - (f) `revertedSuccessfully=true`; preHash == postHash == .bak hash.
+- Commit-trailer hygiene per CLAUDE.md: no `Co-Authored-By` trailer on the implementation commit `3addac12a` (verified via `git log -1 --pretty=full | grep -i co-authored` → empty after the commit lands).
+- No Rust touch (`git diff --stat origin/main HEAD -- crates/` empty).
+- No sibling-repo changes; no new npm dependencies (`zod ^3.25.76` already pinned in `ui/desktop/package.json:105`).
+- `ui/pnpm-workspace.yaml` `allowBuilds:` drift left unstaged (Sprint 17b convention).
+- Parallel-session coordination: `lavern-firm-mode` at `91d2eba84` for the sixth consecutive sub-sprint drafting/close. Pre-harness probe: no Xvfb on `:99`; Lavern's `aisha-khan` partner-cycle eval running (progressed from cycle 2 to cycle 3 mid-sprint) on `/tmp/oscar-llp-iter-aisha-khan-*` (separate tempdir, no shared disk surface, no Electron, no Xvfb collision). M7's `preflightCleanup` wipes `~/.config/oscar/*` + `~/.config/oscar/profile.json.bak` + `~/.agents/skills/test-*` only — no overlap with Lavern's eval state.
+
+**Deferred** — push to `origin/main` after this close-commit lands.
+
+**Carry-forwards** (master-brief sub-sprints):
+- **M8 — Forge delete-area (Mode E)** (final master-brief sub-sprint) + the single end-to-end Crostini dogfood per Arturs's doctrine. M8 brief draft after this close commit at `/root/.claude/plans/sprint-m8-forge-mode-e-delete-area.md`.
+- **Walker-fork hard skill scoping** — post-master-brief.
+- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
+- **QuickChatButton "STARTING…" stuck-state** (M1 carry) still open.
+- **`pnpm-workspace.yaml` allowBuilds: drift** inherits as unstaged each session.
+- **Crostini dogfood E1–E8 (M0–M7 visual states)** wait for M8 end-to-end run.
+
+**ADRs**: 088, 089.
+
+---
+
 ### Sprint 20-M6 — Skills upload + Forge Mode C review (closed 2026-05-21 on code; commit `ee51295e3`)
 
 **Goal**: seventh sub-sprint (M6) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Add a drop affordance to the Skills section so a lawyer can bring their own `SKILL.md`; on drop, stage to `~/.agents/skills/<slug>/SKILL.md` and auto-open Forge in **Mode C** (review + enrich + bind) with the path passed via `?reviewSkill=<absPath>`. Mode C interviews the lawyer in three short questions (when to invoke / conflicts / area binding), writes enriched frontmatter via oscar-fs, and writes area binding into `area_overrides.enabled_skills` via the same path Mode B already walks for profile.json.
