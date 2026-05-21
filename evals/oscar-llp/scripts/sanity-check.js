@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Sprint 24-C (ADR-081): Sprint 23 baseline re-run sanity check. Runs the
-// Sprint 23 eval harness on a single partner × 3 docs × 2 configs (N=6)
-// and asserts |new Δ_grounded - (-3.8pp)| ≤ 2pp tolerance. Gates iteration
-// start — if MiniMax has drifted or substrate changed, the iteration would
-// run against a wrong baseline. PASS → proceed; FAIL → halt and review.
+// Sprint 25 (ADR-082, carry of 24-C): Sprint 23 baseline re-run sanity
+// check. Runs the Sprint 23 eval harness on Sarah Chen × all 3 docs × 2
+// configs (N=6) and asserts |new Δ_grounded - (-3.8pp)| ≤ 2pp tolerance.
+// Gates iteration start — if MiniMax has drifted or substrate changed,
+// the iteration would run against a wrong baseline. PASS → proceed;
+// FAIL → halt and review.
 
 'use strict';
 
@@ -61,9 +62,11 @@ if (!fs.existsSync(runEval)) {
 }
 
 // Run on Sarah Chen × all 3 docs × both configs = N=6. ~$0.30, ~15 min.
+// Sprint 23's run-eval.js defaults to all 3 docs when --docs is omitted;
+// passing '--docs all' was a 24-C wrapper bug (treated 'all' as a literal id).
 const r = spawnSync(
   'node',
-  [runEval, '--partners', 'sarah-chen', '--docs', 'all', '--configs', 'with-ralph,without-ralph'],
+  [runEval, '--partners', 'sarah-chen', '--configs', 'with-ralph,without-ralph'],
   { encoding: 'utf8', timeout: 1200_000, stdio: ['inherit', 'inherit', 'pipe'] },
 );
 
