@@ -1,11 +1,13 @@
 // Sprint M2 (ADR-070): closed section-ID enum + per-section meta + component
 // registry. M2 maps every ID to the shared PanelSectionStub; M3 fills
-// MatterFacts + History by swapping their entries; M4 fills Playbooks; M5
-// fills Skills. RightPaneShell never imports section bodies directly — it
-// reads from sectionRegistry, so adding a real body is a one-line edit here.
+// MatterFacts + ProgrammeFacts + History; M4 fills Playbooks; M5 fills
+// Skills. RightPaneShell never imports section bodies directly — it reads
+// from sectionRegistry, so adding a real body is a one-line edit here.
 
 import type { ComponentType } from 'react';
 import PanelSectionStub from './PanelSectionStub';
+import MatterFactsSection from './MatterFactsSection';
+import HistorySection from './HistorySection';
 
 export const PANEL_SECTION_IDS = [
   'MatterFacts',
@@ -26,18 +28,19 @@ export const isPanelSectionId = (v: unknown): v is PanelSectionId =>
 
 interface SectionMeta {
   title: string;
-  comingIn: string;
+  /** Set on stub entries only; omitted once the section has a real body. */
+  comingIn?: string;
 }
 
 export const SECTION_META: Record<PanelSectionId, SectionMeta> = {
-  MatterFacts: { title: 'Matter Facts', comingIn: 'M3' },
-  ProgrammeFacts: { title: 'Programme Facts', comingIn: 'M3' },
+  MatterFacts: { title: 'Matter Facts' },
+  ProgrammeFacts: { title: 'Programme Facts' },
   Skills: { title: 'Skills', comingIn: 'M5' },
   Playbooks: { title: 'Playbooks', comingIn: 'M4' },
   Redlining: { title: 'Redlining', comingIn: 'soon' },
   Forum: { title: 'Forum', comingIn: 'soon' },
   Deadlines: { title: 'Deadlines', comingIn: 'soon' },
-  History: { title: 'History', comingIn: 'M3' },
+  History: { title: 'History' },
 };
 
 export interface PanelSectionProps {
@@ -48,12 +51,12 @@ export const sectionRegistry: Record<
   PanelSectionId,
   ComponentType<PanelSectionProps>
 > = {
-  MatterFacts: PanelSectionStub,
-  ProgrammeFacts: PanelSectionStub,
+  MatterFacts: MatterFactsSection,
+  ProgrammeFacts: MatterFactsSection,
   Skills: PanelSectionStub,
   Playbooks: PanelSectionStub,
   Redlining: PanelSectionStub,
   Forum: PanelSectionStub,
   Deadlines: PanelSectionStub,
-  History: PanelSectionStub,
+  History: HistorySection,
 };

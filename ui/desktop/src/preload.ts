@@ -8,6 +8,21 @@ import type {
   NewMatterInput,
 } from './components/oscar/matters/types';
 
+// Sprint 20-M3 (ADR-083): right-pane MatterFacts/ProgrammeFacts IPC payload.
+// Returned by `window.electron.rightPane.readMatterFacts`. Field shape is
+// stable; labels are resolved on the renderer side via matterLabels.
+export interface MatterFactsPayload {
+  name: string;
+  subject: { type: string; label: string } | null;
+  counterparty: { role: string; name: string } | null;
+  kind: string | null;
+  stakeholder: string | null;
+  privileged: boolean;
+  extras: Record<string, string>;
+  key_facts_md: string;
+  tom_md: string | null;
+}
+
 // Mapping from settings keys to their old localStorage keys for lazy migration
 const localStorageKeyMap: Partial<Record<SettingKey, string>> = {
   theme: 'theme',
@@ -268,6 +283,15 @@ type ElectronAPI = {
     ensureDir: () => Promise<{ ok: boolean; path: string }>;
     getDir: () => Promise<string>;
   };
+  // Sprint 20-M3 (ADR-083): right-pane section readers. Polled by section
+  // components every 2 s; reads the same matter.md + Top of Mind file the
+  // agent reads — no shadow store.
+  rightPane: {
+    readMatterFacts: (
+      areaId: string,
+      slug: string,
+    ) => Promise<MatterFactsPayload | null>;
+  };
 };
 
 type AppConfigAPI = {
@@ -472,6 +496,10 @@ const electronAPI: ElectronAPI = {
   quickChats: {
     ensureDir: () => ipcRenderer.invoke('oscar:quick-chats:ensure-dir'),
     getDir: () => ipcRenderer.invoke('oscar:quick-chats:get-dir'),
+  },
+  rightPane: {
+    readMatterFacts: (areaId: string, slug: string) =>
+      ipcRenderer.invoke('oscar:right-pane:read-matter-facts', areaId, slug),
   },
 };
 

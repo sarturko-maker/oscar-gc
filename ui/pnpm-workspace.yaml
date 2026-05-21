@@ -10,6 +10,11 @@ packages:
 # deps actually fires. Without these, two React copies can land in the
 # renderer bundle and hooks throw "Cannot read properties of null
 # (reading 'useRef')" at launch.
+# Sprint 20-M3: pnpm 11 also stopped honouring `node-linker` from .npmrc;
+# electron-forge's pre-flight refuses to build without it being declared
+# in pnpm-workspace.yaml. The hoisted layout is what every prior build of
+# Oscar GC relied on, so this is restoring intent, not changing it.
+nodeLinker: hoisted
 overrides:
   react: '^19.2.4'
   react-dom: '^19.2.4'

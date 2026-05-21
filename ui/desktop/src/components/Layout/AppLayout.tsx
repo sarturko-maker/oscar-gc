@@ -412,6 +412,9 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
               isExpanded={paneVis.isExpanded}
               onToggle={() => setIsRightPaneExpanded(!paneVis.isExpanded)}
               sections={paneSections}
+              areaId={paneVis.areaId}
+              slug={paneVis.slug}
+              sessionId={paneVis.sessionId}
             />
             {paneVis.isExpanded && (
               <div

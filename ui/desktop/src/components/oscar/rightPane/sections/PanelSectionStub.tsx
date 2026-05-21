@@ -11,9 +11,11 @@ export default function PanelSectionStub({ sectionId }: PanelSectionProps) {
       <span className="oscar__eyebrow oscar__eyebrow--bare oscar__panel-section-title">
         {meta.title}
       </span>
-      <p className="oscar__panel-section-stub-body">
-        coming in {meta.comingIn}
-      </p>
+      {meta.comingIn && (
+        <p className="oscar__panel-section-stub-body">
+          coming in {meta.comingIn}
+        </p>
+      )}
     </section>
   );
 }

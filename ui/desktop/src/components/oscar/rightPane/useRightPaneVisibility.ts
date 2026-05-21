@@ -2,6 +2,9 @@
 // Sprint M2 (ADR-070): extended to expose areaId from the matters.lookupSession
 // response, so the composition hook can resolve defaultPanelSections without a
 // second IPC call.
+// Sprint 20-M3 (ADR-083): extended again to expose slug + sessionId so
+// section bodies (MatterFacts reads matter.md, History tails the session
+// log) can fetch without a second lookup.
 //
 // Defaults: pane is on for matter-bound /pair sessions, off elsewhere
 // (Hub, MattersLanding, Forge, Settings, quick-chats). Explicit user
@@ -22,6 +25,10 @@ export interface RightPaneVisibility {
   isExpanded: boolean;
   /** active matter's area_id when matter-bound; null otherwise (quick-chat, unresolved) */
   areaId: string | null;
+  /** active matter's slug when matter-bound; null otherwise */
+  slug: string | null;
+  /** the /pair resumeSessionId when on /pair with a session; null otherwise */
+  sessionId: string | null;
 }
 
 interface MatterLookup {
@@ -35,6 +42,8 @@ const HIDDEN: RightPaneVisibility = {
   isMounted: false,
   isExpanded: false,
   areaId: null,
+  slug: null,
+  sessionId: null,
 };
 
 export function useRightPaneVisibility(
@@ -88,5 +97,7 @@ export function useRightPaneVisibility(
     isMounted: true,
     isExpanded,
     areaId: matterRow?.area_id ?? null,
+    slug: matterRow?.slug ?? null,
+    sessionId,
   };
 }

@@ -1794,6 +1794,10 @@ import {
   extrasKeyLabel,
 } from './components/oscar/matters/matterLabels';
 import { kindLabel } from './components/oscar/matters/practiceAreaShapes';
+import {
+  parseMatterMd,
+  renderMatterMd,
+} from './components/oscar/matters/matterMdSerde';
 
 const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
 const OSCAR_DOCUMENTS_DIR = path.join(os.homedir(), 'Documents', 'Oscar GC');
@@ -1905,40 +1909,6 @@ const writeMattersRegistry = async (
     JSON.stringify(registry, null, 2),
     'utf8',
   );
-};
-
-const renderMatterMd = (entry: MatterEntry, keyFacts: string): string => {
-  const lines: string[] = [
-    '---',
-    `slug: ${entry.slug}`,
-    `name: ${JSON.stringify(entry.name)}`,
-    `area_id: ${entry.area_id}`,
-    `kind: ${entry.kind}`,
-    `subject_type: ${entry.subject.type}`,
-    `subject_label: ${JSON.stringify(entry.subject.label)}`,
-  ];
-  if (entry.counterparty) {
-    lines.push(
-      `counterparty_role: ${entry.counterparty.role}`,
-      `counterparty_name: ${JSON.stringify(entry.counterparty.name)}`,
-    );
-  }
-  if (entry.stakeholder) {
-    lines.push(`stakeholder: ${JSON.stringify(entry.stakeholder)}`);
-  }
-  if (entry.extras) {
-    for (const [k, v] of Object.entries(entry.extras)) {
-      lines.push(`extras_${k}: ${JSON.stringify(v)}`);
-    }
-  }
-  lines.push(
-    `opened_at: ${entry.opened_at}`,
-    `status: ${entry.status}`,
-    `privileged: ${entry.privileged}`,
-    'schema_version: 2',
-    '---',
-  );
-  return `${lines.join('\n')}\n\n# Matter: ${entry.name}\n\n## Key facts\n\n${keyFacts.trim()}\n\n## Matter-specific overrides\n\n_None yet._\n`;
 };
 
 const renderTomActiveMatter = (entry: MatterEntry, keyFacts: string): string => {
@@ -2206,6 +2176,64 @@ ipcMain.handle('oscar:matters:lookup-session', async (_event, sessionIdRaw: unkn
     return null;
   }
 });
+
+// Sprint 20-M3 (ADR-083): right-pane MatterFacts/ProgrammeFacts reader.
+// Reads the same matter.md the agent reads (ADR-047) + the same Top of
+// Mind file the agent reads (ADR-044). The renderer polls every 2 s; this
+// handler is the thin file-fetch + parse shim.
+ipcMain.handle(
+  'oscar:right-pane:read-matter-facts',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    if (!areaId || !slug) return null;
+    const registry = await readMattersRegistry(areaId);
+    const entry = registry.matters.find((m) => m.slug === slug);
+    if (!entry) return null;
+
+    let matterMdRaw = '';
+    try {
+      matterMdRaw = await fs.readFile(
+        path.join(entry.working_dir, 'matter.md'),
+        'utf8',
+      );
+    } catch (err) {
+      if ((err as { code?: string }).code !== 'ENOENT') {
+        log.warn('oscar:right-pane:read-matter-facts: matter.md read failed', {
+          areaId,
+          slug,
+          err: errorMessage(err, 'Unknown error'),
+        });
+      }
+    }
+
+    const parsed = parseMatterMd(matterMdRaw);
+
+    // Top of Mind is renderer-visible only when it points at this matter.
+    // setActive writes "- Slug: <slug>" into the file; detachActive truncates.
+    let tomMd: string | null = null;
+    try {
+      const tomRaw = await fs.readFile(OSCAR_TOM_ACTIVE_MATTER_FILE, 'utf8');
+      if (tomRaw.length > 0 && tomRaw.includes(`Slug: ${slug}`)) {
+        tomMd = tomRaw;
+      }
+    } catch {
+      tomMd = null;
+    }
+
+    return {
+      name: entry.name,
+      subject: parsed.subject,
+      counterparty: parsed.counterparty,
+      kind: parsed.kind,
+      stakeholder: parsed.stakeholder,
+      privileged: parsed.privileged,
+      extras: parsed.extras,
+      key_facts_md: parsed.key_facts_md,
+      tom_md: tomMd,
+    };
+  },
+);
 
 // Sprint 17 (ADR-059, ADR-061): Integrations registry + per-area state.
 // Vendor data read from skills/in-house-legal/<plugin>/.mcp.json files

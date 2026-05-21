@@ -1,10 +1,13 @@
 // Sprint M1 (ADR-069): docked right-pane host (chrome + toggle).
 // Sprint M2 (ADR-070): body becomes a vertical stack of section stubs
 // driven by the resolved `sections` list (override ?? shape default).
+// Sprint 20-M3 (ADR-083): ambient matter coords (areaId / slug / sessionId)
+// flow through RightPaneProvider so section bodies don't each re-lookup.
 // AppLayout owns the width drag state and visibility resolution; this
 // component owns chrome + composition rendering only.
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { RightPaneProvider } from './RightPaneContext';
 import {
   sectionRegistry,
   type PanelSectionId,
@@ -14,12 +17,18 @@ interface RightPaneShellProps {
   isExpanded: boolean;
   onToggle: () => void;
   sections: PanelSectionId[];
+  areaId: string | null;
+  slug: string | null;
+  sessionId: string | null;
 }
 
 export default function RightPaneShell({
   isExpanded,
   onToggle,
   sections,
+  areaId,
+  slug,
+  sessionId,
 }: RightPaneShellProps) {
   const ChevIcon = isExpanded ? ChevronRight : ChevronLeft;
   const toggleLabel = isExpanded ? 'Collapse right pane' : 'Expand right pane';
@@ -48,10 +57,12 @@ export default function RightPaneShell({
       </div>
       {isExpanded && (
         <div className="oscar__right-pane-body">
-          {sections.map((id) => {
-            const Section = sectionRegistry[id];
-            return <Section key={id} sectionId={id} />;
-          })}
+          <RightPaneProvider areaId={areaId} slug={slug} sessionId={sessionId}>
+            {sections.map((id) => {
+              const Section = sectionRegistry[id];
+              return <Section key={id} sectionId={id} />;
+            })}
+          </RightPaneProvider>
         </div>
       )}
     </aside>

@@ -175,7 +175,7 @@ const COMMERCIAL: PracticeAreaShape = {
     },
   ],
   privileged: { fallback: false },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Redlining'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Redlining', 'History'],
 };
 
 const COMMERCIAL_DISPUTES: PracticeAreaShape = {
@@ -214,7 +214,7 @@ const COMMERCIAL_DISPUTES: PracticeAreaShape = {
     { key: 'internal_owner', label: 'Internal owner (BU / team)', placeholder: 'Sales — EMEA' },
   ],
   privileged: { fallback: true },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Forum'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Forum', 'History'],
 };
 
 const CORPORATE: PracticeAreaShape = {
@@ -265,7 +265,7 @@ const CORPORATE: PracticeAreaShape = {
     defaultByKind: { m_a_buy: true, m_a_sell: true },
     fallback: false,
   },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'History'],
 };
 
 const EMPLOYMENT: PracticeAreaShape = {
@@ -320,7 +320,7 @@ const EMPLOYMENT: PracticeAreaShape = {
     },
     fallback: false,
   },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'History'],
 };
 
 const EMPLOYMENT_DISPUTES: PracticeAreaShape = {
@@ -363,7 +363,7 @@ const EMPLOYMENT_DISPUTES: PracticeAreaShape = {
     { key: 'forum', label: 'Forum / tribunal', placeholder: 'London Central ET / EAT / ACAS' },
   ],
   privileged: { fallback: true },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Forum'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Forum', 'History'],
 };
 
 const PRIVACY: PracticeAreaShape = {
@@ -444,7 +444,7 @@ const PRIVACY: PracticeAreaShape = {
     },
     fallback: false,
   },
-  defaultPanelSections: ['ProgrammeFacts', 'Skills', 'Playbooks', 'Deadlines'],
+  defaultPanelSections: ['ProgrammeFacts', 'Skills', 'Playbooks', 'Deadlines', 'History'],
 };
 
 const IP: PracticeAreaShape = {
@@ -490,7 +490,7 @@ const IP: PracticeAreaShape = {
     defaultByKind: { fto: true },
     fallback: false,
   },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'History'],
 };
 
 const IP_DISPUTES: PracticeAreaShape = {
@@ -529,7 +529,7 @@ const IP_DISPUTES: PracticeAreaShape = {
     { key: 'forum', label: 'Forum / office', placeholder: 'EUIPO / UKIPO / Court' },
   ],
   privileged: { fallback: true },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Forum'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Forum', 'History'],
 };
 
 const REGULATORY: PracticeAreaShape = {
@@ -572,7 +572,7 @@ const REGULATORY: PracticeAreaShape = {
     defaultByKind: { inquiry: true, audit_response: true },
     fallback: false,
   },
-  defaultPanelSections: ['ProgrammeFacts', 'Skills', 'Playbooks', 'Deadlines'],
+  defaultPanelSections: ['ProgrammeFacts', 'Skills', 'Playbooks', 'Deadlines', 'History'],
 };
 
 const REGULATORY_DISPUTES: PracticeAreaShape = {
@@ -609,7 +609,7 @@ const REGULATORY_DISPUTES: PracticeAreaShape = {
     ],
   },
   privileged: { fallback: true },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Forum', 'Deadlines'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Forum', 'Deadlines', 'History'],
 };
 
 const PRODUCT: PracticeAreaShape = {
@@ -661,7 +661,7 @@ const PRODUCT: PracticeAreaShape = {
     },
   ],
   privileged: { fallback: false },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'History'],
 };
 
 const AI_GOVERNANCE: PracticeAreaShape = {
@@ -721,7 +721,7 @@ const AI_GOVERNANCE: PracticeAreaShape = {
     defaultByKind: { incident_review: true },
     fallback: false,
   },
-  defaultPanelSections: ['ProgrammeFacts', 'Skills', 'Playbooks', 'Deadlines'],
+  defaultPanelSections: ['ProgrammeFacts', 'Skills', 'Playbooks', 'Deadlines', 'History'],
 };
 
 const COSEC: PracticeAreaShape = {
@@ -778,7 +778,7 @@ const COSEC: PracticeAreaShape = {
     },
   ],
   privileged: { fallback: false },
-  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Deadlines'],
+  defaultPanelSections: ['MatterFacts', 'Skills', 'Playbooks', 'Deadlines', 'History'],
 };
 
 export const PRACTICE_AREA_SHAPES: Record<string, PracticeAreaShape> = {
