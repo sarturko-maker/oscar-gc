@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { readFile } from "node:fs/promises";
 import { DOCUMENTS, type DocumentSection } from "./documents.js";
 
 export function buildServer(): McpServer {
@@ -270,6 +271,41 @@ export function buildServer(): McpServer {
           },
         ],
       };
+    },
+  );
+
+  // Sprint 24-B (ADR-079): Lavern Pipeline Watchman ingress. Reads the first
+  // N characters of an absolute path so the Watchman can classify without
+  // first registering the document in this MCP's bundled corpus.
+  server.registerTool(
+    "read_document_head",
+    {
+      description:
+        "Read the first N characters of a document at an absolute path. Used by the Lavern Pipeline's Watchman stage for triage. Capped at 8 KiB; non-text files (binary, very large) return an error.",
+      inputSchema: {
+        path: z.string().min(1).describe("Absolute path to the document."),
+        max_chars: z
+          .number()
+          .int()
+          .min(1)
+          .max(8192)
+          .optional()
+          .describe("Max characters to return (default: 1500, max: 8192)."),
+      },
+    },
+    async ({ path: docPath, max_chars }) => {
+      const maxChars = max_chars ?? 1500;
+      try {
+        const buf = await readFile(docPath, { encoding: "utf8" });
+        const head = buf.slice(0, maxChars);
+        return { content: [{ type: "text", text: head }] };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          content: [{ type: "text", text: `Failed to read ${docPath}: ${msg}` }],
+          isError: true,
+        };
+      }
     },
   );
 
