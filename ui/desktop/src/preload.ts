@@ -292,7 +292,50 @@ type ElectronAPI = {
       slug: string,
     ) => Promise<MatterFactsPayload | null>;
   };
+  // Sprint 20-M4 (ADR-084, ADR-085): playbook subsystem. List/upload/toggle/
+  // delete drive the PlaybooksSection; renderBlock is the recipe-builder's
+  // Layer 1 injection helper (returns the `## Playbooks in scope` markdown
+  // block or null when no always-on entries resolve to readable files).
+  playbooks: {
+    list: (areaId: string) => Promise<PlaybookEntry[]>;
+    upload: (
+      areaId: string,
+      scope: 'global' | 'area',
+      filename: string,
+      bytes: Uint8Array,
+    ) => Promise<UploadResult>;
+    toggleAlwaysOn: (
+      areaId: string,
+      relPath: string,
+      next: boolean,
+    ) => Promise<ToggleAlwaysOnResult>;
+    delete: (
+      areaId: string,
+      relPath: string,
+    ) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
+    renderBlock: (
+      relPaths: readonly string[],
+      charCap: number,
+    ) => Promise<string | null>;
+  };
 };
+
+export interface PlaybookEntry {
+  relPath: string;
+  filename: string;
+  scope: 'global' | 'area';
+  sizeBytes: number;
+  mtimeMs: number;
+  alwaysOn: boolean;
+}
+
+export type UploadResult =
+  | { ok: true; relPath: string }
+  | { ok: false; code: string; message: string };
+
+export type ToggleAlwaysOnResult =
+  | { ok: true; alwaysOn: boolean; budgetCap: number }
+  | { ok: false; code: string; message: string; extractedLength?: number; cap?: number };
 
 type AppConfigAPI = {
   get: (key: string) => unknown;
@@ -500,6 +543,17 @@ const electronAPI: ElectronAPI = {
   rightPane: {
     readMatterFacts: (areaId: string, slug: string) =>
       ipcRenderer.invoke('oscar:right-pane:read-matter-facts', areaId, slug),
+  },
+  playbooks: {
+    list: (areaId: string) => ipcRenderer.invoke('oscar:playbooks:list', areaId),
+    upload: (areaId: string, scope: 'global' | 'area', filename: string, bytes: Uint8Array) =>
+      ipcRenderer.invoke('oscar:playbooks:upload', areaId, scope, filename, bytes),
+    toggleAlwaysOn: (areaId: string, relPath: string, next: boolean) =>
+      ipcRenderer.invoke('oscar:playbooks:toggle-always-on', areaId, relPath, next),
+    delete: (areaId: string, relPath: string) =>
+      ipcRenderer.invoke('oscar:playbooks:delete', areaId, relPath),
+    renderBlock: (relPaths: readonly string[], charCap: number) =>
+      ipcRenderer.invoke('oscar:playbooks:render-block', relPaths, charCap),
   },
 };
 

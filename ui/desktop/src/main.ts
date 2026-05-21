@@ -1798,6 +1798,22 @@ import {
   parseMatterMd,
   renderMatterMd,
 } from './components/oscar/matters/matterMdSerde';
+import {
+  ComputerControllerClient,
+  PLAYBOOKS_ROOT as PLAYBOOKS_ROOT_DIR,
+  GLOBAL_SCOPE_DIR as PLAYBOOKS_GLOBAL_DIR,
+  absPathForRel as playbookAbsPath,
+  ensurePlaybookDirs,
+  extractText as playbookExtractText,
+  isAllowedExt as isPlaybookAllowedExt,
+  isBinaryExt as isPlaybookBinaryExt,
+  listPlaybooks,
+  renderPlaybooksBlock as renderPlaybooksBlockMain,
+  sanitiseFilename as sanitisePlaybookFilename,
+  type PlaybookEntry,
+  type PlaybookScope,
+} from './components/oscar/playbooks/playbookStore';
+import { findGoosedBinaryPath } from './goosed';
 
 const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
 const OSCAR_DOCUMENTS_DIR = path.join(os.homedir(), 'Documents', 'Oscar GC');
@@ -2234,6 +2250,316 @@ ipcMain.handle(
     };
   },
 );
+
+// Sprint 20-M4 (ADR-084, ADR-085): playbooks subsystem. Five handlers
+// mirror the M3 right-pane shape — list, upload, toggle-always-on, delete,
+// and render-block (the recipe-build-time Layer 1 injection helper).
+//
+// Binary extraction goes through Goose's bundled computercontroller MCP
+// (reuse per CLAUDE.md "Reuse over rebuild"); text formats are raw reads.
+// profile.json writes use atomic temp+rename — same pattern Forge Mode B
+// established via oscar-fs__write_file (ADR-039). The Sprint 12 "single-
+// writer" comment below applies to v2-schema migrations only; M4's writes
+// touch area_overrides.playbooks.always_on additively.
+
+const OSCAR_PROFILE_PATH = path.join(os.homedir(), '.config', 'oscar', 'profile.json');
+const PLAYBOOKS_ALWAYS_ON_CAP = 8000;
+
+interface ProfileShape {
+  schema_version: number;
+  practice_areas?: Array<{
+    id: string;
+    area_overrides?: {
+      playbooks?: { always_on?: string[]; on_demand?: string[] };
+    } & Record<string, unknown>;
+  } & Record<string, unknown>>;
+}
+
+const safeRelPath = (raw: unknown): string | null => {
+  if (typeof raw !== 'string' || raw.length === 0 || raw.length > 256) return null;
+  // Must be "<scope>/<filename>", POSIX separator only.
+  const parts = raw.split('/');
+  if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+  if (parts[0].includes('..') || parts[1].includes('..') || raw.includes('\0')) return null;
+  return raw;
+};
+
+const safeScope = (raw: unknown): PlaybookScope | null => {
+  if (raw === 'global' || raw === 'area') return raw;
+  return null;
+};
+
+async function readProfileFile(): Promise<ProfileShape | null> {
+  try {
+    const raw = await fs.readFile(OSCAR_PROFILE_PATH, 'utf8');
+    return JSON.parse(raw) as ProfileShape;
+  } catch {
+    return null;
+  }
+}
+
+async function writeProfileFile(profile: ProfileShape): Promise<void> {
+  const tmp = `${OSCAR_PROFILE_PATH}.tmp`;
+  await fs.writeFile(tmp, JSON.stringify(profile, null, 2), { mode: 0o600 });
+  await fs.rename(tmp, OSCAR_PROFILE_PATH);
+}
+
+function getAlwaysOnList(profile: ProfileShape | null, areaId: string): string[] {
+  const area = profile?.practice_areas?.find((a) => a.id === areaId);
+  return area?.area_overrides?.playbooks?.always_on ?? [];
+}
+
+async function mutateAlwaysOn(
+  areaId: string,
+  mutator: (list: string[]) => string[],
+): Promise<string[]> {
+  const profile = await readProfileFile();
+  if (!profile) throw new Error('profile.json not found');
+  const areas = profile.practice_areas ?? [];
+  const idx = areas.findIndex((a) => a.id === areaId);
+  if (idx < 0) throw new Error(`area ${areaId} not in profile`);
+  const area = areas[idx];
+  const overrides = area.area_overrides ?? {};
+  const playbooks = overrides.playbooks ?? { always_on: [], on_demand: [] };
+  const currentList = playbooks.always_on ?? [];
+  const nextList = mutator([...currentList]);
+  const newProfile: ProfileShape = {
+    ...profile,
+    practice_areas: [
+      ...areas.slice(0, idx),
+      {
+        ...area,
+        area_overrides: {
+          ...overrides,
+          playbooks: { always_on: nextList, on_demand: playbooks.on_demand ?? [] },
+        },
+      },
+      ...areas.slice(idx + 1),
+    ],
+  };
+  await writeProfileFile(newProfile);
+  return nextList;
+}
+
+function resolveGoosedBin(): string {
+  return findGoosedBinaryPath({
+    isPackaged: app.isPackaged,
+    resourcesPath: process.resourcesPath,
+  });
+}
+
+ipcMain.handle(
+  'oscar:playbooks:list',
+  async (_event, areaIdRaw: unknown): Promise<PlaybookEntry[]> => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return [];
+    const profile = await readProfileFile();
+    const alwaysOn = getAlwaysOnList(profile, areaId);
+    return listPlaybooks(areaId, alwaysOn);
+  },
+);
+
+ipcMain.handle(
+  'oscar:playbooks:upload',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    scopeRaw: unknown,
+    filenameRaw: unknown,
+    bytesRaw: unknown,
+  ): Promise<{ ok: true; relPath: string } | { ok: false; code: string; message: string }> => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return { ok: false, code: 'EBADAREA', message: 'Invalid area id' };
+    const scope = safeScope(scopeRaw);
+    if (!scope) return { ok: false, code: 'EBADSCOPE', message: 'Invalid scope' };
+    let filename: string;
+    try {
+      filename = sanitisePlaybookFilename(String(filenameRaw ?? ''));
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? 'EBADNAME';
+      return { ok: false, code, message: (err as Error).message };
+    }
+    if (!(bytesRaw instanceof Uint8Array || ArrayBuffer.isView(bytesRaw))) {
+      return { ok: false, code: 'EBADBODY', message: 'Expected Uint8Array bytes' };
+    }
+    const bytes = Buffer.from(bytesRaw as Uint8Array);
+    await ensurePlaybookDirs(areaId);
+    const scopeDirName = scope === 'global' ? PLAYBOOKS_GLOBAL_DIR : areaId;
+    const target = path.join(PLAYBOOKS_ROOT_DIR, scopeDirName, filename);
+    try {
+      // Open with wx flag (write-exclusive) so existing files don't get
+      // silently clobbered — the pane surfaces an EEXIST toast.
+      await fs.writeFile(target, bytes, { flag: 'wx', mode: 0o600 });
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? 'EIO';
+      return { ok: false, code, message: errorMessage(err, 'Upload failed') };
+    }
+    return { ok: true, relPath: `${scopeDirName}/${filename}` };
+  },
+);
+
+ipcMain.handle(
+  'oscar:playbooks:toggle-always-on',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    relPathRaw: unknown,
+    nextRaw: unknown,
+  ): Promise<
+    | { ok: true; alwaysOn: boolean; budgetCap: number }
+    | { ok: false; code: string; message: string; extractedLength?: number; cap?: number }
+  > => {
+    const areaId = safeAreaId(areaIdRaw);
+    const relPath = safeRelPath(relPathRaw);
+    if (!areaId || !relPath) {
+      return { ok: false, code: 'EBADNAME', message: 'Invalid area or playbook path' };
+    }
+    const next = nextRaw === true;
+    if (next) {
+      // Per-file budget check at toggle time: extract once and reject if a
+      // single file alone exceeds the always-on cap. Multi-file budget is
+      // redistributed proportionally at recipe-build time (per-file =
+      // floor(cap / count)) so we don't need to check totals here.
+      let absPath: string;
+      try {
+        absPath = playbookAbsPath(relPath);
+      } catch (err) {
+        return { ok: false, code: 'EBADNAME', message: (err as Error).message };
+      }
+      try {
+        const stat = await fs.stat(absPath);
+        if (!stat.isFile()) {
+          return { ok: false, code: 'ENOENT', message: 'Playbook not found' };
+        }
+      } catch {
+        return { ok: false, code: 'ENOENT', message: 'Playbook not found' };
+      }
+      const needsCc = isPlaybookBinaryExt(absPath);
+      const cc = needsCc ? new ComputerControllerClient(resolveGoosedBin()) : null;
+      let extracted = '';
+      try {
+        extracted = await playbookExtractText(absPath, cc);
+      } catch (err) {
+        await cc?.close();
+        return {
+          ok: false,
+          code: 'EEXTRACT',
+          message: errorMessage(err, 'Extraction failed'),
+        };
+      }
+      await cc?.close();
+      if (extracted.length > PLAYBOOKS_ALWAYS_ON_CAP) {
+        return {
+          ok: false,
+          code: 'EBUDGET',
+          message: `Exceeds the ${PLAYBOOKS_ALWAYS_ON_CAP / 1000}K always-on budget — kept on-demand instead.`,
+          extractedLength: extracted.length,
+          cap: PLAYBOOKS_ALWAYS_ON_CAP,
+        };
+      }
+    }
+    try {
+      await mutateAlwaysOn(areaId, (list) => {
+        const set = new Set(list);
+        if (next) set.add(relPath);
+        else set.delete(relPath);
+        return Array.from(set).sort();
+      });
+    } catch (err) {
+      return {
+        ok: false,
+        code: 'EWRITE',
+        message: errorMessage(err, 'Profile write failed'),
+      };
+    }
+    return { ok: true, alwaysOn: next, budgetCap: PLAYBOOKS_ALWAYS_ON_CAP };
+  },
+);
+
+ipcMain.handle(
+  'oscar:playbooks:delete',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    relPathRaw: unknown,
+  ): Promise<{ ok: true } | { ok: false; code: string; message: string }> => {
+    const areaId = safeAreaId(areaIdRaw);
+    const relPath = safeRelPath(relPathRaw);
+    if (!areaId || !relPath) {
+      return { ok: false, code: 'EBADNAME', message: 'Invalid area or playbook path' };
+    }
+    let absPath: string;
+    try {
+      absPath = playbookAbsPath(relPath);
+    } catch (err) {
+      return { ok: false, code: 'EBADNAME', message: (err as Error).message };
+    }
+    try {
+      await fs.unlink(absPath);
+    } catch (err) {
+      if ((err as { code?: string }).code !== 'ENOENT') {
+        return { ok: false, code: 'EIO', message: errorMessage(err, 'Delete failed') };
+      }
+      // File already gone — still scrub from always_on lists.
+    }
+    // Scrub the relPath from every area's always_on list so deletion doesn't
+    // leave dangling references. Walk every practice_area for safety.
+    const profile = await readProfileFile();
+    if (profile?.practice_areas) {
+      let mutated = false;
+      const next: ProfileShape = {
+        ...profile,
+        practice_areas: profile.practice_areas.map((a) => {
+          const list = a.area_overrides?.playbooks?.always_on ?? [];
+          if (!list.includes(relPath)) return a;
+          mutated = true;
+          return {
+            ...a,
+            area_overrides: {
+              ...(a.area_overrides ?? {}),
+              playbooks: {
+                always_on: list.filter((p) => p !== relPath),
+                on_demand: a.area_overrides?.playbooks?.on_demand ?? [],
+              },
+            },
+          };
+        }),
+      };
+      if (mutated) await writeProfileFile(next);
+    }
+    return { ok: true };
+  },
+);
+
+ipcMain.handle(
+  'oscar:playbooks:render-block',
+  async (
+    _event,
+    relPathsRaw: unknown,
+    charCapRaw: unknown,
+  ): Promise<string | null> => {
+    if (!Array.isArray(relPathsRaw)) return null;
+    const relPaths = (relPathsRaw as unknown[])
+      .map((r) => safeRelPath(r))
+      .filter((r): r is string => r !== null);
+    if (relPaths.length === 0) return null;
+    const cap =
+      typeof charCapRaw === 'number' && charCapRaw > 0
+        ? charCapRaw
+        : PLAYBOOKS_ALWAYS_ON_CAP;
+    try {
+      return await renderPlaybooksBlockMain(relPaths, cap, resolveGoosedBin());
+    } catch (err) {
+      log.warn('oscar:playbooks:render-block failed', {
+        err: errorMessage(err, 'Unknown error'),
+      });
+      return null;
+    }
+  },
+);
+
+// Suppress unused-import lint for narrow helpers used only by typed handlers.
+void isPlaybookAllowedExt;
 
 // Sprint 17 (ADR-059, ADR-061): Integrations registry + per-area state.
 // Vendor data read from skills/in-house-legal/<plugin>/.mcp.json files

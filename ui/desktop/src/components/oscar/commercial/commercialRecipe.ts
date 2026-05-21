@@ -25,10 +25,11 @@ function resolveRedlineBin(resourcesRoot: string | null): string {
 // Sprint 17 (ADR-061): installedConfigs threaded through — lawyer-added
 // integrations from installed_integrations.json land after redline in
 // extraExtensions. Empty array when nothing's been added.
-export function buildCommercialRecipe(
+export async function buildCommercialRecipe(
   workingDir: string,
   stateFolder: string,
   resourcesRoot: string | null,
+  homeDir: string,
   companyContext: OscarCompanyContext | null,
   installedConfigs: NonNullable<Recipe['extensions']> = [],
   // Sprint 18 (ADR-065): user-enabled platform extensions threaded from
@@ -37,7 +38,7 @@ export function buildCommercialRecipe(
   // Sprint 20 (ADR-067): per-area overrides from profile.json; M0 wires
   // description_override through to the generic builder.
   areaOverrides: OscarAreaOverrides | null = null,
-): Recipe {
+): Promise<Recipe> {
   return buildPracticeAreaRecipe({
     area: {
       id: 'commercial',
@@ -49,6 +50,7 @@ export function buildCommercialRecipe(
     workingDir,
     stateFolder,
     resourcesRoot,
+    homeDir,
     systemPrompt: SYSTEM_PROMPT,
     companyContext,
     enabledPlatformExtensions,

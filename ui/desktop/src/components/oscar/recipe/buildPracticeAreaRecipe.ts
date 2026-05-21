@@ -16,6 +16,7 @@ import type {
   OscarCompanyContext,
 } from '../hooks/useOscarProfile';
 import { renderCompanyContextBlock } from './companyContextBlock';
+import { renderPlaybooksBlock } from './renderPlaybooksBlock';
 
 const DEV_NODE_CMD = '/usr/bin/node';
 const DEV_OSCAR_FS_BUNDLE = '/srv/projects/goose/ui/desktop/src/resources/mcps/oscar-fs/index.js';
@@ -28,6 +29,7 @@ function resolveOscarFsBundle(resourcesRoot: string | null): string {
   return resourcesRoot ? `${resourcesRoot}/mcps/oscar-fs/index.js` : DEV_OSCAR_FS_BUNDLE;
 }
 
+
 export interface BuildPracticeAreaRecipeOptions {
   area: PracticeArea;
   // Sprint 14 (ADR-047): two-folder layout. workingDir is the user-visible
@@ -39,6 +41,10 @@ export interface BuildPracticeAreaRecipeOptions {
   stateFolder: string;
   matterSlug?: string;
   resourcesRoot: string | null;
+  // Sprint 20-M4 (ADR-084): home dir for ~/.config/oscar/playbooks/ resolution
+  // — passed in so this builder stays free of node/electron imports (mirrors
+  // forgeRecipe.ts:68 homeDir param).
+  homeDir: string;
   // Commercial passes its bespoke system prompt; the generic default
   // anchors the agent to the practice-area scope when omitted.
   systemPrompt?: string;
@@ -112,18 +118,25 @@ rather than guessing. Match output to the audience: legal team in legal
 idiom; business stakeholders in plain business framing.
 `.trim();
 
-export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): Recipe {
+export async function buildPracticeAreaRecipe(
+  opts: BuildPracticeAreaRecipeOptions,
+): Promise<Recipe> {
+  const playbooksDir = `${opts.homeDir}/.config/oscar/playbooks`;
   const extensions: NonNullable<Recipe['extensions']> = [
     {
       type: 'stdio',
       name: 'oscar-fs',
       description:
-        'Filesystem MCP scoped to the matter working + state folders (Sprint 12 ADR-040, Sprint 14 ADR-047).',
+        'Filesystem MCP scoped to the matter working + state folders + playbooks root (Sprint 12 ADR-040, Sprint 14 ADR-047, Sprint 20-M4 ADR-084).',
       cmd: resolveNodeCmd(opts.resourcesRoot),
       args: [
         resolveOscarFsBundle(opts.resourcesRoot),
         opts.workingDir,
         opts.stateFolder,
+        // Sprint 20-M4 (ADR-084): playbooks readable on-demand by the agent.
+        // Single parent dir; oscar-fs allowed-directory checks are prefix
+        // based so this covers _global + every per-area subdir.
+        playbooksDir,
       ],
       envs: {
         // Sprint 12 (ADR-037), Sprint 14 (ADR-047): skills consume
@@ -131,6 +144,19 @@ export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): R
         // working folder (user-visible matter dir), not state.
         OSCAR_MATTER_DIR: opts.workingDir,
       },
+      timeout: 30,
+    },
+    // Sprint 20-M4 (ADR-085 Layer 2): bundled computercontroller narrowed
+    // via ADR-017 available_tools discipline so the agent gets pdf_tool +
+    // docx_tool ONLY — not the broader Computer Controller surface
+    // (automation_script, web_scrape, cache, xlsx_tool). The agent reads
+    // binary playbooks on-demand when the lawyer prompts.
+    {
+      type: 'builtin',
+      name: 'computercontroller',
+      description: 'PDF + DOCX text extraction for matter playbooks.',
+      available_tools: ['pdf_tool', 'docx_tool'],
+      bundled: true,
       timeout: 30,
     },
     // Sprint 18 (ADR-063, ADR-065): the user's enabled platform extensions
@@ -154,7 +180,15 @@ export function buildPracticeAreaRecipe(opts: BuildPracticeAreaRecipeOptions): R
   const areaDescriptionBlock = descriptionOverride
     ? `## About this practice area\n${descriptionOverride}`
     : null;
-  const instructions = [companyBlock, areaDescriptionBlock, baseInstructions]
+  // Sprint 20-M4 (ADR-085 Layer 1): renderer asks main process to extract
+  // always-on playbooks and format the block. Bounded at 8K chars per area.
+  const playbooksBlock = await renderPlaybooksBlock(opts.areaOverrides);
+  const instructions = [
+    companyBlock,
+    areaDescriptionBlock,
+    playbooksBlock,
+    baseInstructions,
+  ]
     .filter((s): s is string => Boolean(s))
     .join('\n\n');
   return {

@@ -1367,6 +1367,180 @@ pre:has(> code.bg-inline-code) {
   color: var(--ink);
 }
 
+/* Sprint 20-M4 (ADR-084, ADR-085): Playbooks section. Editorial register —
+   cream drop zone with hairline rule, copper hover, mono numerics for file
+   sizes, italic faint scope label, copper-accented active chip. */
+
+.oscar__playbooks-drop {
+  display: block;
+  width: 100%;
+  padding: 12px 10px;
+  background: transparent;
+  border: 1px dashed var(--rule);
+  border-radius: 3px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+
+.oscar__playbooks-drop:hover,
+.oscar__playbooks-drop:focus {
+  border-color: var(--copper);
+  color: var(--copper);
+  background: var(--paper-edge);
+  outline: none;
+}
+
+.oscar__playbooks-upload-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  background: var(--paper-edge);
+  border-radius: 3px;
+}
+
+.oscar__playbooks-upload-name {
+  flex: 1 1 100%;
+  font-family: var(--mono-editorial);
+  font-size: 11px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.oscar__playbooks-upload-confirm button {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-family: var(--sans-editorial);
+  font-size: 11px;
+  color: var(--ink-light);
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.oscar__playbooks-upload-confirm button:hover {
+  color: var(--copper);
+  border-color: var(--copper);
+}
+
+.oscar__playbooks-upload-confirm button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.oscar__playbooks-error,
+.oscar__playbooks-budget-warning {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--paper-edge);
+  border-left: 2px solid var(--copper);
+}
+
+.oscar__playbooks-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oscar__playbooks-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rule-light);
+}
+
+.oscar__playbooks-row:last-child {
+  border-bottom: none;
+}
+
+.oscar__playbooks-name {
+  font-family: var(--mono-editorial);
+  font-size: 12px;
+  color: var(--ink-light);
+  word-break: break-all;
+}
+
+.oscar__playbooks-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-family: var(--sans-editorial);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.02em;
+}
+
+.oscar__playbooks-scope {
+  font-style: italic;
+}
+
+.oscar__playbooks-size {
+  font-family: var(--mono-editorial);
+}
+
+.oscar__playbooks-chip {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--sans-editorial);
+  font-size: 10px;
+  color: var(--ink-faint);
+  padding: 2px 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.oscar__playbooks-chip[aria-pressed='true'] {
+  border-color: var(--copper);
+  color: var(--copper);
+  background: var(--paper-edge);
+}
+
+.oscar__playbooks-chip:hover:not(:disabled) {
+  border-color: var(--copper);
+  color: var(--copper);
+}
+
+.oscar__playbooks-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.oscar__playbooks-delete {
+  background: transparent;
+  border: none;
+  color: var(--ink-faint);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.oscar__playbooks-delete:hover:not(:disabled) {
+  color: var(--copper);
+}
+
+.oscar__playbooks-delete:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .oscar__sidebar-list {
   display: flex;
   flex-direction: column;

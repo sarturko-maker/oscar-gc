@@ -8,6 +8,7 @@ import type { ComponentType } from 'react';
 import PanelSectionStub from './PanelSectionStub';
 import MatterFactsSection from './MatterFactsSection';
 import HistorySection from './HistorySection';
+import PlaybooksSection from './PlaybooksSection';
 
 export const PANEL_SECTION_IDS = [
   'MatterFacts',
@@ -36,7 +37,7 @@ export const SECTION_META: Record<PanelSectionId, SectionMeta> = {
   MatterFacts: { title: 'Matter Facts' },
   ProgrammeFacts: { title: 'Programme Facts' },
   Skills: { title: 'Skills', comingIn: 'M5' },
-  Playbooks: { title: 'Playbooks', comingIn: 'M4' },
+  Playbooks: { title: 'Playbooks' },
   Redlining: { title: 'Redlining', comingIn: 'soon' },
   Forum: { title: 'Forum', comingIn: 'soon' },
   Deadlines: { title: 'Deadlines', comingIn: 'soon' },
@@ -54,7 +55,7 @@ export const sectionRegistry: Record<
   MatterFacts: MatterFactsSection,
   ProgrammeFacts: MatterFactsSection,
   Skills: PanelSectionStub,
-  Playbooks: PanelSectionStub,
+  Playbooks: PlaybooksSection,
   Redlining: PanelSectionStub,
   Forum: PanelSectionStub,
   Deadlines: PanelSectionStub,

@@ -139,6 +139,10 @@ export default function MattersLanding({ area }: MattersLandingProps) {
 
       const { working_dir: workingDir, state_folder: stateFolder } = active;
       const resourcesRoot = window.electron.oscarResourcesRoot;
+      const homeDir = window.electron.oscarHomeDir;
+      if (!homeDir) {
+        throw new Error('HOME_DIR not available; cannot resolve playbooks root');
+      }
       // Sprint 15 (ADR-053): company_context block prepended to recipe
       // instructions for first-turn briefing.
       // Sprint 16 (ADR-057): Tavily key handled via env_keys on the extension
@@ -179,23 +183,28 @@ export default function MattersLanding({ area }: MattersLandingProps) {
 
       // Commercial composes its bespoke system prompt + redline MCP on top
       // via buildCommercialRecipe; the other 12 areas use the generic shape.
+      // Sprint 20-M4: builders are async — Layer 1 playbook extraction hits
+      // the bundled computercontroller MCP when any always-on entry is
+      // .pdf/.docx. Text-only always-on lists short-circuit (no subprocess).
       const recipe =
         area.id === 'commercial'
-          ? buildCommercialRecipe(
+          ? await buildCommercialRecipe(
               workingDir,
               stateFolder,
               resourcesRoot,
+              homeDir,
               companyContext,
               installedConfigs,
               enabledPlatformExtensions,
               areaOverrides,
             )
-          : buildPracticeAreaRecipe({
+          : await buildPracticeAreaRecipe({
               area,
               workingDir,
               stateFolder,
               matterSlug: matter.slug,
               resourcesRoot,
+              homeDir,
               companyContext,
               extraExtensions: installedConfigs,
               enabledPlatformExtensions,
