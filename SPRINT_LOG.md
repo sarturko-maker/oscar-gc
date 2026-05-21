@@ -14,6 +14,55 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 20-M5 — Skills visibility + per-area scoping (closed 2026-05-21 on code; commit `0ef740ea9`)
+
+**Goal**: sixth sub-sprint (M5) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace the `PanelSectionStub` mapping for **Skills** with a real renderer: list Goose's auto-discovered skills filtered to the active area (bundled `commercial-legal` / `privacy-legal` / `ip-legal` / ... per `practiceAreas.bundled_skill_sources` × `~/.agents/skills/`); per-area allow/deny chips persist to `area_overrides.enabled_skills`; recipe builder injects a `## Skills available in this area` block followed by `Ignore any other skills you may discover` — prompt-level soft scoping.
+
+**Built** — one implementation commit + ADR-086 (skill scoping via prompt enumeration) + visual harness on lq-vps:
+
+- **Reuse pivot at plan-mode time**: brief proposed a fresh `skillStore.ts` filesystem walker + YAML frontmatter parser (likely `gray-matter` or `js-yaml`). Probe found Goose's Rust core already ships `goose::skills::discover_skills()` exposed via `GET /config/slash_commands` (CommandType === 'Skill'); `SkillsView.tsx:121` already calls it; YAML parsing happens server-side via `serde_yaml`. CLAUDE.md "Reuse over rebuild" → drop the walker + parser; M5 fetches via the existing API. Bundled-vs-user discrimination is a tiny `fs.readdir` of `<resourcesRoot>/skills/in-house-legal/<plugin>/skills/` per area. **Zero new npm deps; zero new Rust changes.** Mirrors M4 ADR-085's `computercontroller` pivot.
+
+- **`skillStore.ts`** (main-process, `ui/desktop/src/components/oscar/skills/`): pure inventory readers (`readBundledInventory(root, plugins) → Set<slug>`, `readUserSkillSlugs() → Set<slug>`), pure joiners (`joinSkills(slashCommands, areaBundled, userSlugs, mode, slugs) → SkillEntry[]` sorted bundled-first then alpha; `resolveEnabledSlugs(joined) → string[]`), `renderSkillsBlockMarkdown(allowed) → string \| null`, `deleteUserSkillDir(slug, globalBundled) → ok|error` with `EBUNDLED_DELETE` defence in depth. No HTTP, no YAML, no MCP spawn.
+
+- **Five IPCs on `main.ts`** (after the `oscar:playbooks:render-block` handler):
+  - `oscar:skills:list(areaId) → SkillsListResult` — fetches `/config/slash_commands` via the per-window `goosedClients.get(windowId)` client (cert-pinned `net.fetch` already wired at `main.ts:993–1003`), joins with bundled + user inventories, returns `{ mode, skills }` with chip state computed.
+  - `oscar:skills:set-mode(areaId, mode)` — atomic profile write via new `mutateEnabledSkills` helper modelled on M4's `mutateAlwaysOn` (`main.ts:2312–2342`). Mode flip does NOT clear slugs (audit-friendly + invert-on-flip ergonomic; documented in ADR-086).
+  - `oscar:skills:toggle-slug(areaId, slug, included)` — same atomic-write helper; deduplicated + sorted slug list.
+  - `oscar:skills:delete(_, slug)` — `fs.rm -r ~/.agents/skills/<slug>/`; refuses if slug ∈ global bundled inventory (across all 9 plugins); cross-area scrubs slug from every area's `enabled_skills.slugs` (mirrors M4 playbook-delete scrub at `main.ts:2505–2528`).
+  - `oscar:skills:render-block(areaId) → string \| null` — main reads profile + bundled inventory + getSlashCommands + composes via `renderSkillsBlockMarkdown`. Returns `null` on any failure (recipe still spawns; matches M4 fallback).
+
+  ProfileShape widened to type `area_overrides.enabled_skills?: { mode?: string; slugs?: string[] }`.
+
+- **`window.electron.skills` preload bridge** (`preload.ts`): `list / setMode / toggleSlug / delete / renderBlock`; re-exports `SkillEntry`, `SkillMode`, `SkillsListResult` types so renderer + section consume them.
+
+- **`renderSkillsBlock.ts`** (renderer wrapper): thin try/catch around `window.electron.skills.renderBlock(areaId)`; returns `null` on failure with `console.warn` (mirrors `renderPlaybooksBlock.ts`). Called from `buildPracticeAreaRecipe.ts` between `playbooksBlock` and `baseInstructions`. No signature change to `BuildPracticeAreaRecipeOptions`; no cascade to `commercialRecipe.ts` or `buildForgeRecipe.ts` (Forge intentionally exempt).
+
+- **`SkillsSection.tsx`**: three-segment mode pill (All / Allow / Deny — `aria-pressed`, click → `setMode`); per-skill row with name + `[bundled]` tag (bundled rows only) + description (2-line clamp via `-webkit-line-clamp`) + chip with `aria-pressed={enabled}` `aria-disabled={mode==='all'}` `title="Applies on next matter open"` (resume-semantics tooltip per AskUserQuestion) + delete X (user-added rows only). Polled at 2 s via shared `usePanelReader<SkillsListResult>` hook (M3-era). Per-skill busy state isolates rows. Error toast surfaces failed mutations.
+
+- **`registry.ts`**: `Skills: PanelSectionStub` → `Skills: SkillsSection`; `SECTION_META.Skills.comingIn` deleted.
+
+- **`.oscar__skills*` CSS family** (`styles/main.css`): mirrors `.oscar__playbooks*` editorial register. Mode pill = inline-flex three-segment toggle with copper accent on pressed segment; row grid is two rows (name+chip+delete on line 1; description spans full width on line 2); `[bundled]` tag is italic uppercase faint sans-editorial. `aria-disabled` chip variant for the all-mode info state (no border, italic, faint).
+
+- **Visual harness `capture-m5.{js,sh}`**: clones M4 with widened `preflightCleanup` (also wipes `~/.agents/skills/test-*`); pre-seed writes `~/.agents/skills/test-nda-checklist/SKILL.md` with proper frontmatter; five states (default-all-mode / allow-mode-with-selection / user-added-visible / recipe-injection-with-diagnostic-overlay / deny-mode-blocks-one); per-state console audit asserts `data-section-id` array + per-skill `{slug, source, enabled, deletable}` + `renderBlock` content grep + profile.json `enabled_skills` field. Asserted in-flight: state (a) has 9 commercial-legal bundled rows + 1 user row; (b) mode flips to allow with 2 toggled slugs; (d) renderBlock returns the 157-char block with `## Skills available in this area` + the two allowed slugs + `Ignore any other skills you may discover.`; (e) renderBlock OMITS the two slugs after mode flips to deny (slugs preserved across flip). PNGs at `docs/screenshots/sprint-m5/`.
+
+**Deferred**:
+- Skill upload + Forge review (Mode C) — M6.
+- Cross-agent "All Skills" view — defers post-M8 per AskUserQuestion at plan-mode start (`SkillsView.tsx` at `/skills` route stays as the existing Goose-native global surface).
+- Walker-fork hard scoping — post-master-brief.
+
+**Carry-forwards** (master-brief sub-sprints):
+- **M6 — Skills upload + Forge review (Mode C)** (next). Drop-affordance shape (file-drop vs paste-modal) + Forge mode-routing fallback for AskUserQuestion at start. M6 brief draft after this close commit at `/root/.claude/plans/sprint-m6-forge-mode-c-skill-review.md`.
+- **M7 — Forge area-modify (Mode D)** + ADR for Zod-validated profile.json writes.
+- **M8 — Forge delete-area (Mode E)** + the single end-to-end Crostini dogfood per Arturs's doctrine.
+- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
+- **QuickChatButton "STARTING…" stuck-state** (M1 carry) still open.
+- **`pnpm-workspace.yaml` allowBuilds: drift** inherits as unstaged each session.
+- **Crostini dogfood E1 (M0 description_override) + M1/M2/M3/M4/M5 visual states** wait for M8.
+
+**ADRs**: 086.
+
+---
+
 ### Sprint 20-M4 — Playbooks subsystem (closed 2026-05-21 on code; commit `ec24d4710`)
 
 **Goal**: fifth sub-sprint (M4) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace the `PanelSectionStub` mapping for **Playbooks** with a real renderer: drag-drop upload → `~/.config/oscar/playbooks/<scope>/<filename>`; per-file always-on chip → file's extracted text injected into the matter's recipe instructions as a `## Playbooks in scope` block (Layer 1); on-demand files stay listed in the pane; agent reads them via oscar-fs + computercontroller (Layer 2).
