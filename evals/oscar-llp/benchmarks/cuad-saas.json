@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "source": "Atticus Project CUAD — SaaS/Tech-Tx clause subset",
+    "license": "CC-BY-4.0",
+    "citation": "Hendrycks et al., NeurIPS 2021. https://www.atticusprojectai.org/cuad",
+    "format_version": "oscar-llp-1.0",
+    "partner": "aisha-khan",
+    "specialism": "Tech Transactions",
+    "clause_type_filter": ["Source_Code_Escrow", "Most_Favored_Nation", "Volume_Restriction", "Affiliate_License"],
+    "target_sample_size_per_cycle": 20,
+    "total_instances_target": 25,
+    "instances_present": 0,
+    "_instructions": "Populate via scripts/lib-benchmarks.js cuadFromHfDataset(filter=[...])."
+  },
+  "_schema": {
+    "instance": {
+      "id": "string",
+      "source_doc_id": "string",
+      "source_doc_text": "string",
+      "truncated": "boolean",
+      "question": "string (partner-facing Tech-Tx question template)",
+      "gold_labels": [
+        {
+          "rubric_item_id": "string",
+          "label_text": "string",
+          "severity_band": "RED | major | minor",
+          "clause_ref": "string"
+        }
+      ]
+    }
+  },
+  "instances": []
+}

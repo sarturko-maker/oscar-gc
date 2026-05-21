@@ -1,0 +1,32 @@
+{
+  "_meta": {
+    "source": "Atticus Project MAUD (Merger Agreement Understanding Dataset)",
+    "license": "CC-BY-4.0",
+    "citation": "Wang et al., NeurIPS 2023. https://www.atticusprojectai.org/maud",
+    "format_version": "oscar-llp-1.0",
+    "partner": "sarah-chen",
+    "specialism": "M&A",
+    "target_sample_size_per_cycle": 20,
+    "total_instances_target": 50,
+    "instances_present": 0,
+    "_instructions": "Populate `instances` by downloading MAUD from https://www.atticusprojectai.org/maud and running scripts/lib-benchmarks.js maudFromCsv() on the source CSV. Each instance must follow the schema in `_schema`."
+  },
+  "_schema": {
+    "instance": {
+      "id": "string (stable across runs — derived from MAUD doc_id + annotation_id)",
+      "source_doc_id": "string (MAUD doc identifier)",
+      "source_doc_text": "string (full agreement text, truncated to 30k chars if needed; truncated flag set if so)",
+      "truncated": "boolean",
+      "question": "string (partner-facing question template; M&A-focused)",
+      "gold_labels": [
+        {
+          "rubric_item_id": "string (e.g., 'mac-pandemic-carveout')",
+          "label_text": "string (the expert-annotated label from MAUD)",
+          "severity_band": "RED | major | minor",
+          "clause_ref": "string (section/clause reference if known)"
+        }
+      ]
+    }
+  },
+  "instances": []
+}

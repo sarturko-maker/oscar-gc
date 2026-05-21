@@ -105,3 +105,11 @@ docs/sprint-15/eval/**/recipe-*.json
 # runs/<ts>/ is per-execution and not committed.
 evals/lavern-jv/runs/*
 !evals/lavern-jv/runs/.gitkeep
+
+# Sprint 24-C (ADR-081) — per-iteration outputs (transcripts, scores,
+# proposals, prompt snapshots, cost log). The curated closing report at
+# evals/oscar-llp/reports/sprint-24-c-iteration-baseline.md is checked in;
+# everything under iterations/ is per-execution.
+evals/oscar-llp/iterations/*
+!evals/oscar-llp/iterations/.gitkeep
+evals/oscar-llp/scripts/node_modules/

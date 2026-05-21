@@ -1,0 +1,17 @@
+{
+  "name": "oscar-llp-iteration-eval",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sprint 24-C cross-partner iteration eval harness — subtractive-edit methodology against MAUD/CUAD/LegalBench legal-tech benchmarks.",
+  "scripts": {
+    "sanity": "node scripts/sanity-check.js",
+    "iterate": "node scripts/run-iteration.js",
+    "iterate:all": "node scripts/run-iteration.js --all"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.40.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
