@@ -281,6 +281,15 @@ type ElectronAPI = {
     listPartnerStates: () => Promise<
       Record<string, { session_id: string | null }>
     >;
+    // Sprint 24-B (ADR-079): Lavern Pipeline launch surface.
+    pipeline: {
+      ensureDir: () => Promise<{
+        ok: boolean;
+        workingDir: string;
+        precedentsDir: string;
+      }>;
+      listRecentDocs: () => Promise<{ docs: Array<{ name: string; path: string }> }>;
+    };
   };
 };
 
@@ -521,6 +530,10 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.invoke('oscar:llp:lookup-state', slug),
     listPartnerStates: () =>
       ipcRenderer.invoke('oscar:llp:list-partner-states'),
+    pipeline: {
+      ensureDir: () => ipcRenderer.invoke('oscar:llp:pipeline:ensure-dir'),
+      listRecentDocs: () => ipcRenderer.invoke('oscar:llp:pipeline:list-recent-docs'),
+    },
   },
 };
 

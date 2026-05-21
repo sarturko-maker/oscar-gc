@@ -113,6 +113,25 @@ export default function OscarLLPRoster() {
 
         {!loading && !error && (
           <div className="oscar__matters-list flex flex-col mt-6 overflow-y-auto min-h-0">
+            {/* Sprint 24-B (ADR-079): Lavern Pipeline launcher above the
+                10 partner cards. Pipeline is firm-level work — Oscar LLP's
+                case team running a multi-stage review — so it sits next to
+                the partners, not in a separate sidebar group. */}
+            <button
+              type="button"
+              onClick={() => navigate('/oscar-llp/pipeline')}
+              className="oscar__matter-row w-full text-left flex items-center justify-between gap-4 py-4 px-2 transition-colors"
+            >
+              <div className="flex flex-col min-w-0">
+                <span className="oscar__matter-row-name truncate">
+                  Lavern Pipeline (multi-stage contract review)
+                </span>
+                <div className="oscar__matter-row-meta">
+                  Run Watchman → Reader → Curator on documents. Multi-doc surfaces cross-document patterns.
+                </div>
+              </div>
+              <div className="oscar__matter-row-time">Run</div>
+            </button>
             {partners.map((row) => (
               <OscarLLPPartnerRow
                 key={row.partner.slug}

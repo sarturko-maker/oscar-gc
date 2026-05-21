@@ -2365,6 +2365,51 @@ ipcMain.handle('oscar:llp:list-partner-states', async () =>
   readOscarLlpRegistry(),
 );
 
+// Sprint 24-B (ADR-079, ADR-080): Lavern Pipeline launch surface IPCs.
+// The pipeline working dir is a sibling of per-partner working dirs under
+// ~/Documents/Oscar GC/Oscar LLP/; users drop docs in there. The precedent-
+// board state lives at ~/.config/oscar/state/lavern/ (ADR-080 per-user-per-
+// area scope via oscar-baselines-mcp's OSCAR_BASELINES_DIR env override).
+const LAVERN_PIPELINE_DIR = path.join(OSCAR_LLP_DIR, 'lavern-pipeline');
+const LAVERN_STATE_DIR = path.join(OSCAR_STATE_DIR, 'lavern');
+const LAVERN_PRECEDENTS_DIR = path.join(LAVERN_STATE_DIR, 'precedents');
+const PIPELINE_DOC_EXTENSIONS = new Set(['.txt', '.md', '.pdf', '.docx', '.doc']);
+
+ipcMain.handle('oscar:llp:pipeline:ensure-dir', async () => {
+  try {
+    await fs.mkdir(LAVERN_PIPELINE_DIR, { recursive: true });
+    await fs.mkdir(LAVERN_PRECEDENTS_DIR, { recursive: true });
+    return {
+      ok: true,
+      workingDir: LAVERN_PIPELINE_DIR,
+      precedentsDir: LAVERN_PRECEDENTS_DIR,
+    };
+  } catch (err) {
+    log.warn('oscar:llp:pipeline:ensure-dir failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { ok: false, workingDir: '', precedentsDir: '' };
+  }
+});
+
+ipcMain.handle('oscar:llp:pipeline:list-recent-docs', async () => {
+  try {
+    const entries = await fs.readdir(LAVERN_PIPELINE_DIR, { withFileTypes: true });
+    const docs = entries
+      .filter((e) => e.isFile())
+      .filter((e) => PIPELINE_DOC_EXTENSIONS.has(path.extname(e.name).toLowerCase()))
+      .map((e) => ({ name: e.name, path: path.join(LAVERN_PIPELINE_DIR, e.name) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { docs };
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') return { docs: [] };
+    log.warn('oscar:llp:pipeline:list-recent-docs failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { docs: [] };
+  }
+});
+
 // Sprint 14 (ADR-047): reverse lookup — given a session_id (from BaseChat),
 // find the matter bound to it. Used by the matter back-button affordance to
 // know which practice area to navigate back to. Returns null if the session

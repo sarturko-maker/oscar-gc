@@ -26,6 +26,7 @@ import PracticeAreaPlaceholder from './components/oscar/PracticeAreaPlaceholder'
 import ForgeView from './components/oscar/forge/ForgeView';
 import IntegrationsView from './components/oscar/integrations/IntegrationsView';
 import OscarLLPRoster from './components/oscar/oscar-llp/OscarLLPRoster';
+import LavernPipelineView from './components/oscar/oscar-llp/LavernPipelineView';
 import OscarOnboardingGuard from './components/oscar/onboarding/OscarOnboardingGuard';
 import { UserInput } from './types/message';
 
@@ -704,6 +705,7 @@ export function AppInner() {
               <Route path="forge" element={<ForgeView />} />
               <Route path="integrations" element={<IntegrationsView />} />
               <Route path="oscar-llp" element={<OscarLLPRoster />} />
+              <Route path="oscar-llp/pipeline" element={<LavernPipelineView />} />
               <Route
                 path="shared-session"
                 element={
