@@ -14,6 +14,70 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 20-M3 — Matter Facts + History real bodies (closed 2026-05-21 on code; commit `7b6586765`)
+
+**Goal**: fourth sub-sprint (M3) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace `PanelSectionStub` for **MatterFacts**, **ProgrammeFacts**, and **History** with real renderers backed by the same on-disk state the agent reads — `matter.md` (ADR-047), `~/.config/oscar/tom-active-matter.md` (ADR-044), and the goose-server session log via the existing `GET /sessions/{session_id}` route. No shadow store, no new persistence model, no file watchers (polled 2 s).
+
+**Built** — one implementation commit + ADR-083 at decision time + History-default settled via plan-mode AskUserQuestion:
+
+- **ADR-083** (`docs/adr/083-pane-reads-matter-folder.md`, 49 lines): right pane = view of agent state, not parallel source of truth. MatterFacts reads `matter.md` + tom file via a thin Electron IPC; History reads `getSession()` from the renderer; reads polled at 2 s. Alternatives rejected: file watchers (fan-out under multi-matter use); separate per-pane state file (split-brain); new Rust readonly session route (`getSession` already returns full conversation); SQLite-from-main (needs driver in bundle); reusing `oscar:matters:get` (returns full `MatterEntry` + raw markdown — M3 IPC returns parsed, label-ready facts decoupled from registry shape).
+
+- **History-default settled via plan-mode AskUserQuestion** (option A — universal): `'History'` appended to **all 13** areas' `defaultPanelSections` in `practiceAreaShapes.ts`. Reasoning: lawyer always sees recent activity; M3 becomes the sprint where History is a load-bearing surface (not dark code awaiting Forge area-modify at M7).
+
+- **`matterMdSerde.ts` colocates writer + parser** (`ui/desktop/src/components/oscar/matters/matterMdSerde.ts`): `renderMatterMd` moved here from `main.ts:1910`; new `parseMatterMd(text) → { subject, counterparty, kind, stakeholder, privileged, key_facts_md, extras }` is tolerant of unknown frontmatter keys and frontmatter+body drift. Writer and reader can't drift because they live next to each other.
+
+- **`oscar:right-pane:read-matter-facts` IPC + preload bridge** (`main.ts`, `preload.ts`): input `(areaId, slug)`; output `MatterFactsPayload { name, subject, counterparty, kind, stakeholder, privileged, extras, key_facts_md, tom_md }`. Tom file is gated on `Slug: <slug>` match — only returned when it points at this matter (so detach + open-different-matter cleanly empties the block).
+
+- **`usePanelReader` + `useHistoryTail` hooks** (`ui/desktop/src/components/oscar/rightPane/sections/`): `usePanelReader<T>(fetcher, deps, opts?)` is the shared 2 s-polled fetch with abort-on-unmount + late-return drop; mirrors `useOscarProfile`'s opt-in `pollMs` shape but kept separate so that hook's contract doesn't widen. `useHistoryTail(sessionId, limit=10)` wraps it over `getSession()` and reduces `Conversation` → `HistoryEvent[]` (`{ ts, role, summary }`). Consecutive same-tool-name turns collapse; tool name extracted via a probe that tries `toolCall.name`, `toolCall.Ok.name`, `toolCall.value.name` (codegen lost the precise ToolCall enum). Unknown content types fall back to `"Responded"`.
+
+- **`RightPaneContext` exposes ambient matter coords** (`ui/desktop/src/components/oscar/rightPane/RightPaneContext.tsx`): `{ areaId, slug, sessionId }`. Provider lives in `RightPaneShell` body; consumers call `useRightPaneCoords()`. Keeps the registry's per-section signature at `{ sectionId }` — sections that need coords subscribe; sections that don't (stubs) don't.
+
+- **`useRightPaneVisibility` extended** (`useRightPaneVisibility.ts`): return type adds `slug: string | null` and `sessionId: string | null`. Both already in scope at the existing `matters.lookupSession(sessionId)` call site; no second IPC.
+
+- **`RightPaneShell` wraps body in provider** (`RightPaneShell.tsx`): new required props `{ areaId, slug, sessionId }`; renders `<RightPaneProvider value={{areaId, slug, sessionId}}>{sections.map(...)}` around the existing M2 stack. Chrome (Loadout eyebrow + chevron toggle) preserved verbatim.
+
+- **`MatterFactsSection.tsx`** consumes `useRightPaneCoords()`+`usePanelReader(window.electron.rightPane.readMatterFacts, [areaId, slug])`; renders a labelled definition list (Subject row uses `subjectTypeLabel` from `matterLabels.ts`; Counterparty row uses `partyRoleLabel`; Kind uses `kindLabel(areaId, ...)` from `practiceAreaShapes.ts`; Stakeholder / Privileged / extras as straight rows). Key facts rendered as a `pre`-wrapped block. Top of Mind block collapses behind a `[+]/[−]` toggle so the long agent-prompt text doesn't dominate the pane.
+
+- **`HistorySection.tsx`** consumes `useRightPaneCoords()` + `useHistoryTail(sessionId)`; renders reverse-chrono rows of `[time] summary`. Time formatting handles seconds-vs-milliseconds heuristically (Unix-second ts × 1000 if < 10¹⁰; pass through if ms). Same-day timestamps render `HH:mm`; older render `DD MMM`. Empty state copy: "No activity yet."
+
+- **Registry swap + META cleanup** (`registry.ts`): `MatterFactsSection` mapped on both `MatterFacts` and `ProgrammeFacts` (one component, different eyebrow via `SECTION_META[id].title`); `HistorySection` on `History`. `comingIn` deleted from those three entries; field made optional on `SectionMeta`; `PanelSectionStub` guards absent `comingIn` so the three filled IDs can't ship "coming in undefined".
+
+- **CSS family** (`main.css`): new `.oscar__panel-section-body` (12px gap stack), `.oscar__panel-section-dl` + `.oscar__panel-section-dl-row` (90px label column / 1fr value), `.oscar__panel-section-keyfacts` + `.oscar__panel-section-keyfacts-body` (pre-wrapped), `.oscar__panel-section-tom` + `.oscar__panel-section-tom-toggle` + `.oscar__panel-section-tom-body` (dashed-rule separator + paper-edge background for the agent-prompt text), `.oscar__panel-section-history` + `.oscar__panel-section-history-row` (48px time column / 1fr summary, mono numerics for time). Editorial register matches LQdesign reference (paper / ink-light / ink-faint / copper hover).
+
+- **Visual verification harness** (`ui/desktop/scripts/capture-m3.js` + `scripts/capture-m3.sh`): Playwright/CDP under Xvfb, clones M2's pattern. Pre-seeds Commercial + Privacy + IP matters via `matters.create` with realistic `key_facts` strings (matter.md actually renders content this sprint). Drives 5 states: (a) Commercial MatterFacts loaded, (b) Privacy ProgrammeFacts loaded, (c) chat-input fill+Enter → History row, (d) external matter.md append → polled read picks it up <2.5 s, (e) `matters.setActive` → Top of Mind block surfaces after toggling open. Per-state audit: `dataset.sectionId` array + first MatterFacts `<dt>/<dd>` content captured to stdout. PNGs at `docs/screenshots/sprint-m3/`.
+
+- **`pnpm-workspace.yaml` build-infra fix**: `nodeLinker: hoisted` added (pnpm 11 stopped honouring it from `.npmrc` and electron-forge's pre-flight blocks the build without the workspace.yaml declaration). Sprint 17b carry (auto-appended `allowBuilds:` block) left unstaged per convention.
+
+**Verification** (in this session):
+- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0).
+- ADR-083 line count: 49 (target ≤50).
+- `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` succeeded; packaged binary at `ui/desktop/out/Oscar-GC-linux-x64/oscar-gc` (206 MB).
+- Visual harness produced 5 PNGs at 1440×900. Per-state audit:
+  - (a) `[MatterFacts,Skills,Playbooks,Redlining,History]` — firstFact `Contract: Acme Master Services Agreement`.
+  - (b) `[ProgrammeFacts,Skills,Playbooks,Deadlines,History]` — firstFact `Processing activity: Salesforce vendor DPA`.
+  - (c) one chat turn driven via `data-testid="chat-input":visible` fill+Enter; HISTORY row landed with `04:16 PM` timestamp + "Hello — sprint M3 history seed message." (verified visually).
+  - (d) `appendKeyFact` writes "- Late-added fact: SLA credits unchanged" to disk; pane reflects after a 2.5 s wait (one poll tick).
+  - (e) `matters.setActive('commercial', 'test-msa-renewal')` → Top of Mind block expanded shows the full `renderTomActiveMatter` body.
+- Commit-trailer hygiene per CLAUDE.md: no `Co-Authored-By` trailer (verified via `git log -1 --pretty=full`).
+- **ADR slot taken at decision time: 083.** The M3 brief reserved 071 but Sprint 21–25's `lavern-firm-mode` branch occupies 071–082 in the shared `.git` database — verified via `ls docs/adr/` + `git log --all --diff-filter=A -- 'docs/adr/*.md'` before naming. Brief amended in plan mode.
+- No Rust touch, no sibling-repo changes.
+- Parallel-session coordination: Xvfb :99 confirmed clear before each harness run (Sprint 24 / `lavern-firm-mode` was idle on display); no collision.
+
+**Deferred** — push to `origin/main` happens after the close commit lands the SPRINT_LOG entry with this section's commit SHA.
+
+**Carry-forwards** (master-brief sub-sprints):
+- **M4 — Playbooks subsystem** (upload + always-on injection + on-demand list). Two ADRs at decision time (storage convention + three-layer injection). M4 brief draft after this close commit.
+- **M5 — Skills visibility + per-area scoping**. One ADR at decision time (skill scoping via prompt enumeration).
+- **M6–M8** unchanged from M2 carry.
+- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
+- **QuickChatButton "STARTING…" stuck-state** (M1 carry) — out of M3 scope; fork-hygiene sweep candidate.
+- **`pnpm-workspace.yaml` allowBuilds: drift** still inherits as unstaged each session (Sprint 17b convention).
+- **Crostini dogfood E1 (M0 description_override) + M1/M2/M3 visual states** all wait for M8's single end-to-end dogfood per Arturs's doctrine.
+
+**ADRs**: 083.
+
+---
+
 ### Sprint 20-M2 — Section registry + per-area composition (closed 2026-05-20 on code; commit `1c0d3370e`)
 
 **Goal**: third sub-sprint (M2) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Turn M1's inert pane body into a data-driven stack of section stubs whose composition is per-area: `PracticeAreaShape.defaultPanelSections` overridden by `area_overrides.panel_sections`. No real section bodies — M3 fills MatterFacts + History, M4 Playbooks, M5 Skills. M2 is the wiring sprint.
