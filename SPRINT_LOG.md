@@ -14,6 +14,135 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 25 — Execute Sprint 24-C iteration (interactive, Max-only) (closed 2026-05-22 on code)
+
+**Goal**: rework Sprint 24-C's SDK-automated iteration harness into a Claude-Code-interactive shape per ADR-082 ("via Max subscription" means Claude Code interactive, not SDK), then *run* the iteration end-to-end on the Sarah Chen / Diana Park / Aisha Khan trio against MAUD + CUAD-privacy + CUAD-saas. Produce the substantive cross-partner-pattern deliverable the 24-C substrate was built for.
+
+**Decisions resolved in plan-mode** (AskUserQuestion):
+1. **Cycles per partner**: 4 (iter-0 baseline + 3 edit cycles). Matches the brief's MiniMax cost table; dense enough for Phase 4 cross-partner signal.
+2. **Partner-run concurrency**: serial (one goose run at a time). Clean transcript boundaries; no MiniMax rate-limit risk.
+3. **Phase A script language**: trimmed Node (`run-partner-cycle.js`), not bash. Reuses the existing battle-tested spawn/transcript/manifest logic from 24-C's `run-iteration.js`.
+
+**Architectural call** — **ADR-082** (decision-time, committed `583950b80` BEFORE any code per CLAUDE.md): shift from SDK-automated to Claude-Code-interactive iteration. Max subscription covers Claude Code running; the SDK wrapper duplicates what Read / Edit / Bash already do per conversation turn. Three-phase shape: Phase A (Node, unattended in-turn) spawns goose; Phase B (Claude Code, in-conversation) judges + proposes via Read / Write; Phase C (Node) validates + applies subtractive removals. References ADR-081 (Hybrid 2 iteration target, unchanged) and ADR-077 (Sprint 23 frozen baseline). 40 lines.
+
+**Built — Phase 0 (substrate trim)**:
+
+- **Deleted** (`git rm`): `evals/oscar-llp/scripts/lib-claude.js` (217 LOC Anthropic SDK wrapper) and `evals/oscar-llp/package.json` (the only dep was `@anthropic-ai/sdk@0.40.1`).
+- **Trimmed**: `lib-cost-log.js` (93 → 56 LOC; `ANTHROPIC_PRICING` table + `costForAnthropicCall` removed; MiniMax-only).
+- **Renamed + trimmed**: `run-iteration.js` → `run-partner-cycle.js` (394 → 197 LOC; Phase A only — judging + Phase 2 + writeClosingReport stripped; prints `READY-FOR-JUDGE iterations/<partner>/iter-<k>/` marker on completion).
+- **New**: `apply-proposal.js` (88 LOC Phase C subtractive applier — reads `proposal.json`, validates via `lib-subtractive`, applies removals, writes next-iter `prompt.txt` + unified diff).
+- **`lib-report24.js`**: header + report filename + envelope strings updated for Sprint 25 (writes `reports/sprint-25-iteration-results.md`).
+- **README.md**: rewritten — Phase A/B/C interactive shape, removed Anthropic API key gate, cost table now ~$12 MiniMax-only.
+- **NOTICE.benchmarks.md**: updated with CUAD privacy-clause substitution disclosure (see Phase 1).
+- **`.gitignore`**: dropped dead `evals/oscar-llp/scripts/node_modules/` reference; generic-ified Sprint 24-C comment.
+
+Net Phase 0 diff: −452 LOC (728 deleted, 276 added). Substrate that survives unchanged: `lib-recipe24.js`, `lib-subtractive.js`, `lib-benchmarks.js`, `sanity-check.js`, prompts/*.
+
+**Built — Phase 1 (benchmark loaders)**:
+
+- **`loaders/maud-loader.js`** (168 LOC): parses Atticus MAUD CSV (downloads from `github.com/TheAtticusProject/maud/raw/main/data.zip` to `/tmp/oscar-benchmarks/maud/`); 6651 rows across 152 unique contracts → 50 instances with ≥3 annotations; loads source doc text from `data/contracts/<name>.txt` truncated to 30k chars; M&A-themed partner question. Median 62 gold_labels per instance. CC-BY-4.0 attribution.
+- **`loaders/cuad-loader.js`** (201 LOC): parses Atticus CUADv1.json (510 contracts, 41 clause types); `--filter privacy|saas` selects the partner config. **Important substitution**: CUAD does NOT include "Data_Privacy" in its taxonomy — the original 24-C stub filter was a misread. Diana's privacy benchmark substitutes data-flow + third-party-access clauses (Audit Rights, Affiliate License-Licensee/Licensor, Anti-Assignment, Insurance, Change Of Control, Covenant Not To Sue) as the closest privacy-adjacent commercial-contract surface CUAD offers. Aisha's tech-tx benchmark uses CUAD's SaaS-relevant taxonomy (License Grant, Cap on Liability, Termination For Convenience, Post-Termination Services, Renewal Term, Exclusivity, Source Code Escrow, Most Favored Nation, Volume Restriction, Warranty Duration, etc.). Substitution flagged in the partner question template and documented in NOTICE.benchmarks.md.
+- **Populated benchmarks** (50 instances each): `maud.json` (50 MAUD contracts), `cuad-privacy.json` (50 with ≥3 matching qas under the privacy filter), `cuad-saas.json` (50 with ≥3 matching qas under the SaaS filter). Stubs retained for `legalbench-privacy.json` + `github-saas-tnc.json` per drop-order.
+- **Wrapper bug fix**: `sanity-check.js` was passing `--docs all` to Sprint 23's `run-eval.js`, which interprets `all` as a literal doc id and throws `unknown doc: all`. Default behaviour is already all 3 docs when `--docs` is omitted. Caught at first Phase 2 invocation, fixed cleanly (commit `91d2eba84`).
+
+**Phase 2 (sanity check)** — FAILED on the literal ±2pp gate (new Δ_grounded = +4.3pp vs Sprint 23's -3.8pp; drift 8.1pp). All 6/6 partner runs + 6/6 judge calls clean (1080s, $0.30). Investigation: Sprint 23's -3.8pp baseline carried wildly overlapping 95% CIs of [13.8%, 57.3%] and [20.1%, 66.8%] on N=6; the "drift" is statistical noise on tiny samples. Sprint 23 substrate diffs since (commit `1da0c328c`, Sprint 24-A) were cosmetic only — SPRINT_22_DIRECTIVE + RALPH_DIRECTIVE constants frozen per ADR-077 as required. **Gate over-tuned to N=6 noise; waived per user direction**: Phase 3 proceeds with `SKIP_SANITY_GATE=1`.
+
+**Built — Phase 3 (12 partner-cycle iterations)**:
+
+Each cycle: Phase A (`run-partner-cycle.js` spawns 20 `goose run --recipe <yaml> --no-session` serially, ~25 min wall-clock) → Phase B (me, in-conversation, reading 20 transcripts + gold labels, writing `scores.json` + `proposal.json`) → Phase C (`apply-proposal.js` validates + applies + writes next-iter snapshot + diff).
+
+**Sarah Chen (M&A / MAUD) — 4 cycles**:
+
+| cycle | Timeout | NO_ANALYSIS | PARTIAL | Delivered | Total | Edit |
+|---:|---:|---:|---:|---:|---:|---|
+| iter-0 | 45% | 25% | 0% | 30% | 30% | (baseline) |
+| iter-1 | 30% | 20% | 10% | 40% | 50% | -62: fetch parenthetical |
+| iter-2 | 15% | 35% | 10% | 40% | 50% | -767: Phase 4+5 framework |
+| iter-3 | 10% | 30% | 0% | 60% | 60% | -31: doc-text precondition |
+
+Sarah's timeouts collapsed monotonically; delivery doubled (30% → 60%). 860 chars cut total (-12.9% of original 6657-char prompt). MiniMax spend $0.897.
+
+**Diana Park (Privacy / CUAD-privacy) — 4 cycles**:
+
+| cycle | Timeout | NO_ANALYSIS | PARTIAL | Delivered | Total | Edit |
+|---:|---:|---:|---:|---:|---:|---|
+| iter-0 | 15% | 20% | 0% | 65% | 65% | (baseline) |
+| iter-1 | 10% | 20% | 0% | 70% | 70% | -62: fetch parenthetical |
+| iter-2 | 10% | **40%** | 0% | 50% | **50%** | -973: Phase 4+5 framework |
+| iter-3 | 10% | 10% | 20% | 60% | 80% | -31: doc-text precondition |
+
+**Diana iter-2 REGRESSED -20pp** after the same Phase 4+5 cut that helped Sarah. Diana's Phase 4 (Consent Architecture) + Phase 5 (Produce Deliverables) provided implicit scaffolding ("I have a method") — removing it caused partners to default to "I need the document first." iter-3 doc-text edit recovered the loss and pushed total output to 80%. 1066 chars cut total (-14.2% of 7504-char prompt). MiniMax spend $0.965.
+
+**Aisha Khan (Tech-Tx / CUAD-saas) — 4 cycles**:
+
+| cycle | Timeout | NO_ANALYSIS | PARTIAL | Delivered | Total | Edit |
+|---:|---:|---:|---:|---:|---:|---|
+| iter-0 | 0% | 20% | 5% | 75% | 80% | (baseline) |
+| iter-1 | 0% | 25% | 0% | 75% | 75% | -62: fetch parenthetical |
+| iter-2 | 5% | 10% | 20% | 65% | 85% | -31: doc-text precondition (Phase 4+5 SKIPPED) |
+| iter-3 | 0% | 5% | 5% | 90% | **95%** | -425: escalation script |
+
+Aisha started strongest (80% baseline) and finished at 95% — best partner-cycle result in Sprint 25. **Phase 4+5 cut was DELIBERATELY SKIPPED** because Aisha's Phase 4 (Licensing and IP Analysis) + Phase 5 (Vendor Risk Assessment) are core to her tech-tx task, not off-topic ceremony like Sarah's (Negotiation Strategy + Deliverables) or Diana's (Consent Architecture + Deliverables). The escalation-script cut produced the biggest single-cycle delivery improvement of the sprint (+25pp). 518 chars cut total (-5.5% of 9407-char prompt). MiniMax spend $1.020.
+
+**Built — Phase 4 (cross-partner pattern extraction)**:
+
+`iterations/_cross-partner/pattern-extraction.json` (schema-compliant per `prompts/cross-partner-extractor.md`). Four patterns surfaced across ≥2 partners + one negative finding + methodology summary.
+
+- **P1 — MCP-fetch parenthetical drives tool-hunt timeouts** (HIGH transferability to all 7 non-trio partners). Fix: -62 chars on `(fetched via `oscar-document-reader` or pasted by the user)`. Evidence: Sarah 9/20 + Diana 2/3 iter-0 timeouts tool-hunting via `oscar-fs` `search_files`. Transferable because the verification gate is byte-identical across all 10 partners per ADR-081.
+- **P2 — Doc-text precondition language drives ask-for-upload NO_ANALYSIS** (HIGH transferability). Fix: -31 chars on `the relevant document text and `. Evidence: 7 of Sarah's, 8 of Diana's, 5 of Aisha's NO_ANALYSIS instances explicitly asked for MCP upload despite acknowledging inline text. Same edit helped all three partners.
+- **P3 — Pre-scripted escalation reply misuse** (MEDIUM transferability). Fix: -425 chars on the "Reply exactly: > I cannot ground..." block. Evidence: Sarah contract_147 invoked directly; Aisha 2 instances mimicked as "Option A/B/CONFIRM" off-ramps. +25pp delivery on Aisha iter-3 (biggest single-cycle improvement).
+- **P4 — Subtractive transferability is not automatic** (LOW transferability of structural-position-blind cuts). Same Phase 4+5 cut helped Sarah (off-topic content), hurt Diana -20pp (off-topic but scaffolding-providing), and was correctly skipped for Aisha (on-topic content). Per-partner content inspection required.
+- **Negative finding — partner-training-bias on MCP-fetch is beyond subtractive reach**. All 3 partners show residual 5-30% NO_ANALYSIS rates where the model holds a strong prior that documents come via MCP and inline text is provisional. Closing the gap requires a constructive addition — violates Sprint 25's subtractive-only constraint. Sprint 26 should consider relaxing.
+
+**Built — Phase 5 (closing artefacts)**:
+
+- `evals/oscar-llp/reports/sprint-25-iteration-results.md` (substantive closing report — per-partner trajectories, cross-partner patterns, negative finding, cost breakdown, recommended back-ports).
+- This SPRINT_LOG entry.
+- PROJECT.md Sprint Index row.
+- RUNBOOK note for `SKIP_SANITY_GATE=1` waiver.
+
+**Tests / verifications**:
+- All trim-side scripts parse-check clean (`node --check` 8/8 PASS post-trim).
+- All three benchmark JSONs verified `instances.length ≥ 20` (50 each) + first-instance schema spot-check.
+- `lib-benchmarks.loadBenchmark()` smoke-tested for all 3 partners with seeded sampling.
+- iter-0 prompt composition verified for all 3 partners (production + verificationGateBlock via `lib-recipe24.loadPromptForCycle`).
+
+**Deferred**:
+- **Production back-port of P1+P2 into `verificationGateBlock.ts`**: Sprint 25 produces the *evidence*; adoption is a separate ADR with its own decision-time gate (Sprint 26+ scope per ADR-082 §Out of scope).
+- **P3 escalation-script back-port**: MEDIUM transferability rating warrants small-scale single-partner validation before broader adoption.
+- **Substantive Curator port** (Sprint 24-B carry): heartbeat-driven Curator deferred again; no Sprint 25 evidence required it. Sprint 26+ scope.
+- **Sprint 24-A `Lavern —` trust-bypass cleanup**: carries forward; one-commit cleanup when convenient.
+- **LegalBench-Privacy + GitHub-SaaS-T&C supplemental loaders**: drop-order #1 active; stubs retained for reactivation if benchmark-source overfitting evidence surfaces.
+
+**Carry-forwards**:
+- **Sprint 26 should test P1+P2 back-port effectiveness**: a small-N controlled experiment on production `verificationGateBlock.ts` — apply -93 chars (P1 -62 + P2 -31), re-run Phase 3 single-partner (probably Sarah on MAUD given the highest improvement room observed), validate the cross-partner pattern claim empirically.
+- **Sprint 26 should consider relaxing the subtractive-only constraint** for partner-training-bias defects per the negative finding. One sentence acknowledging inline document context as authoritative would likely close the residual MCP-fetch NO_ANALYSIS rate.
+- **Per-partner edit selection methodology**: future iteration should run per-partner-customized, not shared edits. Diana iter-2 regression validates this.
+- **Non-trio partner coverage** (Marcus Webb / Daniel Reeves / Priya Patel / James Okafor / Helena Voss / Robert Sinclair / Thomas Schmidt): Sprint 26+ could extend Phase 3 to validate P1/P2 transferability claims empirically.
+
+**Honest scope notes**:
+- **Sanity-check gate waived**, not honored. The user's call (per ADR-082 §"Decisions to lock before execution"); the gate was over-tuned to Sprint 23's N=6 baseline noise. Iteration's own N=20 per cycle × 4 cycles × 3 partners = 240 samples provides much stronger statistical ground than the 6-sample sanity check. Documented in Phase 5 report.
+- **CUAD privacy-clause substitution**: CUAD does not include "Data_Privacy" in its 41-clause taxonomy. Diana's filter substitutes data-flow + third-party-access commercial clauses. Flagged in partner question template + NOTICE.benchmarks.md.
+- **Aisha Phase 4+5 cut deliberately skipped** because content was on-topic. Methodology refinement, not scope drop. Captured as P4 finding.
+- **Phase B judging is approximate** — per-rubric-item verdicts are coarse (PARTIAL bucket for delivering instances; full per-MAUD-axis judging not done at strict precision). The iter-1/iter-2/iter-3 distributions are honest at the delivery-vs-non-delivery level which is the actionable signal for subtractive selection.
+
+**ADRs**: 082 (one — Sprint 25 interactive iteration shape).
+
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode`):
+- `583950b80` — ADR-082 at decision time (CLAUDE.md mandate)
+- `0f9b1b5c0` — Phase 0 substrate trim (SDK deletion + run-partner-cycle.js + apply-proposal.js + README rewrite)
+- `1b611c736` — Phase 1 benchmark loaders + populated MAUD / CUAD-privacy / CUAD-saas (23,561 insertions)
+- `91d2eba84` — sanity-check.js `--docs all` wrapper bug fix
+- (close-out commit at sprint close — SPRINT_LOG + PROJECT.md Sprint Index + report)
+
+**Sibling repos**: none touched (Sprint 24-B's `oscar-document-reader-mcp` `read_document_head` already shipped at `ba283bf0d`; Sprint 25 reuses unchanged).
+
+**Total live spend**: $3.18 MiniMax (32% of $10/PCM dev-key cap). $0.00 Anthropic spend (judging in-conversation under Max subscription per ADR-082 — the headline 97% cost reduction vs Sprint 24-C's ~$52 SDK envelope).
+
+No Rust core touch. No new sibling MCP. Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
+
+---
+
 ### Sprint 24-B/C — Lavern Pipeline port + cross-partner iteration eval harness (closed 2026-05-21 on code; iteration runs → user invocation)
 
 **Goal**: combined sprint. (24-B) port Lavern's contract-analysis pipeline (Watchman classify → Reader per-clause + synthesis → Curator portfolio sweep) onto Goose's sub-recipe substrate per [[ADR-074]]; (24-C) build an Anthropic-SDK-based iteration harness applying Lavern's subtractive-edit methodology (the methodology gap Sprint 23 missed — 4-6 cycles of measurable subtractive edits, not single A/B). Pre-iteration prerequisite: extract the byte-identical 21-line verification gate (Sprint 23's broken language; Δ_grounded = -3.8pp) from 10 partner prompts into a single shared module so iteration edits one constant rather than ten copies.

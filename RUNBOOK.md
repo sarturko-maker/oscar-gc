@@ -1239,6 +1239,48 @@ The 5 benchmark stub files at `evals/oscar-llp/benchmarks/*.json` ship with `ins
 
 Lavern source unchanged at `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
 
+## Sprint 25 — Execute Sprint 24-C iteration (interactive, Max-only) (2026-05-22, lq-vps)
+
+**ADRs**: 082 (interactive iteration shape — Claude Code, not @anthropic-ai/sdk).
+
+**Host-state changes**:
+
+| Path | Purpose | Created by |
+|---|---|---|
+| `/tmp/oscar-benchmarks/` | Transient cache for MAUD + CUAD upstream zip downloads (32.9 MB + 18.3 MB; extracted to `maud/` + `cuad/` subdirs). Cleared on reboot — not persistent host state. | Manual `curl` during Phase 1 loader development; loaders re-download if path absent |
+| `evals/oscar-llp/loaders/` | New directory containing `maud-loader.js` (168 LOC) + `cuad-loader.js` (201 LOC). Tracked in git. | Sprint 25 Phase 1 |
+| `evals/oscar-llp/iterations/<partner>/iter-{0..3}/` | Per-cycle outputs (`prompt.txt`, `transcripts/<id>.log` × 20, `manifest.json`, `scores.json`, `proposal.json`, `diff-from-prior.patch`). Gitignored per-execution data. ~1.7 MB per partner ≈ 5 MB trio total. | `run-partner-cycle.js` Phase A + me-in-conversation Phase B + `apply-proposal.js` Phase C |
+| `evals/oscar-llp/iterations/_cross-partner/pattern-extraction.json` | Phase 4 cross-partner pattern output (4 patterns + 1 negative finding). Gitignored. | Me-in-conversation Phase 4 |
+| `evals/oscar-llp/iterations/_sanity-check/` | `result.json` (pass=false, drift_pp=8.1) + `FAIL.md`. Gitignored. Waived per user direction. | `sanity-check.js` |
+| `evals/oscar-llp/iterations/_costs/costs-2026-05-21.json`, `costs-2026-05-22.json` | Daily MiniMax cost logs. Gitignored. | `lib-cost-log.appendCost` |
+
+**No process daemons**, no global env-var locks, no system services added. Each cycle spawns `goose run --recipe <yaml> --no-session` 20 times serially via `spawnSync`.
+
+**New env var convention**: `SKIP_SANITY_GATE=1` bypasses the Sprint 23 baseline-drift check in `run-partner-cycle.js`'s `checkSanityGate()`. Honored per user direction after the Phase 2 sanity check FAILED the literal ±2pp gate (+4.3pp vs Sprint 23's -3.8pp baseline; drift diagnosed as Sprint 23's N=6 CI noise, not substrate change). Sprint 25 Phase 3 invocations all used this flag.
+
+**New invocations**:
+
+```bash
+# Phase 1 — populate benchmarks (one-time per sprint; ~50 MB transient downloads to /tmp/oscar-benchmarks/)
+node evals/oscar-llp/loaders/maud-loader.js
+node evals/oscar-llp/loaders/cuad-loader.js --filter privacy
+node evals/oscar-llp/loaders/cuad-loader.js --filter saas
+
+# Phase 2 — sanity check (~$0.30, ~15 min, gates Phase 3)
+node evals/oscar-llp/scripts/sanity-check.js
+
+# Phase 3 (per partner, per cycle) — Phase A spawns 20 goose runs serially (~25 min)
+MINIMAX_API_KEY=$(cat /root/.minimax-dev-key) SKIP_SANITY_GATE=1 \
+  node evals/oscar-llp/scripts/run-partner-cycle.js --partner sarah-chen --cycle 0 --sample-size 20
+
+# Phase 3C — apply the proposal me-in-conversation Phase B wrote (writes iter-<k+1>/prompt.txt + diff)
+node evals/oscar-llp/scripts/apply-proposal.js --partner sarah-chen --cycle 0
+```
+
+**Sanity-check waiver note**: per user direction 2026-05-22, `SKIP_SANITY_GATE=1` was honored for Sprint 25 Phase 3. The literal ±2pp tolerance baked into `sanity-check.js` was over-tuned to Sprint 23's N=6 sample; the +4.3pp Sprint 25 sanity result is within the original Sprint 23 95% CIs ([13.8%, 57.3%] and [20.1%, 66.8%]). Future sprints should either widen the tolerance to ±10pp or move sanity to higher-N (3 partners × 3 docs × 2 configs = 18 runs). Documented in `evals/oscar-llp/reports/sprint-25-iteration-results.md` Phase 2 section.
+
+**Total Sprint 25 spend on `/root/.minimax-dev-key`**: $3.18 (32% of $10/PCM cap). $0.00 Anthropic — judging in-conversation under Max subscription per ADR-082. Cost data persisted at `evals/oscar-llp/iterations/_costs/costs-2026-05-{21,22}.json`.
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.
