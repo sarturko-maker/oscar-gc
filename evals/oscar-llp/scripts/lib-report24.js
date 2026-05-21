@@ -1,7 +1,10 @@
-// Sprint 24-C (ADR-081): iteration trajectory report + Phase 2 extractor.
+// Sprint 25 (ADR-082): iteration trajectory + cross-partner formatter.
 // Reuses bootstrap + recall math from Sprint 23 lib-report.js where the
 // shape matches; emits a per-partner trajectory section plus a cross-
-// partner pattern table (or negative finding) at sprint close.
+// partner pattern table (or negative finding) at sprint close. Cross-
+// partner pattern data is produced by me in conversation at Phase 4 and
+// written to iterations/_cross-partner/pattern-extraction.json; this
+// module only renders the closing report from on-disk artefacts.
 
 'use strict';
 
@@ -88,14 +91,14 @@ function writeFinalReport({
   honestScopeDrops,
 }) {
   fs.mkdirSync(REPORTS_DIR, { recursive: true });
-  const reportPath = path.join(REPORTS_DIR, 'sprint-24-c-iteration-baseline.md');
+  const reportPath = path.join(REPORTS_DIR, 'sprint-25-iteration-results.md');
 
   const lines = [
-    '# Sprint 24-C — Cross-partner iteration eval baseline',
+    '# Sprint 25 — Cross-partner iteration eval results',
     '',
     `Date: ${new Date().toISOString().slice(0, 10)}`,
     `Trio: ${partnerSlugs.join(' / ')}`,
-    `Total compute spend: $${totalCostUsd.toFixed(2)} (Sprint envelope $60-100 per brief)`,
+    `Total MiniMax spend: $${totalCostUsd.toFixed(2)} (Sprint envelope ~$12 per ADR-082; judging in-conversation)`,
     '',
     '## Sanity check (Sprint 23 baseline re-run)',
     '',

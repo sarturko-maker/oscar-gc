@@ -1,6 +1,6 @@
 // Sprint 24-C (ADR-081): benchmark format adapters. Loads MAUD / CUAD /
 // LegalBench instances from local JSON files in evals/oscar-llp/benchmarks/
-// and unifies the per-partner shape used by run-iteration.js.
+// and unifies the per-partner shape used by run-partner-cycle.js.
 //
 // The local JSON files at benchmarks/<name>.json are populated separately
 // by an operator (downloading MAUD/CUAD/LegalBench from upstream sources)
