@@ -14,6 +14,95 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 24-B/C — Lavern Pipeline port + cross-partner iteration eval harness (closed 2026-05-21 on code; iteration runs → user invocation)
+
+**Goal**: combined sprint. (24-B) port Lavern's contract-analysis pipeline (Watchman classify → Reader per-clause + synthesis → Curator portfolio sweep) onto Goose's sub-recipe substrate per [[ADR-074]]; (24-C) build an Anthropic-SDK-based iteration harness applying Lavern's subtractive-edit methodology (the methodology gap Sprint 23 missed — 4-6 cycles of measurable subtractive edits, not single A/B). Pre-iteration prerequisite: extract the byte-identical 21-line verification gate (Sprint 23's broken language; Δ_grounded = -3.8pp) from 10 partner prompts into a single shared module so iteration edits one constant rather than ten copies.
+
+**Decisions resolved in plan-mode** (AskUserQuestion):
+1. **Partner trio**: Sarah Chen (M&A) / **Diana Park (Privacy — swap from Helena)** / Aisha Khan (Tech Tx). Sprint 22's substrate inline-cast Helena Voss as Privacy was a bug — production `partners.ts:73` correctly has Helena as Tax; the +33pp "Helena × Doc 1" win on Sprint 23 with-Ralph was actually on that Privacy inline-cast and is closer to Diana than to real Helena Tax. Swap preserves methodology-level continuity.
+2. **Prompt architecture**: **Hybrid 2** (extract only the byte-identical 21-line verification gate; leave Memory + Key Principles per-partner). 28% "shared" overstates the case — only 210 lines (21 × 10) sha256 1f67d064f6987ba1 across all 10 partners are genuinely identical; the rest is premature abstraction per CLAUDE.md.
+3. **Sprint scope**: both 24-B + 24-C, Curator stubbed. Pipeline shape (4 YAMLs) lands so Sprint 25 substantiates Curator by editing one YAML; eval harness lands fully with 3 cycles × 3 partners × N=20 envelope.
+
+**Architectural calls** — three ADRs at decision time, all before any code:
+- **ADR-079** (Lavern Pipeline shape): Shape P1 — declarative orchestration via parent recipe + 3 sub-recipes. Doc-head ingress via new `read_document_head` MCP tool. Curator-fires-when-doc-count≥2; Curator stubbed in 24-B / substantive in Sprint 25 (heartbeat-driven Lavern Curator doesn't translate cleanly to one-shot recipes — needs design work beyond 24-B budget).
+- **ADR-080** (precedent-board persistence): reuse `oscar-baselines-mcp` at `~/.config/oscar/state/lavern/precedents/` (per-user-per-area scope); CLAUDE.md "reuse over rebuild" — no new sibling MCP.
+- **ADR-081** (verification-gate extraction / Hybrid 2): extract byte-identical 21-line block; mirror `userIdentityBlock` + `companyContextBlock` precedent at `buildOscarLLPPartnerRecipe.ts:123-127`. Sprint 23 Δ_grounded = -3.8pp traces here; iteration in 24-C edits one constant.
+
+**Built — Sprint 24-B (pipeline)**:
+
+- **3 sub-recipe YAMLs** at `ui/desktop/sub-recipes/` (bundler picks them up via existing `prepareSubRecipes()` at `prepare-oscar-bundle.js:489-510`; zero edit needed):
+  - `lavern-watchman.yaml`: lifts Lavern's `WATCHMAN_PROMPT` from `claw/watchman.ts:39-82`; instructs the LLM to call `read_document_head(path, 1500)` first; returns the JSON shape Lavern defines. `max_turns: 4`.
+  - `lavern-reader.yaml`: 7 doc-type templates lifted from `claw/reader-templates.ts:65-191` selected via `{{document_type}}` param; per-clause loop via tool-call iteration (Goose agent loop handles the iteration; we don't write loop code); grounding pass via `oscar-grounding-verifier`. `max_turns: 32`. Optional `jurisdiction` parameter requires `default: ""` per Goose's recipe-validator (parse-failure caught on smoke test, fixed inline).
+  - `lavern-curator.yaml`: 20-line STUB per ADR-079 §Consequences. One-shot surface-decision pass; substantive Curator (consolidation + re-read queue + precedent promotion) deferred to Sprint 25.
+- **1 parent reference YAML** at `ui/desktop/sub-recipes/lavern-pipeline.yaml`: documents the canonical shape; uses relative paths (`./lavern-watchman.yaml`) per Goose's `resolve_sub_recipe_path` at `crates/goose/src/recipe/build_recipe/mod.rs:161-184` (verified relative-path resolution at sprint start).
+- **Programmatic parent** at `ui/desktop/src/components/oscar/oscar-llp/buildLavernPipelineRecipe.ts`: sibling to `buildOscarLLPPartnerRecipe.ts:96-156`; declares oscar-fs + oscar-document-reader + oscar-grounding-verifier + oscar-baselines (latter with `OSCAR_BASELINES_DIR=~/.config/oscar/state/lavern/precedents/` per ADR-080); sub-recipes inherit per ADR-074. Title prefix `Oscar LLP — Lavern Pipeline` auto-trusts via Sprint 24-A's three-way OR (no `preload.ts` edit).
+- **UI surface**: new `LavernPipelineView.tsx` (doc picker + invoke button) at `/oscar-llp/pipeline`; new card on `OscarLLPRoster.tsx:115-125` above the 10 partner cards (firm-level work — Oscar LLP's case team running a multi-stage review — sits next to partners, not separate sidebar group).
+- **IPC**: `oscar:llp:pipeline:ensure-dir` (creates `~/Documents/Oscar GC/Oscar LLP/lavern-pipeline/` + `~/.config/oscar/state/lavern/precedents/`) + `oscar:llp:pipeline:list-recent-docs`. Preload bridge under `window.electron.llp.pipeline.{ensureDir,listRecentDocs}`.
+- **Sibling MCP `oscar-document-reader-mcp` modified** (pushed SHA `ba283bf0d82ac3f88b2b61c6bbbc1e017845eb74` at `sarturko-maker/oscar-document-reader-mcp main`): added `read_document_head` tool (~30 LOC); takes `{path: string, max_chars?: number ≤ 8192}`, returns first N chars via `node:fs/promises.readFile`. Bundler picks it up automatically.
+- **Test**: `ui/desktop/scripts/test-lavern-pipeline.js`. `--parse-only` flag runs `goose run --recipe <yaml> --explain` on all 4 YAMLs (3 sub-recipes + 1 inline-synthesized parent); **4/4 PARSE OK** at sprint close. End-to-end (Phase 2) mode synthesises a single-doc pipeline YAML inline (mirrors Sprint 23 eval harness pattern), runs real MiniMax (~$0.15-0.25), asserts Watchman + Reader fire and Curator does NOT (single-doc) — deferred to user invocation (live MiniMax spend).
+
+**Built — Sprint 24-C (eval harness + Hybrid 2 refactor)**:
+
+- **Hybrid 2 refactor** (Sprint 24-C prep, executed BEFORE eval substrate):
+  - New `ui/desktop/src/components/oscar/oscar-llp/verificationGateBlock.ts` (~25 lines): exports `VERIFICATION_GATE_BLOCK: string` constant — the 21-line paragraph, verified byte-identical sha256 `1f67d064f6987ba1d2340f042ede84a2da55d6614647da6395cbc1e6aa3c9590` across all 10 partner prompts pre-refactor.
+  - `buildOscarLLPPartnerRecipe.ts:123-127`: added VERIFICATION_GATE_BLOCK as the 4th array entry alongside identity/company/partner-body (+2 lines, -1 modified). Pattern mirrors `userIdentityBlock` (Sprint 21 / ADR-071) and `companyContextBlock` (Sprint 15 / ADR-053).
+  - 10 partner prompt files lost the verification-gate tail (22 lines each — gate + preceding blank line), file footprints now 94-131 lines (well under 300-line cap).
+  - Untouched: `prompts/raw/*.ts.original` (Apache 2.0 verbatim per [[ADR-072]] + [[ADR-078]]; verification gate is Oscar-GC augmentation, never in raws); `evals/lavern-jv/scripts/lib-recipe.js` SPRINT_22_DIRECTIVE + RALPH_DIRECTIVE frozen constants per ADR-077.
+  - Smoke: `tsc --noEmit` clean on all changed files; isolated tsc per partner file pass-checks each individually.
+- **Eval harness substrate at `evals/oscar-llp/`** (8 scripts + 3 prompts + 5 benchmark stubs + README + NOTICE.benchmarks.md + package.json):
+  - `scripts/run-iteration.js`: orchestrator. Per partner × cycle: load prompt snapshot (production+gate for iter-0, or `iterations/<partner>/iter-<k-1>/prompt.txt` for k≥1) → sample N=20 instances (seeded deterministic per partner+cycle via simple LCG) → invoke real MiniMax via `goose run --recipe <yaml> --no-session` per instance → batched single Claude judge+propose call → validate proposal subtractive-only → apply removals → save iter-(k+1) snapshot + unified-diff patch.
+  - `scripts/sanity-check.js`: Sprint 23 baseline re-run gate. Sarah × 3 docs × 2 configs (N=6, ~$0.30, ~15 min). Parses new run's `REPORT.md` for `Δ_grounded`; asserts |new - (-3.8pp)| ≤ 2pp tolerance. PASS → log to `iterations/_sanity-check/result.json`; FAIL → halt + Arturs reviews.
+  - `scripts/lib-claude.js`: Anthropic SDK wrapper. `judgeAndPropose` + `extractCrossPartnerPatterns` calls. Prompt-caching on the system + judge-rubric prefixes via `cache_control: { type: 'ephemeral' }` (5-min TTL). Per-call cost logged via `lib-cost-log`. Key lookup: env `ANTHROPIC_API_KEY` then `/root/.anthropic-dev-key` (chmod 600).
+  - `scripts/lib-recipe24.js`: per-iteration partner-recipe builder. Re-exports Sprint 23 `lib-recipe.js` substrate (frozen per ADR-077); loads partner prompt from per-iteration file via `extractTemplateLiteralBody()` regex (matches `export const <name>Prompt = \`...\`;` shape); composes with `VERIFICATION_GATE_BLOCK` extracted from `verificationGateBlock.ts` for iter-0 baseline.
+  - `scripts/lib-benchmarks.js`: MAUD/CUAD/LegalBench loaders with seeded deterministic sampling. Per-partner mapping (Sarah → maud; Diana → cuad-privacy + legalbench-privacy; Aisha → cuad-saas + github-saas-tnc). DROP_CANDIDATES set marks supplemental files as `--drop-supplemental` candidates.
+  - `scripts/lib-subtractive.js`: Layer B subtractive-constraint validator. `validateRemovals` enforces all `end > start`, no overlaps, net length strictly negative, resulting prompt is strict char-subset. `applyRemovals` + `strictSubsetCheck` + `emitUnifiedDiff` for Layer C diff visualisation. Smoke-tested against synthetic input — overlap rejection, zero-diff rejection, subset check all PASS.
+  - `scripts/lib-report24.js`: iteration trajectory table + Phase 2 cross-partner pattern report. Reuses Sprint 23 `lib-report.js` bootstrap/recall math via `require()`.
+  - `scripts/lib-cost-log.js`: per-cycle token + dollar accumulator. Anthropic pricing for Opus 4.7 / Sonnet 4.6 / Haiku 4.5. MiniMax pricing approximation (refine from invoices). Daily JSON log at `iterations/_costs/costs-<date>.json` with running total.
+  - `prompts/subtractive-system.md`: Layer A constraint — verbatim Lavern "only REMOVALS, never additions/rewrites/replacements"; explicit escalation path if subtraction is genuinely insufficient.
+  - `prompts/judge-rubric.md`: per-partner judging axes (MAUD-shaped for Sarah; CUAD-privacy / LegalBench for Diana; CUAD-SaaS for Aisha) + global Oscar-GC metrics (grounded_citations, hallucination_count, verification_pass_cited, etc.).
+  - `prompts/cross-partner-extractor.md`: Phase 2 — patterns appearing in ≥2 partners; explicit `transferability: high|medium|low` rating per non-trio partner; honest-results framing (`negative_finding` shape if <2 patterns surface).
+  - 5 benchmark stub files (instances=[] until operator downloads upstream): `maud.json`, `cuad-privacy.json`, `cuad-saas.json`, `legalbench-privacy.json` (DROP CANDIDATE #2), `github-saas-tnc.json` (DROP CANDIDATE #1). Each file's `_meta` block documents license + citation + format-version + drop-order position.
+  - `package.json`: `@anthropic-ai/sdk` pinned at `0.40.1`. Dev-only deps.
+  - `NOTICE.benchmarks.md`: Atticus Project (MAUD + CUAD CC-BY-4.0) + Stanford LegalBench (MIT) attributions.
+  - `.gitignore` updated: `evals/oscar-llp/iterations/*` ignored except `.gitkeep`; mirrors Sprint 23 `lavern-jv/runs/*` pattern.
+
+**Tests**:
+- **Pipeline parse-only**: 4/4 YAMLs PARSE OK via `goose run --recipe <yaml> --explain` (parse failure on first `lavern-reader.yaml` run due to missing default on optional `jurisdiction` param — fixed inline, re-validated).
+- **Hybrid 2 refactor**: `tsc --noEmit` clean on all 11 changed files (10 partners + `buildOscarLLPPartnerRecipe.ts`); isolated tsc per partner file pass-checks each individually; `verificationGateBlock.ts` parse-checks clean.
+- **Eval harness**: all 8 scripts pass `node -c` syntax check. `lib-subtractive` validated against synthetic input. `lib-recipe24` composes production partner prompts + `VERIFICATION_GATE_BLOCK` correctly for all 3 trio members (Sarah / Diana / Aisha).
+
+**Deferred** — substantive iteration runs require live spend (Anthropic + MiniMax). User invokes per the README's pre-execution gates:
+- `/root/.anthropic-dev-key` (chmod 600). Pay-as-you-go API key required; Max subscriptions don't issue API keys.
+- `node evals/oscar-llp/scripts/sanity-check.js` PASS (Sprint 23 baseline within ±2pp).
+- `node evals/oscar-llp/scripts/run-iteration.js --all` for full trio × 4 cycles × N=20 sweep (~$52 total estimated).
+
+**Carry-forwards**:
+- **Sprint 25 substantive Curator**: edit `lavern-curator.yaml` from the 20-line stub to full surface-decision + consolidation + re-read queue + precedent promotion (per `claw/curator.ts` Lavern source). The pipeline shape is intact; Sprint 25's lift is contained.
+- **Sprint 25 Lavern— trust-bypass cleanup** (carries from 24-A): drop the dual-prefix coexistence once no live host has legacy data.
+- **Phase 2 cross-partner extraction**: only fires meaningfully after the trio's iteration cycles complete. Deferred per pre-execution-gate posture.
+- **Benchmark data ingestion**: MAUD/CUAD/LegalBench downloads + adapter loaders are not in 24-B/C scope. Operator populates `benchmarks/<name>.json` instances arrays before first iteration run. Format documented in each file's `_schema` block.
+- **Anthropic SDK Max subscription caveat**: brief mentioned "via Max subscription"; Max subscriptions don't issue API keys. Pre-execution gate documents the pay-as-you-go path. If only Max available, iteration blocks; surfaces immediately to user.
+- **Pre-existing 17 `tsc --noEmit` errors** (Sprint 22 workspace-install carry) unchanged through 24-B/C.
+
+**Honest scope notes**:
+- Parent pipeline YAML at `ui/desktop/sub-recipes/lavern-pipeline.yaml` ships as a **reference document** for the canonical shape; the actual UI runtime parent recipe is constructed programmatically by `buildLavernPipelineRecipe.ts` (mirrors Sprint 22 partner-recipe pattern — `buildOscarLLPPartnerRecipe.ts` is also programmatic, not a YAML). The test script synthesises its own parent YAML inline with resolved paths (mirrors Sprint 23 `lib-recipe.js` pattern). Minor deviation from the plan's "4 YAMLs ship" framing; the substantive shape is intact.
+- Approximate token usage in `run-iteration.js`'s MiniMax-cost accounting (4 chars per token estimate) — refine from real MiniMax invoice headers when available.
+
+**ADRs**: 079, 080, 081.
+
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode`):
+- `f300b0f09` — ADRs 079, 080, 081 at decision time (CLAUDE.md mandate)
+- `e4febabea` — Hybrid 2 refactor (verificationGateBlock + 11 file edits)
+- `fb2952971` — Lavern Pipeline (4 YAMLs + builder + view + IPC + test script)
+- `604131ac9` — eval harness substrate (`evals/oscar-llp/`)
+
+**Sibling repo** (`sarturko-maker/oscar-document-reader-mcp` `main`):
+- `ba283bf0d82ac3f88b2b61c6bbbc1e017845eb74` — `read_document_head` tool (~30 LOC; Sprint 24-B Watchman ingress)
+
+Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
+
+---
+
 ### Sprint 24-A — Lavern → Oscar LLP rebrand (closed 2026-05-21 on code)
 
 **Goal**: rebrand the 10-partner sidebar bench from "Lavern" (Sprint 21 placeholder) to "Oscar LLP" — the in-house standard for a multi-partner law-firm structure — and reserve the "Lavern" name for upstream-credit attribution on Sprint 24-B+C's contract-analysis pipeline port (Watchman → Reader → Curator; substance Lavern's own evals validated). Self-contained UI/state/path rename. No Rust core touch. No partner-content edits (Sprint 24-B+C handles content iteration). Apache 2.0 attribution preserved verbatim per §6.

@@ -1154,6 +1154,90 @@ node evals/lavern-jv/scripts/run-eval.js \
 
 No sibling repo modified. Lavern source unchanged at `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
 
+## Sprint 24-B/C — Lavern Pipeline + cross-partner iteration eval (2026-05-21, lq-vps)
+
+**ADRs**: 079 (pipeline shape Shape P1 + `read_document_head` MCP tool + Curator-fires-when-doc-count≥2 + Curator stubbed in 24-B), 080 (precedent-board persistence — reuse `oscar-baselines-mcp` at per-user-per-area scope), 081 (verification-gate extraction Hybrid 2 — byte-identical 21-line block sha256 `1f67d064f6987ba1` extracted into `verificationGateBlock.ts`).
+
+**Host-state changes**:
+
+| Path | Purpose | Created by |
+|---|---|---|
+| `~/Documents/Oscar GC/Oscar LLP/lavern-pipeline/` | User drops `.txt/.md/.pdf/.docx` documents here for pipeline analysis | `oscar:llp:pipeline:ensure-dir` IPC on first invocation of `/oscar-llp/pipeline` |
+| `~/.config/oscar/state/lavern/precedents/` | Precedent-board persistence (per-user-per-area scope per ADR-080); `oscar-baselines-mcp` writes here when invoked with `OSCAR_BASELINES_DIR=` env override | Same IPC, created adjacent to the working dir |
+
+**No process daemons**, no global env-var locks, no system services added. Pipeline invocation spawns 4 stdio MCPs (oscar-fs + oscar-document-reader + oscar-grounding-verifier + oscar-baselines) per session; same pattern as Sprint 22 Tier-A partner recipes.
+
+**New test invocations** (Sprint 24-B pipeline regression — real MiniMax):
+
+```bash
+# Parse-only (zero LLM cost) — validates all 4 YAMLs parse
+node ui/desktop/scripts/test-lavern-pipeline.js --parse-only
+
+# End-to-end (real MiniMax, ~$0.15-0.25, ~3-5 min)
+node ui/desktop/scripts/test-lavern-pipeline.js
+# Reads /srv/projects/oscar-gc-lavern/evals/lavern-jv/docs/borrowmoneycom_06_11_2020.txt
+# Asserts: delegate("watchman") fires; delegate("reader") fires; delegate("curator") does NOT (single doc)
+# Transcript: ui/desktop/tests/lavern-pipeline-transcripts/pipeline-<ts>.log
+```
+
+**Pre-execution gates for Sprint 24-C iteration eval** (user invokes when ready; not part of this sprint's code-commit close):
+
+1. **Anthropic API key**: `/root/.anthropic-dev-key` (chmod 600), env-var override `ANTHROPIC_API_KEY`. **Max subscriptions do not issue API keys** — confirm pay-as-you-go API key is available; if only Max, the harness blocks.
+2. **MiniMax dev key**: `/root/.minimax-dev-key` (Sprint 22+ carries $10/PCM dev key).
+3. **Sprint 22 regression**: `node ui/desktop/scripts/test-oscar-llp-agents.js` 3/3 PASS post-Hybrid-2 (confirms composition seam holds).
+4. **Sprint 23 sanity check**: `node evals/oscar-llp/scripts/sanity-check.js` (1 partner × 3 docs × 2 configs = N=6, ~$0.30, ~15 min). Asserts |new Δ_grounded - (-3.8pp)| ≤ 2pp tolerance. PASS logged to `evals/oscar-llp/iterations/_sanity-check/result.json`. FAIL halts.
+
+**Iteration run command** (full sprint, ~$52 estimated against $60-100 brief envelope):
+
+```bash
+cd evals/oscar-llp
+npm install                              # installs @anthropic-ai/sdk@0.40.1
+cd ../..
+node evals/oscar-llp/scripts/sanity-check.js
+node evals/oscar-llp/scripts/run-iteration.js --all
+# 3 partners × 4 cycles × N=20 partner runs = 240 MiniMax invocations
+# 12 batched Claude judge+propose calls (Opus 4.7 default; Sonnet 4.6 fallback)
+# 1 Phase 2 cross-partner extractor call
+# Output:
+#   evals/oscar-llp/iterations/<partner>/iter-<0..3>/{prompt.txt,transcripts/,scores.json,proposal.json,diff-from-prior.patch}
+#   evals/oscar-llp/iterations/_cross-partner/pattern-extraction.json
+#   evals/oscar-llp/iterations/_costs/costs-<date>.json  (running token + dollar log)
+#   evals/oscar-llp/reports/sprint-24-c-iteration-baseline.md  (final report)
+```
+
+**Drop-order** (if mid-execution scope tightens; per brief, protect 24-C eval over 24-B pipeline):
+
+```bash
+# Drop supplemental benchmarks (LegalBench-Privacy + GitHub-SaaS-T&C):
+node evals/oscar-llp/scripts/run-iteration.js --all --drop-supplemental
+
+# Reduce iteration cycles 3 → 2 per partner:
+node evals/oscar-llp/scripts/run-iteration.js --all --cycles 0..2
+
+# Single partner only (cross-partner patterns deferred):
+node evals/oscar-llp/scripts/run-iteration.js --partner sarah-chen --cycles 0..3
+
+# Phase 2 only (after iteration runs complete):
+node evals/oscar-llp/scripts/run-iteration.js --phase2-only
+```
+
+**Benchmark population** (not in 24-B/C scope — operator-driven before first iteration):
+
+The 5 benchmark stub files at `evals/oscar-llp/benchmarks/*.json` ship with `instances: []`. Each file's `_meta` block documents source + license + format; `_schema` block documents the per-instance shape (`id`, `source_doc_text`, `question`, `gold_labels[]`). Operator downloads MAUD (`https://www.atticusprojectai.org/maud`) + CUAD (HF `theatticusproject/cuad-qa`) + LegalBench (`hazyresearch.stanford.edu/legalbench/`) and runs an adapter script to populate the `instances` arrays. Adapter scripts not in Sprint 24-B/C scope.
+
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode` branch):
+
+- `f300b0f09` — ADRs 079, 080, 081 at decision time
+- `e4febabea` — Hybrid 2 refactor (verificationGateBlock + 11 file edits; -201 lines, +40 lines net)
+- `fb2952971` — Lavern Pipeline substance (4 YAMLs + builder + view + IPC + test)
+- `604131ac9` — eval harness substrate (8 scripts + 3 prompts + 5 benchmark stubs)
+
+**Sibling repo** (`sarturko-maker/oscar-document-reader-mcp` `main` branch):
+
+- `ba283bf0d82ac3f88b2b61c6bbbc1e017845eb74` — `read_document_head` tool (~30 LOC)
+
+Lavern source unchanged at `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.
