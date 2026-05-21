@@ -133,7 +133,7 @@ Aisha started strongest (80% baseline) and finished at 95% — best partner-cycl
 - `0f9b1b5c0` — Phase 0 substrate trim (SDK deletion + run-partner-cycle.js + apply-proposal.js + README rewrite)
 - `1b611c736` — Phase 1 benchmark loaders + populated MAUD / CUAD-privacy / CUAD-saas (23,561 insertions)
 - `91d2eba84` — sanity-check.js `--docs all` wrapper bug fix
-- (close-out commit at sprint close — SPRINT_LOG + PROJECT.md Sprint Index + report)
+- `0205e729e` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK / `evals/oscar-llp/reports/sprint-25-iteration-results.md` (331 insertions across 4 files)
 
 **Sibling repos**: none touched (Sprint 24-B's `oscar-document-reader-mcp` `read_document_head` already shipped at `ba283bf0d`; Sprint 25 reuses unchanged).
 
