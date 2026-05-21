@@ -14,6 +14,81 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 20-M6 — Skills upload + Forge Mode C review (closed 2026-05-21 on code; commit `ee51295e3`)
+
+**Goal**: seventh sub-sprint (M6) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Add a drop affordance to the Skills section so a lawyer can bring their own `SKILL.md`; on drop, stage to `~/.agents/skills/<slug>/SKILL.md` and auto-open Forge in **Mode C** (review + enrich + bind) with the path passed via `?reviewSkill=<absPath>`. Mode C interviews the lawyer in three short questions (when to invoke / conflicts / area binding), writes enriched frontmatter via oscar-fs, and writes area binding into `area_overrides.enabled_skills` via the same path Mode B already walks for profile.json.
+
+**Built** — one implementation commit + ADR-087 (Forge Mode C — review uploaded skill) + visual harness on lq-vps:
+
+- **Three plan-mode scope decisions locked via AskUserQuestion** (in this session): (1) drop-affordance shape = **file-drop only** (mirrors M4's `.oscar__playbooks-drop` precedent; no paste-modal); (2) Forge mode-routing fallback = **silent — Mode C only via drop** (`SYSTEM_PROMPT` holds three modes A/B/C; the activation preamble is prepended at recipe-build time only when `?reviewSkill=` is set; without the param the agent picks from the lawyer's opener and Mode C does not fire in practice); (3) profile-write path = **Forge agent via `oscar-fs__write_file`** (same path Mode B already walks at `systemPrompt.ts:86,111`; no new agent-facing IPC; `mutateEnabledSkills` helper at `main.ts:2641` left untouched). All three matched the brief's recommended defaults.
+
+- **Pre-execution surface probe** (Phase 1 Explore agents + own file reads) confirmed:
+  - `forgeRecipe.ts:72–73` already lists `~/.agents/skills` + `~/.config/oscar` as oscar-fs allowed-dirs; **no widening needed** for SKILL.md writes or profile.json writes.
+  - `systemPrompt.ts:5–129` is monolithic with agent-detected branching; Mode C slots in as a third numbered section between Mode B and "Things you never do".
+  - `ForgeView.tsx:15–87` is a transient bootstrap (create session + redirect to `/pair`); imports `useNavigate` only; M6 adds `useSearchParams` to read the query param before recipe build.
+  - `crates/goose/src/skills/mod.rs:390–415` (`discover_skills`) is re-walked on every `/config/slash_commands` call — no caching — so a freshly-staged SKILL.md surfaces on the next 2 s pane poll. No app restart required.
+  - **ADR slot taken at decision time: 087.** Master plan reserved 075 (stale post-Lavern); confirmed 087 next-free via `ls docs/adr/` before naming.
+
+- **ADR-087** (`docs/adr/087-forge-mode-c-review-uploaded-skill.md`, 50 lines): Mode C as the third numbered section in `SYSTEM_PROMPT`; deep-link entry via `#/forge?reviewSkill=<absPath>`; recipe-build-time preamble (`[Begin in Mode C. Review the SKILL.md at: <path>]`) prepended only when the param is set; profile.json writes via `oscar-fs__write_file` (mirror Mode B). Alternatives rejected: pre-session chrome with three-mode picker (adds UI ForgeView doesn't have today); mode-stripped templated prompt (brittle); M5-IPC callback for binding writes (defeats reuse pivot). Cites ADR-031 (skills on-disk convention), ADR-039 (Forge chrome), ADR-067 (`area_overrides` surface), ADR-086 (skill scoping via prompt enumeration).
+
+- **`stageUserSkill.ts`** (`ui/desktop/src/components/oscar/skills/stageUserSkill.ts`, ~115 LOC, main-process): `stageUserSkill(slugRaw, contentRaw, globalBundledSlugs)` → `{ok: true, absPath} | {ok: false, code, message}`. Five validation gates in order: `safeSlug` regex (`^[a-z0-9]+(?:-[a-z0-9]+)*$`, max 64 chars, mirrors `main.ts:1866`); slug ∉ global bundled set (defence-in-depth — pane already hides drop for bundled rows); frontmatter delimiters `---` at line 0 + closing `---` later + `name:` field between them (regex only; Goose's `serde_yaml` is the source of truth at `/config/slash_commands` call time); target SKILL.md does not already exist. Atomicity: `fs.mkdir` (recursive, ok if exists) → `fs.writeFile { flag: 'wx', mode: 0o600 }` → EEXIST on collision. Error codes: `EBADSLUG | EBUNDLED_COLLISION | EBADFRONTMATTER | EEXIST | EIO`. Mirrors M4's `oscar:playbooks:upload` atomic pattern (`main.ts:2376–2410`).
+
+- **`oscar:skills:stage-for-review` IPC** (`main.ts`, sixth in the M5 IPC block, between `:delete` and `:render-block`): calls `allBundledPlugins()` + `readBundledInventory()` to compute the global bundled set, then `stageUserSkill(slugRaw, contentRaw, globalBundled)`. Returns the same discriminated-union shape as the other skill IPCs.
+
+- **`window.electron.skills.stageForReview`** (`preload.ts`): sixth method on the existing M5 bridge. New `StageForReviewErrorCode` + `StageForReviewResult` type re-exports for the renderer.
+
+- **`SkillsSection.tsx`** drop affordance: new `.oscar__skills-drop` div with `onDrop` + `onDragOver` + click-to-browse (hidden `<input type="file" accept=".md">`), inserted between `<div class="oscar__panel-section-body">` and `<SkillsModePill>` (mirrors PlaybooksSection:180-200 placement). Slug derived from filename sans `.md`; pre-flight regex reject before IPC; IPC validates again. On success, `useNavigate` to `/forge?reviewSkill=<absPath>` (encoded). No scope picker (skills are global). `.oscar__skills-upload-error` row surfaces `EBADFRONTMATTER` / `EEXIST` / `EBUNDLED_COLLISION` inline. `aria-busy` on the drop zone during the staging window; M5's mode pill / chips / delete X all preserved verbatim.
+
+- **`forgeRecipe.ts`** signature: gains optional fourth param `reviewSkillPath?: string`. When set, prepends `[Begin in Mode C. Review the SKILL.md at: ${reviewSkillPath}]\n\n` to `SYSTEM_PROMPT` instructions. Recipe `description`, oscar-fs allowed-dirs, `available_tools`, and `settings` all unchanged.
+
+- **`ForgeView.tsx`** edits: import `useSearchParams`; read `reviewSkillPath = searchParams.get('reviewSkill') ?? undefined` after `useNavigate`; pass to `buildForgeRecipe(...)` as the fourth arg. `startedRef.current` short-circuit (line 22) gates re-entry; only the first mount value matters.
+
+- **`systemPrompt.ts`** Mode C section (new, between Mode B's step 6 and "Things you never do"): three-question interview cadence (invocation triggers → conflicts → area binding) mirroring Mode A's one-question-at-a-time + confirm-before-write pattern; step 5 writes enriched SKILL.md via `oscar-fs__write_file` (overwrite); step 6 reads + mutates + writes `practice_areas[i].area_overrides.enabled_skills` per chosen area (mode flips to `allow` if previously `all`; sorted + deduped slug list); step 7 closes with the resume-semantics caveat (next-fresh-matter-open). Line 9 intro: `**two modes**` → `**three modes**` with parenthetical about the activation preamble.
+
+- **`.oscar__skills-drop` CSS family** (`styles/main.css`): cloned from `.oscar__playbooks-drop` lines 1374–1396 — dashed cream box, copper hover, paper-edge background; `aria-busy='true'` variant adds opacity + progress cursor during the staging window; `.oscar__skills-upload-error` row mirrors `.oscar__playbooks-error` editorial register.
+
+- **Visual harness** (`ui/desktop/scripts/capture-m6.js` + `scripts/capture-m6.sh`): clone of M5's pattern with three M6-specific changes — preflightCleanup also wipes `~/.agents/skills/test-nda-review`; state (b) calls `window.electron.skills.stageForReview` directly (synthetic File objects via CDP are high-friction); state (d) fetches `/sessions/{id}.recipe.instructions` via `getGoosedHostPort` + `getSecretKey` (renderer.tsx:25–36 pattern) and asserts the activation preamble + Mode A/B/C section headers; state (e) simulates Mode C step 6 via the existing M5 IPCs (`setMode` + `toggleSlug`) — same end-state Mode C produces via oscar-fs; live agent turns deferred to M8 Crostini dogfood per Arturs's doctrine.
+
+  States captured (PNGs at `docs/screenshots/sprint-m6/`):
+  - **(a) `skills-drop-zone.png`** — `data-testid="skills-dropzone"` in DOM above the M5 mode pill on Commercial / Test MSA Renewal.
+  - **(b) `skills-staged.png`** — `stageForReview('test-nda-review', <216-byte SKILL.md>)` returns `{ok: true, absPath: '/root/.agents/skills/test-nda-review/SKILL.md'}`; disk file confirmed; pane row `[data-testid="skills-row-test-nda-review"]` visible after 3 s polled refresh.
+  - **(c) `forge-mode-c-opens.png`** — `setRoute('#/forge?reviewSkill=...')`; ForgeView redirects to `/pair?resumeSessionId=...` within ~2.5 s; chat surface mounts.
+  - **(d) `forge-mode-c-recipe-diagnostic.png`** — session metadata fetched via `getSession` route; `instructions` length 9094 chars; starts with `[Begin in Mode C. Review the SKILL.md at: /root/.agents/skills/test-nda-review/SKILL.md]\n\n`; contains all three Mode A/B/C section headers. Diagnostic overlay shows first 800 chars.
+  - **(e) `skills-bound-commercial-simulated.png`** — `setMode('commercial', 'allow')` + `toggleSlug('commercial', 'test-nda-review', true)`; profile.json shows `practice_areas[commercial].area_overrides.enabled_skills = {mode: 'allow', slugs: ['test-nda-review']}`; Privacy untouched (no `area_overrides`); Commercial chip `aria-pressed='true'`.
+  - **(f) `skills-unbound-privacy.png`** — open Privacy / Test Vendor DPA; mode pill = `all`; the user row surfaces (Goose's `discover_skills` is global) with chip `aria-disabled='true'` per M5's all-mode UI.
+
+**Verification** (in this session):
+- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0).
+- ADR-087 line count: 50 (target ≤50; on the boundary).
+- `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` succeeded.
+- Visual harness: 6 PNGs at 1440×900 with per-state console assertions all green:
+  - (a) `dropPresent=true`; sections `[MatterFacts,Skills,Playbooks,Redlining,History]`.
+  - (b) `stagedSkills=["test-nda-review"]`; `onDiskBytes=216`; `userRowPresent=true`.
+  - (c) `forgeHash` starts with `#/pair?resumeSessionId=`; `cameFromForgeWithParam=true`.
+  - (d) `instructionsLen=9094`; `hasModeC=true`; preview starts with `[Begin in Mode C. Review the SKILL.md at: /root/.agents/skills/test-nda-review/SKILL.md]`.
+  - (e) `enabledSkillsByArea={"commercial":{"mode":"allow","slugs":["test-nda-review"]}}`; `chipPressed="true"`.
+  - (f) `privacyMode="all"`; `privacyUserRow={"present":true,"chipPressed":"true","chipDisabled":"true"}`.
+- Commit-trailer hygiene per CLAUDE.md: no `Co-Authored-By` trailer on the implementation commit `ee51295e3` (verified via `git log -1 --pretty=full | grep -i co-authored` → empty).
+- No Rust touch (`git diff --stat origin/main HEAD -- crates/` empty).
+- No sibling-repo changes; no new npm dependencies.
+- `ui/pnpm-workspace.yaml` `allowBuilds:` drift left unstaged (Sprint 17b convention).
+- Parallel-session coordination: `lavern-firm-mode` at `91d2eba84` for the fifth consecutive sub-sprint drafting/close. Pre-harness probe: no Xvfb on `:99` / `:98`; Lavern's `aisha-khan --cycle 1` CLI eval running on `/tmp/oscar-llp-iter-aisha-khan-*` (separate tempdir, no shared disk surface, no Electron, no Xvfb collision). M6's `preflightCleanup` wipes `~/.config/oscar/*` + `~/.agents/skills/test-*` only — no overlap with Lavern's eval state.
+
+**Deferred** — push to `origin/main` after this close-commit lands.
+
+**Carry-forwards** (master-brief sub-sprints):
+- **M7 — Forge area-modify (Mode D)** (next). Builds on Mode B's profile.json read/modify/write AND Mode C's interview-with-confirm cadence. ADR for Zod-validated profile.json writes per master plan §M7. M7 brief draft after this close commit at `/root/.claude/plans/sprint-m7-forge-mode-d-modify-area.md`.
+- **M8 — Forge delete-area (Mode E)** + the single end-to-end Crostini dogfood per Arturs's doctrine.
+- **Walker-fork hard skill scoping** — post-master-brief.
+- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
+- **QuickChatButton "STARTING…" stuck-state** (M1 carry) still open.
+- **`pnpm-workspace.yaml` allowBuilds: drift** inherits as unstaged each session.
+- **Crostini dogfood E1 (M0 description_override) + M1/M2/M3/M4/M5/M6 visual states** wait for M8.
+
+**ADRs**: 087.
+
+---
+
 ### Sprint 20-M5 — Skills visibility + per-area scoping (closed 2026-05-21 on code; commit `0ef740ea9`)
 
 **Goal**: sixth sub-sprint (M5) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace the `PanelSectionStub` mapping for **Skills** with a real renderer: list Goose's auto-discovered skills filtered to the active area (bundled `commercial-legal` / `privacy-legal` / `ip-legal` / ... per `practiceAreas.bundled_skill_sources` × `~/.agents/skills/`); per-area allow/deny chips persist to `area_overrides.enabled_skills`; recipe builder injects a `## Skills available in this area` block followed by `Ignore any other skills you may discover` — prompt-level soft scoping.
