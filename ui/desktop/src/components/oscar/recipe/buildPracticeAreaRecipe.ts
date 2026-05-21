@@ -17,6 +17,7 @@ import type {
 } from '../hooks/useOscarProfile';
 import { renderCompanyContextBlock } from './companyContextBlock';
 import { renderPlaybooksBlock } from './renderPlaybooksBlock';
+import { renderSkillsBlock } from './renderSkillsBlock';
 
 const DEV_NODE_CMD = '/usr/bin/node';
 const DEV_OSCAR_FS_BUNDLE = '/srv/projects/goose/ui/desktop/src/resources/mcps/oscar-fs/index.js';
@@ -183,10 +184,16 @@ export async function buildPracticeAreaRecipe(
   // Sprint 20-M4 (ADR-085 Layer 1): renderer asks main process to extract
   // always-on playbooks and format the block. Bounded at 8K chars per area.
   const playbooksBlock = await renderPlaybooksBlock(opts.areaOverrides);
+  // Sprint 20-M5 (ADR-086): per-area skill scoping via prompt enumeration.
+  // Main reads area_overrides.enabled_skills + bundled inventory + user
+  // ~/.agents/skills/ and composes a `## Skills available in this area`
+  // block followed by an "Ignore any other skills" instruction.
+  const skillsBlock = await renderSkillsBlock(opts.area.id);
   const instructions = [
     companyBlock,
     areaDescriptionBlock,
     playbooksBlock,
+    skillsBlock,
     baseInstructions,
   ]
     .filter((s): s is string => Boolean(s))

@@ -9,6 +9,7 @@ import PanelSectionStub from './PanelSectionStub';
 import MatterFactsSection from './MatterFactsSection';
 import HistorySection from './HistorySection';
 import PlaybooksSection from './PlaybooksSection';
+import SkillsSection from './SkillsSection';
 
 export const PANEL_SECTION_IDS = [
   'MatterFacts',
@@ -36,7 +37,7 @@ interface SectionMeta {
 export const SECTION_META: Record<PanelSectionId, SectionMeta> = {
   MatterFacts: { title: 'Matter Facts' },
   ProgrammeFacts: { title: 'Programme Facts' },
-  Skills: { title: 'Skills', comingIn: 'M5' },
+  Skills: { title: 'Skills' },
   Playbooks: { title: 'Playbooks' },
   Redlining: { title: 'Redlining', comingIn: 'soon' },
   Forum: { title: 'Forum', comingIn: 'soon' },
@@ -54,7 +55,7 @@ export const sectionRegistry: Record<
 > = {
   MatterFacts: MatterFactsSection,
   ProgrammeFacts: MatterFactsSection,
-  Skills: PanelSectionStub,
+  Skills: SkillsSection,
   Playbooks: PlaybooksSection,
   Redlining: PanelSectionStub,
   Forum: PanelSectionStub,

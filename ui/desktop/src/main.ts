@@ -48,7 +48,7 @@ import {
 import { UPDATES_ENABLED } from './updates';
 import './utils/recipeHash';
 import { Client } from './api/client';
-import { GooseApp } from './api';
+import { type GooseApp, getSlashCommands } from './api';
 import * as mesh from './mesh';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { BLOCKED_PROTOCOLS, WEB_PROTOCOLS } from './utils/urlSecurity';
@@ -1814,6 +1814,18 @@ import {
   type PlaybookScope,
 } from './components/oscar/playbooks/playbookStore';
 import { findGoosedBinaryPath } from './goosed';
+import {
+  deleteUserSkillDir,
+  joinSkills,
+  readBundledInventory,
+  readUserSkillSlugs,
+  renderSkillsBlockMarkdown,
+  resolveEnabledSlugs,
+  type SkillMode,
+  type SkillSlashCommand,
+  type SkillsListResult,
+} from './components/oscar/skills/skillStore';
+import { PRACTICE_AREAS } from './components/oscar/practiceAreas';
 
 const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
 const OSCAR_DOCUMENTS_DIR = path.join(os.homedir(), 'Documents', 'Oscar GC');
@@ -2271,6 +2283,7 @@ interface ProfileShape {
     id: string;
     area_overrides?: {
       playbooks?: { always_on?: string[]; on_demand?: string[] };
+      enabled_skills?: { mode?: string; slugs?: string[] };
     } & Record<string, unknown>;
   } & Record<string, unknown>>;
 }
@@ -2560,6 +2573,273 @@ ipcMain.handle(
 
 // Suppress unused-import lint for narrow helpers used only by typed handlers.
 void isPlaybookAllowedExt;
+
+// Sprint 20-M5 (ADR-086): skills visibility + per-area scoping. Five
+// handlers mirror the M4 right-pane shape — list, set-mode, toggle-slug,
+// delete, render-block (the recipe-build-time prompt-enumeration helper).
+//
+// Skill name + description come from goosed's existing
+// GET /config/slash_commands (CommandType === 'Skill'); the bundled-vs-user
+// discrimination joins against fs.readdir of
+// <inHouseLegalRoot>/<plugin>/skills/ and ~/.agents/skills/. No YAML parser
+// (Goose did it server-side via serde_yaml); no new npm dep. Mirrors M4's
+// computercontroller-reuse pivot.
+
+const safeSkillMode = (raw: unknown): SkillMode | null => {
+  if (raw === 'all' || raw === 'allow' || raw === 'deny') return raw;
+  return null;
+};
+
+const bundledSourcesForArea = (areaId: string): readonly string[] => {
+  const entry = PRACTICE_AREAS.find((a) => a.id === areaId);
+  return entry?.bundled_skill_sources ?? [];
+};
+
+const allBundledPlugins = (): readonly string[] => {
+  const set = new Set<string>();
+  for (const a of PRACTICE_AREAS) {
+    for (const p of a.bundled_skill_sources ?? []) set.add(p);
+  }
+  return Array.from(set);
+};
+
+async function fetchSkillSlashCommands(
+  client: Client | null,
+): Promise<SkillSlashCommand[]> {
+  if (!client) return [];
+  try {
+    const resp = await getSlashCommands({
+      client,
+      query: { working_dir: os.homedir() },
+      throwOnError: true,
+    });
+    const commands = resp.data?.commands ?? [];
+    return commands as SkillSlashCommand[];
+  } catch (err) {
+    log.warn('oscar:skills slash_commands fetch failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return [];
+  }
+}
+
+function readEnabledSkillsOverride(
+  profile: ProfileShape | null,
+  areaId: string,
+): { mode: SkillMode; slugs: string[] } {
+  const area = profile?.practice_areas?.find((a) => a.id === areaId);
+  const override = area?.area_overrides?.enabled_skills;
+  const rawMode = override?.mode;
+  const mode: SkillMode =
+    rawMode === 'allow' || rawMode === 'deny' ? rawMode : 'all';
+  const slugs = Array.isArray(override?.slugs)
+    ? (override?.slugs as string[]).filter((s) => typeof s === 'string')
+    : [];
+  return { mode, slugs };
+}
+
+async function mutateEnabledSkills(
+  areaId: string,
+  mutator: (current: { mode: SkillMode; slugs: string[] }) => {
+    mode: SkillMode;
+    slugs: string[];
+  },
+): Promise<{ mode: SkillMode; slugs: string[] }> {
+  const profile = await readProfileFile();
+  if (!profile) throw new Error('profile.json not found');
+  const areas = profile.practice_areas ?? [];
+  const idx = areas.findIndex((a) => a.id === areaId);
+  if (idx < 0) throw new Error(`area ${areaId} not in profile`);
+  const area = areas[idx];
+  const overrides = area.area_overrides ?? {};
+  const current = readEnabledSkillsOverride(profile, areaId);
+  const next = mutator(current);
+  const newProfile: ProfileShape = {
+    ...profile,
+    practice_areas: [
+      ...areas.slice(0, idx),
+      {
+        ...area,
+        area_overrides: {
+          ...overrides,
+          enabled_skills: { mode: next.mode, slugs: next.slugs },
+        },
+      },
+      ...areas.slice(idx + 1),
+    ],
+  };
+  await writeProfileFile(newProfile);
+  return next;
+}
+
+ipcMain.handle(
+  'oscar:skills:list',
+  async (event, areaIdRaw: unknown): Promise<SkillsListResult> => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return { mode: 'all', skills: [] };
+    const profile = await readProfileFile();
+    const { mode, slugs } = readEnabledSkillsOverride(profile, areaId);
+    const windowId = BrowserWindow.fromWebContents(event.sender)?.id;
+    const client = windowId ? (goosedClients.get(windowId) ?? null) : null;
+    const slashCommands = await fetchSkillSlashCommands(client);
+    const root = inHouseLegalRoot();
+    const areaBundled = await readBundledInventory(
+      root,
+      bundledSourcesForArea(areaId),
+    );
+    const userSkills = await readUserSkillSlugs();
+    const skills = joinSkills(slashCommands, areaBundled, userSkills, mode, slugs);
+    return { mode, skills };
+  },
+);
+
+ipcMain.handle(
+  'oscar:skills:set-mode',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    modeRaw: unknown,
+  ): Promise<
+    { ok: true; mode: SkillMode } | { ok: false; code: string; message: string }
+  > => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return { ok: false, code: 'EBADAREA', message: 'Invalid area id' };
+    const mode = safeSkillMode(modeRaw);
+    if (!mode) return { ok: false, code: 'EBADMODE', message: 'Invalid skill mode' };
+    try {
+      const next = await mutateEnabledSkills(areaId, (current) => ({
+        mode,
+        slugs: current.slugs,
+      }));
+      return { ok: true, mode: next.mode };
+    } catch (err) {
+      return {
+        ok: false,
+        code: 'EWRITE',
+        message: errorMessage(err, 'Profile write failed'),
+      };
+    }
+  },
+);
+
+ipcMain.handle(
+  'oscar:skills:toggle-slug',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    slugRaw: unknown,
+    includedRaw: unknown,
+  ): Promise<
+    | { ok: true; slugs: string[] }
+    | { ok: false; code: string; message: string }
+  > => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return { ok: false, code: 'EBADAREA', message: 'Invalid area id' };
+    const slug = safeSlug(slugRaw);
+    if (!slug) return { ok: false, code: 'EBADSLUG', message: 'Invalid skill slug' };
+    const included = includedRaw === true;
+    try {
+      const next = await mutateEnabledSkills(areaId, (current) => {
+        const set = new Set(current.slugs);
+        if (included) set.add(slug);
+        else set.delete(slug);
+        return { mode: current.mode, slugs: Array.from(set).sort() };
+      });
+      return { ok: true, slugs: next.slugs };
+    } catch (err) {
+      return {
+        ok: false,
+        code: 'EWRITE',
+        message: errorMessage(err, 'Profile write failed'),
+      };
+    }
+  },
+);
+
+ipcMain.handle(
+  'oscar:skills:delete',
+  async (
+    _event,
+    _areaIdRaw: unknown,
+    slugRaw: unknown,
+  ): Promise<{ ok: true } | { ok: false; code: string; message: string }> => {
+    const slug = safeSlug(slugRaw);
+    if (!slug) return { ok: false, code: 'EBADSLUG', message: 'Invalid skill slug' };
+    const root = inHouseLegalRoot();
+    const globalBundled = await readBundledInventory(root, allBundledPlugins());
+    const result = await deleteUserSkillDir(slug, globalBundled);
+    if (!result.ok) {
+      return {
+        ok: false,
+        code: result.code ?? 'EIO',
+        message: result.message ?? 'Delete failed',
+      };
+    }
+    // Cross-area scrub: drop the slug from every area's
+    // enabled_skills.slugs so deletion doesn't leave dangling references.
+    const profile = await readProfileFile();
+    if (profile?.practice_areas) {
+      let mutated = false;
+      const nextProfile: ProfileShape = {
+        ...profile,
+        practice_areas: profile.practice_areas.map((a) => {
+          const list = a.area_overrides?.enabled_skills?.slugs ?? [];
+          if (!list.includes(slug)) return a;
+          mutated = true;
+          const overrides = a.area_overrides ?? {};
+          const prev = overrides.enabled_skills ?? { mode: 'all', slugs: [] };
+          return {
+            ...a,
+            area_overrides: {
+              ...overrides,
+              enabled_skills: {
+                mode: prev.mode,
+                slugs: list.filter((s) => s !== slug),
+              },
+            },
+          };
+        }),
+      };
+      if (mutated) await writeProfileFile(nextProfile);
+    }
+    return { ok: true };
+  },
+);
+
+ipcMain.handle(
+  'oscar:skills:render-block',
+  async (event, areaIdRaw: unknown): Promise<string | null> => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return null;
+    try {
+      const profile = await readProfileFile();
+      const { mode, slugs } = readEnabledSkillsOverride(profile, areaId);
+      const windowId = BrowserWindow.fromWebContents(event.sender)?.id;
+      const client = windowId ? (goosedClients.get(windowId) ?? null) : null;
+      const slashCommands = await fetchSkillSlashCommands(client);
+      const root = inHouseLegalRoot();
+      const areaBundled = await readBundledInventory(
+        root,
+        bundledSourcesForArea(areaId),
+      );
+      const userSkills = await readUserSkillSlugs();
+      const joined = joinSkills(
+        slashCommands,
+        areaBundled,
+        userSkills,
+        mode,
+        slugs,
+      );
+      const allowed = resolveEnabledSlugs(joined);
+      return renderSkillsBlockMarkdown(allowed);
+    } catch (err) {
+      log.warn('oscar:skills:render-block failed', {
+        err: errorMessage(err, 'Unknown error'),
+      });
+      return null;
+    }
+  },
+);
 
 // Sprint 17 (ADR-059, ADR-061): Integrations registry + per-area state.
 // Vendor data read from skills/in-house-legal/<plugin>/.mcp.json files

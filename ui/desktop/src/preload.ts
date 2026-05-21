@@ -318,6 +318,33 @@ type ElectronAPI = {
       charCap: number,
     ) => Promise<string | null>;
   };
+  // Sprint 20-M5 (ADR-086): skills visibility + per-area scoping. List /
+  // setMode / toggleSlug drive SkillsSection (right pane); renderBlock is
+  // the recipe-builder's prompt-enumeration helper (returns the `## Skills
+  // available in this area` block or null when no slugs resolve).
+  skills: {
+    list: (areaId: string) => Promise<SkillsListResult>;
+    setMode: (
+      areaId: string,
+      mode: SkillMode,
+    ) => Promise<
+      | { ok: true; mode: SkillMode }
+      | { ok: false; code: string; message: string }
+    >;
+    toggleSlug: (
+      areaId: string,
+      slug: string,
+      included: boolean,
+    ) => Promise<
+      | { ok: true; slugs: string[] }
+      | { ok: false; code: string; message: string }
+    >;
+    delete: (
+      areaId: string,
+      slug: string,
+    ) => Promise<{ ok: true } | { ok: false; code: string; message: string }>;
+    renderBlock: (areaId: string) => Promise<string | null>;
+  };
 };
 
 export interface PlaybookEntry {
@@ -336,6 +363,22 @@ export type UploadResult =
 export type ToggleAlwaysOnResult =
   | { ok: true; alwaysOn: boolean; budgetCap: number }
   | { ok: false; code: string; message: string; extractedLength?: number; cap?: number };
+
+export type SkillMode = 'all' | 'allow' | 'deny';
+
+export interface SkillEntry {
+  slug: string;
+  name: string;
+  description: string;
+  source: 'bundled' | 'user';
+  bundled: boolean;
+  enabled: boolean;
+}
+
+export interface SkillsListResult {
+  mode: SkillMode;
+  skills: SkillEntry[];
+}
 
 type AppConfigAPI = {
   get: (key: string) => unknown;
@@ -554,6 +597,17 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.invoke('oscar:playbooks:delete', areaId, relPath),
     renderBlock: (relPaths: readonly string[], charCap: number) =>
       ipcRenderer.invoke('oscar:playbooks:render-block', relPaths, charCap),
+  },
+  skills: {
+    list: (areaId: string) => ipcRenderer.invoke('oscar:skills:list', areaId),
+    setMode: (areaId: string, mode: SkillMode) =>
+      ipcRenderer.invoke('oscar:skills:set-mode', areaId, mode),
+    toggleSlug: (areaId: string, slug: string, included: boolean) =>
+      ipcRenderer.invoke('oscar:skills:toggle-slug', areaId, slug, included),
+    delete: (areaId: string, slug: string) =>
+      ipcRenderer.invoke('oscar:skills:delete', areaId, slug),
+    renderBlock: (areaId: string) =>
+      ipcRenderer.invoke('oscar:skills:render-block', areaId),
   },
 };
 
