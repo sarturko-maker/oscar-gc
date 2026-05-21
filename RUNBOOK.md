@@ -1231,6 +1231,7 @@ The 5 benchmark stub files at `evals/oscar-llp/benchmarks/*.json` ship with `ins
 - `e4febabea` — Hybrid 2 refactor (verificationGateBlock + 11 file edits; -201 lines, +40 lines net)
 - `fb2952971` — Lavern Pipeline substance (4 YAMLs + builder + view + IPC + test)
 - `604131ac9` — eval harness substrate (8 scripts + 3 prompts + 5 benchmark stubs)
+- `9b84eb9a3` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK
 
 **Sibling repo** (`sarturko-maker/oscar-document-reader-mcp` `main` branch):
 

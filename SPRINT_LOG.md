@@ -95,6 +95,7 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 - `e4febabea` — Hybrid 2 refactor (verificationGateBlock + 11 file edits)
 - `fb2952971` — Lavern Pipeline (4 YAMLs + builder + view + IPC + test script)
 - `604131ac9` — eval harness substrate (`evals/oscar-llp/`)
+- `9b84eb9a3` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK
 
 **Sibling repo** (`sarturko-maker/oscar-document-reader-mcp` `main`):
 - `ba283bf0d82ac3f88b2b61c6bbbc1e017845eb74` — `read_document_head` tool (~30 LOC; Sprint 24-B Watchman ingress)
