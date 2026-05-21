@@ -106,10 +106,9 @@ docs/sprint-15/eval/**/recipe-*.json
 evals/lavern-jv/runs/*
 !evals/lavern-jv/runs/.gitkeep
 
-# Sprint 24-C (ADR-081) — per-iteration outputs (transcripts, scores,
-# proposals, prompt snapshots, cost log). The curated closing report at
-# evals/oscar-llp/reports/sprint-24-c-iteration-baseline.md is checked in;
-# everything under iterations/ is per-execution.
+# Oscar LLP iteration eval — per-execution outputs (transcripts, scores,
+# proposals, prompt snapshots, cost log). Curated closing reports under
+# evals/oscar-llp/reports/ are checked in; everything under iterations/
+# is per-execution and reproducible from the seeded loaders.
 evals/oscar-llp/iterations/*
 !evals/oscar-llp/iterations/.gitkeep
-evals/oscar-llp/scripts/node_modules/
