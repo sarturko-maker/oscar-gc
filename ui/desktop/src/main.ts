@@ -1829,6 +1829,7 @@ import {
   stageUserSkill,
   type StageUserSkillResult,
 } from './components/oscar/skills/stageUserSkill';
+import { startProfileWriteWatcher } from './components/oscar/forge/profileWriteWatcher';
 import { PRACTICE_AREAS } from './components/oscar/practiceAreas';
 
 const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
@@ -2279,6 +2280,9 @@ ipcMain.handle(
 // touch area_overrides.playbooks.always_on additively.
 
 const OSCAR_PROFILE_PATH = path.join(os.homedir(), '.config', 'oscar', 'profile.json');
+// Sprint 20-M7 (ADR-089): the watcher's rollback target — refreshed on
+// every validated write; restored over profile.json on a rejected one.
+const OSCAR_PROFILE_BACKUP_PATH = `${OSCAR_PROFILE_PATH}.bak`;
 const PLAYBOOKS_ALWAYS_ON_CAP = 8000;
 
 interface ProfileShape {
@@ -3515,6 +3519,15 @@ async function appMain() {
   await ensureWinShims();
 
   registerUpdateIpcHandlers();
+
+  // Sprint 20-M7 (ADR-089): start the defence-in-depth validator for
+  // profile.json writes. Watches the parent directory (so it survives the
+  // pre-onboarding case where profile.json doesn't yet exist) and reverts
+  // any write whose area_overrides shape fails the local Zod schema.
+  startProfileWriteWatcher({
+    profilePath: OSCAR_PROFILE_PATH,
+    backupPath: OSCAR_PROFILE_BACKUP_PATH,
+  });
 
   // Handle microphone permission requests
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {

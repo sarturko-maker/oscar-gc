@@ -3,10 +3,13 @@
 // driven by the resolved `sections` list (override ?? shape default).
 // Sprint 20-M3 (ADR-083): ambient matter coords (areaId / slug / sessionId)
 // flow through RightPaneProvider so section bodies don't each re-lookup.
+// Sprint 20-M7 (ADR-088): per-area Edit link in the header deep-links to
+// Forge with ?modifyArea=<areaId>; mirrors M6's ?reviewSkill= precedent.
 // AppLayout owns the width drag state and visibility resolution; this
 // component owns chrome + composition rendering only.
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { RightPaneProvider } from './RightPaneContext';
 import {
   sectionRegistry,
@@ -43,6 +46,16 @@ export default function RightPaneShell({
           <span className="oscar__eyebrow oscar__eyebrow--bare oscar__right-pane-title">
             Loadout
           </span>
+        )}
+        {isExpanded && areaId && (
+          <Link
+            to={`/forge?modifyArea=${encodeURIComponent(areaId)}`}
+            className="oscar__right-pane-edit-link"
+            data-testid="right-pane-edit-link"
+            title="Modify this practice area in Forge"
+          >
+            Edit
+          </Link>
         )}
         <button
           type="button"

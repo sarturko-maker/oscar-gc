@@ -1191,6 +1191,28 @@ pre:has(> code.bg-inline-code) {
      skips the trailing rule because the header already carries a border. */
 }
 
+/* Sprint 20-M7 (ADR-088): per-area Edit link sits between the Loadout
+   eyebrow and the toggle chevron. Subtle mono italic copper; tiny so it
+   sits below the eyebrow weight but stays readable as an affordance. */
+.oscar__right-pane-edit-link {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 10px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  text-decoration: none;
+  padding: 2px 6px;
+  margin-left: auto;
+  margin-right: 8px;
+  transition: color 120ms ease;
+}
+
+.oscar__right-pane-edit-link:hover {
+  color: var(--copper);
+  text-decoration: underline;
+}
+
 .oscar__right-pane-toggle {
   background: transparent;
   border: none;

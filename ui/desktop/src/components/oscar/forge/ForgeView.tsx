@@ -19,6 +19,10 @@ export default function ForgeView() {
   // affordance. When present, threads through to buildForgeRecipe which
   // prepends a Mode-C activation preamble to SYSTEM_PROMPT.
   const reviewSkillPath = searchParams.get('reviewSkill') ?? undefined;
+  // Sprint 20-M7 (ADR-088): deep-link entry from RightPaneShell's Edit
+  // link. When present, threads through to buildForgeRecipe which prepends
+  // a Mode-D activation preamble naming the area to modify.
+  const modifyAreaId = searchParams.get('modifyArea') ?? undefined;
   const { extensionsList } = useConfig();
   const [error, setError] = useState<string | null>(null);
   const startedRef = useRef(false);
@@ -46,6 +50,7 @@ export default function ForgeView() {
           window.electron.oscarResourcesRoot,
           enabledPlatformExtensions,
           reviewSkillPath,
+          modifyAreaId,
         );
         const session = await createSession(homeDir, { recipe });
         if (cancelled) return;

@@ -72,13 +72,20 @@ export function buildForgeRecipe(
   // to SYSTEM_PROMPT. Threaded in from ForgeView via the ?reviewSkill=
   // query param the drop affordance writes on stage-success.
   reviewSkillPath?: string,
+  // Sprint 20-M7 (ADR-088): when set, prepends a Mode-D activation preamble.
+  // Threaded in from ForgeView via the ?modifyArea= query param the right-
+  // pane Edit link writes. reviewSkillPath takes precedence if both are set
+  // (the deep-link shapes are mutually exclusive in the UI today).
+  modifyAreaId?: string,
 ): Recipe {
   const skillsDir = `${homeDir}/.agents/skills`;
   const oscarConfigDir = `${homeDir}/.config/oscar`;
   const platforms = ensureForgePlatforms(enabledPlatformExtensions);
   const preamble = reviewSkillPath
     ? `[Begin in Mode C. Review the SKILL.md at: ${reviewSkillPath}]\n\n`
-    : '';
+    : modifyAreaId
+      ? `[Begin in Mode D. Modify the practice area: ${modifyAreaId}]\n\n`
+      : '';
 
   return {
     version: '1.0.0',

@@ -162,10 +162,22 @@ export default function MattersLanding({ area }: MattersLandingProps) {
       // Sprint 17 (ADR-061): merge lawyer-added integrations into the
       // recipe's extension array. Unknown ids and bundled-tier entries
       // resolve to null in buildExtensionFromIntegration and are dropped.
+      // Sprint 20-M7 (ADR-088): area_overrides.enabled_mcps filters the
+      // installed set per area. 'allow' keeps only the listed ids;
+      // 'deny' drops them; 'all' or absent → no filter (Sprint 18
+      // permissive-default loadout doctrine).
       const installed = await window.electron.integrations.list(area.id);
       const trustedInstalled = installed.filter((i) => i.trust_acknowledged);
+      const enabledMcps = areaOverrides?.enabled_mcps;
+      const scopedInstalled = enabledMcps
+        ? trustedInstalled.filter((i) => {
+            if (enabledMcps.mode === 'allow') return enabledMcps.ids.includes(i.id);
+            if (enabledMcps.mode === 'deny') return !enabledMcps.ids.includes(i.id);
+            return true;
+          })
+        : trustedInstalled;
       const installedConfigsRaw = await Promise.all(
-        trustedInstalled.map((i) => buildExtensionFromIntegration(i.id)),
+        scopedInstalled.map((i) => buildExtensionFromIntegration(i.id)),
       );
       const installedConfigs: NonNullable<Recipe['extensions']> =
         installedConfigsRaw.filter(
