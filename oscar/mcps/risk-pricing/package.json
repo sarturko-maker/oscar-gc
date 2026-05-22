@@ -1,0 +1,31 @@
+{
+  "name": "oscar-risk-pricing-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Clause-risk benchmarking MCP for Oscar GC's Lavern partners. Net-new (NOT a lift): Lavern's risk-pricing.ts is orchestration scaffolding around a subagent, not substantive pricing. This MCP exposes assess_clause_risk + list_clause_benchmarks against a hardcoded benchmark table seeded with mid-market US norms for common clause types. Sprint 22 placeholder; future sprints widen the benchmark distribution.",
+  "license": "Apache-2.0",
+  "author": "s-arturko",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oscar-risk-pricing-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "smoke": "node ./smoke.mjs",
+    "test": "node ./tests/integration.test.mjs",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@0.21.2 node ./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "=1.29.0",
+    "zod": "=4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "=25.8.0",
+    "typescript": "=6.0.3"
+  }
+}
