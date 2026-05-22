@@ -14,6 +14,57 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 27 — Per-partner conversation history on the Oscar LLP roster (closed 2026-05-22 on code)
+
+**Goal**: Evolve the `/oscar-llp` partner roster from one-bound-session-per-partner to multiple-sessions-per-partner. The Sprint 21 Crostini dogfood (Arturs, 2026-05-20) surfaced this as the load-bearing UX gap: "I want multiple sessions per partner. Right now clicking Sarah Chen always opens the same conversation. History should be on the Oscar LLP screen." No sidebar tree extension, no right-pane bolt-on, no Rust touch, no `main` rebase.
+
+**Decisions resolved in plan-mode** (AskUserQuestion):
+1. **Roster layout**: sessions inline per partner card (cap 5 visible, scrollable beyond) — not partner-detail page, not expand-in-place.
+2. **Click-on-card semantics**: resume `sessions[0]` (most-recent); preserves Sprint 21 muscle memory. "+ New chat" is the explicit fresh-session affordance. Session row click resumes that specific session.
+3. **Migration shape**: lazy at read-time. v1 `{session_id: "X"}` synthesizes v2 `{sessions: [{id: "X", label: "(legacy)"}]}`; mirrors ADR-078's Lavern → Oscar LLP read-time `fs.rename` precedent.
+
+**Built**:
+
+- **ADR-092** (`docs/adr/092-sprint27-multi-session-per-partner.md`, 55 lines, decision-time per CLAUDE.md): captures schema v1→v2 bump, lazy read-time migration, click semantics, atomic-write upgrade, out-of-scope flags. Committed standalone before any code change in commit `e63f15fb7`. Companion to [[ADR-071]] (Lavern firm-mode structural decision) and [[ADR-078]] (migration pattern Sprint 27 mirrors). ADR slot check at decision time: local max 090, origin/main max 091 → 092 next-free.
+- **Schema v2 + IPC handlers** (`ui/desktop/src/main.ts` ~2210-2380 region): `OscarLLPPartnerState` interface bumped to `{ sessions: OscarLLPSessionEntry[] }`; `readOscarLlpRegistry` gains per-entry shape check — v2 `Array.isArray(v.sessions)` path with dedupe-by-id; v1 `typeof v.session_id === 'string'` path synthesizes `{ sessions: [{ id, label: '(legacy)' }] }`; v1-with-null-session_id silently drops. `writeOscarLlpRegistry` upgraded from direct `fs.writeFile` to `.tmp + fs.rename` (interrupt-safety floor). `oscar:llp:bind-session` now accepts optional label and PREPENDS to `sessions[]` (dedupe-by-id; defensive). New `oscar:llp:unbind-session` reserved for a future "delete partner session" UI — not consumed in Sprint 27 but kept in the IPC surface while we were in the file.
+- **Preload bridge** (`ui/desktop/src/preload.ts` ~265-300, ~520-540 regions): `bindSession` signature gains optional `label`; new `unbindSession` method; `lookupState` + `listPartnerStates` return types reshaped for the array-of-sessions value shape.
+- **Hook reshape** (`ui/desktop/src/components/oscar/oscar-llp/useOscarLLPPartners.ts`, ~110 lines): now joins `listPartnerStates()` (partners.json — ordering authority + label override) with `listSessions()` (goosed — metadata authority). For each partner, walks `state.sessions[]`, looks up the goosed `Session` by id, skips if missing (deleted out-of-band), produces `OscarLLPSessionRow[{id, label, name, created_at, updated_at, user_set_name}]`. Sorted by `Session.updated_at DESC` (matches `useChatHistory` matters precedent). Subscribes to SESSION_CREATED|DELETED|RENAMED|FORKED for live refresh.
+- **Roster UI evolution** (`ui/desktop/src/components/oscar/oscar-llp/OscarLLPRoster.tsx`, 180 → 231 lines): per-partner card grows an inline `oscar__llp-sessions` block under the partner header containing "+ New chat with <Name>" button at top, then up to 5 session rows (id + relative-date), then "…N more" overflow annotation if `sessions.length > 5`. Three handlers: `openCard(row)` resumes `sessions[0]` (or falls through to `newChat` if empty / session deleted server-side); `newChat(partner)` always builds a fresh recipe via `buildOscarLLPPartnerRecipe` + `createSession` + `bindSession` (prepend); `resumeSession(partner, session)` verifies the session still exists via `getSession({throwOnError: false})` then dispatches `ADD_ACTIVE_SESSION` + navigates. Common `provisionPartnerDir` + `navigateToSession` helpers factor the shared `matters.detachActive() → llp.ensureDir() → CustomEvent + navigate` dance. Label fallback chain: `partners.json` user-set label → goosed `Session.name` → `Session <date>`. `formatRelative` ported inline from `ChatHistorySearch.tsx:41-54` (just now / Nm / Nh / Nd / Mon D — CLAUDE.md "no premature abstraction").
+- **CSS additions** (`ui/desktop/src/styles/main.css` ~1872 region): new `.oscar__llp-*` family — `oscar__llp-card` wrapper removes the partner-row's bottom border so the session block becomes the bottom delimiter; `.oscar__llp-sessions` block left-indented under the header with 24px padding; `.oscar__llp-new-chat` copper-mono action affordance; `.oscar__llp-session-row` 12px italic faded-ink (matches Sprint 19b matter-row visual treatment); `.oscar__llp-session-time` mono uppercase; `.oscar__llp-overflow` faint mono.
+- **Verification**:
+  - `tsc --noEmit` baseline 17 errors pre-change (all pre-existing — missing `@radix-ui/*` typedefs, `yaml` import, `@testing-library/dom` testdef, implicit-any in `BottomMenuExtensionSelection.tsx` / `DictationSettings.tsx` / etc.). Post-change identical 17 errors — **zero net new TS errors** from Sprint 27. Verified by `git stash --keep-index` + tsc + `git stash pop`.
+  - `eslint --quiet` clean on `src/components/oscar/oscar-llp/`, `src/main.ts`, `src/preload.ts`.
+  - **Sprint 22 smoke** (`test-oscar-llp-agents.js`) **3/3 PASS** on real MiniMax against the post-change codebase (Sarah Chen 21.6s + Helena Voss 21.4s + Aisha Khan 23.9s; each invoked the expected Tier-A MCP + verification-pass sub-recipe). Composition seam unbroken — Sprint 27 doesn't touch the recipe builder, prompts, sub-recipes, or verification gate so this was the expected outcome but it confirms the cross-cutting integration. ~$0.04 MiniMax spend.
+
+**v1 fixture verification dropped** per plan drop-order #2: `ls ~/.config/oscar/state/oscar-llp/partners.json` on lq-vps returned no file (no live v1 data on this host). Sprint 21 was the only sprint that wrote it; live hosts that opened a partner session under Sprint 21-26 will exercise the migration path when they upgrade to a Sprint 27 build. Arturs's Crostini dogfood is the right validation surface; carry to Sprint 27b if any v1 data exists on that host. The migration logic is small enough (single `Array.isArray(v.sessions)` vs `typeof v.session_id === 'string'` per-entry switch) that static reasoning + the smoke gate carries adequate confidence.
+
+**Architectural sanity-check** — Sprint 27 stayed inside `ui/desktop/src/` (TypeScript + CSS) and `docs/adr/`. No `crates/` touch; no sibling MCP repo touched (`oscar-memory-mcp`, `oscar-onboarding-mcp`, `oscar-baselines-mcp`, `oscar-knowledge-base-mcp`, `oscar-document-reader-mcp`, `oscar-grounding-verifier-mcp`, `oscar-risk-pricing-mcp`, `oscar-document-checks-mcp` all untouched). No `main` rebase. The work is one ADR + five files modified + roster CSS — comparable to Sprint 19b's surgical-fix shape.
+
+**Deferred**:
+
+- **Crostini dogfood iteration** (E2–E4 in plan: v1 fixture exercise + click-resume-most-recent + click-+-new-chat + click-session-row): defers to Sprint 27b unless Arturs opens a verification window. The .deb build pipeline is intact from Sprint 17b; lq-vps build/install cycle is mechanical.
+- **Editable session labels in the UI**: v2 schema already supports `label: string | null`; only the renderer-side mutation affordance (right-click → rename, or per-row inline edit) is missing. Sprint 28+ candidate.
+- **`oscar:llp:unbind-session` IPC consumption**: the handler exists; the renderer-side "delete this session from the roster" UI is missing. Sprint 28+ candidate. Cheaper to keep the IPC than to defer it because we were already in the file.
+
+**Carry-forwards**:
+
+- **Substantive Curator port** (Sprint 24-B / 25 / 26 carry, again). Sprint 28 candidate unless deprioritized.
+- **Sprint 24-A `Lavern —` trust-bypass cleanup**: still pending; Sprint 27 didn't touch `preload.ts:trustBypass` (only the llp bridge methods). One-commit cleanup.
+- **@-mention partners from chat**: Sprint 28 candidate. Requires verifying Goose's `summon` extension + `ChatInput.tsx` mention popover infrastructure against current code.
+- **Multi-agent project / "M&A team"**: Sprint 29+ candidate. Requires Project container design pass and recipes-vs-agent-files architectural call.
+- **Cross-partner empirical coverage** for remaining 6 non-trio partners (Sprint 26 carry, nice-to-have). Not blocking.
+- **`lavern-firm-mode` rebase onto `origin/main`** (M0-M8 + 19b not on this branch). Deferred to focused hygiene sprint when the conflict surface becomes load-bearing.
+
+**ADRs**: 092 (one — Sprint 27 multi-session per partner).
+
+**Commits**: `e63f15fb7` (ADR-092 standalone, before code) → `09205b9f4` (Sprint 27 code: main.ts schema/IPC + preload.ts bridge + useOscarLLPPartners hook reshape + OscarLLPRoster.tsx UI + main.css `.oscar__llp-*` family).
+
+**MiniMax spend**: ~$0.04 (one smoke run; 3% of $10/PCM dev-key cap). Wall-clock ~3 hours including plan-mode + ADR + Phase 1-3 implementation + verification + sprint close.
+
+**Sibling repos**: none touched.
+
+**No Rust core touch. No new sibling MCP. No `main` rebase.**
+
 ### Sprint 26 — Back-port Sprint 25 findings + targeted constraint relax (closed 2026-05-22 on code)
 
 **Goal**: Apply Sprint 25's three subtractive findings (P1 fetch parenthetical, P2 doc-text precondition, P3 escalation script) to production `verificationGateBlock.ts` and decide whether to relax Sprint 25's subtractive-only constraint for the partner-training-bias defect Sprint 25 proved subtraction cannot fix. Empirically validate the back-port (Sarah Chen, MAUD, A/B vs Sprint 25 baseline on disk) and cross-partner transferability (Marcus Webb, CUAD-saas, pre+post A/B).
