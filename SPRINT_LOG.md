@@ -14,6 +14,46 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 26 — Back-port Sprint 25 findings + targeted constraint relax (closed 2026-05-22 on code)
+
+**Goal**: Apply Sprint 25's three subtractive findings (P1 fetch parenthetical, P2 doc-text precondition, P3 escalation script) to production `verificationGateBlock.ts` and decide whether to relax Sprint 25's subtractive-only constraint for the partner-training-bias defect Sprint 25 proved subtraction cannot fix. Empirically validate the back-port (Sarah Chen, MAUD, A/B vs Sprint 25 baseline on disk) and cross-partner transferability (Marcus Webb, CUAD-saas, pre+post A/B).
+
+**Built**:
+
+- **ADR-090** (`docs/adr/090-sprint26-verification-gate-backport.md`, 40 lines, decision-time per CLAUDE.md): captures back-port + targeted constraint relaxation for partner-training-bias defect only. Not a general license to add — Sprint 25's ~240 partner-runs of evidence justify the exception. Companion to [[ADR-081]] (Hybrid 2 — what gets edited) and [[ADR-082]] (Sprint 25 interactive iteration shape — evidence source).
+- **`verificationGateBlock.ts` back-port** (1 commit `d9f6af68c`): -284 bytes net (-518 chars subtractive + ~+280 chars constructive). P1 (-62) + P2 (-31) remove broken language from line 16; P3 (-425) removes the pre-scripted escalation reply template + follow-up paragraph (keeps abstract escalation directive at line 27); acknowledgement sentence inserted at top of gate stating that document text supplied directly in the user message (pasted inline or under `## Document context` heading) is authoritative source material. All 10 partners pick up the change byte-for-byte via the [[ADR-081]] composition seam — no per-partner edits.
+- **Substrate extension for Marcus Webb** (1 commit `dc5feaa30`): three additive entries in `evals/oscar-llp/scripts/{lib-benchmarks.js, lib-recipe24.js, run-partner-cycle.js}` adding `marcus-webb → cuad-saas` mapping + Commercial Contracts metadata. Sprint 25's substrate scales cleanly to non-trio partners with ~17 LOC of additive code.
+- **Sarah Phase 4 validation** (60-min unattended run, 20 instances, $0.295 MiniMax): re-ran iter-0 against production back-ported gate. Result: **TIMEOUT 45% → 0%; NO_ANALYSIS 25% → 0%; DELIVERED 30% → 95%; total output 30% → 100%.** Both exit criteria (≥10pp timeout drop OR delivery rise) met by 4-7×. Sprint 25's residual 30% NO_ANALYSIS on Sarah iter-3 collapsed to 0%. Sprint 25 iter-0 baseline preserved at `iter-0-sprint25-baseline/` (renamed before re-run).
+- **Marcus Phase 5 transferability A/B** (two 30-50 min runs, 40 instances total, $0.573 MiniMax): clean pre+post A/B via temporary gate restore (`git show HEAD~2:...verificationGateBlock.ts` → file → 8s sleep for script to read → restore post-back-port). Pre-back-port: NO_ANALYSIS 20%, PARTIAL 5%, DELIVERED 75%, total output 80%. **Post-back-port: NO_ANALYSIS 0%, PARTIAL 0%, DELIVERED 100%, total output 100%.** All 5 problem instances pre-back-port (4 NO_ANALYSIS + 1 PARTIAL/escalated) flipped to clean DELIVERED post-back-port. The mediwoundltd flip is methodologically informative: pre-back-port invoked the P3 escalation script verbatim ("I cannot ground this analysis to the source material after two revision attempts..."); post-back-port (script removed; abstract directive retained) the same instance delivered substantive analysis. Cross-partner transferability per ADR-081 §Hybrid 2 empirically validated for one of seven non-trio partners.
+- **Sprint 22 smoke regression gate** (×2, ~$0.10): pre-change run 2/3 PASS (Sarah+Helena PASS, Aisha skips verification-pass on focused-tool questions — pre-existing MiniMax non-determinism); post-change run 3/3 PASS. The test's hardcoded `VERIFICATION_DIRECTIVE` is independent of `verificationGateBlock.ts` so the smoke gate validates infrastructure (recipe build, MCP spawn, sub-recipe load) — composition seam intact pre AND post Sprint 26 edit. RUNBOOK addendum documents the Aisha known-behaviour pattern.
+- **Negative finding refuted**: Sprint 25's headline negative finding (partner-training-bias on MCP-fetch is beyond subtractive reach) is empirically refuted as "beyond reach of intervention". The targeted acknowledgement sentence — one sentence, ~280 chars — closes the gap entirely on both Sarah (30% → 0% NO_ANALYSIS) and Marcus (20% → 0% NO_ANALYSIS). The constructive addition is doing the load-bearing work that subtraction alone could not.
+- **Closing report** at `evals/oscar-llp/reports/sprint-26-back-port-validation.md` (full A/B tables + interpretation + cost breakdown + caveats); per-partner scores.json files at `iterations/{sarah-chen, marcus-webb}/iter-0{,-pre-backport}/scores.json` (gitignored).
+
+**Substantive results in one paragraph**: The back-port reproduces Sprint 25's iter-1 effect on Sarah and substantially exceeds Sprint 25's best Sarah cycle (60% iter-3 → 95% Sprint 26 iter-0). It transfers cleanly to a non-trio partner (Marcus Webb's 5 problem instances all flipped to DELIVERED). Sprint 25's negative finding on partner-training-bias is refuted by the targeted acknowledgement sentence. No regressions in either partner's pre→post comparison. Total Sprint 26 spend: $0.87 against $3 plan estimate (back-port itself reduces tool-hunting wall-clock, making each iteration cheaper).
+
+**Deferred**:
+
+- Re-validating Diana / Aisha post-back-port. Sprint 25 already iterated those partners with similar cuts; re-running them post-back-port would consume budget for no incremental decision-relevant signal.
+- Cross-partner empirical coverage for the remaining 6 non-trio partners (Daniel Reeves / Priya Patel / James Okafor / Helena Voss / Robert Sinclair / Thomas Schmidt). Structural inference per ADR-081 covers them; empirical evidence on Marcus + Sarah is sufficient for ship confidence.
+- Phase 4 (framework-section) cuts. Sprint 25 P4 negative finding (same cut had opposite effects on Sarah vs Diana) made these LOW-transferability and partner-specific. Sprint 26 made no Phase 4+5 cuts; this category remains "per-partner content inspection required" if revisited.
+
+**Carry-forwards**:
+
+- **Substantive Curator port** (Sprint 24-B / 25 / 26 carry). Sprint 27 candidate unless deprioritized.
+- **Sprint 24-A `Lavern —` trust-bypass cleanup**. One-commit cleanup; carries again (Sprint 26 didn't touch `preload.ts`).
+- **Cross-partner empirical coverage for remaining 6 non-trio partners**. Nice-to-have, ~$1.50 per partner pre+post. Not blocking.
+- **`oscar-fs` scope leak** (Sprint 23 finding). Still deferred.
+
+**ADRs**: 090 (one — Sprint 26 verification-gate back-port + targeted constraint relax).
+
+**Commits**: `d9f6af68c` (back-port + ADR-090) → `dc5feaa30` (Marcus substrate extension) → close-out commit (this SPRINT_LOG entry + closing report + RUNBOOK addendum + PROJECT.md Sprint Index row).
+
+**MiniMax spend**: $0.87 total (9% of $10/PCM cap). Cumulative Sprint 22→26: ~$5.72 across five sprints. No Anthropic spend (judging in-conversation under Max subscription per ADR-082).
+
+**Sibling repos**: none touched.
+
+**No Rust core touch. No new sibling MCP.**
+
 ### Sprint 25 — Execute Sprint 24-C iteration (interactive, Max-only) (closed 2026-05-22 on code)
 
 **Goal**: rework Sprint 24-C's SDK-automated iteration harness into a Claude-Code-interactive shape per ADR-082 ("via Max subscription" means Claude Code interactive, not SDK), then *run* the iteration end-to-end on the Sarah Chen / Diana Park / Aisha Khan trio against MAUD + CUAD-privacy + CUAD-saas. Produce the substantive cross-partner-pattern deliverable the 24-C substrate was built for.

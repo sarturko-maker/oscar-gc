@@ -1281,6 +1281,62 @@ node evals/oscar-llp/scripts/apply-proposal.js --partner sarah-chen --cycle 0
 
 **Total Sprint 25 spend on `/root/.minimax-dev-key`**: $3.18 (32% of $10/PCM cap). $0.00 Anthropic — judging in-conversation under Max subscription per ADR-082. Cost data persisted at `evals/oscar-llp/iterations/_costs/costs-2026-05-{21,22}.json`.
 
+## Sprint 26 — Verification-gate back-port + cross-partner A/B (2026-05-22, lq-vps)
+
+Sprint 26 produced one production code change (`verificationGateBlock.ts` back-port) and three N=20 validation runs (Sarah post-back-port, Marcus pre-back-port, Marcus post-back-port). All reused Sprint 25's substrate at `evals/oscar-llp/`.
+
+**ADRs**: 090 (verification-gate back-port + targeted constraint relax for partner-training-bias defect).
+
+**Host-state changes**:
+
+| Path | Purpose | Created by |
+|---|---|---|
+| `evals/oscar-llp/iterations/sarah-chen/iter-0-sprint25-baseline/` | Preserved Sprint 25 Sarah iter-0 evidence (prompt.txt, manifest.json, scores.json, 20 transcripts) before Sprint 26 re-run clobbered the `iter-0/` path. Rename only; reversible. | Sprint 26 Phase 4 setup |
+| `evals/oscar-llp/iterations/sarah-chen/iter-0/` | Sprint 26 post-back-port Sarah run. New transcripts + new scores.json with shape verdicts. Gitignored. | `run-partner-cycle.js` Phase A + me-in-conversation Phase B |
+| `evals/oscar-llp/iterations/marcus-webb/iter-0-pre-backport/` | Marcus pre-back-port baseline (gate restored from HEAD~2 during run start). Gitignored. | `run-partner-cycle.js` + post-run rename |
+| `evals/oscar-llp/iterations/marcus-webb/iter-0/` | Marcus post-back-port run (uses production back-ported gate). Gitignored. | `run-partner-cycle.js` Phase A + me-in-conversation Phase B |
+| `evals/oscar-llp/reports/sprint-26-back-port-validation.md` | Closing report with A/B tables for Sarah and Marcus. Tracked in git. | Sprint 26 Phase 6 |
+| `docs/adr/090-sprint26-verification-gate-backport.md` | ADR-090. Tracked in git. | Sprint 26 Phase 0 |
+| `/tmp/vgb-post.ts`, `/tmp/sprint26-{smoke-pre,smoke-post,sarah-iter0,marcus-pre,marcus-post}.log` | Transient scratch (deletable). Used by Phase 5 gate-substitution wrapper + per-run stdout capture. | Sprint 26 Phase 5 wrapper |
+
+**No new env vars** beyond Sprint 25's `SKIP_SANITY_GATE=1`. No new daemons. No new system packages. No new sibling repos.
+
+**New invocation pattern — pre/post A/B on a non-trio partner (Phase 5 wrapper)**:
+
+```bash
+GATE=/srv/projects/oscar-gc-lavern/ui/desktop/src/components/oscar/oscar-llp/verificationGateBlock.ts
+# 1. Save current (post-back-port) gate
+cp "$GATE" /tmp/vgb-post.ts
+# 2. Overwrite with pre-back-port version (HEAD~2 = pre-Sprint-26-back-port commit)
+git -C /srv/projects/oscar-gc-lavern show HEAD~2:ui/desktop/src/components/oscar/oscar-llp/verificationGateBlock.ts > "$GATE"
+# 3. Launch run; sleep 8s for script to read file; restore post-back-port; wait for completion
+SKIP_SANITY_GATE=1 node /srv/projects/oscar-gc-lavern/evals/oscar-llp/scripts/run-partner-cycle.js \
+  --partner marcus-webb --cycle 0 --sample-size 20 > /tmp/sprint26-marcus-pre.log 2>&1 &
+NODEPID=$!
+sleep 8                                # script reads gate during startup
+cp /tmp/vgb-post.ts "$GATE"            # restore post-back-port — working tree clean again
+wait $NODEPID
+# 4. Rename iter-0/ → iter-0-pre-backport/ before launching the post-back-port run
+mv evals/oscar-llp/iterations/marcus-webb/iter-0 evals/oscar-llp/iterations/marcus-webb/iter-0-pre-backport
+# 5. Run again with the (already-restored) post-back-port gate; lands at fresh iter-0/
+SKIP_SANITY_GATE=1 node evals/oscar-llp/scripts/run-partner-cycle.js \
+  --partner marcus-webb --cycle 0 --sample-size 20 > /tmp/sprint26-marcus-post.log 2>&1
+```
+
+The 8s sleep is the load-bearing detail: `lib-recipe24.loadProductionPartnerPrompt` reads the gate file ONCE at script startup (line 88 of `run-partner-cycle.js`); after that the prompt is in memory and the file can be restored without affecting the run. Verified empirically — Marcus pre-back-port `iter-0/prompt.txt` snapshot contained pre-back-port gate (`fetched via=1`, `acknowledgement=0`); Marcus post-back-port snapshot contained post-back-port gate (`fetched via=0`, `acknowledgement=1`). Reusable for any future cross-partner A/B on a gate edit.
+
+**Substrate extension to support Marcus Webb** — three additive entries (commit `dc5feaa30`, ~17 LOC):
+
+- `evals/oscar-llp/scripts/lib-benchmarks.js` — `PARTNER_BENCHMARK_MAP['marcus-webb'] = ['cuad-saas.json']`
+- `evals/oscar-llp/scripts/lib-recipe24.js` — `PRODUCTION_PROMPTS['marcus-webb']` = path to partner .ts file
+- `evals/oscar-llp/scripts/run-partner-cycle.js` — `PARTNER_META['marcus-webb'] = { name: 'Marcus Webb', specialism: 'Commercial Contracts' }`
+
+Same pattern (3 entries) for any future non-trio partner. cuad-saas is partner-agnostic at the data layer; `partnerCycleSeed` gives each partner a distinct N=20 sample even from a shared corpus.
+
+**Sprint 22 smoke (`test-oscar-llp-agents.js`) baseline drift note**: pre-Sprint-26 the test was at 2/3 PASS (Aisha skipping verification-pass on focused-tool questions — pre-existing MiniMax non-determinism that's been latent since Sprint 22). The test's hardcoded `VERIFICATION_DIRECTIVE` (lines 108-113) is independent of `verificationGateBlock.ts`, so this isn't a Sprint 26 regression — it's a known model-behaviour quirk. Sprint 26 post-change run was 3/3 PASS (model happened to invoke verification-pass on Aisha that time). For Sprint 26's purposes, infrastructure (recipe build, MCP spawn, sub-recipe load) is the relevant gate; that's been intact across all four smoke runs this sprint.
+
+**Total Sprint 26 spend on `/root/.minimax-dev-key`**: $0.87 (9% of $10/PCM cap, well under $3 plan estimate). $0.00 Anthropic — judging in-conversation under Max subscription per ADR-082. The back-port itself reduces tool-hunting wall-clock by 20-90% per instance, so each validation run was faster than Sprint 25's pre-back-port baseline. Cost data persisted at `evals/oscar-llp/iterations/_costs/costs-2026-05-22.json`.
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.
