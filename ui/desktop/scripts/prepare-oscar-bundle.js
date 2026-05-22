@@ -24,11 +24,17 @@ const NODE_TARBALL_URL = `https://nodejs.org/dist/v${NODE_VERSION}/${NODE_TARBAL
 
 const ADEU_VERSION = '1.6.9';
 
-// Sibling MCP repos. Each is bundled with esbuild from src/index.ts using the
-// sibling's own node_modules for module resolution.
+// In-tree MCP sources. Each is bundled with esbuild from src/index.ts using
+// the MCP's own node_modules for module resolution. After Sprint-26
+// consolidation these live under oscar/mcps/<name>/ in this repo. The 6
+// Sprint-22 MCPs (baselines, document-checks, document-reader,
+// grounding-verifier, knowledge-base, risk-pricing) are in-tree at
+// oscar/mcps/ but not yet bundled into the .deb — wire them in a separate
+// change.
+const OSCAR_MCPS_ROOT = path.resolve(__dirname, '..', '..', '..', 'oscar', 'mcps');
 const SIBLING_MCPS = {
-  'oscar-onboarding': '/srv/projects/oscar-onboarding-mcp',
-  'oscar-memory': '/srv/projects/oscar-memory-mcp',
+  'oscar-onboarding': path.join(OSCAR_MCPS_ROOT, 'onboarding'),
+  'oscar-memory': path.join(OSCAR_MCPS_ROOT, 'memory'),
 };
 
 // Sprint 12 (ADR-040): npm-vendored MCPs. Each is bundled with esbuild from
