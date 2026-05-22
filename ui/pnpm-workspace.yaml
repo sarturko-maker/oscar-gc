@@ -23,3 +23,8 @@ onlyBuiltDependencies:
   - electron
   - electron-winstaller
   - esbuild
+allowBuilds:
+  '@modelcontextprotocol/ext-apps': true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
