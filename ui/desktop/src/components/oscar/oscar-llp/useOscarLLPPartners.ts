@@ -1,30 +1,40 @@
-// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): hook joining the static
-// OSCAR_LLP_PARTNERS registry with the per-partner session-binding state file.
-// Returns one row per partner with the slug → session_id binding (null if no
-// prior conversation). The roster shows a "Resume" vs "Start chat" badge from
-// this. Mirrors the resume-state surface useChatHistory exposes for matters,
-// simplified for the partner case (no working_dir-based session-list
-// partitioning needed).
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
+// hook joining the static OSCAR_LLP_PARTNERS registry with both the per-partner
+// session-array binding (~/.config/oscar/state/oscar-llp/partners.json, owned
+// by main.ts) and the goosed Session list (id → metadata). v1 entries migrate
+// lazily at read-time in main.ts; this hook only sees v2 shape.
+//
+// Returns one row per partner with the resolved session list, sorted by
+// Session.updated_at DESC. Sessions that no longer exist server-side
+// (deleted out-of-band) drop out of the list silently. The roster click
+// handler still verifies the session at click time before dispatching
+// resume-on-existing — this hook's join is a UX hint, not a correctness gate.
 
 import { useCallback, useEffect, useState } from 'react';
+import { listSessions } from '../../../api';
+import type { Session } from '../../../api';
 import { AppEvents } from '../../../constants/events';
 import { OSCAR_LLP_PARTNERS, type OscarLLPPartner } from './partners';
 
+export interface OscarLLPSessionRow {
+  id: string;
+  label: string | null;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  user_set_name: boolean;
+}
+
 export interface OscarLLPPartnerWithState {
   partner: OscarLLPPartner;
-  // Bound session_id from ~/.config/oscar/state/oscar-llp/partners.json (legacy
-  // ~/.config/oscar/state/lavern/partners.json migrated read-time at first
-  // launch per ADR-078). Null if the partner has never been opened. The roster
-  // click-handler verifies the session still exists at click time
-  // (resume-or-fresh-spawn flow); this binding is treated as a UX hint for the
-  // badge, not a correctness gate.
-  session_id: string | null;
+  sessions: OscarLLPSessionRow[];
 }
 
 const SUBSCRIBED_EVENTS: AppEvents[] = [
   AppEvents.SESSION_CREATED,
   AppEvents.SESSION_DELETED,
   AppEvents.SESSION_RENAMED,
+  AppEvents.SESSION_FORKED,
 ];
 
 export interface UseOscarLLPPartnersResult {
@@ -35,17 +45,44 @@ export interface UseOscarLLPPartnersResult {
 }
 
 export function useOscarLLPPartners(): UseOscarLLPPartnersResult {
-  const [states, setStates] = useState<Record<string, { session_id: string | null }>>({});
+  const [partners, setPartners] = useState<OscarLLPPartnerWithState[]>(() =>
+    OSCAR_LLP_PARTNERS.map((p) => ({ partner: p, sessions: [] })),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async (): Promise<void> => {
     try {
-      const result = await window.electron.llp.listPartnerStates();
-      setStates(result);
+      const [states, sessionsResp] = await Promise.all([
+        window.electron.llp.listPartnerStates(),
+        listSessions({ throwOnError: false }),
+      ]);
+      const sessionMap = new Map<string, Session>();
+      for (const s of sessionsResp.data?.sessions ?? []) {
+        sessionMap.set(s.id, s);
+      }
+      const rows: OscarLLPPartnerWithState[] = OSCAR_LLP_PARTNERS.map((p) => {
+        const entries = states[p.slug]?.sessions ?? [];
+        const resolved: OscarLLPSessionRow[] = [];
+        for (const entry of entries) {
+          const meta = sessionMap.get(entry.id);
+          if (!meta) continue;
+          resolved.push({
+            id: entry.id,
+            label: entry.label,
+            name: meta.name,
+            created_at: meta.created_at,
+            updated_at: meta.updated_at,
+            user_set_name: meta.user_set_name ?? false,
+          });
+        }
+        resolved.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+        return { partner: p, sessions: resolved };
+      });
+      setPartners(rows);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load partner states');
+      setError(err instanceof Error ? err.message : 'Failed to load partner sessions');
     } finally {
       setLoading(false);
     }
@@ -68,11 +105,6 @@ export function useOscarLLPPartners(): UseOscarLLPPartnersResult {
       }
     };
   }, [refresh]);
-
-  const partners: OscarLLPPartnerWithState[] = OSCAR_LLP_PARTNERS.map((p) => ({
-    partner: p,
-    session_id: states[p.slug]?.session_id ?? null,
-  }));
 
   return { partners, loading, error, refresh };
 }

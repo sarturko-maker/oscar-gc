@@ -1,12 +1,19 @@
-// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode
-// roster page. Mounted at /oscar-llp. Lists the 10 partner cards labeled
-// "[Name] ([Specialism])"; each card's click handler mirrors
-// MattersLanding.openMatter resume-on-existing pattern:
-//   1. matters.detachActive()           — clear Top of Mind (partners are not matters)
-//   2. llp.ensureDir(slug)              — ~/Documents/Oscar GC/Oscar LLP/<slug>/
-//   3. llp.lookupState(slug)            — if bound session_id + still exists, resume
-//   4. else buildOscarLLPPartnerRecipe → createSession → llp.bindSession
-//   5. dispatch ADD_ACTIVE_SESSION + navigate /pair?resumeSessionId=…
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
+// Oscar LLP firm-mode roster at /oscar-llp. Per partner: header (name +
+// specialism + blurb), an inline session list (top N visible, scrollable
+// beyond), and a "+ New chat" affordance.
+//
+// Click semantics (ADR-092):
+//   - Click partner header  → resume sessions[0] (most-recent); fall through
+//                              to fresh-spawn if sessions[] empty or the
+//                              most-recent session was deleted server-side.
+//   - Click "+ New chat"    → always fresh createSession + prepend to
+//                              sessions[] via llp.bindSession.
+//   - Click session row     → resume that specific session.
+//
+// All three paths share the same matters.detachActive() + llp.ensureDir()
+// preamble; the resume-on-existing dance mirrors MattersLanding.openMatter
+// (lines 121-138 of MattersLanding.tsx).
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,8 +25,41 @@ import { useConfig } from '../../ConfigContext';
 import { useOscarProfile } from '../hooks/useOscarProfile';
 import { deriveEnabledPlatformExtensions } from '../recipe/enabledPlatformExtensions';
 import { buildOscarLLPPartnerRecipe } from './buildOscarLLPPartnerRecipe';
-import { useOscarLLPPartners, type OscarLLPPartnerWithState } from './useOscarLLPPartners';
+import {
+  useOscarLLPPartners,
+  type OscarLLPPartnerWithState,
+  type OscarLLPSessionRow,
+} from './useOscarLLPPartners';
 import type { OscarLLPPartner } from './partners';
+
+const MAX_VISIBLE_SESSIONS = 5;
+
+// Ported from ChatHistorySearch.tsx:41-54. Inline-copy per CLAUDE.md
+// (no premature abstraction); extract to src/utils/date.ts if a third call
+// site appears.
+function formatRelative(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMs / 3600000);
+  const diffDay = Math.floor(diffMs / 86400000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+// Sprint 27 label fallback chain (ADR-092): user-set label in partners.json
+// → goosed Session.name (auto-emitted, typically first-message-derived) →
+// "Session <date>". Recipe.title is identical for all sessions of one
+// partner so it's useless as a per-session disambiguator.
+function labelOf(s: OscarLLPSessionRow): string {
+  if (s.label && s.label.trim().length > 0) return s.label;
+  if (s.name && s.name.trim().length > 0) return s.name;
+  return `Session ${new Date(s.created_at).toLocaleDateString()}`;
+}
 
 export default function OscarLLPRoster() {
   const navigate = useNavigate();
@@ -29,44 +69,31 @@ export default function OscarLLPRoster() {
   const [opening, setOpening] = useState<string | null>(null);
   const [openError, setOpenError] = useState<string | null>(null);
 
-  const openPartner = async (partner: OscarLLPPartner): Promise<void> => {
+  const provisionPartnerDir = async (partner: OscarLLPPartner): Promise<string> => {
+    await window.electron.matters.detachActive();
+    const { ok, path: workingDir } = await window.electron.llp.ensureDir(partner.slug);
+    if (!ok || !workingDir) {
+      throw new Error('Failed to provision partner working directory');
+    }
+    return workingDir;
+  };
+
+  const navigateToSession = (sessionId: string): void => {
+    window.dispatchEvent(
+      new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
+        detail: { sessionId, initialMessage: undefined },
+      }),
+    );
+    navigate(`/pair?resumeSessionId=${encodeURIComponent(sessionId)}`, {
+      state: { disableAnimation: true },
+    });
+  };
+
+  const newChat = async (partner: OscarLLPPartner): Promise<void> => {
     setOpening(partner.slug);
     setOpenError(null);
     try {
-      // Partners are not matters. Detach the active matter so Top of Mind
-      // is empty for the partner session (mirrors Forge + Quick chats).
-      await window.electron.matters.detachActive();
-
-      const { ok, path: workingDir } = await window.electron.llp.ensureDir(partner.slug);
-      if (!ok || !workingDir) {
-        throw new Error('Failed to provision partner working directory');
-      }
-
-      // Resume-on-existing: if a session is already bound AND still exists
-      // server-side, navigate to it without rebuilding the recipe. Same
-      // pattern as MattersLanding.openMatter:121-138.
-      const state = await window.electron.llp.lookupState(partner.slug);
-      if (state?.session_id) {
-        const existing = await getSession({
-          path: { session_id: state.session_id },
-          throwOnError: false,
-        });
-        if (existing.data) {
-          window.dispatchEvent(
-            new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
-              detail: {
-                sessionId: state.session_id,
-                initialMessage: undefined,
-              },
-            })
-          );
-          navigate(`/pair?resumeSessionId=${encodeURIComponent(state.session_id)}`, {
-            state: { disableAnimation: true },
-          });
-          return;
-        }
-      }
-
+      const workingDir = await provisionPartnerDir(partner);
       const enabledPlatformExtensions = deriveEnabledPlatformExtensions(config.extensionsList);
       const recipe = buildOscarLLPPartnerRecipe({
         partner,
@@ -77,24 +104,47 @@ export default function OscarLLPRoster() {
         companyContext: profile?.company_context ?? null,
         enabledPlatformExtensions,
       });
-
       const session = await createSession(workingDir, { recipe });
       await window.electron.llp.bindSession(partner.slug, session.id);
-      window.dispatchEvent(
-        new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
-          detail: { sessionId: session.id, initialMessage: undefined },
-        })
-      );
-      navigate(`/pair?resumeSessionId=${encodeURIComponent(session.id)}`, {
-        state: { disableAnimation: true },
-      });
-      // Keep the roster's badge in sync for the next visit; harmless if the
-      // SESSION_CREATED listener has already fired.
+      navigateToSession(session.id);
       void refresh();
     } catch (err) {
       setOpenError(errorMessage(err, 'Failed to open partner session'));
       setOpening(null);
     }
+  };
+
+  const resumeSession = async (
+    partner: OscarLLPPartner,
+    session: OscarLLPSessionRow,
+  ): Promise<void> => {
+    setOpening(partner.slug);
+    setOpenError(null);
+    try {
+      await provisionPartnerDir(partner);
+      const existing = await getSession({
+        path: { session_id: session.id },
+        throwOnError: false,
+      });
+      if (!existing.data) {
+        // Session deleted server-side; fall through to fresh spawn so the
+        // user's click doesn't dead-end. The stale entry will get filtered
+        // out on next refresh once the registry is rewritten.
+        return await newChat(partner);
+      }
+      navigateToSession(session.id);
+    } catch (err) {
+      setOpenError(errorMessage(err, 'Failed to resume session'));
+      setOpening(null);
+    }
+  };
+
+  const openCard = (row: OscarLLPPartnerWithState): Promise<void> => {
+    const mostRecent = row.sessions[0];
+    if (mostRecent) {
+      return resumeSession(row.partner, mostRecent);
+    }
+    return newChat(row.partner);
   };
 
   return (
@@ -133,11 +183,13 @@ export default function OscarLLPRoster() {
               <div className="oscar__matter-row-time">Run</div>
             </button>
             {partners.map((row) => (
-              <OscarLLPPartnerRow
+              <OscarLLPPartnerCard
                 key={row.partner.slug}
                 row={row}
                 opening={opening === row.partner.slug}
-                onOpen={openPartner}
+                onOpenCard={openCard}
+                onNewChat={newChat}
+                onResumeSession={resumeSession}
               />
             ))}
           </div>
@@ -150,31 +202,67 @@ export default function OscarLLPRoster() {
   );
 }
 
-interface OscarLLPPartnerRowProps {
+interface OscarLLPPartnerCardProps {
   row: OscarLLPPartnerWithState;
   opening: boolean;
-  onOpen: (partner: OscarLLPPartner) => void;
+  onOpenCard: (row: OscarLLPPartnerWithState) => void;
+  onNewChat: (partner: OscarLLPPartner) => void;
+  onResumeSession: (partner: OscarLLPPartner, session: OscarLLPSessionRow) => void;
 }
 
-function OscarLLPPartnerRow({ row, opening, onOpen }: OscarLLPPartnerRowProps) {
-  const status = row.session_id ? 'Resume' : 'Start chat';
-  // Reuses the matter-row CSS family (Sprint 12+ pattern at MatterRow.tsx);
-  // the partner card has the same visual shape as a matter card so the two
-  // surfaces feel like siblings, not different products.
+function OscarLLPPartnerCard({
+  row,
+  opening,
+  onOpenCard,
+  onNewChat,
+  onResumeSession,
+}: OscarLLPPartnerCardProps) {
+  const visible = row.sessions.slice(0, MAX_VISIBLE_SESSIONS);
+  const overflow = row.sessions.length - visible.length;
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(row.partner)}
-      disabled={opening}
-      className="oscar__matter-row w-full text-left flex items-center justify-between gap-4 py-4 px-2 transition-colors"
-    >
-      <div className="flex flex-col min-w-0">
-        <span className="oscar__matter-row-name truncate">
-          {row.partner.name} ({row.partner.specialism})
-        </span>
-        <div className="oscar__matter-row-meta">{row.partner.blurb}</div>
+    <div className="oscar__llp-card">
+      <button
+        type="button"
+        onClick={() => onOpenCard(row)}
+        disabled={opening}
+        className="oscar__matter-row oscar__llp-card-header w-full text-left flex items-center justify-between gap-4 py-4 px-2 transition-colors"
+      >
+        <div className="flex flex-col min-w-0">
+          <span className="oscar__matter-row-name truncate">
+            {row.partner.name} ({row.partner.specialism})
+          </span>
+          <div className="oscar__matter-row-meta">{row.partner.blurb}</div>
+        </div>
+      </button>
+
+      <div className="oscar__llp-sessions">
+        <button
+          type="button"
+          onClick={() => onNewChat(row.partner)}
+          disabled={opening}
+          className="oscar__llp-new-chat"
+        >
+          + New chat with {row.partner.name}
+        </button>
+        {row.sessions.length === 0 && (
+          <div className="oscar__llp-no-sessions">No prior conversations</div>
+        )}
+        {visible.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => onResumeSession(row.partner, s)}
+            disabled={opening}
+            className="oscar__llp-session-row"
+          >
+            <span className="oscar__llp-session-label truncate">· {labelOf(s)}</span>
+            <span className="oscar__llp-session-time">{formatRelative(s.updated_at)}</span>
+          </button>
+        ))}
+        {overflow > 0 && (
+          <div className="oscar__llp-overflow">…{overflow} more</div>
+        )}
       </div>
-      <div className="oscar__matter-row-time">{status}</div>
-    </button>
+    </div>
   );
 }

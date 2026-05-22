@@ -268,18 +268,31 @@ type ElectronAPI = {
     ensureDir: () => Promise<{ ok: boolean; path: string }>;
     getDir: () => Promise<string>;
   };
-  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode.
-  // Per-partner working_dir + state file binding partner slug → session_id for
-  // resume-on-existing. The canonical partner roster is renderer-side at
-  // oscar-llp/partners.ts; main owns only the session-id binding shape.
+  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
+  // Oscar LLP firm-mode. Per-partner working_dir + state file binding partner
+  // slug → array of sessions (most-recent first). Optional user-set label per
+  // session entry; session metadata read from goosed via listSessions().
   llp: {
     ensureDir: (slug: string) => Promise<{ ok: boolean; path: string }>;
-    bindSession: (slug: string, sessionId: string) => Promise<{ ok: boolean }>;
+    bindSession: (
+      slug: string,
+      sessionId: string,
+      label?: string | null,
+    ) => Promise<{ ok: boolean }>;
+    unbindSession: (
+      slug: string,
+      sessionId: string,
+    ) => Promise<{ ok: boolean }>;
     lookupState: (
       slug: string,
-    ) => Promise<{ session_id: string | null } | null>;
+    ) => Promise<{
+      sessions: Array<{ id: string; label: string | null }>;
+    } | null>;
     listPartnerStates: () => Promise<
-      Record<string, { session_id: string | null }>
+      Record<
+        string,
+        { sessions: Array<{ id: string; label: string | null }> }
+      >
     >;
     // Sprint 24-B (ADR-079): Lavern Pipeline launch surface.
     pipeline: {
@@ -515,17 +528,18 @@ const electronAPI: ElectronAPI = {
     ensureDir: () => ipcRenderer.invoke('oscar:quick-chats:ensure-dir'),
     getDir: () => ipcRenderer.invoke('oscar:quick-chats:get-dir'),
   },
-  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode.
-  // Per-partner working_dir provisioning + per-partner session-binding
-  // registry. The canonical partner roster lives in renderer-land at
-  // components/oscar/oscar-llp/partners.ts; main owns only the session_id
-  // binding (so re-opening a partner from the roster resumes prior chat —
-  // mirrors MattersLanding.openMatter:121-138 pattern).
+  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
+  // Oscar LLP firm-mode. Per-partner working_dir provisioning + per-partner
+  // multi-session registry. bindSession PREPENDS to the partner's sessions
+  // array (most-recent first); the optional label argument lets callers set
+  // a user-set override.
   llp: {
     ensureDir: (slug: string) =>
       ipcRenderer.invoke('oscar:llp:ensure-dir', slug),
-    bindSession: (slug: string, sessionId: string) =>
-      ipcRenderer.invoke('oscar:llp:bind-session', slug, sessionId),
+    bindSession: (slug: string, sessionId: string, label?: string | null) =>
+      ipcRenderer.invoke('oscar:llp:bind-session', slug, sessionId, label),
+    unbindSession: (slug: string, sessionId: string) =>
+      ipcRenderer.invoke('oscar:llp:unbind-session', slug, sessionId),
     lookupState: (slug: string) =>
       ipcRenderer.invoke('oscar:llp:lookup-state', slug),
     listPartnerStates: () =>

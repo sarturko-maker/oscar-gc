@@ -2202,13 +2202,18 @@ ipcMain.handle('oscar:quick-chats:ensure-dir', async () => {
 
 ipcMain.handle('oscar:quick-chats:get-dir', () => OSCAR_QUICK_CHATS_DIR);
 
-// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP partner
-// registry. Per-partner session_id binding for resume-on-existing (mirrors
-// matters.json's session_id field but minimal — no archive, no stakeholders,
-// no display fields; the canonical partner registry is renderer-side at
-// oscar-llp/partners.ts).
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
+// Oscar LLP partner registry. v2 schema — { sessions: [{id, label?}, ...] }
+// per partner, ordered most-recent first by insert order. Session metadata
+// (name / created_at / updated_at) read from goosed via listSessions(); only
+// the optional user-set label is owned here. v1 entries ({ session_id: "X" })
+// are migrated lazily at read-time per ADR-092.
+interface OscarLLPSessionEntry {
+  id: string;
+  label: string | null;
+}
 interface OscarLLPPartnerState {
-  session_id: string | null;
+  sessions: OscarLLPSessionEntry[];
 }
 type OscarLLPRegistry = Record<string, OscarLLPPartnerState>;
 
@@ -2253,13 +2258,35 @@ const readOscarLlpRegistry = async (): Promise<OscarLLPRegistry> => {
       parsed as Record<string, unknown>,
     )) {
       if (!safeSlug(slug)) continue;
-      if (
-        typeof value === 'object' &&
-        value !== null &&
-        'session_id' in value
-      ) {
-        const sid = (value as { session_id?: unknown }).session_id;
-        result[slug] = { session_id: typeof sid === 'string' ? sid : null };
+      if (typeof value !== 'object' || value === null) continue;
+      const v = value as Record<string, unknown>;
+
+      // v2: { sessions: [{id, label?}, ...] }
+      if (Array.isArray(v.sessions)) {
+        const sessions: OscarLLPSessionEntry[] = [];
+        const seen = new Set<string>();
+        for (const s of v.sessions) {
+          if (typeof s !== 'object' || s === null) continue;
+          const entry = s as Record<string, unknown>;
+          if (typeof entry.id !== 'string' || entry.id.length === 0) continue;
+          if (seen.has(entry.id)) continue;
+          seen.add(entry.id);
+          sessions.push({
+            id: entry.id,
+            label: typeof entry.label === 'string' ? entry.label : null,
+          });
+        }
+        result[slug] = { sessions };
+        continue;
+      }
+
+      // v1 lazy upgrade per ADR-092: { session_id: "X" } →
+      // { sessions: [{ id: "X", label: "(legacy)" }] }. Persisted on next
+      // mutation; v1 entries with null session_id drop out (no useful info).
+      if (typeof v.session_id === 'string' && v.session_id.length > 0) {
+        result[slug] = {
+          sessions: [{ id: v.session_id, label: '(legacy)' }],
+        };
       }
     }
     return result;
@@ -2272,13 +2299,13 @@ const readOscarLlpRegistry = async (): Promise<OscarLLPRegistry> => {
   }
 };
 
+// Sprint 27 (ADR-092): atomic write via .tmp + fs.rename. Interrupt-safety
+// floor for the per-partner sessions array, which grows over time.
 const writeOscarLlpRegistry = async (registry: OscarLLPRegistry): Promise<void> => {
   await fs.mkdir(OSCAR_LLP_STATE_DIR, { recursive: true });
-  await fs.writeFile(
-    OSCAR_LLP_REGISTRY_PATH,
-    JSON.stringify(registry, null, 2),
-    'utf8',
-  );
+  const tmp = OSCAR_LLP_REGISTRY_PATH + '.tmp';
+  await fs.writeFile(tmp, JSON.stringify(registry, null, 2), 'utf8');
+  await fs.rename(tmp, OSCAR_LLP_REGISTRY_PATH);
 };
 
 // Sprint 24-A (ADR-078): one-shot per-slug migration of legacy
@@ -2333,8 +2360,48 @@ ipcMain.handle('oscar:llp:ensure-dir', async (_event, slugRaw: unknown) => {
   }
 });
 
+// Sprint 27 (ADR-092): bind-session PREPENDS to the partner's sessions array
+// rather than overwriting a single binding. Dedupes by id — if the same
+// session is bound twice, the first occurrence wins and the array is left
+// in stable order. The optional label argument lets callers set a user-set
+// override; null/undefined falls back to goosed's Session.name at render
+// time.
 ipcMain.handle(
   'oscar:llp:bind-session',
+  async (
+    _event,
+    slugRaw: unknown,
+    sessionIdRaw: unknown,
+    labelRaw: unknown,
+  ) => {
+    const slug = safeSlug(slugRaw);
+    if (
+      !slug ||
+      typeof sessionIdRaw !== 'string' ||
+      sessionIdRaw.length === 0
+    ) {
+      return { ok: false };
+    }
+    const label = typeof labelRaw === 'string' ? labelRaw : null;
+    const registry = await readOscarLlpRegistry();
+    const existing = registry[slug]?.sessions ?? [];
+    if (existing.some((s) => s.id === sessionIdRaw)) {
+      return { ok: true };
+    }
+    registry[slug] = {
+      sessions: [{ id: sessionIdRaw, label }, ...existing],
+    };
+    await writeOscarLlpRegistry(registry);
+    return { ok: true };
+  },
+);
+
+// Sprint 27 (ADR-092): reserved for a future "delete partner session" UI.
+// Removes the entry from sessions[]; leaves the goosed session row alone
+// (deletion of the underlying session is a separate concern owned by
+// goosed's session API).
+ipcMain.handle(
+  'oscar:llp:unbind-session',
   async (_event, slugRaw: unknown, sessionIdRaw: unknown) => {
     const slug = safeSlug(slugRaw);
     if (
@@ -2345,7 +2412,13 @@ ipcMain.handle(
       return { ok: false };
     }
     const registry = await readOscarLlpRegistry();
-    registry[slug] = { session_id: sessionIdRaw };
+    const existing = registry[slug]?.sessions ?? [];
+    const next = existing.filter((s) => s.id !== sessionIdRaw);
+    if (next.length === 0) {
+      delete registry[slug];
+    } else {
+      registry[slug] = { sessions: next };
+    }
     await writeOscarLlpRegistry(registry);
     return { ok: true };
   },
