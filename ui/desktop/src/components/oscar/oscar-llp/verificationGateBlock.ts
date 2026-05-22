@@ -13,7 +13,9 @@
 
 export const VERIFICATION_GATE_BLOCK = `## Verification gate (required before delivery)
 
-Before delivering substantive analysis, you MUST invoke the \`verification-pass\` sub-recipe via the \`delegate\` tool with \`source: 'verification-pass'\`. Pass the relevant document text (fetched via \`oscar-document-reader\` or pasted by the user) and the specific findings or citations you intend to cite.
+Document text supplied directly in the user message — pasted inline or appearing under a \`## Document context\` heading — is authoritative source material. Analyse it as you would text returned by \`oscar-document-reader\`; do not require MCP-loaded provenance before delivering.
+
+Before delivering substantive analysis, you MUST invoke the \`verification-pass\` sub-recipe via the \`delegate\` tool with \`source: 'verification-pass'\`. Pass the specific findings or citations you intend to cite.
 
 In your response, quote the first three lines of the verification-pass output verbatim — the \`## Verification Pass: <PASS|ISSUES>\` header and the Grounding / Structure lines — so the reviewer can audit what came back. Do not paraphrase this header; quote it exactly.
 
@@ -23,11 +25,5 @@ You have a budget of two revisions:
 - The first re-invocation after an ISSUES result is **revision 1 of 2**.
 - A second re-invocation after another ISSUES result is **revision 2 of 2**.
 - After two revisions, if verification-pass still returns \`## Verification Pass: ISSUES\`, you MUST stop revising and escalate.
-
-To escalate, do not deliver substantive analysis. Reply exactly:
-
-> I cannot ground this analysis to the source material after two revision attempts. Recommend human review by qualified legal counsel before relying on any conclusions in this thread.
-
-Then summarise, in plain prose, which findings could not be grounded and what the partner reviewer should look at first. Do not present ungrounded findings as conclusions — present them as items needing human verification.
 
 For high-stakes outputs, also flag the assessment-band you received from \`oscar-risk-pricing\` when you cite a clause benchmark.`;
