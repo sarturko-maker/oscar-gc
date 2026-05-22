@@ -11,7 +11,7 @@
 // Pre-reqs:
 //   - goose CLI on PATH or at GOOSE_BIN env var.
 //   - goose's config.yaml has goose_provider=minimax + provider key.
-//   - oscar-onboarding-mcp dist built (`cd /srv/projects/oscar-onboarding-mcp && npm run build`).
+//   - oscar-onboarding-mcp dist built (`cd /srv/projects/goose/oscar/mcps/onboarding && pnpm run build`).
 //   - Tavily key resolvable via env TAVILY_API_KEY or ~/.config/oscar/secrets/tavily.json.
 //
 // Output layout:
