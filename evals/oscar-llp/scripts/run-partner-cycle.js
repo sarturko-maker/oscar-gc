@@ -35,6 +35,7 @@ const PARTNER_META = {
   'sarah-chen': { name: 'Sarah Chen', specialism: 'M&A' },
   'diana-park': { name: 'Diana Park', specialism: 'Privacy' },
   'aisha-khan': { name: 'Aisha Khan', specialism: 'Tech Transactions' },
+  'marcus-webb': { name: 'Marcus Webb', specialism: 'Commercial Contracts' },
 };
 
 function parseArgs() {

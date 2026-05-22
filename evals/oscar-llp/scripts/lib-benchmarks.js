@@ -18,6 +18,11 @@ const PARTNER_BENCHMARK_MAP = {
   'sarah-chen': ['maud.json'],
   'diana-park': ['cuad-privacy.json', 'legalbench-privacy.json'],
   'aisha-khan': ['cuad-saas.json', 'github-saas-tnc.json'],
+  // Sprint 26: Marcus Webb (Commercial Contracts) added for non-trio
+  // transferability validation. Reuses cuad-saas as the closest commercial-
+  // agreement fit; partnerCycleSeed makes Marcus's N=20 sample distinct
+  // from Aisha's even though the underlying corpus is shared.
+  'marcus-webb': ['cuad-saas.json'],
 };
 
 const DROP_CANDIDATES = new Set(['legalbench-privacy.json', 'github-saas-tnc.json']);

@@ -56,6 +56,17 @@ const PRODUCTION_PROMPTS = {
     'prompts',
     'aisha-khan.ts',
   ),
+  'marcus-webb': path.join(
+    REPO_ROOT,
+    'ui',
+    'desktop',
+    'src',
+    'components',
+    'oscar',
+    'oscar-llp',
+    'prompts',
+    'marcus-webb.ts',
+  ),
 };
 
 const VERIFICATION_GATE_PATH = path.join(
