@@ -46,7 +46,7 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 **ADRs**: 090 (one — Sprint 26 verification-gate back-port + targeted constraint relax).
 
-**Commits**: `d9f6af68c` (back-port + ADR-090) → `dc5feaa30` (Marcus substrate extension) → close-out commit (this SPRINT_LOG entry + closing report + RUNBOOK addendum + PROJECT.md Sprint Index row).
+**Commits**: `d9f6af68c` (back-port + ADR-090) → `dc5feaa30` (Marcus substrate extension) → `6476990b6` (close-out: this SPRINT_LOG entry + closing report + RUNBOOK addendum + PROJECT.md Sprint Index row).
 
 **MiniMax spend**: $0.87 total (9% of $10/PCM cap). Cumulative Sprint 22→26: ~$5.72 across five sprints. No Anthropic spend (judging in-conversation under Max subscription per ADR-082).
 
