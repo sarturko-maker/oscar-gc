@@ -1,0 +1,31 @@
+{
+  "name": "oscar-document-reader-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Document-navigation MCP for Oscar GC's Lavern partners. Structural lift from github.com/AnttiHero/lavern (Apache-2.0; commit 7c2efe61). Five read-only tools: list_documents, read_document_section, search_document, get_defined_terms, get_document_tables. Sprint 22 ships with two hardcoded sample parsed documents; a future sprint will wire to a real parser.",
+  "license": "Apache-2.0",
+  "author": "s-arturko",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oscar-document-reader-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "smoke": "node ./smoke.mjs",
+    "test": "node ./tests/integration.test.mjs",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@0.21.2 node ./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "=1.29.0",
+    "zod": "=4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "=25.8.0",
+    "typescript": "=6.0.3"
+  }
+}
