@@ -1830,6 +1830,7 @@ import {
   type StageUserSkillResult,
 } from './components/oscar/skills/stageUserSkill';
 import { startProfileWriteWatcher } from './components/oscar/forge/profileWriteWatcher';
+import { startForgeDeleteWatcher } from './components/oscar/forge/forgeDeleteWatcher';
 import { PRACTICE_AREAS } from './components/oscar/practiceAreas';
 
 const OSCAR_STATE_DIR = path.join(os.homedir(), '.config', 'oscar', 'state');
@@ -2680,6 +2681,119 @@ async function mutateEnabledSkills(
   return next;
 }
 
+// Sprint 20-M8 (ADR-091): area-level archive destination. One folder per
+// delete event, suffix = ISO timestamp from the marker (with ':' replaced
+// so filesystems on Windows / FAT-rooted volumes don't reject it).
+const OSCAR_ARCHIVE_DIR = path.join(OSCAR_STATE_DIR, '_archive');
+
+const archiveSuffixFromIso = (iso: string): string =>
+  iso.replace(/:/g, '-').replace(/\.\d{3}Z$/, 'Z');
+
+async function archiveAreaState(
+  areaId: string,
+  timestamp: string,
+): Promise<string> {
+  const src = areaStateDir(areaId);
+  const dst = path.join(
+    OSCAR_ARCHIVE_DIR,
+    `${areaId}-${archiveSuffixFromIso(timestamp)}`,
+  );
+  // Copy first, then remove. If copy fails, source survives untouched. If
+  // rm fails after a successful cp, the archive has the data and we log —
+  // data is in two places, not zero (ADR-091 caveat).
+  try {
+    await fs.access(src);
+  } catch {
+    // No state folder for this area — nothing to archive on disk. Still
+    // return a destination string so the caller can record it; the dir
+    // is not created.
+    return dst;
+  }
+  await fs.mkdir(OSCAR_ARCHIVE_DIR, { recursive: true });
+  await fs.cp(src, dst, { recursive: true });
+  try {
+    await fs.rm(src, { recursive: true, force: true });
+  } catch (err) {
+    log.warn('oscar:forge archive-area: rm source failed post-copy', {
+      areaId,
+      src,
+      dst,
+      err: errorMessage(err, 'rm failed'),
+    });
+  }
+  return dst;
+}
+
+async function removePracticeArea(areaId: string): Promise<void> {
+  const profile = await readProfileFile();
+  if (!profile) throw new Error('profile.json not found');
+  const areas = profile.practice_areas ?? [];
+  const idx = areas.findIndex((a) => a.id === areaId);
+  if (idx < 0) throw new Error(`area ${areaId} not in profile`);
+  const newProfile: ProfileShape = {
+    ...profile,
+    practice_areas: [...areas.slice(0, idx), ...areas.slice(idx + 1)],
+  };
+  await writeProfileFile(newProfile);
+}
+
+const markerPathForArea = (areaId: string): string =>
+  path.join(OSCAR_CONFIG_DIR, `_forge_request_delete_${areaId}.json`);
+
+const unlinkMarkerIfPresent = async (areaId: string): Promise<void> => {
+  try {
+    await fs.unlink(markerPathForArea(areaId));
+  } catch (err) {
+    if ((err as { code?: string }).code !== 'ENOENT') {
+      log.warn('oscar:forge unlink-marker failed', {
+        areaId,
+        err: errorMessage(err, 'unlink failed'),
+      });
+    }
+  }
+};
+
+ipcMain.handle(
+  'oscar:forge:confirm-delete-area',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    timestampRaw: unknown,
+  ): Promise<{ ok: true; archivedTo: string } | { ok: false; reason: string }> => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return { ok: false, reason: 'invalid areaId' };
+    const timestamp =
+      typeof timestampRaw === 'string' && timestampRaw.length > 0
+        ? timestampRaw
+        : new Date().toISOString();
+    try {
+      const archivedTo = await archiveAreaState(areaId, timestamp);
+      await removePracticeArea(areaId);
+      await unlinkMarkerIfPresent(areaId);
+      return { ok: true, archivedTo };
+    } catch (err) {
+      log.error('oscar:forge:confirm-delete-area failed', {
+        areaId,
+        err: errorMessage(err, 'confirm-delete failed'),
+      });
+      return { ok: false, reason: errorMessage(err, 'confirm-delete failed') };
+    }
+  },
+);
+
+ipcMain.handle(
+  'oscar:forge:cancel-delete-area',
+  async (
+    _event,
+    areaIdRaw: unknown,
+  ): Promise<{ ok: true } | { ok: false; reason: string }> => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return { ok: false, reason: 'invalid areaId' };
+    await unlinkMarkerIfPresent(areaId);
+    return { ok: true };
+  },
+);
+
 ipcMain.handle(
   'oscar:skills:list',
   async (event, areaIdRaw: unknown): Promise<SkillsListResult> => {
@@ -3527,6 +3641,35 @@ async function appMain() {
   startProfileWriteWatcher({
     profilePath: OSCAR_PROFILE_PATH,
     backupPath: OSCAR_PROFILE_BACKUP_PATH,
+  });
+
+  // Sprint 20-M8 (ADR-090): start the Forge Mode E marker-file watcher.
+  // Forge writes ~/.config/oscar/_forge_request_delete_<areaId>.json; we
+  // emit `oscar:forge:delete-prepare` to all windows so the renderer
+  // modal can fire. The watcher is read-only — confirm/cancel IPC
+  // handlers own marker deletion.
+  startForgeDeleteWatcher({
+    configDir: OSCAR_CONFIG_DIR,
+    onMarker: (marker) => {
+      void (async () => {
+        const profile = await readProfileFile();
+        const area = profile?.practice_areas?.find((a) => a.id === marker.areaId);
+        const rawName = (area as unknown as { name?: unknown } | undefined)?.name;
+        const areaName =
+          typeof rawName === 'string' && rawName.length > 0
+            ? rawName
+            : displayAreaName(marker.areaId);
+        const payload = {
+          areaId: marker.areaId,
+          areaName,
+          timestamp: marker.timestamp,
+          impact: marker.impact,
+        };
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send('oscar:forge:delete-prepare', payload);
+        }
+      })();
+    },
   });
 
   // Handle microphone permission requests

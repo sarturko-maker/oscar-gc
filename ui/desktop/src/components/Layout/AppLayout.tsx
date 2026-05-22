@@ -11,6 +11,7 @@ import { OscarSidebar } from '../oscar/OscarSidebar';
 import RightPaneShell from '../oscar/rightPane/RightPaneShell';
 import { useRightPaneVisibility } from '../oscar/rightPane/useRightPaneVisibility';
 import { useActiveAreaSections } from '../oscar/rightPane/useActiveAreaSections';
+import DeleteAreaConfirm from '../oscar/forge/DeleteAreaConfirm';
 import {
   NAV_DIMENSIONS,
   RIGHT_PANE_CHEVRON_RAIL_WIDTH,
@@ -431,6 +432,11 @@ const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) =
 
       {/* Overlay mode navigation */}
       {effectiveNavigationMode === 'overlay' && <OscarSidebar />}
+
+      {/* Sprint 20-M8 (ADR-090): global Forge Mode E confirm modal.
+          Subscribes to oscar:forge:delete-prepare emitted by the
+          main-process marker-file watcher. Self-rendering when pending. */}
+      <DeleteAreaConfirm />
     </div>
   );
 };

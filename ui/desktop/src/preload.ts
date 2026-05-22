@@ -352,7 +352,34 @@ type ElectronAPI = {
       content: string,
     ) => Promise<StageForReviewResult>;
   };
+  // Sprint 20-M8 (ADR-090): Forge Mode E destructive-op renderer-confirm
+  // bridges. Forge writes a marker file; the watcher in main.ts emits
+  // `oscar:forge:delete-prepare` via `window.electron.on`; the modal
+  // calls one of these on user click.
+  forge: {
+    confirmDeleteArea: (
+      areaId: string,
+      timestamp: string,
+    ) => Promise<
+      | { ok: true; archivedTo: string }
+      | { ok: false; reason: string }
+    >;
+    cancelDeleteArea: (
+      areaId: string,
+    ) => Promise<{ ok: true } | { ok: false; reason: string }>;
+  };
 };
+
+export interface ForgeDeletePreparePayload {
+  areaId: string;
+  areaName: string;
+  timestamp: string;
+  impact: {
+    matterCount: number;
+    integrationCount: number;
+    overrideKeys: string[];
+  };
+}
 
 export interface PlaybookEntry {
   relPath: string;
@@ -629,6 +656,12 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.invoke('oscar:skills:render-block', areaId),
     stageForReview: (slug: string, content: string) =>
       ipcRenderer.invoke('oscar:skills:stage-for-review', slug, content),
+  },
+  forge: {
+    confirmDeleteArea: (areaId: string, timestamp: string) =>
+      ipcRenderer.invoke('oscar:forge:confirm-delete-area', areaId, timestamp),
+    cancelDeleteArea: (areaId: string) =>
+      ipcRenderer.invoke('oscar:forge:cancel-delete-area', areaId),
   },
 };
 
