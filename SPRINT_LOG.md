@@ -57,7 +57,7 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 **ADRs**: 092 (one — Sprint 27 multi-session per partner).
 
-**Commits**: `e63f15fb7` (ADR-092 standalone, before code) → `09205b9f4` (Sprint 27 code: main.ts schema/IPC + preload.ts bridge + useOscarLLPPartners hook reshape + OscarLLPRoster.tsx UI + main.css `.oscar__llp-*` family).
+**Commits**: `e63f15fb7` (ADR-092 standalone, before code) → `09205b9f4` (Sprint 27 code: main.ts schema/IPC + preload.ts bridge + useOscarLLPPartners hook reshape + OscarLLPRoster.tsx UI + main.css `.oscar__llp-*` family) → `d2252930f` (close-out: this SPRINT_LOG entry + PROJECT.md Sprint Index row).
 
 **MiniMax spend**: ~$0.04 (one smoke run; 3% of $10/PCM dev-key cap). Wall-clock ~3 hours including plan-mode + ADR + Phase 1-3 implementation + verification + sprint close.
 
