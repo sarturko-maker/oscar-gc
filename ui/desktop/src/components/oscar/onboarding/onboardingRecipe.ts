@@ -2,7 +2,7 @@ import type { Recipe } from '../../../api';
 import { SYSTEM_PROMPT } from './systemPrompt';
 
 const DEV_ONBOARDING_NODE_CMD = '/usr/bin/node';
-const DEV_ONBOARDING_MCP_PATH = '/srv/projects/oscar-onboarding-mcp/dist/index.js';
+const DEV_ONBOARDING_MCP_PATH = '/srv/projects/goose/oscar/mcps/onboarding/dist/index.js';
 
 function resolveNodeCmd(resourcesRoot: string | null): string {
   if (resourcesRoot) {
