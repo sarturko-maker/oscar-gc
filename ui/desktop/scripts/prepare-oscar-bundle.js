@@ -26,15 +26,20 @@ const ADEU_VERSION = '1.6.9';
 
 // In-tree MCP sources. Each is bundled with esbuild from src/index.ts using
 // the MCP's own node_modules for module resolution. After Sprint-26
-// consolidation these live under oscar/mcps/<name>/ in this repo. The 6
-// Sprint-22 MCPs (baselines, document-checks, document-reader,
-// grounding-verifier, knowledge-base, risk-pricing) are in-tree at
-// oscar/mcps/ but not yet bundled into the .deb — wire them in a separate
-// change.
+// consolidation these all live under oscar/mcps/<name>/ in this repo.
+// The 6 Sprint-22 MCPs (Sprint 22 ADR-075) are lifted/adapted from Lavern
+// (github.com/AnttiHero/lavern, Apache-2.0, commit 7c2efe61); the 2 net-new
+// ones (onboarding, memory) predate them.
 const OSCAR_MCPS_ROOT = path.resolve(__dirname, '..', '..', '..', 'oscar', 'mcps');
 const SIBLING_MCPS = {
   'oscar-onboarding': path.join(OSCAR_MCPS_ROOT, 'onboarding'),
   'oscar-memory': path.join(OSCAR_MCPS_ROOT, 'memory'),
+  'oscar-knowledge-base': path.join(OSCAR_MCPS_ROOT, 'knowledge-base'),
+  'oscar-document-reader': path.join(OSCAR_MCPS_ROOT, 'document-reader'),
+  'oscar-risk-pricing': path.join(OSCAR_MCPS_ROOT, 'risk-pricing'),
+  'oscar-baselines': path.join(OSCAR_MCPS_ROOT, 'baselines'),
+  'oscar-grounding-verifier': path.join(OSCAR_MCPS_ROOT, 'grounding-verifier'),
+  'oscar-document-checks': path.join(OSCAR_MCPS_ROOT, 'document-checks'),
 };
 
 // Sprint 12 (ADR-040): npm-vendored MCPs. Each is bundled with esbuild from
@@ -79,6 +84,10 @@ const PY_WHEELS_DIR = path.join(PY_DIR, 'wheels');
 const NODE_DIR = path.join(RESOURCES, 'node');
 const NODE_BIN = path.join(NODE_DIR, 'bin', 'node');
 const MCPS_DIR = path.join(RESOURCES, 'mcps');
+// Sprint 22 (ADR-075): sub-recipes are checked-in source under ui/desktop/sub-recipes/.
+// prepareSubRecipes() copies them to RESOURCES/sub-recipes/ for the bundle.
+const SUB_RECIPES_SOURCE = path.join(UI_DESKTOP, 'sub-recipes');
+const SUB_RECIPES_DIR = path.join(RESOURCES, 'sub-recipes');
 const SKILLS_DIR = path.join(RESOURCES, 'skills');
 // Sprint 11 (ADR-031, ADR-035): the curated in-house legal skill library
 // vendored from Anthropic's claude-for-legal lives at this repo path.
@@ -358,6 +367,43 @@ async function smokeTestBundledMcps() {
       args: [],
       readyRe: /oscar-onboarding-mcp ready/,
     },
+    // Sprint 22 (ADR-075): Tier-A Lavern lifts
+    {
+      name: 'oscar-knowledge-base',
+      bundle: path.join(MCPS_DIR, 'oscar-knowledge-base', 'index.js'),
+      args: [],
+      readyRe: /oscar-knowledge-base-mcp ready/,
+    },
+    {
+      name: 'oscar-document-reader',
+      bundle: path.join(MCPS_DIR, 'oscar-document-reader', 'index.js'),
+      args: [],
+      readyRe: /oscar-document-reader-mcp ready/,
+    },
+    {
+      name: 'oscar-risk-pricing',
+      bundle: path.join(MCPS_DIR, 'oscar-risk-pricing', 'index.js'),
+      args: [],
+      readyRe: /oscar-risk-pricing-mcp ready/,
+    },
+    {
+      name: 'oscar-baselines',
+      bundle: path.join(MCPS_DIR, 'oscar-baselines', 'index.js'),
+      args: [],
+      readyRe: /oscar-baselines-mcp ready/,
+    },
+    {
+      name: 'oscar-grounding-verifier',
+      bundle: path.join(MCPS_DIR, 'oscar-grounding-verifier', 'index.js'),
+      args: [],
+      readyRe: /oscar-grounding-verifier-mcp ready/,
+    },
+    {
+      name: 'oscar-document-checks',
+      bundle: path.join(MCPS_DIR, 'oscar-document-checks', 'index.js'),
+      args: [],
+      readyRe: /oscar-document-checks-mcp ready/,
+    },
   ];
 
   if (process.env.SKIP_SMOKE_TEST === '1') {
@@ -440,6 +486,32 @@ function spawnAndAwaitReady(check, nodeBin, timeoutMs) {
   });
 }
 
+// Sprint 22 (ADR-075): copy the checked-in sub-recipe YAMLs from
+// ui/desktop/sub-recipes/ (source) into RESOURCES/sub-recipes/ (bundle output).
+// Mirrors the prepareSkills() shape — source-of-truth lives outside resources/.
+async function prepareSubRecipes() {
+  console.log('--- prepareSubRecipes ---');
+  if (!fs.existsSync(SUB_RECIPES_SOURCE)) {
+    throw new Error(`Sub-recipes source missing: ${SUB_RECIPES_SOURCE}`);
+  }
+  fs.rmSync(SUB_RECIPES_DIR, { recursive: true, force: true });
+  ensureDir(SUB_RECIPES_DIR);
+  const files = fs
+    .readdirSync(SUB_RECIPES_SOURCE)
+    .filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'));
+  if (files.length === 0) {
+    throw new Error(`No sub-recipe YAMLs found in ${SUB_RECIPES_SOURCE}`);
+  }
+  for (const f of files) {
+    const srcPath = path.join(SUB_RECIPES_SOURCE, f);
+    const dstPath = path.join(SUB_RECIPES_DIR, f);
+    fs.copyFileSync(srcPath, dstPath);
+    const sz = fs.statSync(dstPath).size;
+    console.log(`[sub-recipes] ${f} (${sz} bytes)`);
+  }
+  return { count: files.length, files };
+}
+
 async function prepareSkills() {
   console.log('--- prepareSkills ---');
   if (!fs.existsSync(SKILLS_SOURCE)) {
@@ -475,6 +547,7 @@ async function main() {
   await prepareMcps();
   await prepareVendoredMcps();
   const smokeTest = await smokeTestBundledMcps();
+  const subRecipes = await prepareSubRecipes();
   const skills = await prepareSkills();
   const networkAudit = auditMcpNetworkSurface();
   console.log('Oscar GC bundle prep complete.');
@@ -484,6 +557,7 @@ async function main() {
     node: { version: NODE_VERSION },
     adeu: { version: ADEU_VERSION },
     mcps: [...Object.keys(SIBLING_MCPS), ...Object.keys(VENDORED_MCPS)],
+    sub_recipes: { count: subRecipes.count, files: subRecipes.files },
     skills: { 'in-house-legal': { skill_md_count: skills.skillCount } },
     network_audit: networkAudit,
     // Sprint 15 (ADR-052): hosted MCP extensions wired by Oscar code,

@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "source": "Public SaaS Terms of Service / Customer Agreement corpus (research use)",
+    "license": "Per-site Terms of Service. Non-commercial research evaluation only.",
+    "format_version": "oscar-llp-1.0",
+    "partner": "aisha-khan",
+    "specialism": "Tech Transactions",
+    "drop_order_position": "DROP CANDIDATE #1 — lowest-quality benchmark; biggest noise injection risk; licensing weakest",
+    "total_instances_target": 25,
+    "instances_present": 0,
+    "_instructions": "Populate by scraping major SaaS providers' GitHub-hosted T&C documents and Arturs-reviewing expert annotations per document. Per-doc rubric items focus on Tech-Tx axes from judge-rubric.md."
+  },
+  "_schema": {
+    "instance": {
+      "id": "string (provider slug + version date)",
+      "source_doc_id": "string (provider name)",
+      "source_doc_text": "string (full T&C text, may be truncated)",
+      "truncated": "boolean",
+      "question": "string (Tech-Tx review question template)",
+      "gold_labels": [
+        {
+          "rubric_item_id": "string",
+          "label_text": "string (Arturs-annotated finding)",
+          "severity_band": "RED | major | minor",
+          "clause_ref": "string"
+        }
+      ]
+    }
+  },
+  "instances": []
+}

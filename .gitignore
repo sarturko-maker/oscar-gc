@@ -98,3 +98,17 @@ gooseselftest/
 # Sprint 15 eval — recipe files contain Tavily key in their SSE URI; orchestrator writes them to /tmp
 # but defence-in-depth, never commit any recipe-*.json under sprint-15 eval dirs.
 docs/sprint-15/eval/**/recipe-*.json
+
+# Sprint 23 (ADR-077) — per-run eval outputs (transcripts, scores, manifests,
+# per-run REPORT.md). The curated closing report at
+# evals/lavern-jv/reports/sprint-23-baseline.md is checked in; everything in
+# runs/<ts>/ is per-execution and not committed.
+evals/lavern-jv/runs/*
+!evals/lavern-jv/runs/.gitkeep
+
+# Oscar LLP iteration eval — per-execution outputs (transcripts, scores,
+# proposals, prompt snapshots, cost log). Curated closing reports under
+# evals/oscar-llp/reports/ are checked in; everything under iterations/
+# is per-execution and reproducible from the seeded loaders.
+evals/oscar-llp/iterations/*
+!evals/oscar-llp/iterations/.gitkeep

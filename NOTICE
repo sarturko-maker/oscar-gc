@@ -49,5 +49,81 @@ used to brand or promote Oscar GC.
 
 ----------------------------------------------------------------------------
 
+Lavern
+Copyright 2025-2026 Antti Innanen.
+Licensed under the Apache License, Version 2.0.
+https://github.com/AnttiHero/lavern
+
+Ten specialist-agent system prompts are lifted from Lavern's
+`src/agents/prompts/` directory and adapted (per ADR-072) into the
+Oscar LLP firm-mode at `ui/desktop/src/components/oscar/oscar-llp/`
+(originally landed as "Lavern firm-mode" Sprint 21; rebranded to
+"Oscar LLP" Sprint 24-A per ADR-078, with "Lavern" reserved for
+upstream-credit pipeline attribution). Sprint 21 pulled at:
+
+  Upstream commit: 7c2efe61524b
+  Upstream date:   2026-05-20
+  Pull date:       2026-05-20
+
+Source prompts (Lavern slug → Oscar GC partner name):
+  ma-specialist        → Sarah Chen (M&A)
+  contract-specialist  → Marcus Webb (Commercial Contracts)
+  litigation-partner   → Daniel Reeves (Litigation)
+  employment-counsel   → Priya Patel (Employment)
+  ip-specialist        → James Okafor (IP)
+  tax-counsel          → Helena Voss (Tax)
+  privacy-counsel      → Diana Park (Privacy)
+  capital-markets      → Robert Sinclair (Capital Markets)
+  tech-transactions    → Aisha Khan (Tech Transactions)
+  regulatory-counsel   → Thomas Schmidt (Regulatory)
+
+Adapted to remove Lavern-internal orchestration substrate (debate-board
+postings, evaluator-gate JSON output, personality numerics). Persona
+voice and multi-phase analysis frameworks preserved verbatim. Verbatim
+raw originals are checked in at
+`ui/desktop/src/components/oscar/oscar-llp/prompts/raw/<slug>.ts.original`
+for diff-against-upstream review.
+
+Per-file provenance comments appear at the top of each adapted prompt
+file (`Lifted from github.com/AnttiHero/lavern (Apache 2.0, HEAD
+7c2efe61524b) src/agents/prompts/<slug>.ts. Adapted per ADR-072: ...`).
+
+Trademark notice: "Lavern" is the name of Antti Innanen's project. Per
+Apache License 2.0 §6, this NOTICE file describes the origin of the
+vendored content; the mark is referenced openly in Oscar GC's NOTICE and
+provenance comments to credit the upstream design (per the Sprint 21
+brief's "no hiding" framing). Sprint 24-A (ADR-078) reframes the
+partner-roster UI surface as "Oscar LLP" (Oscar GC's invented bench) and
+reserves the "Lavern" name for the upstream-credit pipeline port arriving
+in Sprint 24-B+C — the substance Lavern's own evals validated. The
+"Lavern" mark is not used to imply endorsement.
+
+----------------------------------------------------------------------------
+
+Lavern eval baseline (Sprint 23)
+Copyright 2025-2026 Antti Innanen.
+Licensed under the Apache License, Version 2.0.
+https://github.com/AnttiHero/lavern
+
+The fixtures under `evals/lavern-jv/` (three CUAD JV-flavoured contracts —
+borrowmoneycom_06_11_2020, sibannac_12_04_2017, veoneer_02_21_2020 — plus
+the 29-item pre-registered scoring rubric at `RUBRIC.lavern-original.md`)
+are lifted verbatim from Lavern's `evals/jv/` directory. Sprint 23 pulled
+at the same upstream commit as Sprint 21:
+
+  Upstream commit: 7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd
+  Upstream date:   2026-05-20
+  Pull date:       2026-05-20
+
+The Oscar GC adaptation (`RUBRIC.adapted.md` + the runner under
+`evals/lavern-jv/scripts/`) is Sprint 23 work and not lifted; see
+`evals/lavern-jv/NOTICE.lavern.md` for the per-file mapping and the
+adaptation policy (per ADR-077). Lavern's human-baseline scores in the
+EVAL_REPORT_V*.md files are NOT lifted — they were graded on `gemma2:2b`
+through Lavern's pipeline, whereas Oscar GC runs on `MiniMax-M2.5` doing
+partner-style consultation; direct score comparison is informational only.
+
+----------------------------------------------------------------------------
+
 ADR-035 records the attribution scheme for this fork. Future Apache 2.0
 dependencies added to Oscar GC append entries here.

@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "source": "Stanford LegalBench — privacy_policy_qa task",
+    "license": "MIT",
+    "citation": "Guha et al., 2023. https://hazyresearch.stanford.edu/legalbench/",
+    "format_version": "oscar-llp-1.0",
+    "partner": "diana-park",
+    "specialism": "Privacy",
+    "task": "privacy_policy_qa",
+    "drop_order_position": "DROP CANDIDATE #2 — different rubric shape (binary yes/no) complicates judge prompt",
+    "total_instances_target": 100,
+    "instances_present": 0,
+    "_instructions": "Populate via scripts/lib-benchmarks.js legalBenchFromHf(task='privacy_policy_qa')."
+  },
+  "_schema": {
+    "instance": {
+      "id": "string (LegalBench task_id + sub_id)",
+      "source_doc_text": "string (the policy text)",
+      "question": "string (the policy-QA question)",
+      "gold_labels": [
+        {
+          "rubric_item_id": "binary-qa",
+          "expected_answer": "Relevant | Irrelevant",
+          "label_text": "string"
+        }
+      ]
+    }
+  },
+  "instances": []
+}

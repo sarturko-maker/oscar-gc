@@ -115,3 +115,14 @@ Closed by Sprint 14 (commits `214bc10e6` Unit 1 + `0ebe0d238` Unit 2):
 ## Sprint dogfood + pilot observations (placeholder)
 
 - Empty until Sprint 12 dogfood adds entries.
+
+## Sprint 21 dogfood findings (Crostini, 2026-05-20)
+
+`.deb` install + Lavern roster + per-partner chat verified by Arturs. Three carry-forwards for a sprint after 22 (Lavern MCPs) and 23 (per-partner evals):
+
+- **Per-partner conversation history** — current Lavern roster binds one session_id per partner in `state/lavern/partners.json`; every click resumes the same session, accumulating "one long convo". Expected shape: multiple sessions per partner, sidebar tree mirrors Sprint 19's PA → Matter → Session pattern (Lavern → Partner → Session). State file evolves to `{ slug: { sessions: [{ id, created_at, ... }] } }`. "New chat with Sarah Chen" button on the roster creates a fresh session; sidebar shows session rows under each partner row.
+- **In-house PA → Matter → Session tree dogfood gap** — Sprint 19's sidebar tree shipped on code; Crostini dogfood of the matter-history surface is still untested per Arturs's note ("remains untested though"). Same future sprint can validate both.
+- **Tag (@-mention) partners from chat** — in-house lawyer drafting in a matter chat needs to be able to `@sarah-chen` to pull her into the conversation (handoff or sub-recipe invocation). Investigate Goose primitives for inline-agent-reference.
+- **Multi-agent collaboration on a project (e.g., M&A transaction)** — Sarah Chen as lead, James Okafor on IP, Helena Voss on tax, Daniel Reeves on litigation contingencies. Shared project context across partners; cross-partner artefact handoff. Investigate Goose sub-recipes, handoff patterns, project-scoped Top of Mind. The brief's original out-of-scope ("cross-partner memory", "multi-partner conversations") is now back in scope as future work — the demo proves the framing; this sprint makes it substantive.
+
+These collectively are a Sprint 24-or-later "Lavern multi-session + collaboration" sprint, dependent on Sprint 22 (MCPs) and Sprint 23 (evals) landing first.

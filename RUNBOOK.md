@@ -977,6 +977,366 @@ print('patch verified: word-diff yields', len(edits), 'sub-edits on canonical ex
 
 **`.deb` impact**: Sprint 10's bundling copies the venv into the Electron resources directory. Rebuilding `.deb` after applying the patch carries the patched code into the bundle (Sprint 13 Phase 6).
 
+## Sprint 22 — Lavern Tier-A MCPs + verification-pass sub-recipe (2026-05-20, lq-vps)
+
+**New sibling MCP repos** under `/srv/projects/` (each is its own git repo; mirrors `oscar-onboarding-mcp` / `oscar-memory-mcp` shape; pnpm + TypeScript + `@modelcontextprotocol/sdk` 1.29.0 + zod 4.4.3; raw Lavern sources preserved at `src/_lavern-original/`):
+
+- `/srv/projects/oscar-knowledge-base-mcp/`
+- `/srv/projects/oscar-document-reader-mcp/`
+- `/srv/projects/oscar-risk-pricing-mcp/` (net-new — Lavern's source is orchestration-only scaffolding)
+- `/srv/projects/oscar-baselines-mcp/`
+- `/srv/projects/oscar-grounding-verifier-mcp/`
+- `/srv/projects/oscar-document-checks-mcp/`
+
+Per-repo dev cycle: `pnpm install && pnpm build && pnpm smoke && pnpm test`. Integration tests use a real `@modelcontextprotocol/sdk` client harness (no LLM, CLAUDE.md "real MCP client harness" rule).
+
+**Reference repo (read-only)**: `/srv/projects/lavern/` — cloned from `https://github.com/AnttiHero/lavern.git` at commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (2026-05-20, "Update readme"). Apache 2.0. Source of the lifted MCP tool surfaces, `evals/jv/` (RUBRIC + 3 CUAD JV contracts + scored reports — Sprint 23 reference), and `docs/architecture-spec.md` (the sequential pipeline our SubRecipe primitive maps onto). Do not push to its remote.
+
+**MiniMax dev key**: `/root/.minimax-dev-key` (chmod 600, 126 bytes). USD 10/month dev budget. `scripts/test-lavern-agents.js` falls back to this file when `MINIMAX_API_KEY` is not in env. Do not commit; do not echo into transcripts.
+
+**esbuild quirk on lq-vps**: pnpm workspace install fails in this environment (`ERR_PNPM_EXOTIC_SUBDEP` on `@electron/node-gyp`). Sprint 22 worked around with a standalone esbuild install (`cd /tmp && npm init -y && npm install esbuild`, then copy `node_modules/{esbuild,@esbuild}` into `ui/desktop/node_modules/`). This is sufficient for `prepare-oscar-bundle.js` to resolve `require('esbuild')`. Hermit-activated environment (`source bin/activate-hermit`) appears to handle the full workspace install fine — the failure is only when running pnpm outside Hermit's shell.
+
+**Bundle outputs verified** (post-`prepare-oscar-bundle.js`): 9 bundled MCPs at `ui/desktop/src/resources/mcps/{oscar-fs, oscar-memory, oscar-onboarding, oscar-knowledge-base, oscar-document-reader, oscar-risk-pricing, oscar-baselines, oscar-grounding-verifier, oscar-document-checks}/index.js`; sub-recipe at `ui/desktop/src/resources/sub-recipes/verification-pass.yaml`; smoke test passes for all 9 within 150ms each; network audit clean for all 9.
+
+## Sprint 23 — Ralph Loop (Shape A) + Lavern-baselined eval (2026-05-20, lq-vps)
+
+**ADRs**: 076 (Ralph Loop, Shape A — prompt-borne gate-and-revise discipline; revision-count tracking inline; `Recipe.settings.max_turns = 12` safety ceiling). 077 (eval baseline lift + rubric adaptation + MiniMax-as-judge methodology + frozen Sprint 22 directive constant for the without-Ralph A/B leg).
+
+**Piece 1 — Ralph Loop wiring** (commit `70d82658d`)
+
+- Sprint 22's "Verification before delivery" paragraph REPLACED in all 10 partner prompt files at `ui/desktop/src/components/oscar/lavern/prompts/*.ts` by the Ralph Loop paragraph (verbatim from ADR-076). The new paragraph requires verbatim-quote of the verification-pass header (`## Verification Pass: <PASS|ISSUES>`), enforces a 2-revision budget enumerated as concrete sequence steps, and gives an exact escalation phrase. Sprint 21 `prompts/raw/*.ts.original` untouched (verification gate is Oscar-GC-specific augmentation, not part of the Lavern adaptation lineage).
+- `max_turns: 12` added to production `buildLavernPartnerRecipe.ts:settings` and mirrored in `scripts/test-lavern-agents.js:buildPartnerRecipeYaml()`. Acts as substrate safety ceiling against runaway revision loops.
+
+**Piece 1 — Dogfood test** (`ui/desktop/scripts/test-lavern-revision.js`, new)
+
+Single-partner (Sarah Chen) test with the deliberately ungrounded prompt: *"Quote section 99.9 of the bundled M&A playbook verbatim..."* Verdict gates on a single hard-gate criterion (c3: no attribution fabrication detected — markdown `## Section 99.9 ...` headers or inline `Section 99.9 verbatim/states/contemplates/...` attribution). Three soft-info diagnostics (c1 ISSUES returned, c2 ≥2 verify headers, c4 explicit acknowledgment OR escalation) are printed but do not gate verdict — multiple valid paths (explicit acknowledgment / silent neutral substitution / draft-then-verify-revise / escalation) all achieve the same fails-closed outcome.
+
+Run:
+
+```bash
+node ui/desktop/scripts/test-lavern-revision.js
+SKIP_MINIMAX_TESTS=1 node ui/desktop/scripts/test-lavern-revision.js  # CI bypass
+```
+
+Single transcript persisted at `ui/desktop/tests/lavern-transcripts/sarah-chen-revision-<ts>.log`. Cost: ~$0.05 per run. Observed variance across 5 runs: 4 PASS (paths A / B), 1 FAIL (path X — `## Section 99.9 Verbatim` fabrication over content actually retrieved from chunk `ma-playbook-reps-survival-005`). Shape A's discipline does not always force verification-pass invocation; when bypassed, the partner can still mislabel attribution.
+
+**Piece 1 — Sprint 22 regression** (no commit; verification only)
+
+`node ui/desktop/scripts/test-lavern-agents.js` continues passing 3/3 partners on the second of two runs (first run had Aisha skip verification-pass on a happy-path question — same LLM variance Sprint 22 documented when closing at "3/3 PASS after directive sharpening"). Per partner: ~15s wall-clock, ~$0.02. Skip via `SKIP_MINIMAX_TESTS=1`.
+
+**Piece 2 — Lavern eval substrate** (commit `b3fca0ef1`)
+
+New self-contained directory at `/srv/projects/oscar-gc-lavern/evals/lavern-jv/`. Apache 2.0 attribution at `evals/lavern-jv/NOTICE.lavern.md` + top-level `NOTICE` Lavern-eval-baseline section. Lavern SHA `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (same as Sprint 22 lift).
+
+Layout:
+
+```
+evals/lavern-jv/
+├── README.md                   ← reproducibility recipe
+├── NOTICE.lavern.md            ← per-directory Apache 2.0 attribution
+├── RUBRIC.lavern-original.md   ← verbatim copy from Lavern (28-item)
+├── RUBRIC.adapted.md           ← Oscar GC adaptation (drops pipeline metrics; adds 4 axes)
+├── docs/*.txt                  ← 3 CUAD JV contracts copied from Lavern
+├── rubric/{doc1,doc2,doc3,extra-axes}.json
+├── prompts/{judge-system,partner-question}.md
+├── scripts/{run-eval,lib-recipe,lib-judge,lib-report}.js
+├── runs/                       ← gitignored except .gitkeep
+└── reports/sprint-23-baseline.md  ← curated closing report (promoted at sprint close)
+```
+
+**Piece 2 — Eval invocation**
+
+```bash
+# Full sweep — 3 partners × 3 docs × 2 configs = 18 partner runs + 18 judge calls
+node evals/lavern-jv/scripts/run-eval.js
+
+# Subsets per ADR-077 drop-order
+node evals/lavern-jv/scripts/run-eval.js --configs with-ralph                  # drop A/B (9 runs)
+node evals/lavern-jv/scripts/run-eval.js --partners sarah-chen                 # reduce to 1 partner × 3 docs × 2 configs (6 runs)
+node evals/lavern-jv/scripts/run-eval.js --partners sarah-chen --docs doc1-borrowmoney --configs with-ralph  # debug
+
+# Re-score saved transcripts (no partner re-runs; useful after judge prompt edits)
+node evals/lavern-jv/scripts/run-eval.js --judge-only --from-run evals/lavern-jv/runs/<ts>
+
+# CI bypass
+SKIP_MINIMAX_TESTS=1 node evals/lavern-jv/scripts/run-eval.js
+```
+
+Cost / wall-clock envelope (full sweep, max scope):
+
+| Shape | Partner calls | Judge calls | Total | $ ballpark | Wall-clock |
+|---|---|---|---|---|---|
+| Min (1×3, judge-only)               | 3   | 3   | 6   | $0.05-0.20  | ~3 min   |
+| Mid (3×3, no A/B)                   | 9   | 9   | 18  | $0.15-0.60  | ~10 min  |
+| **Max (3×3×2)**                     | **18**  | **18**  | **36**  | **~$1.50-2.50** | **~30 min** |
+
+Smoke-tested at 88s/100s per single tuple (Sarah Chen × Doc 1 × with-Ralph) — partner+judge, exit 0. Full-sweep cost projection updated against $10/PCM dev-key envelope: still comfortably under.
+
+**Frozen Sprint 22 baseline**: `lib-recipe.js` exports `SPRINT_22_DIRECTIVE` constant carrying Sprint 22's verification paragraph verbatim, inline-cited at SHA `08a5381a7`. This decouples the eval's without-Ralph leg from live production prompts — future sprints can rerun against the same fixed without-Ralph baseline even after Ralph Loop directive evolves.
+
+**Per-run output paths** (`runs/<ISO-timestamp>/`):
+
+- `transcripts/<partner>-<doc>-<config>.log` — full partner stdout+stderr
+- `scores/<partner>-<doc>-<config>.json` — judge result (ok / parsed / error / raw_stdout / recipe_path)
+- `manifest.json` — Lavern SHA, Sprint 22 baseline SHA, Oscar GC SHA, model, wall-clock, counts, CLI args
+- `REPORT.md` — collated per-tuple table + with-Ralph vs without-Ralph Δ_grounded + global axis deltas + interpretation
+
+`runs/` is `.gitignore`d; only `reports/sprint-23-baseline.md` (the curated closing report) is committed.
+
+## Sprint 24-A — Lavern → Oscar LLP rebrand (2026-05-21, lq-vps)
+
+**ADR**: 078 (rebrand decision + Lavern-name reservation for Sprint 24-B+C pipeline + ADR-029 trust-bypass dual-prefix coexistence window + read-time lazy migration shape + Apache 2.0 attribution discipline).
+
+**Host-state changes** (path + namespace renames; legacy paths preserved for migration helpers; Sprint 25 cleanup removes the helpers):
+
+| Old | New | Migration mechanism |
+|---|---|---|
+| `~/.config/oscar/state/lavern/partners.json` | `~/.config/oscar/state/oscar-llp/partners.json` | Atomic `fs.rename` at first call to `readOscarLlpRegistry()` (one-shot, idempotent, interrupt-safe). No-op when new exists or legacy absent. |
+| `~/Documents/Oscar GC/Lavern/<slug>/` | `~/Documents/Oscar GC/Oscar LLP/<slug>/` | Atomic per-slug `fs.rename` at first call to `oscar:llp:ensure-dir` for that slug. Carries `.goose/memory/` and any user-saved files with the working dir (same inode move on the same volume). |
+| IPC channel `oscar:lavern:ensure-dir` (+ `:bind-session`, `:lookup-state`, `:list-partner-states`) | `oscar:llp:*` equivalents | Renderer surface `window.electron.lavern.*` → `window.electron.llp.*`. |
+| Route `/lavern` | `/oscar-llp` | No backstop redirect — sidebar + landing surfaces updated to new route directly. |
+| Recipe title prefix `Lavern —` | `Oscar LLP —` | ADR-029 trust-bypass widens to three-way OR (`Oscar GC` \|\| `Lavern —` \|\| `Oscar LLP —`); both prefixes bypass through Sprint 24-A. Sprint 25 cleanup drops `Lavern —`. |
+
+**Migration log lines to grep for** (one-shot per host, then quiet):
+
+```
+oscar:llp registry migrated from legacy lavern path
+oscar:llp working dir migrated from legacy lavern path
+```
+
+Failure modes (handled defensively; logged at WARN):
+
+```
+oscar:llp legacy registry migration failed
+oscar:llp legacy working-dir migration failed
+```
+
+If both new and legacy paths exist (manual-copy edge case), the new path wins + no rename happens — DO NOT clobber.
+
+**Post-migration verification** (per host, after first launch under Sprint 24-A):
+
+```bash
+ls -la ~/.config/oscar/state/oscar-llp/partners.json    # present
+ls -la ~/.config/oscar/state/lavern/partners.json       # ENOENT (renamed)
+ls -la ~/Documents/Oscar\ GC/Oscar\ LLP/                # populated per partner
+ls -la ~/Documents/Oscar\ GC/Lavern/                    # ENOENT (renamed)
+```
+
+**Renamed test scripts** (Sprint 22 + Sprint 23 regression harnesses; pre-existing behaviour identical, only firm-name strings + filename changed):
+
+```bash
+node ui/desktop/scripts/test-oscar-llp-agents.js      # was test-lavern-agents.js (~$0.04, ~36 s, 3/3 partners)
+node ui/desktop/scripts/test-oscar-llp-revision.js    # was test-lavern-revision.js (~$0.02, ~15 s, c3 PASS)
+```
+
+`TRANSCRIPTS_DIR` also renamed: `ui/desktop/tests/lavern-transcripts/` → `ui/desktop/tests/oscar-llp-transcripts/`. Old transcripts (if present) stay under the legacy directory name — they are test artifacts, not production data; not migrated.
+
+**Eval directory name UNCHANGED** per ADR-077: `evals/lavern-jv/` stays. The Lavern-baselined eval directory and its `NOTICE.lavern.md` / `RUBRIC.lavern-original.md` / `runs/` structure are genuinely Lavern's attribution lineage and not subject to the Sprint 24-A rebrand. Only the synthesized-partner firm strings inside `evals/lavern-jv/scripts/lib-recipe.js` renamed (`at Lavern` → `at Oscar LLP`; recipe title prefix `Lavern —` → `Oscar LLP —`).
+
+**Spot-check eval** (1-tuple, ~$0.07, ~221 s; confirms rename did not break the eval substrate):
+
+```bash
+node evals/lavern-jv/scripts/run-eval.js \
+  --partners sarah-chen --docs doc1-borrowmoney --configs without-ralph
+# REPORT.md shows recipe title "Oscar LLP — Sarah Chen" in the manifest;
+# partner exit 0; judge ok. Sarah×Doc1 0/12 recall is a Sprint 23
+# pre-existing quality issue (carry to Sprint 24-B+C iteration), NOT a
+# Sprint 24-A regression.
+```
+
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode` branch):
+
+- `022a45e15` — ADR-078 at decision time
+- `1f1efa3db` — trust-bypass widening (three-way OR)
+- `24188101f` — mechanical sweep (atomic, 31 files)
+- `1da0c328c` — tests + evals + NOTICE re-section
+- `349966f9d` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK
+
+No sibling repo modified. Lavern source unchanged at `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
+
+## Sprint 24-B/C — Lavern Pipeline + cross-partner iteration eval (2026-05-21, lq-vps)
+
+**ADRs**: 079 (pipeline shape Shape P1 + `read_document_head` MCP tool + Curator-fires-when-doc-count≥2 + Curator stubbed in 24-B), 080 (precedent-board persistence — reuse `oscar-baselines-mcp` at per-user-per-area scope), 081 (verification-gate extraction Hybrid 2 — byte-identical 21-line block sha256 `1f67d064f6987ba1` extracted into `verificationGateBlock.ts`).
+
+**Host-state changes**:
+
+| Path | Purpose | Created by |
+|---|---|---|
+| `~/Documents/Oscar GC/Oscar LLP/lavern-pipeline/` | User drops `.txt/.md/.pdf/.docx` documents here for pipeline analysis | `oscar:llp:pipeline:ensure-dir` IPC on first invocation of `/oscar-llp/pipeline` |
+| `~/.config/oscar/state/lavern/precedents/` | Precedent-board persistence (per-user-per-area scope per ADR-080); `oscar-baselines-mcp` writes here when invoked with `OSCAR_BASELINES_DIR=` env override | Same IPC, created adjacent to the working dir |
+
+**No process daemons**, no global env-var locks, no system services added. Pipeline invocation spawns 4 stdio MCPs (oscar-fs + oscar-document-reader + oscar-grounding-verifier + oscar-baselines) per session; same pattern as Sprint 22 Tier-A partner recipes.
+
+**New test invocations** (Sprint 24-B pipeline regression — real MiniMax):
+
+```bash
+# Parse-only (zero LLM cost) — validates all 4 YAMLs parse
+node ui/desktop/scripts/test-lavern-pipeline.js --parse-only
+
+# End-to-end (real MiniMax, ~$0.15-0.25, ~3-5 min)
+node ui/desktop/scripts/test-lavern-pipeline.js
+# Reads /srv/projects/oscar-gc-lavern/evals/lavern-jv/docs/borrowmoneycom_06_11_2020.txt
+# Asserts: delegate("watchman") fires; delegate("reader") fires; delegate("curator") does NOT (single doc)
+# Transcript: ui/desktop/tests/lavern-pipeline-transcripts/pipeline-<ts>.log
+```
+
+**Pre-execution gates for Sprint 24-C iteration eval** (user invokes when ready; not part of this sprint's code-commit close):
+
+1. **Anthropic API key**: `/root/.anthropic-dev-key` (chmod 600), env-var override `ANTHROPIC_API_KEY`. **Max subscriptions do not issue API keys** — confirm pay-as-you-go API key is available; if only Max, the harness blocks.
+2. **MiniMax dev key**: `/root/.minimax-dev-key` (Sprint 22+ carries $10/PCM dev key).
+3. **Sprint 22 regression**: `node ui/desktop/scripts/test-oscar-llp-agents.js` 3/3 PASS post-Hybrid-2 (confirms composition seam holds).
+4. **Sprint 23 sanity check**: `node evals/oscar-llp/scripts/sanity-check.js` (1 partner × 3 docs × 2 configs = N=6, ~$0.30, ~15 min). Asserts |new Δ_grounded - (-3.8pp)| ≤ 2pp tolerance. PASS logged to `evals/oscar-llp/iterations/_sanity-check/result.json`. FAIL halts.
+
+**Iteration run command** (full sprint, ~$52 estimated against $60-100 brief envelope):
+
+```bash
+cd evals/oscar-llp
+npm install                              # installs @anthropic-ai/sdk@0.40.1
+cd ../..
+node evals/oscar-llp/scripts/sanity-check.js
+node evals/oscar-llp/scripts/run-iteration.js --all
+# 3 partners × 4 cycles × N=20 partner runs = 240 MiniMax invocations
+# 12 batched Claude judge+propose calls (Opus 4.7 default; Sonnet 4.6 fallback)
+# 1 Phase 2 cross-partner extractor call
+# Output:
+#   evals/oscar-llp/iterations/<partner>/iter-<0..3>/{prompt.txt,transcripts/,scores.json,proposal.json,diff-from-prior.patch}
+#   evals/oscar-llp/iterations/_cross-partner/pattern-extraction.json
+#   evals/oscar-llp/iterations/_costs/costs-<date>.json  (running token + dollar log)
+#   evals/oscar-llp/reports/sprint-24-c-iteration-baseline.md  (final report)
+```
+
+**Drop-order** (if mid-execution scope tightens; per brief, protect 24-C eval over 24-B pipeline):
+
+```bash
+# Drop supplemental benchmarks (LegalBench-Privacy + GitHub-SaaS-T&C):
+node evals/oscar-llp/scripts/run-iteration.js --all --drop-supplemental
+
+# Reduce iteration cycles 3 → 2 per partner:
+node evals/oscar-llp/scripts/run-iteration.js --all --cycles 0..2
+
+# Single partner only (cross-partner patterns deferred):
+node evals/oscar-llp/scripts/run-iteration.js --partner sarah-chen --cycles 0..3
+
+# Phase 2 only (after iteration runs complete):
+node evals/oscar-llp/scripts/run-iteration.js --phase2-only
+```
+
+**Benchmark population** (not in 24-B/C scope — operator-driven before first iteration):
+
+The 5 benchmark stub files at `evals/oscar-llp/benchmarks/*.json` ship with `instances: []`. Each file's `_meta` block documents source + license + format; `_schema` block documents the per-instance shape (`id`, `source_doc_text`, `question`, `gold_labels[]`). Operator downloads MAUD (`https://www.atticusprojectai.org/maud`) + CUAD (HF `theatticusproject/cuad-qa`) + LegalBench (`hazyresearch.stanford.edu/legalbench/`) and runs an adapter script to populate the `instances` arrays. Adapter scripts not in Sprint 24-B/C scope.
+
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode` branch):
+
+- `f300b0f09` — ADRs 079, 080, 081 at decision time
+- `e4febabea` — Hybrid 2 refactor (verificationGateBlock + 11 file edits; -201 lines, +40 lines net)
+- `fb2952971` — Lavern Pipeline substance (4 YAMLs + builder + view + IPC + test)
+- `604131ac9` — eval harness substrate (8 scripts + 3 prompts + 5 benchmark stubs)
+- `9b84eb9a3` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK
+
+**Sibling repo** (`sarturko-maker/oscar-document-reader-mcp` `main` branch):
+
+- `ba283bf0d82ac3f88b2b61c6bbbc1e017845eb74` — `read_document_head` tool (~30 LOC)
+
+Lavern source unchanged at `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
+
+## Sprint 25 — Execute Sprint 24-C iteration (interactive, Max-only) (2026-05-22, lq-vps)
+
+**ADRs**: 082 (interactive iteration shape — Claude Code, not @anthropic-ai/sdk).
+
+**Host-state changes**:
+
+| Path | Purpose | Created by |
+|---|---|---|
+| `/tmp/oscar-benchmarks/` | Transient cache for MAUD + CUAD upstream zip downloads (32.9 MB + 18.3 MB; extracted to `maud/` + `cuad/` subdirs). Cleared on reboot — not persistent host state. | Manual `curl` during Phase 1 loader development; loaders re-download if path absent |
+| `evals/oscar-llp/loaders/` | New directory containing `maud-loader.js` (168 LOC) + `cuad-loader.js` (201 LOC). Tracked in git. | Sprint 25 Phase 1 |
+| `evals/oscar-llp/iterations/<partner>/iter-{0..3}/` | Per-cycle outputs (`prompt.txt`, `transcripts/<id>.log` × 20, `manifest.json`, `scores.json`, `proposal.json`, `diff-from-prior.patch`). Gitignored per-execution data. ~1.7 MB per partner ≈ 5 MB trio total. | `run-partner-cycle.js` Phase A + me-in-conversation Phase B + `apply-proposal.js` Phase C |
+| `evals/oscar-llp/iterations/_cross-partner/pattern-extraction.json` | Phase 4 cross-partner pattern output (4 patterns + 1 negative finding). Gitignored. | Me-in-conversation Phase 4 |
+| `evals/oscar-llp/iterations/_sanity-check/` | `result.json` (pass=false, drift_pp=8.1) + `FAIL.md`. Gitignored. Waived per user direction. | `sanity-check.js` |
+| `evals/oscar-llp/iterations/_costs/costs-2026-05-21.json`, `costs-2026-05-22.json` | Daily MiniMax cost logs. Gitignored. | `lib-cost-log.appendCost` |
+
+**No process daemons**, no global env-var locks, no system services added. Each cycle spawns `goose run --recipe <yaml> --no-session` 20 times serially via `spawnSync`.
+
+**New env var convention**: `SKIP_SANITY_GATE=1` bypasses the Sprint 23 baseline-drift check in `run-partner-cycle.js`'s `checkSanityGate()`. Honored per user direction after the Phase 2 sanity check FAILED the literal ±2pp gate (+4.3pp vs Sprint 23's -3.8pp baseline; drift diagnosed as Sprint 23's N=6 CI noise, not substrate change). Sprint 25 Phase 3 invocations all used this flag.
+
+**New invocations**:
+
+```bash
+# Phase 1 — populate benchmarks (one-time per sprint; ~50 MB transient downloads to /tmp/oscar-benchmarks/)
+node evals/oscar-llp/loaders/maud-loader.js
+node evals/oscar-llp/loaders/cuad-loader.js --filter privacy
+node evals/oscar-llp/loaders/cuad-loader.js --filter saas
+
+# Phase 2 — sanity check (~$0.30, ~15 min, gates Phase 3)
+node evals/oscar-llp/scripts/sanity-check.js
+
+# Phase 3 (per partner, per cycle) — Phase A spawns 20 goose runs serially (~25 min)
+MINIMAX_API_KEY=$(cat /root/.minimax-dev-key) SKIP_SANITY_GATE=1 \
+  node evals/oscar-llp/scripts/run-partner-cycle.js --partner sarah-chen --cycle 0 --sample-size 20
+
+# Phase 3C — apply the proposal me-in-conversation Phase B wrote (writes iter-<k+1>/prompt.txt + diff)
+node evals/oscar-llp/scripts/apply-proposal.js --partner sarah-chen --cycle 0
+```
+
+**Sanity-check waiver note**: per user direction 2026-05-22, `SKIP_SANITY_GATE=1` was honored for Sprint 25 Phase 3. The literal ±2pp tolerance baked into `sanity-check.js` was over-tuned to Sprint 23's N=6 sample; the +4.3pp Sprint 25 sanity result is within the original Sprint 23 95% CIs ([13.8%, 57.3%] and [20.1%, 66.8%]). Future sprints should either widen the tolerance to ±10pp or move sanity to higher-N (3 partners × 3 docs × 2 configs = 18 runs). Documented in `evals/oscar-llp/reports/sprint-25-iteration-results.md` Phase 2 section.
+
+**Total Sprint 25 spend on `/root/.minimax-dev-key`**: $3.18 (32% of $10/PCM cap). $0.00 Anthropic — judging in-conversation under Max subscription per ADR-082. Cost data persisted at `evals/oscar-llp/iterations/_costs/costs-2026-05-{21,22}.json`.
+
+## Sprint 26 — Verification-gate back-port + cross-partner A/B (2026-05-22, lq-vps)
+
+Sprint 26 produced one production code change (`verificationGateBlock.ts` back-port) and three N=20 validation runs (Sarah post-back-port, Marcus pre-back-port, Marcus post-back-port). All reused Sprint 25's substrate at `evals/oscar-llp/`.
+
+**ADRs**: 090 (verification-gate back-port + targeted constraint relax for partner-training-bias defect).
+
+**Host-state changes**:
+
+| Path | Purpose | Created by |
+|---|---|---|
+| `evals/oscar-llp/iterations/sarah-chen/iter-0-sprint25-baseline/` | Preserved Sprint 25 Sarah iter-0 evidence (prompt.txt, manifest.json, scores.json, 20 transcripts) before Sprint 26 re-run clobbered the `iter-0/` path. Rename only; reversible. | Sprint 26 Phase 4 setup |
+| `evals/oscar-llp/iterations/sarah-chen/iter-0/` | Sprint 26 post-back-port Sarah run. New transcripts + new scores.json with shape verdicts. Gitignored. | `run-partner-cycle.js` Phase A + me-in-conversation Phase B |
+| `evals/oscar-llp/iterations/marcus-webb/iter-0-pre-backport/` | Marcus pre-back-port baseline (gate restored from HEAD~2 during run start). Gitignored. | `run-partner-cycle.js` + post-run rename |
+| `evals/oscar-llp/iterations/marcus-webb/iter-0/` | Marcus post-back-port run (uses production back-ported gate). Gitignored. | `run-partner-cycle.js` Phase A + me-in-conversation Phase B |
+| `evals/oscar-llp/reports/sprint-26-back-port-validation.md` | Closing report with A/B tables for Sarah and Marcus. Tracked in git. | Sprint 26 Phase 6 |
+| `docs/adr/090-sprint26-verification-gate-backport.md` | ADR-090. Tracked in git. | Sprint 26 Phase 0 |
+| `/tmp/vgb-post.ts`, `/tmp/sprint26-{smoke-pre,smoke-post,sarah-iter0,marcus-pre,marcus-post}.log` | Transient scratch (deletable). Used by Phase 5 gate-substitution wrapper + per-run stdout capture. | Sprint 26 Phase 5 wrapper |
+
+**No new env vars** beyond Sprint 25's `SKIP_SANITY_GATE=1`. No new daemons. No new system packages. No new sibling repos.
+
+**New invocation pattern — pre/post A/B on a non-trio partner (Phase 5 wrapper)**:
+
+```bash
+GATE=/srv/projects/oscar-gc-lavern/ui/desktop/src/components/oscar/oscar-llp/verificationGateBlock.ts
+# 1. Save current (post-back-port) gate
+cp "$GATE" /tmp/vgb-post.ts
+# 2. Overwrite with pre-back-port version (HEAD~2 = pre-Sprint-26-back-port commit)
+git -C /srv/projects/oscar-gc-lavern show HEAD~2:ui/desktop/src/components/oscar/oscar-llp/verificationGateBlock.ts > "$GATE"
+# 3. Launch run; sleep 8s for script to read file; restore post-back-port; wait for completion
+SKIP_SANITY_GATE=1 node /srv/projects/oscar-gc-lavern/evals/oscar-llp/scripts/run-partner-cycle.js \
+  --partner marcus-webb --cycle 0 --sample-size 20 > /tmp/sprint26-marcus-pre.log 2>&1 &
+NODEPID=$!
+sleep 8                                # script reads gate during startup
+cp /tmp/vgb-post.ts "$GATE"            # restore post-back-port — working tree clean again
+wait $NODEPID
+# 4. Rename iter-0/ → iter-0-pre-backport/ before launching the post-back-port run
+mv evals/oscar-llp/iterations/marcus-webb/iter-0 evals/oscar-llp/iterations/marcus-webb/iter-0-pre-backport
+# 5. Run again with the (already-restored) post-back-port gate; lands at fresh iter-0/
+SKIP_SANITY_GATE=1 node evals/oscar-llp/scripts/run-partner-cycle.js \
+  --partner marcus-webb --cycle 0 --sample-size 20 > /tmp/sprint26-marcus-post.log 2>&1
+```
+
+The 8s sleep is the load-bearing detail: `lib-recipe24.loadProductionPartnerPrompt` reads the gate file ONCE at script startup (line 88 of `run-partner-cycle.js`); after that the prompt is in memory and the file can be restored without affecting the run. Verified empirically — Marcus pre-back-port `iter-0/prompt.txt` snapshot contained pre-back-port gate (`fetched via=1`, `acknowledgement=0`); Marcus post-back-port snapshot contained post-back-port gate (`fetched via=0`, `acknowledgement=1`). Reusable for any future cross-partner A/B on a gate edit.
+
+**Substrate extension to support Marcus Webb** — three additive entries (commit `dc5feaa30`, ~17 LOC):
+
+- `evals/oscar-llp/scripts/lib-benchmarks.js` — `PARTNER_BENCHMARK_MAP['marcus-webb'] = ['cuad-saas.json']`
+- `evals/oscar-llp/scripts/lib-recipe24.js` — `PRODUCTION_PROMPTS['marcus-webb']` = path to partner .ts file
+- `evals/oscar-llp/scripts/run-partner-cycle.js` — `PARTNER_META['marcus-webb'] = { name: 'Marcus Webb', specialism: 'Commercial Contracts' }`
+
+Same pattern (3 entries) for any future non-trio partner. cuad-saas is partner-agnostic at the data layer; `partnerCycleSeed` gives each partner a distinct N=20 sample even from a shared corpus.
+
+**Sprint 22 smoke (`test-oscar-llp-agents.js`) baseline drift note**: pre-Sprint-26 the test was at 2/3 PASS (Aisha skipping verification-pass on focused-tool questions — pre-existing MiniMax non-determinism that's been latent since Sprint 22). The test's hardcoded `VERIFICATION_DIRECTIVE` (lines 108-113) is independent of `verificationGateBlock.ts`, so this isn't a Sprint 26 regression — it's a known model-behaviour quirk. Sprint 26 post-change run was 3/3 PASS (model happened to invoke verification-pass on Aisha that time). For Sprint 26's purposes, infrastructure (recipe build, MCP spawn, sub-recipe load) is the relevant gate; that's been intact across all four smoke runs this sprint.
+
+**Total Sprint 26 spend on `/root/.minimax-dev-key`**: $0.87 (9% of $10/PCM cap, well under $3 plan estimate). $0.00 Anthropic — judging in-conversation under Max subscription per ADR-082. The back-port itself reduces tool-hunting wall-clock by 20-90% per instance, so each validation run was faster than Sprint 25's pre-back-port baseline. Cost data persisted at `evals/oscar-llp/iterations/_costs/costs-2026-05-22.json`.
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.
