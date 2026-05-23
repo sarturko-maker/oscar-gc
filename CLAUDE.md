@@ -80,7 +80,7 @@ Working directory determines push target — `git remote -v` to verify before an
   - Caret ranges only for stable 1.x crates with semver discipline (`serde`, `tokio`).
   - `cargo update --precise` for controlled bumps, after reading the changelog.
 - `cargo audit` and `cargo deny` already configured upstream — don't disable.
-- License policy: **no AGPL, no GPL** in our additions (we want to keep the distribution redistributable). Goose is Apache 2.0; keep our adds Apache 2.0 or MIT.
+- License policy (revised at rebrand-2026-05-23): **Oscar-authored code is AGPL-3.0-or-later** (root LICENSE). **Inherited code keeps its existing license** — upstream goose (Apache-2.0) is never re-licensed; Lavern lifts and vendored claude-for-legal stay Apache-2.0; the vendored oscar-fs MCP and adeu are MIT; bundled CPython is PSF + MPL-2.0. New Oscar-authored source files SHOULD carry `// SPDX-License-Identifier: AGPL-3.0-or-later` on the first non-shebang line. Do NOT revert to the previous "Apache-2.0 or MIT, no AGPL/GPL" rule — that was reversed. See `LICENSES/README.md` for the per-path map and `NOTICE` for upstream attribution. Any new dependency that is AGPL/GPL needs explicit compatibility review (root LICENSE is AGPL-3.0-or-later, so AGPL/LGPL/GPL deps are now in-scope where compatible).
 
 ## TypeScript / Node discipline (UI + memory MCP)
 

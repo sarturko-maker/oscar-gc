@@ -7,7 +7,7 @@ Capture every host-state change as it happens. No retroactive writes. Goal: a fr
 - VPS: `lq-vps` (Tailscale tailnet `taile62e32.ts.net`). Shared with LQ-AI; baseline in `lq-ai-fork-state` memory.
 - Path: `/srv/projects/goose` — flattened from `gh repo fork`'s nested clone.
 - tmux session: `goose`.
-- Remotes: `origin` = `git@github.com:sarturko-maker/goose.git`; `upstream` = `git@github.com:aaif-goose/goose.git`. Both SSH.
+- Remotes: `origin` = `git@github.com:sarturko-maker/oscar-gc.git`; `upstream` = `git@github.com:aaif-goose/goose.git`. Both SSH. (Origin renamed from `sarturko-maker/goose` at rebrand-2026-05-23; GitHub auto-redirects old URLs but the canonical name is now `oscar-gc`.)
 - GitHub auth: existing `/root/.ssh/github_ed25519` key (shared with LQ-AI).
 - `gh` CLI: installed + authenticated on VPS.
 - `/srv/projects/lq-ai-mirror.git` — pre-existing bare mirror from LQ-AI's manual-fork workaround. Not part of [Goose]; flagged in case anything scans `/srv/projects/` wholesale.

@@ -4,7 +4,7 @@ Custom distribution of Block's Goose (now AAIF / Linux Foundation) — `aaif-goo
 
 ## The one goal (short-term)
 
-1. Fork Goose (done — `sarturko-maker/goose`, mirroring `aaif-goose/goose`).
+1. Fork Goose (done — `sarturko-maker/oscar-gc`, mirroring `aaif-goose/goose`; renamed from `sarturko-maker/goose` at rebrand-2026-05-23, GitHub auto-redirects old URLs).
 2. Replace the UI layer (`ui/desktop/src/`) with an in-house-legal UI: practice areas → primary unit → memory + artifacts + agent.
 3. Replace the memory layer with a scoped MCP server we own.
 4. Wire adeu as an MCP server for the Commercial practice area.
@@ -19,7 +19,7 @@ We are a custom distribution of Block's Goose (now AAIF / Linux Foundation) per 
 
 | Remote | URL | Purpose |
 |---|---|---|
-| `origin` | `git@github.com:sarturko-maker/goose.git` | Our distribution; product code lives here. |
+| `origin` | `git@github.com:sarturko-maker/oscar-gc.git` | Our distribution; product code lives here. (Renamed from `sarturko-maker/goose` at rebrand-2026-05-23; old URL auto-redirects.) |
 | `upstream` | `git@github.com:aaif-goose/goose.git` | Canonical upstream; tracked for releases and breaking changes. |
 
 **Customization route**: upstream's `CUSTOM_DISTROS.md` documents the supported surfaces for a custom distribution — desktop branding metadata (`ui/desktop/package.json`, `forge.config.ts`, `forge.{deb,rpm}.desktop`, `index.html`), UI rewrite under `ui/desktop/src/`, sibling crates for our additions (memory MCP server, practice-area config, adeu integration), and the system prompt at `crates/goose/src/prompts/system.md`. We follow that path; we do not patch the Rust core.

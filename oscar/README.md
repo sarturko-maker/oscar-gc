@@ -64,3 +64,16 @@ Three things sit alongside Oscar GC but are intentionally NOT consolidated:
 - **`/srv/projects/lavern` and `/srv/projects/LQdesign`** — Reference material
   (upstream Apache-2.0 source and design-system mockups respectively). Cloned
   for reference only; not consumed by build or runtime.
+
+## License
+
+Code under `oscar/` (except the per-MCP `oscar/mcps/<name>/LICENSE` files and
+the `_lavern-original/` snapshots) is licensed under **AGPL-3.0-or-later** per
+the root [`LICENSE`](../LICENSE). The 8 per-MCP `LICENSE` files remain
+**Apache-2.0** (Copyright 2026 s-arturko) to keep MCP-level licensing uniform
+across the Lavern-derived and net-new MCPs alike; AGPL-3.0 still applies at
+the host-app integration level. See [`../LICENSES/README.md`](../LICENSES/README.md)
+for the full per-path map and [`../NOTICE`](../NOTICE) for upstream attribution.
+
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
