@@ -1843,6 +1843,34 @@ const OSCAR_DOCUMENTS_DIR = path.join(os.homedir(), 'Documents', 'Oscar GC');
 // chats via the existing `oscar:matters:detach-active` IPC.
 const OSCAR_QUICK_CHATS_DIR = path.join(OSCAR_DOCUMENTS_DIR, '.quick-chats');
 
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP firm-mode
+// per-partner working_dir + state file. Each partner gets
+// ~/Documents/Oscar GC/Oscar LLP/<slug>/ as their working_dir; Goose Memory's
+// agent-working-dir meta scoping isolates memory per partner automatically.
+// The state file at ~/.config/oscar/state/oscar-llp/partners.json binds
+// partner slugs to session_ids so re-opening a partner from the roster
+// resumes the prior chat (mirrors matters.json[slug].session_id pattern).
+const OSCAR_LLP_DIR = path.join(OSCAR_DOCUMENTS_DIR, 'Oscar LLP');
+const OSCAR_LLP_STATE_DIR = path.join(OSCAR_STATE_DIR, 'oscar-llp');
+const OSCAR_LLP_REGISTRY_PATH = path.join(
+  OSCAR_LLP_STATE_DIR,
+  'partners.json',
+);
+const oscarLlpWorkingDir = (slug: string) => path.join(OSCAR_LLP_DIR, slug);
+
+// Sprint 24-A (ADR-078): legacy Lavern-named paths from Sprint 21-23. Migrated
+// read-time at first read (registry) / first ensure-dir per slug (working dir)
+// via atomic fs.rename — mirrors ADR-047 matters-registry backup pattern and
+// ADR-032 schema v1→v2 lazy migration. Idempotent + interrupt-safe. Sprint 25
+// cleanup removes these constants + the migration helpers once we're confident
+// no live host still has legacy data.
+const LEGACY_LAVERN_REGISTRY_PATH = path.join(
+  OSCAR_STATE_DIR,
+  'lavern',
+  'partners.json',
+);
+const LEGACY_LAVERN_DIR = path.join(OSCAR_DOCUMENTS_DIR, 'Lavern');
+
 // area_id → display name. Kept here (small static table) rather than
 // importing practiceAreas.ts from renderer code into the main bundle.
 const AREA_DISPLAY_NAMES: Record<string, string> = {
@@ -2177,6 +2205,287 @@ ipcMain.handle('oscar:quick-chats:ensure-dir', async () => {
 });
 
 ipcMain.handle('oscar:quick-chats:get-dir', () => OSCAR_QUICK_CHATS_DIR);
+
+// Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
+// Oscar LLP partner registry. v2 schema — { sessions: [{id, label?}, ...] }
+// per partner, ordered most-recent first by insert order. Session metadata
+// (name / created_at / updated_at) read from goosed via listSessions(); only
+// the optional user-set label is owned here. v1 entries ({ session_id: "X" })
+// are migrated lazily at read-time per ADR-092.
+interface OscarLLPSessionEntry {
+  id: string;
+  label: string | null;
+}
+interface OscarLLPPartnerState {
+  sessions: OscarLLPSessionEntry[];
+}
+type OscarLLPRegistry = Record<string, OscarLLPPartnerState>;
+
+// Sprint 24-A (ADR-078): one-shot read-time migration from the legacy
+// ~/.config/oscar/state/lavern/partners.json path. POSIX-atomic fs.rename;
+// safe across interrupted boots. No-op when new path already exists or legacy
+// is absent.
+const migrateLegacyLavernRegistry = async (): Promise<void> => {
+  try {
+    await fs.access(OSCAR_LLP_REGISTRY_PATH);
+    return;
+  } catch {
+    // new path missing; check legacy
+  }
+  try {
+    await fs.access(LEGACY_LAVERN_REGISTRY_PATH);
+  } catch {
+    return;
+  }
+  try {
+    await fs.mkdir(OSCAR_LLP_STATE_DIR, { recursive: true });
+    await fs.rename(LEGACY_LAVERN_REGISTRY_PATH, OSCAR_LLP_REGISTRY_PATH);
+    log.info('oscar:llp registry migrated from legacy lavern path', {
+      from: LEGACY_LAVERN_REGISTRY_PATH,
+      to: OSCAR_LLP_REGISTRY_PATH,
+    });
+  } catch (err) {
+    log.warn('oscar:llp legacy registry migration failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+  }
+};
+
+const readOscarLlpRegistry = async (): Promise<OscarLLPRegistry> => {
+  await migrateLegacyLavernRegistry();
+  try {
+    const raw = await fs.readFile(OSCAR_LLP_REGISTRY_PATH, 'utf8');
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== 'object' || parsed === null) return {};
+    const result: OscarLLPRegistry = {};
+    for (const [slug, value] of Object.entries(
+      parsed as Record<string, unknown>,
+    )) {
+      if (!safeSlug(slug)) continue;
+      if (typeof value !== 'object' || value === null) continue;
+      const v = value as Record<string, unknown>;
+
+      // v2: { sessions: [{id, label?}, ...] }
+      if (Array.isArray(v.sessions)) {
+        const sessions: OscarLLPSessionEntry[] = [];
+        const seen = new Set<string>();
+        for (const s of v.sessions) {
+          if (typeof s !== 'object' || s === null) continue;
+          const entry = s as Record<string, unknown>;
+          if (typeof entry.id !== 'string' || entry.id.length === 0) continue;
+          if (seen.has(entry.id)) continue;
+          seen.add(entry.id);
+          sessions.push({
+            id: entry.id,
+            label: typeof entry.label === 'string' ? entry.label : null,
+          });
+        }
+        result[slug] = { sessions };
+        continue;
+      }
+
+      // v1 lazy upgrade per ADR-092: { session_id: "X" } →
+      // { sessions: [{ id: "X", label: "(legacy)" }] }. Persisted on next
+      // mutation; v1 entries with null session_id drop out (no useful info).
+      if (typeof v.session_id === 'string' && v.session_id.length > 0) {
+        result[slug] = {
+          sessions: [{ id: v.session_id, label: '(legacy)' }],
+        };
+      }
+    }
+    return result;
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') return {};
+    log.warn('oscar:llp registry read failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return {};
+  }
+};
+
+// Sprint 27 (ADR-092): atomic write via .tmp + fs.rename. Interrupt-safety
+// floor for the per-partner sessions array, which grows over time.
+const writeOscarLlpRegistry = async (registry: OscarLLPRegistry): Promise<void> => {
+  await fs.mkdir(OSCAR_LLP_STATE_DIR, { recursive: true });
+  const tmp = OSCAR_LLP_REGISTRY_PATH + '.tmp';
+  await fs.writeFile(tmp, JSON.stringify(registry, null, 2), 'utf8');
+  await fs.rename(tmp, OSCAR_LLP_REGISTRY_PATH);
+};
+
+// Sprint 24-A (ADR-078): one-shot per-slug migration of legacy
+// ~/Documents/Oscar GC/Lavern/<slug>/ working dirs to the Oscar LLP path.
+// fs.rename is atomic on the same volume and carries .goose/memory/ + any
+// user-saved files with it as a single inode move. No-op when new exists or
+// legacy is absent.
+const migrateLegacyLavernWorkingDir = async (slug: string): Promise<void> => {
+  const newDir = oscarLlpWorkingDir(slug);
+  try {
+    await fs.access(newDir);
+    return;
+  } catch {
+    // new missing; check legacy
+  }
+  const legacyDir = path.join(LEGACY_LAVERN_DIR, slug);
+  try {
+    await fs.access(legacyDir);
+  } catch {
+    return;
+  }
+  try {
+    await fs.mkdir(OSCAR_LLP_DIR, { recursive: true });
+    await fs.rename(legacyDir, newDir);
+    log.info('oscar:llp working dir migrated from legacy lavern path', {
+      slug,
+      from: legacyDir,
+      to: newDir,
+    });
+  } catch (err) {
+    log.warn('oscar:llp legacy working-dir migration failed', {
+      slug,
+      err: errorMessage(err, 'Unknown error'),
+    });
+  }
+};
+
+ipcMain.handle('oscar:llp:ensure-dir', async (_event, slugRaw: unknown) => {
+  const slug = safeSlug(slugRaw);
+  if (!slug) return { ok: false, path: '' };
+  await migrateLegacyLavernWorkingDir(slug);
+  const dir = oscarLlpWorkingDir(slug);
+  try {
+    await fs.mkdir(dir, { recursive: true });
+    return { ok: true, path: dir };
+  } catch (err) {
+    log.warn('oscar:llp:ensure-dir failed', {
+      slug,
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { ok: false, path: dir };
+  }
+});
+
+// Sprint 27 (ADR-092): bind-session PREPENDS to the partner's sessions array
+// rather than overwriting a single binding. Dedupes by id — if the same
+// session is bound twice, the first occurrence wins and the array is left
+// in stable order. The optional label argument lets callers set a user-set
+// override; null/undefined falls back to goosed's Session.name at render
+// time.
+ipcMain.handle(
+  'oscar:llp:bind-session',
+  async (
+    _event,
+    slugRaw: unknown,
+    sessionIdRaw: unknown,
+    labelRaw: unknown,
+  ) => {
+    const slug = safeSlug(slugRaw);
+    if (
+      !slug ||
+      typeof sessionIdRaw !== 'string' ||
+      sessionIdRaw.length === 0
+    ) {
+      return { ok: false };
+    }
+    const label = typeof labelRaw === 'string' ? labelRaw : null;
+    const registry = await readOscarLlpRegistry();
+    const existing = registry[slug]?.sessions ?? [];
+    if (existing.some((s) => s.id === sessionIdRaw)) {
+      return { ok: true };
+    }
+    registry[slug] = {
+      sessions: [{ id: sessionIdRaw, label }, ...existing],
+    };
+    await writeOscarLlpRegistry(registry);
+    return { ok: true };
+  },
+);
+
+// Sprint 27 (ADR-092): reserved for a future "delete partner session" UI.
+// Removes the entry from sessions[]; leaves the goosed session row alone
+// (deletion of the underlying session is a separate concern owned by
+// goosed's session API).
+ipcMain.handle(
+  'oscar:llp:unbind-session',
+  async (_event, slugRaw: unknown, sessionIdRaw: unknown) => {
+    const slug = safeSlug(slugRaw);
+    if (
+      !slug ||
+      typeof sessionIdRaw !== 'string' ||
+      sessionIdRaw.length === 0
+    ) {
+      return { ok: false };
+    }
+    const registry = await readOscarLlpRegistry();
+    const existing = registry[slug]?.sessions ?? [];
+    const next = existing.filter((s) => s.id !== sessionIdRaw);
+    if (next.length === 0) {
+      delete registry[slug];
+    } else {
+      registry[slug] = { sessions: next };
+    }
+    await writeOscarLlpRegistry(registry);
+    return { ok: true };
+  },
+);
+
+ipcMain.handle(
+  'oscar:llp:lookup-state',
+  async (_event, slugRaw: unknown) => {
+    const slug = safeSlug(slugRaw);
+    if (!slug) return null;
+    const registry = await readOscarLlpRegistry();
+    return registry[slug] ?? null;
+  },
+);
+
+ipcMain.handle('oscar:llp:list-partner-states', async () =>
+  readOscarLlpRegistry(),
+);
+
+// Sprint 24-B (ADR-079, ADR-080): Lavern Pipeline launch surface IPCs.
+// The pipeline working dir is a sibling of per-partner working dirs under
+// ~/Documents/Oscar GC/Oscar LLP/; users drop docs in there. The precedent-
+// board state lives at ~/.config/oscar/state/lavern/ (ADR-080 per-user-per-
+// area scope via oscar-baselines-mcp's OSCAR_BASELINES_DIR env override).
+const LAVERN_PIPELINE_DIR = path.join(OSCAR_LLP_DIR, 'lavern-pipeline');
+const LAVERN_STATE_DIR = path.join(OSCAR_STATE_DIR, 'lavern');
+const LAVERN_PRECEDENTS_DIR = path.join(LAVERN_STATE_DIR, 'precedents');
+const PIPELINE_DOC_EXTENSIONS = new Set(['.txt', '.md', '.pdf', '.docx', '.doc']);
+
+ipcMain.handle('oscar:llp:pipeline:ensure-dir', async () => {
+  try {
+    await fs.mkdir(LAVERN_PIPELINE_DIR, { recursive: true });
+    await fs.mkdir(LAVERN_PRECEDENTS_DIR, { recursive: true });
+    return {
+      ok: true,
+      workingDir: LAVERN_PIPELINE_DIR,
+      precedentsDir: LAVERN_PRECEDENTS_DIR,
+    };
+  } catch (err) {
+    log.warn('oscar:llp:pipeline:ensure-dir failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { ok: false, workingDir: '', precedentsDir: '' };
+  }
+});
+
+ipcMain.handle('oscar:llp:pipeline:list-recent-docs', async () => {
+  try {
+    const entries = await fs.readdir(LAVERN_PIPELINE_DIR, { withFileTypes: true });
+    const docs = entries
+      .filter((e) => e.isFile())
+      .filter((e) => PIPELINE_DOC_EXTENSIONS.has(path.extname(e.name).toLowerCase()))
+      .map((e) => ({ name: e.name, path: path.join(LAVERN_PIPELINE_DIR, e.name) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { docs };
+  } catch (err) {
+    if ((err as { code?: string }).code === 'ENOENT') return { docs: [] };
+    log.warn('oscar:llp:pipeline:list-recent-docs failed', {
+      err: errorMessage(err, 'Unknown error'),
+    });
+    return { docs: [] };
+  }
+});
 
 // Sprint 14 (ADR-047): reverse lookup — given a session_id (from BaseChat),
 // find the matter bound to it. Used by the matter back-button affordance to

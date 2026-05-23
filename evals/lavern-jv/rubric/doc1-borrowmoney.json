@@ -1,0 +1,23 @@
+{
+  "doc_id": "doc1-borrowmoney",
+  "doc_file": "docs/borrowmoneycom_06_11_2020.txt",
+  "doc_label": "BorrowMoney.com × JVLS (Vaccines2Go) JV Agreement",
+  "contract_type": "joint venture",
+  "char_count": 21454,
+  "clause_count_approx": 67,
+  "items": [
+    { "id": "doc1-1", "severity": "RED", "where": "cl 32-33", "risk": "Joint & several liability for breach-caused harm — broad, no cap" },
+    { "id": "doc1-2", "severity": "major", "where": "cl 19", "risk": "Unanimous consent for Additional Capital — creates deadlock risk if one party refuses" },
+    { "id": "doc1-3", "severity": "major", "where": "cl 20 vs 22", "risk": "Asymmetric capital economics: no interest on contributions (cl 22), but interest IS payable on Member advances at majority-set rate (cl 20)" },
+    { "id": "doc1-4", "severity": "major", "where": "cl 46", "risk": "Confidentiality survives only 1 year after termination — short for a JV" },
+    { "id": "doc1-5", "severity": "major", "where": "cl 43", "risk": "Force Majeure ridiculously broad — 'any other unforeseen and uncontrollable event'" },
+    { "id": "doc1-6", "severity": "major", "where": "cl 11", "risk": "No Reserved Matters / supermajority list — only 'majority vote of Members' for major issues" },
+    { "id": "doc1-7", "severity": "major", "where": "cl 33", "risk": "Involuntary Withdrawal triggers indemnity by the defaulting Member — broad, no cap" },
+    { "id": "doc1-8", "severity": "major", "where": "implicit", "risk": "No dilution formula for Members who don't fund additional capital" },
+    { "id": "doc1-9", "severity": "minor", "where": "cl 55-56", "risk": "Mediation rules unspecified — 'statutory rules of mediation' — vague" },
+    { "id": "doc1-10", "severity": "minor", "where": "cl 64", "risk": "Severability with judicial reformation — court may rewrite, not just strike" },
+    { "id": "doc1-11", "severity": "minor", "where": "cl 34", "risk": "Bankruptcy / Operation of Law triggers Involuntary Withdrawal" },
+    { "id": "doc1-12", "severity": "minor", "where": "cl 44", "risk": "Conflict-of-interest disclosure with majority consent only" }
+  ],
+  "qualitative_tone": "should reference operator/non-operator dynamics (but this JV is symmetrical, no operator), capital calls, deadlock, reserved matters"
+}

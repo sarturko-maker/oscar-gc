@@ -1,0 +1,30 @@
+{
+  "name": "oscar-onboarding-mcp",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "First-launch onboarding interview server for Oscar GC. Two tools: finalize_profile (writes profile v3 to ~/.config/oscar/profile.json atomically; v3 adds the company_context block per ADR-051); list_area_questions (reads per-plugin onboarding-questions.json from the bundled in-house-legal skill library).",
+  "license": "Apache-2.0",
+  "author": "s-arturko",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oscar-onboarding-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "smoke": "node ./smoke.mjs",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@0.21.2 node ./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "=1.29.0",
+    "zod": "=4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "=25.8.0",
+    "typescript": "=6.0.3"
+  }
+}

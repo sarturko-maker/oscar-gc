@@ -13,9 +13,9 @@ import { INTEGRATIONS_OVERLAY } from './registry';
 // Returns the practice-area ids whose bundled_skill_sources includes the
 // given plugin slug. Used to invert ADR-031's mapping.
 function areasUsingPlugin(pluginSlug: string): string[] {
-  return PRACTICE_AREAS.filter((a) =>
-    a.bundled_skill_sources?.includes(pluginSlug),
-  ).map((a) => a.id);
+  return PRACTICE_AREAS.filter((a) => a.bundled_skill_sources?.includes(pluginSlug)).map(
+    (a) => a.id
+  );
 }
 
 // Map .mcp.json `type` to Goose's ExtensionConfig discriminator. All
@@ -37,7 +37,7 @@ function normaliseTransport(t: string): Integration['transport'] {
 function joinVendorAndOverlay(
   vendor: VendorMcpEntry,
   overlay: IntegrationOverlay,
-  relevantAreas: readonly string[],
+  relevantAreas: readonly string[]
 ): Integration {
   return {
     id: vendor.id,
@@ -62,10 +62,7 @@ function joinVendorAndOverlay(
 // MCPs like oscar-fs that need to appear in the catalog for transparency
 // but aren't in .mcp.json. Bundled-tier entries default to all 13 areas.
 function joinOverlayOnly(overlay: IntegrationOverlay): Integration {
-  const relevant =
-    overlay.security_tier === 'bundled'
-      ? PRACTICE_AREAS.map((a) => a.id)
-      : [];
+  const relevant = overlay.security_tier === 'bundled' ? PRACTICE_AREAS.map((a) => a.id) : [];
   return {
     id: overlay.id,
     transport: overlay.overlay_cmd ? 'stdio' : 'streamable_http',
@@ -118,9 +115,8 @@ export async function loadIntegrationsRegistry(): Promise<Integration[]> {
     for (const [id, plugins] of pluginsById.entries()) {
       const overlay = INTEGRATIONS_OVERLAY[id];
       if (!overlay) {
-        // eslint-disable-next-line no-console
         console.warn(
-          `integrations: vendor entry "${id}" has no INTEGRATIONS_OVERLAY row; excluded from registry`,
+          `integrations: vendor entry "${id}" has no INTEGRATIONS_OVERLAY row; excluded from registry`
         );
         continue;
       }

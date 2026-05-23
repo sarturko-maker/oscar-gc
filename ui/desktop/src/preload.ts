@@ -368,6 +368,42 @@ type ElectronAPI = {
       areaId: string,
     ) => Promise<{ ok: true } | { ok: false; reason: string }>;
   };
+  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
+  // Oscar LLP firm-mode. Per-partner working_dir + state file binding partner
+  // slug → array of sessions (most-recent first). Optional user-set label per
+  // session entry; session metadata read from goosed via listSessions().
+  llp: {
+    ensureDir: (slug: string) => Promise<{ ok: boolean; path: string }>;
+    bindSession: (
+      slug: string,
+      sessionId: string,
+      label?: string | null,
+    ) => Promise<{ ok: boolean }>;
+    unbindSession: (
+      slug: string,
+      sessionId: string,
+    ) => Promise<{ ok: boolean }>;
+    lookupState: (
+      slug: string,
+    ) => Promise<{
+      sessions: Array<{ id: string; label: string | null }>;
+    } | null>;
+    listPartnerStates: () => Promise<
+      Record<
+        string,
+        { sessions: Array<{ id: string; label: string | null }> }
+      >
+    >;
+    // Sprint 24-B (ADR-079): Lavern Pipeline launch surface.
+    pipeline: {
+      ensureDir: () => Promise<{
+        ok: boolean;
+        workingDir: string;
+        precedentsDir: string;
+      }>;
+      listRecentDocs: () => Promise<{ docs: Array<{ name: string; path: string }> }>;
+    };
+  };
 };
 
 export interface ForgeDeletePreparePayload {
@@ -575,14 +611,33 @@ const electronAPI: ElectronAPI = {
   // the user installed. The dialog gates user-installed-from-untrusted-source
   // recipes, which Oscar GC won't have until the community-skills tier opens
   // (Sprint 15+).
+  // Sprint 21 (ADR-071): widened to also recognize "Lavern —" so partner
+  // recipes (Lavern firm-mode) bypass the dialog without needing an "Oscar GC"
+  // triple-prefix. Both prefixes mark bundled recipes; the migration to a
+  // recipe.metadata.bundled marker (ADR-029 "Sprint 15+ migration" note) still
+  // applies when community recipes eventually land.
+  // Sprint 24-A (ADR-078): widened again to recognize "Oscar LLP —" as the
+  // production prefix for the rebranded firm-mode recipes. Dual-prefix window:
+  // "Lavern —" stays through Sprint 24-A so pre-rebrand sessions still resume
+  // cleanly; Sprint 25 cleanup drops "Lavern —" once the rename is fully through.
   hasAcceptedRecipeBefore: (recipe: Recipe) => {
-    if (recipe?.title?.startsWith('Oscar GC')) {
+    const title = recipe?.title ?? '';
+    if (
+      title.startsWith('Oscar GC') ||
+      title.startsWith('Lavern —') ||
+      title.startsWith('Oscar LLP —')
+    ) {
       return Promise.resolve(true);
     }
     return ipcRenderer.invoke('has-accepted-recipe-before', recipe);
   },
   recordRecipeHash: (recipe: Recipe) => {
-    if (recipe?.title?.startsWith('Oscar GC')) {
+    const title = recipe?.title ?? '';
+    if (
+      title.startsWith('Oscar GC') ||
+      title.startsWith('Lavern —') ||
+      title.startsWith('Oscar LLP —')
+    ) {
       return Promise.resolve(true);
     }
     return ipcRenderer.invoke('record-recipe-hash', recipe);
@@ -662,6 +717,27 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.invoke('oscar:forge:confirm-delete-area', areaId, timestamp),
     cancelDeleteArea: (areaId: string) =>
       ipcRenderer.invoke('oscar:forge:cancel-delete-area', areaId),
+  },
+  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
+  // Oscar LLP firm-mode. Per-partner working_dir provisioning + per-partner
+  // multi-session registry. bindSession PREPENDS to the partner's sessions
+  // array (most-recent first); the optional label argument lets callers set
+  // a user-set override.
+  llp: {
+    ensureDir: (slug: string) =>
+      ipcRenderer.invoke('oscar:llp:ensure-dir', slug),
+    bindSession: (slug: string, sessionId: string, label?: string | null) =>
+      ipcRenderer.invoke('oscar:llp:bind-session', slug, sessionId, label),
+    unbindSession: (slug: string, sessionId: string) =>
+      ipcRenderer.invoke('oscar:llp:unbind-session', slug, sessionId),
+    lookupState: (slug: string) =>
+      ipcRenderer.invoke('oscar:llp:lookup-state', slug),
+    listPartnerStates: () =>
+      ipcRenderer.invoke('oscar:llp:list-partner-states'),
+    pipeline: {
+      ensureDir: () => ipcRenderer.invoke('oscar:llp:pipeline:ensure-dir'),
+      listRecentDocs: () => ipcRenderer.invoke('oscar:llp:pipeline:list-recent-docs'),
+    },
   },
 };
 

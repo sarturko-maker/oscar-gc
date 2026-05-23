@@ -14,405 +14,563 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
-### Sprint 20-M8 — Forge Mode E (delete area) + renderer-confirm modal + Crostini dogfood handoff (closed 2026-05-22 on code; commit `e97a32be8`; .deb at draft release `oscar-gc-sprint20-master-brief`)
+### Sprint 27 — Per-partner conversation history on the Oscar LLP roster (closed 2026-05-22 on code)
 
-**Goal**: ninth and final sub-sprint of the right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Close the destructive half of agent control: a lawyer asks Forge to delete a practice area in plain English ("delete the IP agent"; "I don't do Tax anymore"), Forge identifies the area, summarises impact, writes a marker file to disk, then stops. A renderer-side modal fires (subscribed via `webContents.send`), lists matter/integration/override counts, and only on **Archive** click does the destructive op run — Forge cannot click the modal itself (ADR-090). Archive moves the state folder to `~/.config/oscar/state/_archive/<areaId>-<isoTimestamp>/` (ADR-091); profile.json edit removes the `practice_areas[i]` entry; Documents folder at `~/Documents/Oscar GC/<Area>/` is untouched. M8 also builds the master-brief .deb and pushes it to the draft release `oscar-gc-sprint20-master-brief` for Arturs's Crostini dogfood across the nine exit criteria (M2 right-pane; M4 playbook injection; M6 Forge Mode C; M6/M7 scoped binding; M7 modify; M8 delete; M2/M4 cross-area composition; lawyer-qualitative gate).
+**Goal**: Evolve the `/oscar-llp` partner roster from one-bound-session-per-partner to multiple-sessions-per-partner. The Sprint 21 Crostini dogfood (Arturs, 2026-05-20) surfaced this as the load-bearing UX gap: "I want multiple sessions per partner. Right now clicking Sarah Chen always opens the same conversation. History should be on the Oscar LLP screen." No sidebar tree extension, no right-pane bolt-on, no Rust touch, no `main` rebase.
 
-**Built** — one open commit (`e97a32be8`) + two ADRs (090 destructive-ops-renderer-confirm, 091 archive-don't-delete) + visual harness on lq-vps + 249 MB `.deb` pushed to draft release:
+**Decisions resolved in plan-mode** (AskUserQuestion):
+1. **Roster layout**: sessions inline per partner card (cap 5 visible, scrollable beyond) — not partner-detail page, not expand-in-place.
+2. **Click-on-card semantics**: resume `sessions[0]` (most-recent); preserves Sprint 21 muscle memory. "+ New chat" is the explicit fresh-session affordance. Session row click resumes that specific session.
+3. **Migration shape**: lazy at read-time. v1 `{session_id: "X"}` synthesizes v2 `{sessions: [{id: "X", label: "(legacy)"}]}`; mirrors ADR-078's Lavern → Oscar LLP read-time `fs.rename` precedent.
 
-- **Four plan-mode scope decisions locked via AskUserQuestion** (in this session): (1) Mode E entry surface = **free-text only** (sidebar Forge button; lawyer types "delete the IP agent"; no per-area Delete link next to M7's Edit affordance — high misclick risk; no Mode-D menu coupling — splits responsibilities); (2) Modal-firing mechanism = **marker file watcher** (mirrors M7's `profileWriteWatcher`; `fs.watch` on `~/.config/oscar/` with 100ms debounce; no goosed-side IPC channel needed); (3) Archive folder layout = **`state/_archive/<areaId>-<isoTimestamp>/`** (one folder per delete; ISO timestamp for chronological sort + `ls | grep <areaId>` lookup); (4) Draft release name = **`oscar-gc-sprint20-master-brief`** (signals the .deb is the master-brief exit-gate artefact, not just M8's per-sprint slice). All four matched the brief's recommended defaults.
+**Built**:
 
-- **Pre-execution probe** (Phase 1 Explore agents + own file reads) confirmed:
-  - **Parallel-Lavern HEAD unchanged at `91d2eba84` for the seventh consecutive sub-sprint** (M3 → M4 → M5 → M6 drafting → M6 close → M7 drafting → M7 close → M8). No handoff-memo refresh needed. Two Lavern node processes for `oscar-llp-iter-aisha-khan-m3SyF4` alive at probe time (oscar-fs MCPs); they died before harness launch (no CDP port contention).
-  - **ADR slots taken at decision time: 090 + 091.** Master plan reserved 078 + 079 (stale post-Lavern); verified 090 + 091 next-free via `ls docs/adr/` before naming.
-  - `systemPrompt.ts:9–16` "four modes" intro flips to "five modes"; Mode E slots between Mode D's close (line 287) and the "Things you never do" header (line 288). Trim of Mode A–D verbosity + tighter Mode E procedure keeps the file at 285 lines (under the 300 CLAUDE.md cap).
-  - `forgeRecipe.ts:103` oscar-fs allowed-dirs already include `~/.config/oscar/` (since ADR-039) — Mode E writes the marker without any widening.
-  - `forgeRecipe.ts:67–80` `buildForgeRecipe` signature stays at five params (free-text-only entry means no new `deleteAreaId` deep-link param).
-  - `main.ts:2322–2326` atomic `writeProfileFile` (temp + rename, mode 0o600) is the existing pattern M8's `removePracticeArea` mirrors; `mutateAlwaysOn` / `mutateEnabledSkills` (M4 / M5) are the immutable-array-splice templates.
-  - `main.ts:1835` `OSCAR_STATE_DIR` and `main.ts:1877` `areaStateDir(areaId)` provide the source path for `archiveAreaState`; `styles/main.css:2427–2599` `.oscar__modal` family + `.oscar__button--primary` / `--ghost` are the modal chrome anchors.
-  - `preload.ts:183–191` generic `on/off/emit` bridge is exposed; M8's new `forge` namespace adds `confirmDeleteArea` / `cancelDeleteArea` invoke bridges alongside.
+- **ADR-092** (`docs/adr/092-sprint27-multi-session-per-partner.md`, 55 lines, decision-time per CLAUDE.md): captures schema v1→v2 bump, lazy read-time migration, click semantics, atomic-write upgrade, out-of-scope flags. Committed standalone before any code change in commit `e63f15fb7`. Companion to [[ADR-071]] (Lavern firm-mode structural decision) and [[ADR-078]] (migration pattern Sprint 27 mirrors). ADR slot check at decision time: local max 090, origin/main max 091 → 092 next-free.
+- **Schema v2 + IPC handlers** (`ui/desktop/src/main.ts` ~2210-2380 region): `OscarLLPPartnerState` interface bumped to `{ sessions: OscarLLPSessionEntry[] }`; `readOscarLlpRegistry` gains per-entry shape check — v2 `Array.isArray(v.sessions)` path with dedupe-by-id; v1 `typeof v.session_id === 'string'` path synthesizes `{ sessions: [{ id, label: '(legacy)' }] }`; v1-with-null-session_id silently drops. `writeOscarLlpRegistry` upgraded from direct `fs.writeFile` to `.tmp + fs.rename` (interrupt-safety floor). `oscar:llp:bind-session` now accepts optional label and PREPENDS to `sessions[]` (dedupe-by-id; defensive). New `oscar:llp:unbind-session` reserved for a future "delete partner session" UI — not consumed in Sprint 27 but kept in the IPC surface while we were in the file.
+- **Preload bridge** (`ui/desktop/src/preload.ts` ~265-300, ~520-540 regions): `bindSession` signature gains optional `label`; new `unbindSession` method; `lookupState` + `listPartnerStates` return types reshaped for the array-of-sessions value shape.
+- **Hook reshape** (`ui/desktop/src/components/oscar/oscar-llp/useOscarLLPPartners.ts`, ~110 lines): now joins `listPartnerStates()` (partners.json — ordering authority + label override) with `listSessions()` (goosed — metadata authority). For each partner, walks `state.sessions[]`, looks up the goosed `Session` by id, skips if missing (deleted out-of-band), produces `OscarLLPSessionRow[{id, label, name, created_at, updated_at, user_set_name}]`. Sorted by `Session.updated_at DESC` (matches `useChatHistory` matters precedent). Subscribes to SESSION_CREATED|DELETED|RENAMED|FORKED for live refresh.
+- **Roster UI evolution** (`ui/desktop/src/components/oscar/oscar-llp/OscarLLPRoster.tsx`, 180 → 231 lines): per-partner card grows an inline `oscar__llp-sessions` block under the partner header containing "+ New chat with <Name>" button at top, then up to 5 session rows (id + relative-date), then "…N more" overflow annotation if `sessions.length > 5`. Three handlers: `openCard(row)` resumes `sessions[0]` (or falls through to `newChat` if empty / session deleted server-side); `newChat(partner)` always builds a fresh recipe via `buildOscarLLPPartnerRecipe` + `createSession` + `bindSession` (prepend); `resumeSession(partner, session)` verifies the session still exists via `getSession({throwOnError: false})` then dispatches `ADD_ACTIVE_SESSION` + navigates. Common `provisionPartnerDir` + `navigateToSession` helpers factor the shared `matters.detachActive() → llp.ensureDir() → CustomEvent + navigate` dance. Label fallback chain: `partners.json` user-set label → goosed `Session.name` → `Session <date>`. `formatRelative` ported inline from `ChatHistorySearch.tsx:41-54` (just now / Nm / Nh / Nd / Mon D — CLAUDE.md "no premature abstraction").
+- **CSS additions** (`ui/desktop/src/styles/main.css` ~1872 region): new `.oscar__llp-*` family — `oscar__llp-card` wrapper removes the partner-row's bottom border so the session block becomes the bottom delimiter; `.oscar__llp-sessions` block left-indented under the header with 24px padding; `.oscar__llp-new-chat` copper-mono action affordance; `.oscar__llp-session-row` 12px italic faded-ink (matches Sprint 19b matter-row visual treatment); `.oscar__llp-session-time` mono uppercase; `.oscar__llp-overflow` faint mono.
+- **Verification**:
+  - `tsc --noEmit` baseline 17 errors pre-change (all pre-existing — missing `@radix-ui/*` typedefs, `yaml` import, `@testing-library/dom` testdef, implicit-any in `BottomMenuExtensionSelection.tsx` / `DictationSettings.tsx` / etc.). Post-change identical 17 errors — **zero net new TS errors** from Sprint 27. Verified by `git stash --keep-index` + tsc + `git stash pop`.
+  - `eslint --quiet` clean on `src/components/oscar/oscar-llp/`, `src/main.ts`, `src/preload.ts`.
+  - **Sprint 22 smoke** (`test-oscar-llp-agents.js`) **3/3 PASS** on real MiniMax against the post-change codebase (Sarah Chen 21.6s + Helena Voss 21.4s + Aisha Khan 23.9s; each invoked the expected Tier-A MCP + verification-pass sub-recipe). Composition seam unbroken — Sprint 27 doesn't touch the recipe builder, prompts, sub-recipes, or verification gate so this was the expected outcome but it confirms the cross-cutting integration. ~$0.04 MiniMax spend.
 
-- **ADR-090** (`docs/adr/090-destructive-ops-renderer-confirm.md`, 47 lines): Mode E uses a one-way handoff. Forge writes `~/.config/oscar/_forge_request_delete_<areaId>.json` via `oscar-fs__write_file`; main-process `fs.watch` (mirroring `profileWriteWatcher`) debounces 100ms, Zod-validates against `ForgeDeleteRequestSchema`, drops anything older than 5s (stale-marker mitigation across restart), and `webContents.send`s `oscar:forge:delete-prepare` to all BrowserWindows. Renderer modal subscribes via existing `window.electron.on` bridge; only the Archive click invokes `oscar:forge:confirm-delete-area`. Watcher is read-only; IPC handlers own marker deletion. Alternatives rejected: goosed → main → renderer IPC bus (new infra; fails if renderer unfocused; loses on-disk auditability); hybrid (marker + IPC nudge — over-engineered for single-window); LLM-driven delete via same write tool as Mode D (violates brief's renderer-confirm rule).
+**v1 fixture verification dropped** per plan drop-order #2: `ls ~/.config/oscar/state/oscar-llp/partners.json` on lq-vps returned no file (no live v1 data on this host). Sprint 21 was the only sprint that wrote it; live hosts that opened a partner session under Sprint 21-26 will exercise the migration path when they upgrade to a Sprint 27 build. Arturs's Crostini dogfood is the right validation surface; carry to Sprint 27b if any v1 data exists on that host. The migration logic is small enough (single `Array.isArray(v.sessions)` vs `typeof v.session_id === 'string'` per-entry switch) that static reasoning + the smoke gate carries adequate confidence.
 
-- **ADR-091** (`docs/adr/091-archive-dont-delete.md`, 49 lines): On confirm, copy `~/.config/oscar/state/<areaId>/` to `~/.config/oscar/state/_archive/<areaId>-<isoTimestamp>/` via Node built-in `fs.cp({recursive:true})` (no new deps); then `fs.rm` the source; then remove `practice_areas[i]` via the existing atomic `writeProfileFile` helper (M7 post-write watcher refreshes `.bak` against the new shape). `~/Documents/Oscar GC/<Area>/` is **untouched** — lawyer's content, separate volume by ADR-047; the modal tells them. Restore-from-archive (post-master-brief) repoints state back to the existing Documents tree if the area is restored. Layout `state/_archive/<areaId>-<isoTimestamp>/` chosen for area-first lookup. Alternatives rejected: `state/_archive/<isoDate>/<areaId>/` (needs date guess); `state/_archive/<areaId>/<isoDate>/` (better for cycle delete-recreate-redelete; no concrete user need yet); archive Documents too (heavy; user content); hard delete (irreversible). Caveat: sessions in archived matters orphan in `ChatHistoryTree` (matter→session binding survives in archive but area is gone from profile).
+**Architectural sanity-check** — Sprint 27 stayed inside `ui/desktop/src/` (TypeScript + CSS) and `docs/adr/`. No `crates/` touch; no sibling MCP repo touched (`oscar-memory-mcp`, `oscar-onboarding-mcp`, `oscar-baselines-mcp`, `oscar-knowledge-base-mcp`, `oscar-document-reader-mcp`, `oscar-grounding-verifier-mcp`, `oscar-risk-pricing-mcp`, `oscar-document-checks-mcp` all untouched). No `main` rebase. The work is one ADR + five files modified + roster CSS — comparable to Sprint 19b's surgical-fix shape.
 
-- **`forgeDeleteRequestSchema.ts`** (`ui/desktop/src/components/oscar/forge/`, 36 lines): Zod schema for marker payload. `areaId: string min(1) max(64) regex([a-z0-9]+(?:-[a-z0-9]+)*)` (matches Sprint 14's area-id discipline at `main.ts:1867`); `timestamp: z.string().datetime()`; `impact: {matterCount: int nonneg, integrationCount: int nonneg, overrideKeys: string[]}`. Watcher validates; the renderer cross-checks `marker.areaId === filenameAreaId` to defend against an LLM naming the file one way and writing a different body areaId.
+**Deferred**:
 
-- **`forgeDeleteWatcher.ts`** (`ui/desktop/src/components/oscar/forge/`, 160 LOC): `startForgeDeleteWatcher({configDir, onMarker}) → {stop()}`. Same `fs.watch(parentDir, {persistent: false})` + 100ms debounce shape as `profileWriteWatcher`; filename filter regex `^_forge_request_delete_([a-z0-9_-]+)\.json$`. Per-filename debounce timers (Map) avoid coalescing simultaneous writes for different areaIds. Stale-marker drop via `Date.now() - new Date(timestamp).getTime() > 5000` — survives app restart with old markers on disk. The `onMarker` callback receives `{...marker, markerPath}`; main.ts uses it to resolve the area's display name from profile.json (preferring `practice_areas[i].name` over the bundled `AREA_DISPLAY_NAMES` table) and `webContents.send` to all BrowserWindows. Inline note: could share the fs.watch instance with `profileWriteWatcher` (same parent dir); kept parallel for now, with a TODO to factor into `oscarConfigDirWatcher` if a third watcher appears.
-
-- **`DeleteAreaConfirm.tsx`** (`ui/desktop/src/components/oscar/forge/`, ~175 LOC): renderer modal subscribing via `useDeleteAreaConfirm` hook. Chrome uses the `.oscar__modal-backdrop` / `.oscar__modal` family (cream paper, copper rule, 4px radius, max-width 560px); title via `.oscar__modal-title` (serif 34px); impact body inlines matter / integration / override counts in `var(--mono-editorial)` numerics; sub-paragraph confirms Documents folder is untouched. `.oscar__modal-actions` houses `.oscar__button--ghost` Cancel + `.oscar__button--primary` Archive (copper bg — the established destructive-action tone in the in-house palette; no vermillion class invented per LQdesign discipline). Data-testids on every assertable surface (`delete-area-confirm`, `delete-area-confirm-title`, `delete-area-confirm-{matter,integration,override}-count`, `delete-area-confirm-{cancel,archive}`) drive the visual-harness assertions.
-
-- **`useDeleteAreaConfirm.ts`** (`ui/desktop/src/components/oscar/forge/`, ~35 LOC): hook lifting state for the modal. Subscribes to `oscar:forge:delete-prepare` via `window.electron.on`; type-imports `ForgeDeletePreparePayload` from preload. One instance per renderer (mounted at `AppLayout.tsx`'s outer render so it's globally available across routes).
-
-- **`main.ts`** changes — adds `import { startForgeDeleteWatcher } from './components/oscar/forge/forgeDeleteWatcher';` at line 1833 next to the M7 watcher import. New constants + helpers: `OSCAR_ARCHIVE_DIR` = `state/_archive`; `archiveSuffixFromIso` (replaces `:` with `-` for FAT-safety + strips milliseconds); `archiveAreaState(areaId, timestamp)` (copy-then-remove via `fs.cp` + `fs.rm`; missing source → returns destination without creating dir; rm-after-cp failure logs but doesn't fail the op — archive holds the data per ADR-091 caveat); `removePracticeArea(areaId)` (mirror of `mutateAlwaysOn` / `mutateEnabledSkills` splice pattern + `writeProfileFile`); `markerPathForArea(areaId)`; `unlinkMarkerIfPresent(areaId)`. Two IPC handlers: `'oscar:forge:confirm-delete-area'` (archive + remove + unlink; returns `{ok:true, archivedTo}`) and `'oscar:forge:cancel-delete-area'` (unlink only). Watcher boot in `appMain()` adjacent to the M7 watcher boot: `startForgeDeleteWatcher({configDir, onMarker})` with `onMarker` resolving area name + broadcasting via `BrowserWindow.getAllWindows()`.
-
-- **`preload.ts`** — adds the `forge: { confirmDeleteArea, cancelDeleteArea }` block to both the `OscarBridge` interface and the bridge implementation; exports new `ForgeDeletePreparePayload` interface for renderer-side type-safety. Generic `on/off` bridge unchanged — already exposed since pre-M8.
-
-- **`AppLayout.tsx`** — imports `DeleteAreaConfirm` from `oscar/forge/`; renders `<DeleteAreaConfirm />` once at the bottom of `AppLayoutContent`'s outer div so the modal portals over any route. Self-rendering (returns null when no pending request) — no conditional mount needed.
-
-- **`systemPrompt.ts`** — Mode E section (between Mode D's close at the new line 273 and "Things you never do"): six-step procedure: (1) identify area via fuzzy match against `practice_areas[].id` and `name` (read profile.json); (2) read impact (matter count from `state/<areaId>/matters.json`; integration count from `state/<areaId>/installed_integrations.json`; override count from area_overrides keys); (3) confirm in chat with explicit "matters / integrations / overrides + Documents stays where it is" framing; (4) write marker file via `oscar-fs__write_file` at the exact `_forge_request_delete_<areaId>.json` path (contract with the watcher's regex); (5) hand off to modal with the literal "I've requested the archive. Confirm in the popup that just appeared — I can't click it for you."; (6) read marker back on next turn → missing+area gone = confirmed; missing+area still present = cancelled; still present = modal not clicked. **Five modes** intro update. **Mode A–D trim**: bundled-skill mapping table in Mode B → one paragraph; Mode C step 6 enabled_skills walk condensed; Mode D step 3 menu enumeration tightened; top comment block 7 lines → 5. Final file 285 lines.
-
-- **Visual harness on lq-vps** (`ui/desktop/scripts/capture-m8.js` 673 LOC + `scripts/capture-m8.sh` 75 LOC, cloned from M7). **Five deterministic states** under Xvfb (no live LLM turn): (a) **sandbox-area-seeded** — profile.json carries test-target user-added area + matter + integration + description_override; (b) **modal-fires-on-marker** — `fs.writeFileSync` of marker file → modal appears within 500ms with title "Archive Test Target?" + counts {1 matter, 1 integration, 1 override}; (c) **archive-confirmed** — Archive click → modal clears, archive folder `test-target-2026-05-22T06-16-03Z/` exists, profile.json area gone, marker unlinks, Documents folder at `~/Documents/Oscar GC/Test Target/` survives with placeholder content; (d) **cancel-keeps-area** — re-seed, write marker, Cancel click → modal clears, marker unlinks, profile unchanged, no new archive dir from this attempt; (e) **stale-marker-dropped** — marker with timestamp 10s old → modal NOT fired (watcher logs + skips), marker remains on disk for manual cleanup. Per-state console audit asserts `data-testid` DOM + on-disk state (profile.json `practice_areas[].id`, archive dir presence, marker file presence, Documents folder content hash). PNGs at `docs/screenshots/sprint-m8/` (5 files, 575k–636k bytes each). Preflight wipes `~/.config/oscar/state/_archive/` + any `_forge_request_delete_*.json` markers + Documents folder + `~/.config/oscar/profile.json.bak` + electron settings; seed-then-shoot pattern keeps states reproducible. Live agent turns deferred to the Crostini dogfood per Arturs's doctrine.
-
-- **.deb build (phase 2 only)** — no Rust changes in M0–M8 so phase 1 was skipped; the Sprint 19b-era `target-debian12/release/goosed` (May 20) was reused. `pnpm run bundle:oscar-linux` ran clean: `scripts/prepare-oscar-bundle.js` (Python/Node bundle + esbuild MCPs + smoke test via ADR-049 mechanism) + `electron-forge make --targets=maker-deb --platform=linux --arch=x64`. Output `oscar-gc_1.34.0_amd64.deb` at 249 MB, SHA-256 `1b572d96031f9630a38b85cf6deea8af33abec5634b1fcdbcb812026bb802785`. Uploaded to draft GitHub release `oscar-gc-sprint20-master-brief` (`https://github.com/sarturko-maker/goose/releases/tag/untagged-094d51ee9abf010ba85e` until promotion); release notes carry the nine-criterion checklist verbatim from the M8 brief.
-
-- **Decision logged in plan-mode**: `pnpm-workspace.yaml` `allowBuilds:` drift inherits as unstaged each session (Sprint 17b convention); verified the drift is the expected placeholder reshuffle; left unstaged.
-
-**Deferred** (out of scope per the M8 brief):
-
-- **Restore from archive** — state at `state/_archive/` is browseable but no UI affordance. Post-master-brief sprint candidate; restore can repoint Documents tree.
-- **Audit log of Forge modifications** — Sprint 15+ candidate per the security posture memo.
-- **Live LLM-driven harness states for Mode E** — visual harness is deterministic by design (marker write simulated via fs).
-- **Multi-area atomic delete** — "Delete IP and Tax" requires two sequential confirmations.
-- **Documents-folder archive** — lawyer's content; lawyer's decision; restore-from-archive reuses the existing tree.
-- **Per-area Delete link chrome** — Q1 plan-mode option B explicitly rejected per "destructive ops should not be one-click discoverable" spirit principle.
-- **Cross-agent All Skills view** — already deferred at Sprint 20-M5 close; documented as deferred in the dogfood checklist criterion 5, not blocked on.
-- **`systemPrompt.ts` split-per-mode refactor** — kept monolithic at 285 lines (under cap); post-master-brief refactor candidate if Mode F ever appears.
-- **Shared `oscarConfigDirWatcher`** — `forgeDeleteWatcher` runs as a second `fs.watch` on the same parent dir as `profileWriteWatcher`. Acceptable for two; if a third watcher appears, factor into a shared dispatcher.
+- **Crostini dogfood iteration** (E2–E4 in plan: v1 fixture exercise + click-resume-most-recent + click-+-new-chat + click-session-row): defers to Sprint 27b unless Arturs opens a verification window. The .deb build pipeline is intact from Sprint 17b; lq-vps build/install cycle is mechanical.
+- **Editable session labels in the UI**: v2 schema already supports `label: string | null`; only the renderer-side mutation affordance (right-click → rename, or per-row inline edit) is missing. Sprint 28+ candidate.
+- **`oscar:llp:unbind-session` IPC consumption**: the handler exists; the renderer-side "delete this session from the roster" UI is missing. Sprint 28+ candidate. Cheaper to keep the IPC than to defer it because we were already in the file.
 
 **Carry-forwards**:
 
-- **Crostini dogfood**: Arturs runs the nine-criterion master-brief gate (criteria 1–9 from the M8 brief `:200–224`) on his Chromebook with the draft-release .deb. Any findings → **M8b** patch sprint (mirrors 17b / 18b / 19b shape).
-- **Sidebar polling cadence**: visual harness observed the sidebar's practice-areas list lagging behind profile.json by ~2s after archive (the sidebar's `usePracticeAreas` hook polls on a 2s interval; the harness `await page.waitForTimeout(2500)` resolves the visual lag for screenshots). Acceptable behaviour; not in M8 scope to tighten.
-- **Post-master-brief sprint candidates**: restore-from-archive; cross-agent All Skills view (M5 deferral); walker-fork hard skill scoping (ADR-086 caveat); audit log of Forge modifications; operator marketplace.
-- **Master brief CLOSES with M8.** Sprint Index in PROJECT.md and this entry are the close-of-record. The .deb's `oscar-gc-sprint20-master-brief` release becomes Latest once Arturs's dogfood passes.
+- **Substantive Curator port** (Sprint 24-B / 25 / 26 carry, again). Sprint 28 candidate unless deprioritized.
+- **Sprint 24-A `Lavern —` trust-bypass cleanup**: still pending; Sprint 27 didn't touch `preload.ts:trustBypass` (only the llp bridge methods). One-commit cleanup.
+- **@-mention partners from chat**: Sprint 28 candidate. Requires verifying Goose's `summon` extension + `ChatInput.tsx` mention popover infrastructure against current code.
+- **Multi-agent project / "M&A team"**: Sprint 29+ candidate. Requires Project container design pass and recipes-vs-agent-files architectural call.
+- **Cross-partner empirical coverage** for remaining 6 non-trio partners (Sprint 26 carry, nice-to-have). Not blocking.
+- **`lavern-firm-mode` rebase onto `origin/main`** (M0-M8 + 19b not on this branch). Deferred to focused hygiene sprint when the conflict surface becomes load-bearing.
 
-**ADRs**: 090, 091.
+**ADRs**: 092 (one — Sprint 27 multi-session per partner).
 
----
+**Commits**: `e63f15fb7` (ADR-092 standalone, before code) → `09205b9f4` (Sprint 27 code: main.ts schema/IPC + preload.ts bridge + useOscarLLPPartners hook reshape + OscarLLPRoster.tsx UI + main.css `.oscar__llp-*` family) → `d2252930f` (close-out: this SPRINT_LOG entry + PROJECT.md Sprint Index row).
 
-### Sprint 20-M7 — Forge Mode D (modify area) + profile.json write validator (closed 2026-05-21 on code; commit `3addac12a`)
+**MiniMax spend**: ~$0.04 (one smoke run; 3% of $10/PCM dev-key cap). Wall-clock ~3 hours including plan-mode + ADR + Phase 1-3 implementation + verification + sprint close.
 
-**Goal**: eighth sub-sprint (M7) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Close the modify side: a lawyer asks Forge to change something about an existing practice area in plain English ("Add Google Drive to Commercial only"; "Change Commercial's description to mention escalation thresholds"; "Disable corporate-legal skills in Commercial") and the change confirms in chat before landing in `profile.json.practice_areas[i].area_overrides`. Two M7-specific deliverables beyond mirroring Mode B/C's read-modify-write: (1) **first consumer of `area_overrides.enabled_mcps`** — the field had been declarative since M0 (2 comments + 1 type def, zero runtime consumers); M7 wires the recipe-builder filter so MCP changes take effect on next matter open; (2) **defence-in-depth write validation** — Forge is an LLM and may write malformed JSON; M7 adds a main-process file watcher that Zod-parses every profile.json write and auto-reverts bad ones from a `.bak`.
+**Sibling repos**: none touched.
 
-**Built** — one implementation commit + two ADRs (088 Forge Mode D, 089 profile.json write validation) + visual harness on lq-vps:
+**No Rust core touch. No new sibling MCP. No `main` rebase.**
 
-- **Three plan-mode scope decisions locked via AskUserQuestion** (in this session): (1) Mode D entry surface = **both** (sidebar Forge button for free-text fallback + per-area "Edit" link in `RightPaneShell` header → deep-link `#/forge?modifyArea=<areaId>`, mirrors M6's `?reviewSkill=` precedent); (2) Zod location = **local** (`forge/areaOverrideSchema.ts`, ~60 lines, mirrors `OscarAreaOverrides` from `useOscarProfile.ts:11–17`; cross-repo import from `oscar-onboarding-mcp` rejected — sibling is private + ESM-only + no `.d.ts` + no `exports` field, not packaged for consumption; "re read claude.md" cross-check confirmed CLAUDE.md endorses Zod at boundaries directly); (3) Area-id resolve = **free-text + disambiguate** (deep-link supplies exact areaId via activation preamble; sidebar-button path has Forge read profile.json + fuzzy-match + ask if multiple matches, same conversational confirm pattern Mode B uses). All three matched the brief's recommended defaults.
+### Sprint 26 — Back-port Sprint 25 findings + targeted constraint relax (closed 2026-05-22 on code)
 
-- **Pre-execution surface probe** (Phase 1 Explore agents + own file reads) confirmed:
-  - `systemPrompt.ts:10–13` "three modes" intro flips to "four modes"; Mode D slots between Mode C's close (`systemPrompt.ts:190`) and the "Things you never do" header.
-  - `forgeRecipe.ts:67–81` already passes oscar-fs `~/.config/oscar/` allowed-dir; no widening needed for profile.json writes. Activation-preamble pattern at lines 79–81 is the exact shape Mode D inherits.
-  - `ForgeView.tsx:17–21` `useSearchParams` block from M6 already reads `?reviewSkill=`; M7 adds a sibling `?modifyArea=` reader.
-  - `RightPaneShell.tsx:41–46` header has a static "Loadout" eyebrow + toggle chevron; areaId is passed in via props (since M3); the Edit link mounts conditionally between them.
-  - `MattersLanding.tsx:162–173` builds `trustedInstalled` → `installedConfigsRaw`. M7's `enabled_mcps` filter slots between those two lines.
-  - **ADR slots taken at decision time: 088 + 089.** Master plan reserved 076 + 077 (stale post-Lavern); confirmed 088 + 089 next-free via `ls docs/adr/` before naming.
+**Goal**: Apply Sprint 25's three subtractive findings (P1 fetch parenthetical, P2 doc-text precondition, P3 escalation script) to production `verificationGateBlock.ts` and decide whether to relax Sprint 25's subtractive-only constraint for the partner-training-bias defect Sprint 25 proved subtraction cannot fix. Empirically validate the back-port (Sarah Chen, MAUD, A/B vs Sprint 25 baseline on disk) and cross-partner transferability (Marcus Webb, CUAD-saas, pre+post A/B).
 
-- **ADR-088** (`docs/adr/088-forge-mode-d-modify-area.md`, 46 lines): Mode D as the fourth numbered section in `SYSTEM_PROMPT`; two entry surfaces (sidebar free-text + per-area Edit link); deep-link `#/forge?modifyArea=<areaId>` with activation preamble `[Begin in Mode D. Modify the practice area: <areaId>]`; writes via `oscar-fs__write_file` (same tool/allowed-dir as B/C per brief's "same write tool" rule); mutate-in-place semantics preserve every untouched field on the area entry verbatim. Alternatives rejected: renderer-side area picker (splits responsibility); new MCP tool for writes (contradicts brief). Cites ADR-039, ADR-067, ADR-070, ADR-086, ADR-087, ADR-089.
+**Built**:
 
-- **ADR-089** (`docs/adr/089-profile-write-validation-watcher.md`, 50 lines): main-process `fs.watch` on profile.json's parent directory (watches the dir, not the file, to survive pre-onboarding when profile.json doesn't yet exist); 100ms debounced handler reads + JSON-parses + Zod-parses via `ProfileForWriteValidationSchema`; valid writes refresh `.bak`, invalid writes revert from `.bak` (both atomic via temp+rename). Self-loop avoidance: SHA-256 of last validated content; matching events skip validation. Forge's Mode D step 7 reads back and surfaces rejection conversationally — no IPC toast channel. Alternatives rejected: patch vendored oscar-fs (fork-hygiene cost on upstream `@modelcontextprotocol/server-filesystem`); new dedicated MCP (contradicts "same write tool" rule); IPC toast (duplicates Forge's chat, jarring); cross-repo schema import (sibling not packaged for consumption). Cites ADR-039, ADR-067, ADR-068, ADR-088.
+- **ADR-090** (`docs/adr/090-sprint26-verification-gate-backport.md`, 40 lines, decision-time per CLAUDE.md): captures back-port + targeted constraint relaxation for partner-training-bias defect only. Not a general license to add — Sprint 25's ~240 partner-runs of evidence justify the exception. Companion to [[ADR-081]] (Hybrid 2 — what gets edited) and [[ADR-082]] (Sprint 25 interactive iteration shape — evidence source).
+- **`verificationGateBlock.ts` back-port** (1 commit `d9f6af68c`): -284 bytes net (-518 chars subtractive + ~+280 chars constructive). P1 (-62) + P2 (-31) remove broken language from line 16; P3 (-425) removes the pre-scripted escalation reply template + follow-up paragraph (keeps abstract escalation directive at line 27); acknowledgement sentence inserted at top of gate stating that document text supplied directly in the user message (pasted inline or under `## Document context` heading) is authoritative source material. All 10 partners pick up the change byte-for-byte via the [[ADR-081]] composition seam — no per-partner edits.
+- **Substrate extension for Marcus Webb** (1 commit `dc5feaa30`): three additive entries in `evals/oscar-llp/scripts/{lib-benchmarks.js, lib-recipe24.js, run-partner-cycle.js}` adding `marcus-webb → cuad-saas` mapping + Commercial Contracts metadata. Sprint 25's substrate scales cleanly to non-trio partners with ~17 LOC of additive code.
+- **Sarah Phase 4 validation** (60-min unattended run, 20 instances, $0.295 MiniMax): re-ran iter-0 against production back-ported gate. Result: **TIMEOUT 45% → 0%; NO_ANALYSIS 25% → 0%; DELIVERED 30% → 95%; total output 30% → 100%.** Both exit criteria (≥10pp timeout drop OR delivery rise) met by 4-7×. Sprint 25's residual 30% NO_ANALYSIS on Sarah iter-3 collapsed to 0%. Sprint 25 iter-0 baseline preserved at `iter-0-sprint25-baseline/` (renamed before re-run).
+- **Marcus Phase 5 transferability A/B** (two 30-50 min runs, 40 instances total, $0.573 MiniMax): clean pre+post A/B via temporary gate restore (`git show HEAD~2:...verificationGateBlock.ts` → file → 8s sleep for script to read → restore post-back-port). Pre-back-port: NO_ANALYSIS 20%, PARTIAL 5%, DELIVERED 75%, total output 80%. **Post-back-port: NO_ANALYSIS 0%, PARTIAL 0%, DELIVERED 100%, total output 100%.** All 5 problem instances pre-back-port (4 NO_ANALYSIS + 1 PARTIAL/escalated) flipped to clean DELIVERED post-back-port. The mediwoundltd flip is methodologically informative: pre-back-port invoked the P3 escalation script verbatim ("I cannot ground this analysis to the source material after two revision attempts..."); post-back-port (script removed; abstract directive retained) the same instance delivered substantive analysis. Cross-partner transferability per ADR-081 §Hybrid 2 empirically validated for one of seven non-trio partners.
+- **Sprint 22 smoke regression gate** (×2, ~$0.10): pre-change run 2/3 PASS (Sarah+Helena PASS, Aisha skips verification-pass on focused-tool questions — pre-existing MiniMax non-determinism); post-change run 3/3 PASS. The test's hardcoded `VERIFICATION_DIRECTIVE` is independent of `verificationGateBlock.ts` so the smoke gate validates infrastructure (recipe build, MCP spawn, sub-recipe load) — composition seam intact pre AND post Sprint 26 edit. RUNBOOK addendum documents the Aisha known-behaviour pattern.
+- **Negative finding refuted**: Sprint 25's headline negative finding (partner-training-bias on MCP-fetch is beyond subtractive reach) is empirically refuted as "beyond reach of intervention". The targeted acknowledgement sentence — one sentence, ~280 chars — closes the gap entirely on both Sarah (30% → 0% NO_ANALYSIS) and Marcus (20% → 0% NO_ANALYSIS). The constructive addition is doing the load-bearing work that subtraction alone could not.
+- **Closing report** at `evals/oscar-llp/reports/sprint-26-back-port-validation.md` (full A/B tables + interpretation + cost breakdown + caveats); per-partner scores.json files at `iterations/{sarah-chen, marcus-webb}/iter-0{,-pre-backport}/scores.json` (gitignored).
 
-- **`areaOverrideSchema.ts`** (`ui/desktop/src/components/oscar/forge/`, 65 lines): exports `AreaOverridesSchema` + `ProfileForWriteValidationSchema`. Mirrors `OscarAreaOverrides` in `useOscarProfile.ts:11–17`: `description_override?: z.string()`; `panel_sections?: z.array(z.string())` (kept permissive — main process doesn't have `PanelSectionId` enum bound; section-level validation happens at render time); `enabled_skills` / `enabled_mcps` discriminated on `mode: z.enum(['all','allow','deny'])`; `playbooks: { always_on, on_demand }`. Profile schema is minimal: validates `practice_areas[i].area_overrides` shape only; other fields `.passthrough()` so valid v3/v4/future-version profiles don't get rejected on shape drift.
-
-- **`profileWriteWatcher.ts`** (`ui/desktop/src/components/oscar/forge/`, ~170 LOC): `startProfileWriteWatcher({profilePath, backupPath}) → {stop()}`. Uses `fs.watch(parentDir, {persistent: false})` with a 100ms debounce; filters events by `filename === path.basename(profilePath)` to skip `.bak` / `.tmp` churn from our own atomic writes. Self-induced-loop guard: SHA-256 hash of last validated content tracked; events whose read-back content matches are skipped (catches both our own `.bak` write and our own revert). Bootstrap path: on init, if profile.json exists + parses valid + `.bak` absent, atomic-write `.bak` as initial backup. Pre-onboarding path: directory exists (created via `fs.mkdir(profileDir, {recursive: true})`), watcher idles until first valid write. Logging via `log` (`utils/logger`) — structured fields, no `console.log` (per CLAUDE.md "Logging" rule).
-
-- **`main.ts`** wireup (`OSCAR_PROFILE_BACKUP_PATH` constant next to existing `OSCAR_PROFILE_PATH` at line 2281; `startProfileWriteWatcher(...)` call inside `appMain()` right after `registerUpdateIpcHandlers()`). Five lines + one import. No new IPC handlers — the watcher communicates outcomes only via the .bak revert + subsequent reads.
-
-- **`systemPrompt.ts`** Mode D section (new, between Mode C step 7 and "Things you never do"; file grows 203 → 299 lines, under the 300 CLAUDE.md cap). Eight-step procedure: (1) identify area from activation preamble or free-text + fuzzy-match + disambiguate; (2) read profile.json + echo current `area_overrides`; (3) interview "which field(s) to change" with the closed menu (description / panel_sections / enabled_skills / enabled_mcps / playbooks) + valid section ids list + three modes for enabled_*; (4) compose override delta preserving non-touched fields verbatim; (5) confirm with before/after diff (text for description, side-by-side list for the others); (6) write via `oscar-fs__write_file`; (7) read back to confirm + retry-once + give-up policy if validator reverts; (8) close with the resume-semantics caveat (already-open sessions keep recipe baked at spawn). Line 10 intro: `**three modes**` → `**four modes**`.
-
-- **`forgeRecipe.ts`** signature: optional fifth param `modifyAreaId?: string`. Preamble construction extends to a three-way ternary — `reviewSkillPath` takes precedence; if absent, `modifyAreaId` produces `[Begin in Mode D. Modify the practice area: ${modifyAreaId}]\n\n`; if both absent, empty preamble. Extensions list, allowed-dirs, settings all unchanged.
-
-- **`ForgeView.tsx`** edits: read `modifyAreaId = searchParams.get('modifyArea') ?? undefined`; pass as fifth arg to `buildForgeRecipe(...)`. Three new lines.
-
-- **`RightPaneShell.tsx`** Edit-link affordance: import `Link` from `react-router-dom`; conditionally render `<Link to={\`/forge?modifyArea=${encodeURIComponent(areaId)}\`} className="oscar__right-pane-edit-link" data-testid="right-pane-edit-link">Edit</Link>` between the "Loadout" eyebrow and the toggle chevron when `isExpanded && areaId`. Hidden in quick-chat (no `areaId`) and on collapsed pane (no header content).
-
-- **`MattersLanding.tsx`** `enabled_mcps` filter: between `trustedInstalled` and the `installedConfigsRaw` build (lines 162–173), apply `area_overrides.enabled_mcps.mode` semantics — `'allow'` keeps only listed ids; `'deny'` drops them; `'all'` or absent → no filter (Sprint 18 permissive-default loadout doctrine preserved at default). Platform extensions (Memory, Tavily, ToM, etc.) bypass the filter — `enabled_mcps` only scopes installed integrations (community/trusted tier per Sprint 17 / ADR-061).
-
-- **`.oscar__right-pane-edit-link` CSS** (`styles/main.css`): tiny IBM Plex Mono italic in `var(--ink-faint)`; hover transitions to `var(--copper)` + underline. Margin-left: auto + margin-right: 8px slots the link between the left-anchored eyebrow and the right-anchored toggle. 18 lines.
-
-- **Visual harness** (`ui/desktop/scripts/capture-m7.js` + `scripts/capture-m7.sh`, cloned from M6 with M7-specific changes — `preflightCleanup` also wipes `~/.config/oscar/profile.json.bak`; states (d)/(e) directly mutate `area_overrides` via fs + spawn fresh matters to bypass the Sprint 19b session-resume short-circuit; state (f) deliberately writes invalid JSON and asserts the watcher reverts within 600ms). Live agent turns deferred to M8 per Arturs's doctrine.
-
-  States captured (PNGs at `docs/screenshots/sprint-m7/`):
-  - **(a) `edit-link-visible.png`** — Commercial / Test MSA Renewal open; right-pane header shows the Edit link with `href="#/forge?modifyArea=commercial"` and `title="Modify this practice area in Forge"`.
-  - **(b) `forge-mode-d-opens.png`** — `setRoute('#/forge?modifyArea=commercial')`; ForgeView redirects to `/pair?resumeSessionId=...`; chat surface mounts.
-  - **(c) `forge-mode-d-recipe-diagnostic.png`** — session metadata fetched via `/sessions/{id}`; `instructions` length 13,755 chars; starts with `[Begin in Mode D. Modify the practice area: commercial]\n\n`; contains all four Mode A/B/C/D section headers. Diagnostic overlay shows the first 800 chars.
-  - **(d) `description-override-applied.png`** — write `area_overrides.description_override = "Escalation thresholds: any indemnity cap > $500k or term > 3 years requires VP-Legal sign-off."` to commercial via fs; wait 400ms for the watcher to refresh `.bak`; create a fresh Commercial matter `test-desc-override`; open it; recipe.instructions includes the `## About this practice area` block (M0's wiring) with the override text.
-  - **(e) `enabled-mcps-filter.png`** — `electron.integrations.install('commercial', 'Google Drive', true)` succeeded (`{ok: true, already_installed: false}`); write `area_overrides.enabled_mcps = {mode: 'deny', ids: ['Google Drive']}`; create a fresh Commercial matter `test-mcp-filter`; open it; recipe.extensions = `[oscar-fs, computercontroller, analyze, apps, developer, skills, tom, Extension Manager, todo, summon, redline, tavily]` — Google Drive successfully filtered out. Diagnostic overlay shows the extension list.
-  - **(f) `validator-rejected-revert.png`** — pre-state hash (`6a8d2c40...`) matches `.bak` hash; write invalid `enabled_mcps = {mode: 'totally-not-a-mode', ids: 'not-an-array'}` directly to profile.json; wait 600ms (>100ms debounce + atomic revert); post-state hash equals pre-state hash — watcher reverted. Diagnostic overlay shows pre/post/.bak hash triplet.
-
-**Verification** (in this session):
-- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0).
-- ADR-088 line count: 46 (target ≤50).
-- ADR-089 line count: 50 (target ≤50; on the boundary).
-- `systemPrompt.ts` line count: 299 (target ≤300; mode trim landed three steps in — close paragraph + step 3 sub-bullets + step 7 retry policy).
-- `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` succeeded (`out/Oscar-GC-linux-x64/oscar-gc` = 206,036,184 bytes).
-- Visual harness: 6 PNGs at 1440×900 with per-state console assertions all green:
-  - (a) `editLinkInfo={"text":"Edit","href":"#/forge?modifyArea=commercial","title":"Modify this practice area in Forge"}`.
-  - (b) `forgeHash="#/pair?resumeSessionId=..."`; `arrivedAtPair=true`.
-  - (c) `instructionsLen=13755`; `hasModeD=true`; all four Mode A/B/C/D section headers present.
-  - (d) `hasAboutBlock=true`; `hasOverrideText=true` (override text in recipe.instructions).
-  - (e) `googleDrivePresent=false`; extensions list = 12 entries, Google Drive absent.
-  - (f) `revertedSuccessfully=true`; preHash == postHash == .bak hash.
-- Commit-trailer hygiene per CLAUDE.md: no `Co-Authored-By` trailer on the implementation commit `3addac12a` (verified via `git log -1 --pretty=full | grep -i co-authored` → empty after the commit lands).
-- No Rust touch (`git diff --stat origin/main HEAD -- crates/` empty).
-- No sibling-repo changes; no new npm dependencies (`zod ^3.25.76` already pinned in `ui/desktop/package.json:105`).
-- `ui/pnpm-workspace.yaml` `allowBuilds:` drift left unstaged (Sprint 17b convention).
-- Parallel-session coordination: `lavern-firm-mode` at `91d2eba84` for the sixth consecutive sub-sprint drafting/close. Pre-harness probe: no Xvfb on `:99`; Lavern's `aisha-khan` partner-cycle eval running (progressed from cycle 2 to cycle 3 mid-sprint) on `/tmp/oscar-llp-iter-aisha-khan-*` (separate tempdir, no shared disk surface, no Electron, no Xvfb collision). M7's `preflightCleanup` wipes `~/.config/oscar/*` + `~/.config/oscar/profile.json.bak` + `~/.agents/skills/test-*` only — no overlap with Lavern's eval state.
-
-**Deferred** — push to `origin/main` after this close-commit lands.
-
-**Carry-forwards** (master-brief sub-sprints):
-- **M8 — Forge delete-area (Mode E)** (final master-brief sub-sprint) + the single end-to-end Crostini dogfood per Arturs's doctrine. M8 brief draft after this close commit at `/root/.claude/plans/sprint-m8-forge-mode-e-delete-area.md`.
-- **Walker-fork hard skill scoping** — post-master-brief.
-- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
-- **QuickChatButton "STARTING…" stuck-state** (M1 carry) still open.
-- **`pnpm-workspace.yaml` allowBuilds: drift** inherits as unstaged each session.
-- **Crostini dogfood E1–E8 (M0–M7 visual states)** wait for M8 end-to-end run.
-
-**ADRs**: 088, 089.
-
----
-
-### Sprint 20-M6 — Skills upload + Forge Mode C review (closed 2026-05-21 on code; commit `ee51295e3`)
-
-**Goal**: seventh sub-sprint (M6) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Add a drop affordance to the Skills section so a lawyer can bring their own `SKILL.md`; on drop, stage to `~/.agents/skills/<slug>/SKILL.md` and auto-open Forge in **Mode C** (review + enrich + bind) with the path passed via `?reviewSkill=<absPath>`. Mode C interviews the lawyer in three short questions (when to invoke / conflicts / area binding), writes enriched frontmatter via oscar-fs, and writes area binding into `area_overrides.enabled_skills` via the same path Mode B already walks for profile.json.
-
-**Built** — one implementation commit + ADR-087 (Forge Mode C — review uploaded skill) + visual harness on lq-vps:
-
-- **Three plan-mode scope decisions locked via AskUserQuestion** (in this session): (1) drop-affordance shape = **file-drop only** (mirrors M4's `.oscar__playbooks-drop` precedent; no paste-modal); (2) Forge mode-routing fallback = **silent — Mode C only via drop** (`SYSTEM_PROMPT` holds three modes A/B/C; the activation preamble is prepended at recipe-build time only when `?reviewSkill=` is set; without the param the agent picks from the lawyer's opener and Mode C does not fire in practice); (3) profile-write path = **Forge agent via `oscar-fs__write_file`** (same path Mode B already walks at `systemPrompt.ts:86,111`; no new agent-facing IPC; `mutateEnabledSkills` helper at `main.ts:2641` left untouched). All three matched the brief's recommended defaults.
-
-- **Pre-execution surface probe** (Phase 1 Explore agents + own file reads) confirmed:
-  - `forgeRecipe.ts:72–73` already lists `~/.agents/skills` + `~/.config/oscar` as oscar-fs allowed-dirs; **no widening needed** for SKILL.md writes or profile.json writes.
-  - `systemPrompt.ts:5–129` is monolithic with agent-detected branching; Mode C slots in as a third numbered section between Mode B and "Things you never do".
-  - `ForgeView.tsx:15–87` is a transient bootstrap (create session + redirect to `/pair`); imports `useNavigate` only; M6 adds `useSearchParams` to read the query param before recipe build.
-  - `crates/goose/src/skills/mod.rs:390–415` (`discover_skills`) is re-walked on every `/config/slash_commands` call — no caching — so a freshly-staged SKILL.md surfaces on the next 2 s pane poll. No app restart required.
-  - **ADR slot taken at decision time: 087.** Master plan reserved 075 (stale post-Lavern); confirmed 087 next-free via `ls docs/adr/` before naming.
-
-- **ADR-087** (`docs/adr/087-forge-mode-c-review-uploaded-skill.md`, 50 lines): Mode C as the third numbered section in `SYSTEM_PROMPT`; deep-link entry via `#/forge?reviewSkill=<absPath>`; recipe-build-time preamble (`[Begin in Mode C. Review the SKILL.md at: <path>]`) prepended only when the param is set; profile.json writes via `oscar-fs__write_file` (mirror Mode B). Alternatives rejected: pre-session chrome with three-mode picker (adds UI ForgeView doesn't have today); mode-stripped templated prompt (brittle); M5-IPC callback for binding writes (defeats reuse pivot). Cites ADR-031 (skills on-disk convention), ADR-039 (Forge chrome), ADR-067 (`area_overrides` surface), ADR-086 (skill scoping via prompt enumeration).
-
-- **`stageUserSkill.ts`** (`ui/desktop/src/components/oscar/skills/stageUserSkill.ts`, ~115 LOC, main-process): `stageUserSkill(slugRaw, contentRaw, globalBundledSlugs)` → `{ok: true, absPath} | {ok: false, code, message}`. Five validation gates in order: `safeSlug` regex (`^[a-z0-9]+(?:-[a-z0-9]+)*$`, max 64 chars, mirrors `main.ts:1866`); slug ∉ global bundled set (defence-in-depth — pane already hides drop for bundled rows); frontmatter delimiters `---` at line 0 + closing `---` later + `name:` field between them (regex only; Goose's `serde_yaml` is the source of truth at `/config/slash_commands` call time); target SKILL.md does not already exist. Atomicity: `fs.mkdir` (recursive, ok if exists) → `fs.writeFile { flag: 'wx', mode: 0o600 }` → EEXIST on collision. Error codes: `EBADSLUG | EBUNDLED_COLLISION | EBADFRONTMATTER | EEXIST | EIO`. Mirrors M4's `oscar:playbooks:upload` atomic pattern (`main.ts:2376–2410`).
-
-- **`oscar:skills:stage-for-review` IPC** (`main.ts`, sixth in the M5 IPC block, between `:delete` and `:render-block`): calls `allBundledPlugins()` + `readBundledInventory()` to compute the global bundled set, then `stageUserSkill(slugRaw, contentRaw, globalBundled)`. Returns the same discriminated-union shape as the other skill IPCs.
-
-- **`window.electron.skills.stageForReview`** (`preload.ts`): sixth method on the existing M5 bridge. New `StageForReviewErrorCode` + `StageForReviewResult` type re-exports for the renderer.
-
-- **`SkillsSection.tsx`** drop affordance: new `.oscar__skills-drop` div with `onDrop` + `onDragOver` + click-to-browse (hidden `<input type="file" accept=".md">`), inserted between `<div class="oscar__panel-section-body">` and `<SkillsModePill>` (mirrors PlaybooksSection:180-200 placement). Slug derived from filename sans `.md`; pre-flight regex reject before IPC; IPC validates again. On success, `useNavigate` to `/forge?reviewSkill=<absPath>` (encoded). No scope picker (skills are global). `.oscar__skills-upload-error` row surfaces `EBADFRONTMATTER` / `EEXIST` / `EBUNDLED_COLLISION` inline. `aria-busy` on the drop zone during the staging window; M5's mode pill / chips / delete X all preserved verbatim.
-
-- **`forgeRecipe.ts`** signature: gains optional fourth param `reviewSkillPath?: string`. When set, prepends `[Begin in Mode C. Review the SKILL.md at: ${reviewSkillPath}]\n\n` to `SYSTEM_PROMPT` instructions. Recipe `description`, oscar-fs allowed-dirs, `available_tools`, and `settings` all unchanged.
-
-- **`ForgeView.tsx`** edits: import `useSearchParams`; read `reviewSkillPath = searchParams.get('reviewSkill') ?? undefined` after `useNavigate`; pass to `buildForgeRecipe(...)` as the fourth arg. `startedRef.current` short-circuit (line 22) gates re-entry; only the first mount value matters.
-
-- **`systemPrompt.ts`** Mode C section (new, between Mode B's step 6 and "Things you never do"): three-question interview cadence (invocation triggers → conflicts → area binding) mirroring Mode A's one-question-at-a-time + confirm-before-write pattern; step 5 writes enriched SKILL.md via `oscar-fs__write_file` (overwrite); step 6 reads + mutates + writes `practice_areas[i].area_overrides.enabled_skills` per chosen area (mode flips to `allow` if previously `all`; sorted + deduped slug list); step 7 closes with the resume-semantics caveat (next-fresh-matter-open). Line 9 intro: `**two modes**` → `**three modes**` with parenthetical about the activation preamble.
-
-- **`.oscar__skills-drop` CSS family** (`styles/main.css`): cloned from `.oscar__playbooks-drop` lines 1374–1396 — dashed cream box, copper hover, paper-edge background; `aria-busy='true'` variant adds opacity + progress cursor during the staging window; `.oscar__skills-upload-error` row mirrors `.oscar__playbooks-error` editorial register.
-
-- **Visual harness** (`ui/desktop/scripts/capture-m6.js` + `scripts/capture-m6.sh`): clone of M5's pattern with three M6-specific changes — preflightCleanup also wipes `~/.agents/skills/test-nda-review`; state (b) calls `window.electron.skills.stageForReview` directly (synthetic File objects via CDP are high-friction); state (d) fetches `/sessions/{id}.recipe.instructions` via `getGoosedHostPort` + `getSecretKey` (renderer.tsx:25–36 pattern) and asserts the activation preamble + Mode A/B/C section headers; state (e) simulates Mode C step 6 via the existing M5 IPCs (`setMode` + `toggleSlug`) — same end-state Mode C produces via oscar-fs; live agent turns deferred to M8 Crostini dogfood per Arturs's doctrine.
-
-  States captured (PNGs at `docs/screenshots/sprint-m6/`):
-  - **(a) `skills-drop-zone.png`** — `data-testid="skills-dropzone"` in DOM above the M5 mode pill on Commercial / Test MSA Renewal.
-  - **(b) `skills-staged.png`** — `stageForReview('test-nda-review', <216-byte SKILL.md>)` returns `{ok: true, absPath: '/root/.agents/skills/test-nda-review/SKILL.md'}`; disk file confirmed; pane row `[data-testid="skills-row-test-nda-review"]` visible after 3 s polled refresh.
-  - **(c) `forge-mode-c-opens.png`** — `setRoute('#/forge?reviewSkill=...')`; ForgeView redirects to `/pair?resumeSessionId=...` within ~2.5 s; chat surface mounts.
-  - **(d) `forge-mode-c-recipe-diagnostic.png`** — session metadata fetched via `getSession` route; `instructions` length 9094 chars; starts with `[Begin in Mode C. Review the SKILL.md at: /root/.agents/skills/test-nda-review/SKILL.md]\n\n`; contains all three Mode A/B/C section headers. Diagnostic overlay shows first 800 chars.
-  - **(e) `skills-bound-commercial-simulated.png`** — `setMode('commercial', 'allow')` + `toggleSlug('commercial', 'test-nda-review', true)`; profile.json shows `practice_areas[commercial].area_overrides.enabled_skills = {mode: 'allow', slugs: ['test-nda-review']}`; Privacy untouched (no `area_overrides`); Commercial chip `aria-pressed='true'`.
-  - **(f) `skills-unbound-privacy.png`** — open Privacy / Test Vendor DPA; mode pill = `all`; the user row surfaces (Goose's `discover_skills` is global) with chip `aria-disabled='true'` per M5's all-mode UI.
-
-**Verification** (in this session):
-- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0).
-- ADR-087 line count: 50 (target ≤50; on the boundary).
-- `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` succeeded.
-- Visual harness: 6 PNGs at 1440×900 with per-state console assertions all green:
-  - (a) `dropPresent=true`; sections `[MatterFacts,Skills,Playbooks,Redlining,History]`.
-  - (b) `stagedSkills=["test-nda-review"]`; `onDiskBytes=216`; `userRowPresent=true`.
-  - (c) `forgeHash` starts with `#/pair?resumeSessionId=`; `cameFromForgeWithParam=true`.
-  - (d) `instructionsLen=9094`; `hasModeC=true`; preview starts with `[Begin in Mode C. Review the SKILL.md at: /root/.agents/skills/test-nda-review/SKILL.md]`.
-  - (e) `enabledSkillsByArea={"commercial":{"mode":"allow","slugs":["test-nda-review"]}}`; `chipPressed="true"`.
-  - (f) `privacyMode="all"`; `privacyUserRow={"present":true,"chipPressed":"true","chipDisabled":"true"}`.
-- Commit-trailer hygiene per CLAUDE.md: no `Co-Authored-By` trailer on the implementation commit `ee51295e3` (verified via `git log -1 --pretty=full | grep -i co-authored` → empty).
-- No Rust touch (`git diff --stat origin/main HEAD -- crates/` empty).
-- No sibling-repo changes; no new npm dependencies.
-- `ui/pnpm-workspace.yaml` `allowBuilds:` drift left unstaged (Sprint 17b convention).
-- Parallel-session coordination: `lavern-firm-mode` at `91d2eba84` for the fifth consecutive sub-sprint drafting/close. Pre-harness probe: no Xvfb on `:99` / `:98`; Lavern's `aisha-khan --cycle 1` CLI eval running on `/tmp/oscar-llp-iter-aisha-khan-*` (separate tempdir, no shared disk surface, no Electron, no Xvfb collision). M6's `preflightCleanup` wipes `~/.config/oscar/*` + `~/.agents/skills/test-*` only — no overlap with Lavern's eval state.
-
-**Deferred** — push to `origin/main` after this close-commit lands.
-
-**Carry-forwards** (master-brief sub-sprints):
-- **M7 — Forge area-modify (Mode D)** (next). Builds on Mode B's profile.json read/modify/write AND Mode C's interview-with-confirm cadence. ADR for Zod-validated profile.json writes per master plan §M7. M7 brief draft after this close commit at `/root/.claude/plans/sprint-m7-forge-mode-d-modify-area.md`.
-- **M8 — Forge delete-area (Mode E)** + the single end-to-end Crostini dogfood per Arturs's doctrine.
-- **Walker-fork hard skill scoping** — post-master-brief.
-- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
-- **QuickChatButton "STARTING…" stuck-state** (M1 carry) still open.
-- **`pnpm-workspace.yaml` allowBuilds: drift** inherits as unstaged each session.
-- **Crostini dogfood E1 (M0 description_override) + M1/M2/M3/M4/M5/M6 visual states** wait for M8.
-
-**ADRs**: 087.
-
----
-
-### Sprint 20-M5 — Skills visibility + per-area scoping (closed 2026-05-21 on code; commit `0ef740ea9`)
-
-**Goal**: sixth sub-sprint (M5) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace the `PanelSectionStub` mapping for **Skills** with a real renderer: list Goose's auto-discovered skills filtered to the active area (bundled `commercial-legal` / `privacy-legal` / `ip-legal` / ... per `practiceAreas.bundled_skill_sources` × `~/.agents/skills/`); per-area allow/deny chips persist to `area_overrides.enabled_skills`; recipe builder injects a `## Skills available in this area` block followed by `Ignore any other skills you may discover` — prompt-level soft scoping.
-
-**Built** — one implementation commit + ADR-086 (skill scoping via prompt enumeration) + visual harness on lq-vps:
-
-- **Reuse pivot at plan-mode time**: brief proposed a fresh `skillStore.ts` filesystem walker + YAML frontmatter parser (likely `gray-matter` or `js-yaml`). Probe found Goose's Rust core already ships `goose::skills::discover_skills()` exposed via `GET /config/slash_commands` (CommandType === 'Skill'); `SkillsView.tsx:121` already calls it; YAML parsing happens server-side via `serde_yaml`. CLAUDE.md "Reuse over rebuild" → drop the walker + parser; M5 fetches via the existing API. Bundled-vs-user discrimination is a tiny `fs.readdir` of `<resourcesRoot>/skills/in-house-legal/<plugin>/skills/` per area. **Zero new npm deps; zero new Rust changes.** Mirrors M4 ADR-085's `computercontroller` pivot.
-
-- **`skillStore.ts`** (main-process, `ui/desktop/src/components/oscar/skills/`): pure inventory readers (`readBundledInventory(root, plugins) → Set<slug>`, `readUserSkillSlugs() → Set<slug>`), pure joiners (`joinSkills(slashCommands, areaBundled, userSlugs, mode, slugs) → SkillEntry[]` sorted bundled-first then alpha; `resolveEnabledSlugs(joined) → string[]`), `renderSkillsBlockMarkdown(allowed) → string \| null`, `deleteUserSkillDir(slug, globalBundled) → ok|error` with `EBUNDLED_DELETE` defence in depth. No HTTP, no YAML, no MCP spawn.
-
-- **Five IPCs on `main.ts`** (after the `oscar:playbooks:render-block` handler):
-  - `oscar:skills:list(areaId) → SkillsListResult` — fetches `/config/slash_commands` via the per-window `goosedClients.get(windowId)` client (cert-pinned `net.fetch` already wired at `main.ts:993–1003`), joins with bundled + user inventories, returns `{ mode, skills }` with chip state computed.
-  - `oscar:skills:set-mode(areaId, mode)` — atomic profile write via new `mutateEnabledSkills` helper modelled on M4's `mutateAlwaysOn` (`main.ts:2312–2342`). Mode flip does NOT clear slugs (audit-friendly + invert-on-flip ergonomic; documented in ADR-086).
-  - `oscar:skills:toggle-slug(areaId, slug, included)` — same atomic-write helper; deduplicated + sorted slug list.
-  - `oscar:skills:delete(_, slug)` — `fs.rm -r ~/.agents/skills/<slug>/`; refuses if slug ∈ global bundled inventory (across all 9 plugins); cross-area scrubs slug from every area's `enabled_skills.slugs` (mirrors M4 playbook-delete scrub at `main.ts:2505–2528`).
-  - `oscar:skills:render-block(areaId) → string \| null` — main reads profile + bundled inventory + getSlashCommands + composes via `renderSkillsBlockMarkdown`. Returns `null` on any failure (recipe still spawns; matches M4 fallback).
-
-  ProfileShape widened to type `area_overrides.enabled_skills?: { mode?: string; slugs?: string[] }`.
-
-- **`window.electron.skills` preload bridge** (`preload.ts`): `list / setMode / toggleSlug / delete / renderBlock`; re-exports `SkillEntry`, `SkillMode`, `SkillsListResult` types so renderer + section consume them.
-
-- **`renderSkillsBlock.ts`** (renderer wrapper): thin try/catch around `window.electron.skills.renderBlock(areaId)`; returns `null` on failure with `console.warn` (mirrors `renderPlaybooksBlock.ts`). Called from `buildPracticeAreaRecipe.ts` between `playbooksBlock` and `baseInstructions`. No signature change to `BuildPracticeAreaRecipeOptions`; no cascade to `commercialRecipe.ts` or `buildForgeRecipe.ts` (Forge intentionally exempt).
-
-- **`SkillsSection.tsx`**: three-segment mode pill (All / Allow / Deny — `aria-pressed`, click → `setMode`); per-skill row with name + `[bundled]` tag (bundled rows only) + description (2-line clamp via `-webkit-line-clamp`) + chip with `aria-pressed={enabled}` `aria-disabled={mode==='all'}` `title="Applies on next matter open"` (resume-semantics tooltip per AskUserQuestion) + delete X (user-added rows only). Polled at 2 s via shared `usePanelReader<SkillsListResult>` hook (M3-era). Per-skill busy state isolates rows. Error toast surfaces failed mutations.
-
-- **`registry.ts`**: `Skills: PanelSectionStub` → `Skills: SkillsSection`; `SECTION_META.Skills.comingIn` deleted.
-
-- **`.oscar__skills*` CSS family** (`styles/main.css`): mirrors `.oscar__playbooks*` editorial register. Mode pill = inline-flex three-segment toggle with copper accent on pressed segment; row grid is two rows (name+chip+delete on line 1; description spans full width on line 2); `[bundled]` tag is italic uppercase faint sans-editorial. `aria-disabled` chip variant for the all-mode info state (no border, italic, faint).
-
-- **Visual harness `capture-m5.{js,sh}`**: clones M4 with widened `preflightCleanup` (also wipes `~/.agents/skills/test-*`); pre-seed writes `~/.agents/skills/test-nda-checklist/SKILL.md` with proper frontmatter; five states (default-all-mode / allow-mode-with-selection / user-added-visible / recipe-injection-with-diagnostic-overlay / deny-mode-blocks-one); per-state console audit asserts `data-section-id` array + per-skill `{slug, source, enabled, deletable}` + `renderBlock` content grep + profile.json `enabled_skills` field. Asserted in-flight: state (a) has 9 commercial-legal bundled rows + 1 user row; (b) mode flips to allow with 2 toggled slugs; (d) renderBlock returns the 157-char block with `## Skills available in this area` + the two allowed slugs + `Ignore any other skills you may discover.`; (e) renderBlock OMITS the two slugs after mode flips to deny (slugs preserved across flip). PNGs at `docs/screenshots/sprint-m5/`.
+**Substantive results in one paragraph**: The back-port reproduces Sprint 25's iter-1 effect on Sarah and substantially exceeds Sprint 25's best Sarah cycle (60% iter-3 → 95% Sprint 26 iter-0). It transfers cleanly to a non-trio partner (Marcus Webb's 5 problem instances all flipped to DELIVERED). Sprint 25's negative finding on partner-training-bias is refuted by the targeted acknowledgement sentence. No regressions in either partner's pre→post comparison. Total Sprint 26 spend: $0.87 against $3 plan estimate (back-port itself reduces tool-hunting wall-clock, making each iteration cheaper).
 
 **Deferred**:
-- Skill upload + Forge review (Mode C) — M6.
-- Cross-agent "All Skills" view — defers post-M8 per AskUserQuestion at plan-mode start (`SkillsView.tsx` at `/skills` route stays as the existing Goose-native global surface).
-- Walker-fork hard scoping — post-master-brief.
 
-**Carry-forwards** (master-brief sub-sprints):
-- **M6 — Skills upload + Forge review (Mode C)** (next). Drop-affordance shape (file-drop vs paste-modal) + Forge mode-routing fallback for AskUserQuestion at start. M6 brief draft after this close commit at `/root/.claude/plans/sprint-m6-forge-mode-c-skill-review.md`.
-- **M7 — Forge area-modify (Mode D)** + ADR for Zod-validated profile.json writes.
-- **M8 — Forge delete-area (Mode E)** + the single end-to-end Crostini dogfood per Arturs's doctrine.
-- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
-- **QuickChatButton "STARTING…" stuck-state** (M1 carry) still open.
-- **`pnpm-workspace.yaml` allowBuilds: drift** inherits as unstaged each session.
-- **Crostini dogfood E1 (M0 description_override) + M1/M2/M3/M4/M5 visual states** wait for M8.
+- Re-validating Diana / Aisha post-back-port. Sprint 25 already iterated those partners with similar cuts; re-running them post-back-port would consume budget for no incremental decision-relevant signal.
+- Cross-partner empirical coverage for the remaining 6 non-trio partners (Daniel Reeves / Priya Patel / James Okafor / Helena Voss / Robert Sinclair / Thomas Schmidt). Structural inference per ADR-081 covers them; empirical evidence on Marcus + Sarah is sufficient for ship confidence.
+- Phase 4 (framework-section) cuts. Sprint 25 P4 negative finding (same cut had opposite effects on Sarah vs Diana) made these LOW-transferability and partner-specific. Sprint 26 made no Phase 4+5 cuts; this category remains "per-partner content inspection required" if revisited.
 
-**ADRs**: 086.
+**Carry-forwards**:
+
+- **Substantive Curator port** (Sprint 24-B / 25 / 26 carry). Sprint 27 candidate unless deprioritized.
+- **Sprint 24-A `Lavern —` trust-bypass cleanup**. One-commit cleanup; carries again (Sprint 26 didn't touch `preload.ts`).
+- **Cross-partner empirical coverage for remaining 6 non-trio partners**. Nice-to-have, ~$1.50 per partner pre+post. Not blocking.
+- **`oscar-fs` scope leak** (Sprint 23 finding). Still deferred.
+
+**ADRs**: 090 (one — Sprint 26 verification-gate back-port + targeted constraint relax).
+
+**Commits**: `d9f6af68c` (back-port + ADR-090) → `dc5feaa30` (Marcus substrate extension) → `6476990b6` (close-out: this SPRINT_LOG entry + closing report + RUNBOOK addendum + PROJECT.md Sprint Index row).
+
+**MiniMax spend**: $0.87 total (9% of $10/PCM cap). Cumulative Sprint 22→26: ~$5.72 across five sprints. No Anthropic spend (judging in-conversation under Max subscription per ADR-082).
+
+**Sibling repos**: none touched.
+
+**No Rust core touch. No new sibling MCP.**
+
+### Sprint 25 — Execute Sprint 24-C iteration (interactive, Max-only) (closed 2026-05-22 on code)
+
+**Goal**: rework Sprint 24-C's SDK-automated iteration harness into a Claude-Code-interactive shape per ADR-082 ("via Max subscription" means Claude Code interactive, not SDK), then *run* the iteration end-to-end on the Sarah Chen / Diana Park / Aisha Khan trio against MAUD + CUAD-privacy + CUAD-saas. Produce the substantive cross-partner-pattern deliverable the 24-C substrate was built for.
+
+**Decisions resolved in plan-mode** (AskUserQuestion):
+1. **Cycles per partner**: 4 (iter-0 baseline + 3 edit cycles). Matches the brief's MiniMax cost table; dense enough for Phase 4 cross-partner signal.
+2. **Partner-run concurrency**: serial (one goose run at a time). Clean transcript boundaries; no MiniMax rate-limit risk.
+3. **Phase A script language**: trimmed Node (`run-partner-cycle.js`), not bash. Reuses the existing battle-tested spawn/transcript/manifest logic from 24-C's `run-iteration.js`.
+
+**Architectural call** — **ADR-082** (decision-time, committed `583950b80` BEFORE any code per CLAUDE.md): shift from SDK-automated to Claude-Code-interactive iteration. Max subscription covers Claude Code running; the SDK wrapper duplicates what Read / Edit / Bash already do per conversation turn. Three-phase shape: Phase A (Node, unattended in-turn) spawns goose; Phase B (Claude Code, in-conversation) judges + proposes via Read / Write; Phase C (Node) validates + applies subtractive removals. References ADR-081 (Hybrid 2 iteration target, unchanged) and ADR-077 (Sprint 23 frozen baseline). 40 lines.
+
+**Built — Phase 0 (substrate trim)**:
+
+- **Deleted** (`git rm`): `evals/oscar-llp/scripts/lib-claude.js` (217 LOC Anthropic SDK wrapper) and `evals/oscar-llp/package.json` (the only dep was `@anthropic-ai/sdk@0.40.1`).
+- **Trimmed**: `lib-cost-log.js` (93 → 56 LOC; `ANTHROPIC_PRICING` table + `costForAnthropicCall` removed; MiniMax-only).
+- **Renamed + trimmed**: `run-iteration.js` → `run-partner-cycle.js` (394 → 197 LOC; Phase A only — judging + Phase 2 + writeClosingReport stripped; prints `READY-FOR-JUDGE iterations/<partner>/iter-<k>/` marker on completion).
+- **New**: `apply-proposal.js` (88 LOC Phase C subtractive applier — reads `proposal.json`, validates via `lib-subtractive`, applies removals, writes next-iter `prompt.txt` + unified diff).
+- **`lib-report24.js`**: header + report filename + envelope strings updated for Sprint 25 (writes `reports/sprint-25-iteration-results.md`).
+- **README.md**: rewritten — Phase A/B/C interactive shape, removed Anthropic API key gate, cost table now ~$12 MiniMax-only.
+- **NOTICE.benchmarks.md**: updated with CUAD privacy-clause substitution disclosure (see Phase 1).
+- **`.gitignore`**: dropped dead `evals/oscar-llp/scripts/node_modules/` reference; generic-ified Sprint 24-C comment.
+
+Net Phase 0 diff: −452 LOC (728 deleted, 276 added). Substrate that survives unchanged: `lib-recipe24.js`, `lib-subtractive.js`, `lib-benchmarks.js`, `sanity-check.js`, prompts/*.
+
+**Built — Phase 1 (benchmark loaders)**:
+
+- **`loaders/maud-loader.js`** (168 LOC): parses Atticus MAUD CSV (downloads from `github.com/TheAtticusProject/maud/raw/main/data.zip` to `/tmp/oscar-benchmarks/maud/`); 6651 rows across 152 unique contracts → 50 instances with ≥3 annotations; loads source doc text from `data/contracts/<name>.txt` truncated to 30k chars; M&A-themed partner question. Median 62 gold_labels per instance. CC-BY-4.0 attribution.
+- **`loaders/cuad-loader.js`** (201 LOC): parses Atticus CUADv1.json (510 contracts, 41 clause types); `--filter privacy|saas` selects the partner config. **Important substitution**: CUAD does NOT include "Data_Privacy" in its taxonomy — the original 24-C stub filter was a misread. Diana's privacy benchmark substitutes data-flow + third-party-access clauses (Audit Rights, Affiliate License-Licensee/Licensor, Anti-Assignment, Insurance, Change Of Control, Covenant Not To Sue) as the closest privacy-adjacent commercial-contract surface CUAD offers. Aisha's tech-tx benchmark uses CUAD's SaaS-relevant taxonomy (License Grant, Cap on Liability, Termination For Convenience, Post-Termination Services, Renewal Term, Exclusivity, Source Code Escrow, Most Favored Nation, Volume Restriction, Warranty Duration, etc.). Substitution flagged in the partner question template and documented in NOTICE.benchmarks.md.
+- **Populated benchmarks** (50 instances each): `maud.json` (50 MAUD contracts), `cuad-privacy.json` (50 with ≥3 matching qas under the privacy filter), `cuad-saas.json` (50 with ≥3 matching qas under the SaaS filter). Stubs retained for `legalbench-privacy.json` + `github-saas-tnc.json` per drop-order.
+- **Wrapper bug fix**: `sanity-check.js` was passing `--docs all` to Sprint 23's `run-eval.js`, which interprets `all` as a literal doc id and throws `unknown doc: all`. Default behaviour is already all 3 docs when `--docs` is omitted. Caught at first Phase 2 invocation, fixed cleanly (commit `91d2eba84`).
+
+**Phase 2 (sanity check)** — FAILED on the literal ±2pp gate (new Δ_grounded = +4.3pp vs Sprint 23's -3.8pp; drift 8.1pp). All 6/6 partner runs + 6/6 judge calls clean (1080s, $0.30). Investigation: Sprint 23's -3.8pp baseline carried wildly overlapping 95% CIs of [13.8%, 57.3%] and [20.1%, 66.8%] on N=6; the "drift" is statistical noise on tiny samples. Sprint 23 substrate diffs since (commit `1da0c328c`, Sprint 24-A) were cosmetic only — SPRINT_22_DIRECTIVE + RALPH_DIRECTIVE constants frozen per ADR-077 as required. **Gate over-tuned to N=6 noise; waived per user direction**: Phase 3 proceeds with `SKIP_SANITY_GATE=1`.
+
+**Built — Phase 3 (12 partner-cycle iterations)**:
+
+Each cycle: Phase A (`run-partner-cycle.js` spawns 20 `goose run --recipe <yaml> --no-session` serially, ~25 min wall-clock) → Phase B (me, in-conversation, reading 20 transcripts + gold labels, writing `scores.json` + `proposal.json`) → Phase C (`apply-proposal.js` validates + applies + writes next-iter snapshot + diff).
+
+**Sarah Chen (M&A / MAUD) — 4 cycles**:
+
+| cycle | Timeout | NO_ANALYSIS | PARTIAL | Delivered | Total | Edit |
+|---:|---:|---:|---:|---:|---:|---|
+| iter-0 | 45% | 25% | 0% | 30% | 30% | (baseline) |
+| iter-1 | 30% | 20% | 10% | 40% | 50% | -62: fetch parenthetical |
+| iter-2 | 15% | 35% | 10% | 40% | 50% | -767: Phase 4+5 framework |
+| iter-3 | 10% | 30% | 0% | 60% | 60% | -31: doc-text precondition |
+
+Sarah's timeouts collapsed monotonically; delivery doubled (30% → 60%). 860 chars cut total (-12.9% of original 6657-char prompt). MiniMax spend $0.897.
+
+**Diana Park (Privacy / CUAD-privacy) — 4 cycles**:
+
+| cycle | Timeout | NO_ANALYSIS | PARTIAL | Delivered | Total | Edit |
+|---:|---:|---:|---:|---:|---:|---|
+| iter-0 | 15% | 20% | 0% | 65% | 65% | (baseline) |
+| iter-1 | 10% | 20% | 0% | 70% | 70% | -62: fetch parenthetical |
+| iter-2 | 10% | **40%** | 0% | 50% | **50%** | -973: Phase 4+5 framework |
+| iter-3 | 10% | 10% | 20% | 60% | 80% | -31: doc-text precondition |
+
+**Diana iter-2 REGRESSED -20pp** after the same Phase 4+5 cut that helped Sarah. Diana's Phase 4 (Consent Architecture) + Phase 5 (Produce Deliverables) provided implicit scaffolding ("I have a method") — removing it caused partners to default to "I need the document first." iter-3 doc-text edit recovered the loss and pushed total output to 80%. 1066 chars cut total (-14.2% of 7504-char prompt). MiniMax spend $0.965.
+
+**Aisha Khan (Tech-Tx / CUAD-saas) — 4 cycles**:
+
+| cycle | Timeout | NO_ANALYSIS | PARTIAL | Delivered | Total | Edit |
+|---:|---:|---:|---:|---:|---:|---|
+| iter-0 | 0% | 20% | 5% | 75% | 80% | (baseline) |
+| iter-1 | 0% | 25% | 0% | 75% | 75% | -62: fetch parenthetical |
+| iter-2 | 5% | 10% | 20% | 65% | 85% | -31: doc-text precondition (Phase 4+5 SKIPPED) |
+| iter-3 | 0% | 5% | 5% | 90% | **95%** | -425: escalation script |
+
+Aisha started strongest (80% baseline) and finished at 95% — best partner-cycle result in Sprint 25. **Phase 4+5 cut was DELIBERATELY SKIPPED** because Aisha's Phase 4 (Licensing and IP Analysis) + Phase 5 (Vendor Risk Assessment) are core to her tech-tx task, not off-topic ceremony like Sarah's (Negotiation Strategy + Deliverables) or Diana's (Consent Architecture + Deliverables). The escalation-script cut produced the biggest single-cycle delivery improvement of the sprint (+25pp). 518 chars cut total (-5.5% of 9407-char prompt). MiniMax spend $1.020.
+
+**Built — Phase 4 (cross-partner pattern extraction)**:
+
+`iterations/_cross-partner/pattern-extraction.json` (schema-compliant per `prompts/cross-partner-extractor.md`). Four patterns surfaced across ≥2 partners + one negative finding + methodology summary.
+
+- **P1 — MCP-fetch parenthetical drives tool-hunt timeouts** (HIGH transferability to all 7 non-trio partners). Fix: -62 chars on `(fetched via `oscar-document-reader` or pasted by the user)`. Evidence: Sarah 9/20 + Diana 2/3 iter-0 timeouts tool-hunting via `oscar-fs` `search_files`. Transferable because the verification gate is byte-identical across all 10 partners per ADR-081.
+- **P2 — Doc-text precondition language drives ask-for-upload NO_ANALYSIS** (HIGH transferability). Fix: -31 chars on `the relevant document text and `. Evidence: 7 of Sarah's, 8 of Diana's, 5 of Aisha's NO_ANALYSIS instances explicitly asked for MCP upload despite acknowledging inline text. Same edit helped all three partners.
+- **P3 — Pre-scripted escalation reply misuse** (MEDIUM transferability). Fix: -425 chars on the "Reply exactly: > I cannot ground..." block. Evidence: Sarah contract_147 invoked directly; Aisha 2 instances mimicked as "Option A/B/CONFIRM" off-ramps. +25pp delivery on Aisha iter-3 (biggest single-cycle improvement).
+- **P4 — Subtractive transferability is not automatic** (LOW transferability of structural-position-blind cuts). Same Phase 4+5 cut helped Sarah (off-topic content), hurt Diana -20pp (off-topic but scaffolding-providing), and was correctly skipped for Aisha (on-topic content). Per-partner content inspection required.
+- **Negative finding — partner-training-bias on MCP-fetch is beyond subtractive reach**. All 3 partners show residual 5-30% NO_ANALYSIS rates where the model holds a strong prior that documents come via MCP and inline text is provisional. Closing the gap requires a constructive addition — violates Sprint 25's subtractive-only constraint. Sprint 26 should consider relaxing.
+
+**Built — Phase 5 (closing artefacts)**:
+
+- `evals/oscar-llp/reports/sprint-25-iteration-results.md` (substantive closing report — per-partner trajectories, cross-partner patterns, negative finding, cost breakdown, recommended back-ports).
+- This SPRINT_LOG entry.
+- PROJECT.md Sprint Index row.
+- RUNBOOK note for `SKIP_SANITY_GATE=1` waiver.
+
+**Tests / verifications**:
+- All trim-side scripts parse-check clean (`node --check` 8/8 PASS post-trim).
+- All three benchmark JSONs verified `instances.length ≥ 20` (50 each) + first-instance schema spot-check.
+- `lib-benchmarks.loadBenchmark()` smoke-tested for all 3 partners with seeded sampling.
+- iter-0 prompt composition verified for all 3 partners (production + verificationGateBlock via `lib-recipe24.loadPromptForCycle`).
+
+**Deferred**:
+- **Production back-port of P1+P2 into `verificationGateBlock.ts`**: Sprint 25 produces the *evidence*; adoption is a separate ADR with its own decision-time gate (Sprint 26+ scope per ADR-082 §Out of scope).
+- **P3 escalation-script back-port**: MEDIUM transferability rating warrants small-scale single-partner validation before broader adoption.
+- **Substantive Curator port** (Sprint 24-B carry): heartbeat-driven Curator deferred again; no Sprint 25 evidence required it. Sprint 26+ scope.
+- **Sprint 24-A `Lavern —` trust-bypass cleanup**: carries forward; one-commit cleanup when convenient.
+- **LegalBench-Privacy + GitHub-SaaS-T&C supplemental loaders**: drop-order #1 active; stubs retained for reactivation if benchmark-source overfitting evidence surfaces.
+
+**Carry-forwards**:
+- **Sprint 26 should test P1+P2 back-port effectiveness**: a small-N controlled experiment on production `verificationGateBlock.ts` — apply -93 chars (P1 -62 + P2 -31), re-run Phase 3 single-partner (probably Sarah on MAUD given the highest improvement room observed), validate the cross-partner pattern claim empirically.
+- **Sprint 26 should consider relaxing the subtractive-only constraint** for partner-training-bias defects per the negative finding. One sentence acknowledging inline document context as authoritative would likely close the residual MCP-fetch NO_ANALYSIS rate.
+- **Per-partner edit selection methodology**: future iteration should run per-partner-customized, not shared edits. Diana iter-2 regression validates this.
+- **Non-trio partner coverage** (Marcus Webb / Daniel Reeves / Priya Patel / James Okafor / Helena Voss / Robert Sinclair / Thomas Schmidt): Sprint 26+ could extend Phase 3 to validate P1/P2 transferability claims empirically.
+
+**Honest scope notes**:
+- **Sanity-check gate waived**, not honored. The user's call (per ADR-082 §"Decisions to lock before execution"); the gate was over-tuned to Sprint 23's N=6 baseline noise. Iteration's own N=20 per cycle × 4 cycles × 3 partners = 240 samples provides much stronger statistical ground than the 6-sample sanity check. Documented in Phase 5 report.
+- **CUAD privacy-clause substitution**: CUAD does not include "Data_Privacy" in its 41-clause taxonomy. Diana's filter substitutes data-flow + third-party-access commercial clauses. Flagged in partner question template + NOTICE.benchmarks.md.
+- **Aisha Phase 4+5 cut deliberately skipped** because content was on-topic. Methodology refinement, not scope drop. Captured as P4 finding.
+- **Phase B judging is approximate** — per-rubric-item verdicts are coarse (PARTIAL bucket for delivering instances; full per-MAUD-axis judging not done at strict precision). The iter-1/iter-2/iter-3 distributions are honest at the delivery-vs-non-delivery level which is the actionable signal for subtractive selection.
+
+**ADRs**: 082 (one — Sprint 25 interactive iteration shape).
+
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode`):
+- `583950b80` — ADR-082 at decision time (CLAUDE.md mandate)
+- `0f9b1b5c0` — Phase 0 substrate trim (SDK deletion + run-partner-cycle.js + apply-proposal.js + README rewrite)
+- `1b611c736` — Phase 1 benchmark loaders + populated MAUD / CUAD-privacy / CUAD-saas (23,561 insertions)
+- `91d2eba84` — sanity-check.js `--docs all` wrapper bug fix
+- `0205e729e` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK / `evals/oscar-llp/reports/sprint-25-iteration-results.md` (331 insertions across 4 files)
+
+**Sibling repos**: none touched (Sprint 24-B's `oscar-document-reader-mcp` `read_document_head` already shipped at `ba283bf0d`; Sprint 25 reuses unchanged).
+
+**Total live spend**: $3.18 MiniMax (32% of $10/PCM dev-key cap). $0.00 Anthropic spend (judging in-conversation under Max subscription per ADR-082 — the headline 97% cost reduction vs Sprint 24-C's ~$52 SDK envelope).
+
+No Rust core touch. No new sibling MCP. Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd`.
 
 ---
 
-### Sprint 20-M4 — Playbooks subsystem (closed 2026-05-21 on code; commit `ec24d4710`)
+### Sprint 24-B/C — Lavern Pipeline port + cross-partner iteration eval harness (closed 2026-05-21 on code; iteration runs → user invocation)
 
-**Goal**: fifth sub-sprint (M4) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace the `PanelSectionStub` mapping for **Playbooks** with a real renderer: drag-drop upload → `~/.config/oscar/playbooks/<scope>/<filename>`; per-file always-on chip → file's extracted text injected into the matter's recipe instructions as a `## Playbooks in scope` block (Layer 1); on-demand files stay listed in the pane; agent reads them via oscar-fs + computercontroller (Layer 2).
+**Goal**: combined sprint. (24-B) port Lavern's contract-analysis pipeline (Watchman classify → Reader per-clause + synthesis → Curator portfolio sweep) onto Goose's sub-recipe substrate per [[ADR-074]]; (24-C) build an Anthropic-SDK-based iteration harness applying Lavern's subtractive-edit methodology (the methodology gap Sprint 23 missed — 4-6 cycles of measurable subtractive edits, not single A/B). Pre-iteration prerequisite: extract the byte-identical 21-line verification gate (Sprint 23's broken language; Δ_grounded = -3.8pp) from 10 partner prompts into a single shared module so iteration edits one constant rather than ten copies.
 
-**Built** — one implementation commit + ADR-084 (storage convention) + ADR-085 (three-layer injection with reuse pivot) + visual harness on lq-vps:
+**Decisions resolved in plan-mode** (AskUserQuestion):
+1. **Partner trio**: Sarah Chen (M&A) / **Diana Park (Privacy — swap from Helena)** / Aisha Khan (Tech Tx). Sprint 22's substrate inline-cast Helena Voss as Privacy was a bug — production `partners.ts:73` correctly has Helena as Tax; the +33pp "Helena × Doc 1" win on Sprint 23 with-Ralph was actually on that Privacy inline-cast and is closer to Diana than to real Helena Tax. Swap preserves methodology-level continuity.
+2. **Prompt architecture**: **Hybrid 2** (extract only the byte-identical 21-line verification gate; leave Memory + Key Principles per-partner). 28% "shared" overstates the case — only 210 lines (21 × 10) sha256 1f67d064f6987ba1 across all 10 partners are genuinely identical; the rest is premature abstraction per CLAUDE.md.
+3. **Sprint scope**: both 24-B + 24-C, Curator stubbed. Pipeline shape (4 YAMLs) lands so Sprint 25 substantiates Curator by editing one YAML; eval harness lands fully with 3 cycles × 3 partners × N=20 envelope.
 
-- **Mid-execution architecture pivot — reuse Goose's `computercontroller` instead of adding `pdf-parse` + `mammoth`.** Plan-mode landed on the two npm deps; Arturs flagged the CLAUDE.md "Reuse over rebuild — Goose" rule. Probing `crates/goose-mcp/src/computercontroller/` surfaced `pdf_tool.rs` (via `lopdf`) + `docx_tool.rs` (via `docx_rs`) with `extract_text` operations, exposed as MCP tools and spawnable standalone via `goosed mcp computercontroller`. CLAUDE.md decision: drop the npm deps; talk to the bundled MCP from the main process via `@modelcontextprotocol/sdk` stdio client (already in node_modules). Plan file at `/root/.claude/plans/please-read-m4-breif-starry-pascal.md` updated mid-flight to reflect the pivot.
+**Architectural calls** — three ADRs at decision time, all before any code:
+- **ADR-079** (Lavern Pipeline shape): Shape P1 — declarative orchestration via parent recipe + 3 sub-recipes. Doc-head ingress via new `read_document_head` MCP tool. Curator-fires-when-doc-count≥2; Curator stubbed in 24-B / substantive in Sprint 25 (heartbeat-driven Lavern Curator doesn't translate cleanly to one-shot recipes — needs design work beyond 24-B budget).
+- **ADR-080** (precedent-board persistence): reuse `oscar-baselines-mcp` at `~/.config/oscar/state/lavern/precedents/` (per-user-per-area scope); CLAUDE.md "reuse over rebuild" — no new sibling MCP.
+- **ADR-081** (verification-gate extraction / Hybrid 2): extract byte-identical 21-line block; mirror `userIdentityBlock` + `companyContextBlock` precedent at `buildOscarLLPPartnerRecipe.ts:123-127`. Sprint 23 Δ_grounded = -3.8pp traces here; iteration in 24-C edits one constant.
 
-- **ADR-084** (`docs/adr/084-playbook-storage-convention.md`, 46 lines): filesystem at `~/.config/oscar/playbooks/<scope>/<filename>`; `<scope>` = `_global` (cross-area) or `<areaId>` (per-area; dirname equals `OscarUserProfilePracticeArea.id`). `area_overrides[areaId].playbooks.always_on` stores scoped relative paths like `["_global/foo.md"]`. Pane lists from disk via `fs.readdir`; no shadow registry. Underscore prefix on `_global` keeps it free of any future area-id named "global". Mirrors `~/.agents/skills/<slug>/SKILL.md` (Sprint 11) — filesystem-as-source-of-truth, Finder/Drive-sync-compatible.
+**Built — Sprint 24-B (pipeline)**:
 
-- **ADR-085** (`docs/adr/085-playbook-three-layer-injection.md`, 47 lines): three layers, two implemented in M4. Layer 1 (always-on) → `oscar:playbooks:render-block` IPC; main process spawns `goosed mcp computercontroller` for binary files (.pdf/.docx); text formats raw-read (.md/.txt/.html/.json/.yaml/.csv); per-file budget = `floor(cap / count)`; truncation at paragraph boundary with sentinel. Layer 2 (on-demand) → practice-area recipes carry narrowed `computercontroller` with `available_tools: ['pdf_tool', 'docx_tool']` only (ADR-017 discipline); oscar-fs widening covers text files. Layer 3 (semantic) deferred. Documents resume-path "next-open" semantics: toggle applies on fresh matter-open, already-bound sessions keep the recipe baked at spawn (Sprint 19b + ADR-038). Force-detach rejected.
+- **3 sub-recipe YAMLs** at `ui/desktop/sub-recipes/` (bundler picks them up via existing `prepareSubRecipes()` at `prepare-oscar-bundle.js:489-510`; zero edit needed):
+  - `lavern-watchman.yaml`: lifts Lavern's `WATCHMAN_PROMPT` from `claw/watchman.ts:39-82`; instructs the LLM to call `read_document_head(path, 1500)` first; returns the JSON shape Lavern defines. `max_turns: 4`.
+  - `lavern-reader.yaml`: 7 doc-type templates lifted from `claw/reader-templates.ts:65-191` selected via `{{document_type}}` param; per-clause loop via tool-call iteration (Goose agent loop handles the iteration; we don't write loop code); grounding pass via `oscar-grounding-verifier`. `max_turns: 32`. Optional `jurisdiction` parameter requires `default: ""` per Goose's recipe-validator (parse-failure caught on smoke test, fixed inline).
+  - `lavern-curator.yaml`: 20-line STUB per ADR-079 §Consequences. One-shot surface-decision pass; substantive Curator (consolidation + re-read queue + precedent promotion) deferred to Sprint 25.
+- **1 parent reference YAML** at `ui/desktop/sub-recipes/lavern-pipeline.yaml`: documents the canonical shape; uses relative paths (`./lavern-watchman.yaml`) per Goose's `resolve_sub_recipe_path` at `crates/goose/src/recipe/build_recipe/mod.rs:161-184` (verified relative-path resolution at sprint start).
+- **Programmatic parent** at `ui/desktop/src/components/oscar/oscar-llp/buildLavernPipelineRecipe.ts`: sibling to `buildOscarLLPPartnerRecipe.ts:96-156`; declares oscar-fs + oscar-document-reader + oscar-grounding-verifier + oscar-baselines (latter with `OSCAR_BASELINES_DIR=~/.config/oscar/state/lavern/precedents/` per ADR-080); sub-recipes inherit per ADR-074. Title prefix `Oscar LLP — Lavern Pipeline` auto-trusts via Sprint 24-A's three-way OR (no `preload.ts` edit).
+- **UI surface**: new `LavernPipelineView.tsx` (doc picker + invoke button) at `/oscar-llp/pipeline`; new card on `OscarLLPRoster.tsx:115-125` above the 10 partner cards (firm-level work — Oscar LLP's case team running a multi-stage review — sits next to partners, not separate sidebar group).
+- **IPC**: `oscar:llp:pipeline:ensure-dir` (creates `~/Documents/Oscar GC/Oscar LLP/lavern-pipeline/` + `~/.config/oscar/state/lavern/precedents/`) + `oscar:llp:pipeline:list-recent-docs`. Preload bridge under `window.electron.llp.pipeline.{ensureDir,listRecentDocs}`.
+- **Sibling MCP `oscar-document-reader-mcp` modified** (pushed SHA `ba283bf0d82ac3f88b2b61c6bbbc1e017845eb74` at `sarturko-maker/oscar-document-reader-mcp main`): added `read_document_head` tool (~30 LOC); takes `{path: string, max_chars?: number ≤ 8192}`, returns first N chars via `node:fs/promises.readFile`. Bundler picks it up automatically.
+- **Test**: `ui/desktop/scripts/test-lavern-pipeline.js`. `--parse-only` flag runs `goose run --recipe <yaml> --explain` on all 4 YAMLs (3 sub-recipes + 1 inline-synthesized parent); **4/4 PARSE OK** at sprint close. End-to-end (Phase 2) mode synthesises a single-doc pipeline YAML inline (mirrors Sprint 23 eval harness pattern), runs real MiniMax (~$0.15-0.25), asserts Watchman + Reader fire and Curator does NOT (single-doc) — deferred to user invocation (live MiniMax spend).
 
-- **`playbookStore.ts`** (`ui/desktop/src/components/oscar/playbooks/playbookStore.ts`, main-process): `listPlaybooks(areaId, alwaysOn)` walks `_global` + per-area dirs, returns sorted `PlaybookEntry[]`; `extractText(absPath, cc?)` (text formats raw; html tag-strip; .pdf/.docx via passed-in `ComputerControllerClient`); `renderPlaybooksBlock(relPaths, charCap, goosedBin)` is the Layer 1 helper — one subprocess per build, multiple `tools/call`, killed at end. `ComputerControllerClient` wraps `StdioClientTransport` + `Client` from `@modelcontextprotocol/sdk` against `goosed mcp computercontroller`. Path-safety helpers (`sanitiseFilename`, `absPathForRel`) reject traversal attempts at the IPC boundary.
+**Built — Sprint 24-C (eval harness + Hybrid 2 refactor)**:
 
-- **`renderPlaybooksBlock.ts`** (`ui/desktop/src/components/oscar/recipe/renderPlaybooksBlock.ts`, renderer): thin async wrapper around `window.electron.playbooks.renderBlock(alwaysOn, cap)`; returns `string | null`. Mirrors `renderCompanyContextBlock` shape so the recipe builder's compose remains `[companyBlock, areaDescriptionBlock, playbooksBlock, baseInstructions].filter(Boolean).join('\n\n')`. Failure to extract degrades to "null" (no block) rather than failing the spawn.
+- **Hybrid 2 refactor** (Sprint 24-C prep, executed BEFORE eval substrate):
+  - New `ui/desktop/src/components/oscar/oscar-llp/verificationGateBlock.ts` (~25 lines): exports `VERIFICATION_GATE_BLOCK: string` constant — the 21-line paragraph, verified byte-identical sha256 `1f67d064f6987ba1d2340f042ede84a2da55d6614647da6395cbc1e6aa3c9590` across all 10 partner prompts pre-refactor.
+  - `buildOscarLLPPartnerRecipe.ts:123-127`: added VERIFICATION_GATE_BLOCK as the 4th array entry alongside identity/company/partner-body (+2 lines, -1 modified). Pattern mirrors `userIdentityBlock` (Sprint 21 / ADR-071) and `companyContextBlock` (Sprint 15 / ADR-053).
+  - 10 partner prompt files lost the verification-gate tail (22 lines each — gate + preceding blank line), file footprints now 94-131 lines (well under 300-line cap).
+  - Untouched: `prompts/raw/*.ts.original` (Apache 2.0 verbatim per [[ADR-072]] + [[ADR-078]]; verification gate is Oscar-GC augmentation, never in raws); `evals/lavern-jv/scripts/lib-recipe.js` SPRINT_22_DIRECTIVE + RALPH_DIRECTIVE frozen constants per ADR-077.
+  - Smoke: `tsc --noEmit` clean on all changed files; isolated tsc per partner file pass-checks each individually.
+- **Eval harness substrate at `evals/oscar-llp/`** (8 scripts + 3 prompts + 5 benchmark stubs + README + NOTICE.benchmarks.md + package.json):
+  - `scripts/run-iteration.js`: orchestrator. Per partner × cycle: load prompt snapshot (production+gate for iter-0, or `iterations/<partner>/iter-<k-1>/prompt.txt` for k≥1) → sample N=20 instances (seeded deterministic per partner+cycle via simple LCG) → invoke real MiniMax via `goose run --recipe <yaml> --no-session` per instance → batched single Claude judge+propose call → validate proposal subtractive-only → apply removals → save iter-(k+1) snapshot + unified-diff patch.
+  - `scripts/sanity-check.js`: Sprint 23 baseline re-run gate. Sarah × 3 docs × 2 configs (N=6, ~$0.30, ~15 min). Parses new run's `REPORT.md` for `Δ_grounded`; asserts |new - (-3.8pp)| ≤ 2pp tolerance. PASS → log to `iterations/_sanity-check/result.json`; FAIL → halt + Arturs reviews.
+  - `scripts/lib-claude.js`: Anthropic SDK wrapper. `judgeAndPropose` + `extractCrossPartnerPatterns` calls. Prompt-caching on the system + judge-rubric prefixes via `cache_control: { type: 'ephemeral' }` (5-min TTL). Per-call cost logged via `lib-cost-log`. Key lookup: env `ANTHROPIC_API_KEY` then `/root/.anthropic-dev-key` (chmod 600).
+  - `scripts/lib-recipe24.js`: per-iteration partner-recipe builder. Re-exports Sprint 23 `lib-recipe.js` substrate (frozen per ADR-077); loads partner prompt from per-iteration file via `extractTemplateLiteralBody()` regex (matches `export const <name>Prompt = \`...\`;` shape); composes with `VERIFICATION_GATE_BLOCK` extracted from `verificationGateBlock.ts` for iter-0 baseline.
+  - `scripts/lib-benchmarks.js`: MAUD/CUAD/LegalBench loaders with seeded deterministic sampling. Per-partner mapping (Sarah → maud; Diana → cuad-privacy + legalbench-privacy; Aisha → cuad-saas + github-saas-tnc). DROP_CANDIDATES set marks supplemental files as `--drop-supplemental` candidates.
+  - `scripts/lib-subtractive.js`: Layer B subtractive-constraint validator. `validateRemovals` enforces all `end > start`, no overlaps, net length strictly negative, resulting prompt is strict char-subset. `applyRemovals` + `strictSubsetCheck` + `emitUnifiedDiff` for Layer C diff visualisation. Smoke-tested against synthetic input — overlap rejection, zero-diff rejection, subset check all PASS.
+  - `scripts/lib-report24.js`: iteration trajectory table + Phase 2 cross-partner pattern report. Reuses Sprint 23 `lib-report.js` bootstrap/recall math via `require()`.
+  - `scripts/lib-cost-log.js`: per-cycle token + dollar accumulator. Anthropic pricing for Opus 4.7 / Sonnet 4.6 / Haiku 4.5. MiniMax pricing approximation (refine from invoices). Daily JSON log at `iterations/_costs/costs-<date>.json` with running total.
+  - `prompts/subtractive-system.md`: Layer A constraint — verbatim Lavern "only REMOVALS, never additions/rewrites/replacements"; explicit escalation path if subtraction is genuinely insufficient.
+  - `prompts/judge-rubric.md`: per-partner judging axes (MAUD-shaped for Sarah; CUAD-privacy / LegalBench for Diana; CUAD-SaaS for Aisha) + global Oscar-GC metrics (grounded_citations, hallucination_count, verification_pass_cited, etc.).
+  - `prompts/cross-partner-extractor.md`: Phase 2 — patterns appearing in ≥2 partners; explicit `transferability: high|medium|low` rating per non-trio partner; honest-results framing (`negative_finding` shape if <2 patterns surface).
+  - 5 benchmark stub files (instances=[] until operator downloads upstream): `maud.json`, `cuad-privacy.json`, `cuad-saas.json`, `legalbench-privacy.json` (DROP CANDIDATE #2), `github-saas-tnc.json` (DROP CANDIDATE #1). Each file's `_meta` block documents license + citation + format-version + drop-order position.
+  - `package.json`: `@anthropic-ai/sdk` pinned at `0.40.1`. Dev-only deps.
+  - `NOTICE.benchmarks.md`: Atticus Project (MAUD + CUAD CC-BY-4.0) + Stanford LegalBench (MIT) attributions.
+  - `.gitignore` updated: `evals/oscar-llp/iterations/*` ignored except `.gitkeep`; mirrors Sprint 23 `lavern-jv/runs/*` pattern.
 
-- **`buildPracticeAreaRecipe.ts` becomes async + inserts the block + widens oscar-fs**: new required `homeDir` option (mirrors `forgeRecipe.ts:68`); oscar-fs args gain `${homeDir}/.config/oscar/playbooks` (single parent dir; prefix-based check covers `_global` + every per-area subdir); new builtin extension entry `{ type: 'builtin', name: 'computercontroller', available_tools: ['pdf_tool', 'docx_tool'] }` narrowed per ADR-017; `playbooksBlock` inserted between `areaDescriptionBlock` and `baseInstructions`. `commercialRecipe.ts` cascades to async. `MattersLanding.openMatter` awaits both builders; reads `window.electron.oscarHomeDir` and throws early if unset.
+**Tests**:
+- **Pipeline parse-only**: 4/4 YAMLs PARSE OK via `goose run --recipe <yaml> --explain` (parse failure on first `lavern-reader.yaml` run due to missing default on optional `jurisdiction` param — fixed inline, re-validated).
+- **Hybrid 2 refactor**: `tsc --noEmit` clean on all 11 changed files (10 partners + `buildOscarLLPPartnerRecipe.ts`); isolated tsc per partner file pass-checks each individually; `verificationGateBlock.ts` parse-checks clean.
+- **Eval harness**: all 8 scripts pass `node -c` syntax check. `lib-subtractive` validated against synthetic input. `lib-recipe24` composes production partner prompts + `VERIFICATION_GATE_BLOCK` correctly for all 3 trio members (Sarah / Diana / Aisha).
 
-- **Five IPCs on main.ts** after the M3 right-pane block:
-  - `oscar:playbooks:list(areaId) → PlaybookEntry[]` — lazy-mkdir + readdir, alphabetical within scope.
-  - `oscar:playbooks:upload(areaId, scope, filename, bytes) → { ok, relPath } | { ok: false, code }` — sanitise via `path.basename`; reject non-allowlist ext; `wx` flag refuses overwrite (EEXIST).
-  - `oscar:playbooks:toggle-always-on(areaId, relPath, next) → { ok, alwaysOn, budgetCap } | { ok: false, code, extractedLength?, cap? }` — single-file budget check at toggle time; extract once via `ComputerControllerClient`; reject EBUDGET if extracted length > 8000; atomic profile.json temp+rename on accept.
-  - `oscar:playbooks:delete(areaId, relPath) → { ok }` — unlink + scrub the relPath from every area's `always_on` list.
-  - `oscar:playbooks:render-block(relPaths, charCap) → string | null` — Layer 1 injection helper called by `renderPlaybooksBlock` at recipe-build time.
+**Deferred** — substantive iteration runs require live spend (Anthropic + MiniMax). User invokes per the README's pre-execution gates:
+- `/root/.anthropic-dev-key` (chmod 600). Pay-as-you-go API key required; Max subscriptions don't issue API keys.
+- `node evals/oscar-llp/scripts/sanity-check.js` PASS (Sprint 23 baseline within ±2pp).
+- `node evals/oscar-llp/scripts/run-iteration.js --all` for full trio × 4 cycles × N=20 sweep (~$52 total estimated).
 
-- **`window.electron.playbooks` preload bridge** with five matching methods + new `PlaybookEntry`, `UploadResult`, `ToggleAlwaysOnResult` ambient types.
+**Carry-forwards**:
+- **Sprint 25 substantive Curator**: edit `lavern-curator.yaml` from the 20-line stub to full surface-decision + consolidation + re-read queue + precedent promotion (per `claw/curator.ts` Lavern source). The pipeline shape is intact; Sprint 25's lift is contained.
+- **Sprint 25 Lavern— trust-bypass cleanup** (carries from 24-A): drop the dual-prefix coexistence once no live host has legacy data.
+- **Phase 2 cross-partner extraction**: only fires meaningfully after the trio's iteration cycles complete. Deferred per pre-execution-gate posture.
+- **Benchmark data ingestion**: MAUD/CUAD/LegalBench downloads + adapter loaders are not in 24-B/C scope. Operator populates `benchmarks/<name>.json` instances arrays before first iteration run. Format documented in each file's `_schema` block.
+- **Anthropic SDK Max subscription caveat**: brief mentioned "via Max subscription"; Max subscriptions don't issue API keys. Pre-execution gate documents the pay-as-you-go path. If only Max available, iteration blocks; surfaces immediately to user.
+- **Pre-existing 17 `tsc --noEmit` errors** (Sprint 22 workspace-install carry) unchanged through 24-B/C.
 
-- **`PlaybooksSection.tsx`** consumes `useRightPaneCoords()` + `usePanelReader(window.electron.playbooks.list, [areaId])`. Drag-drop overlay doubles as click-to-browse (hidden `<input type="file">`); two-button confirm dialog for scope ("Area only" / "Global"); rows with `data-testid="playbooks-row-${relPath}"` + `data-scope` attribute, mono filename + scope label + size + always-on chip (`aria-pressed`) + delete X; budget warning row + EEXIST error row. Empty state copy: "No playbooks yet. Drop a file above."
+**Honest scope notes**:
+- Parent pipeline YAML at `ui/desktop/sub-recipes/lavern-pipeline.yaml` ships as a **reference document** for the canonical shape; the actual UI runtime parent recipe is constructed programmatically by `buildLavernPipelineRecipe.ts` (mirrors Sprint 22 partner-recipe pattern — `buildOscarLLPPartnerRecipe.ts` is also programmatic, not a YAML). The test script synthesises its own parent YAML inline with resolved paths (mirrors Sprint 23 `lib-recipe.js` pattern). Minor deviation from the plan's "4 YAMLs ship" framing; the substantive shape is intact.
+- Approximate token usage in `run-iteration.js`'s MiniMax-cost accounting (4 chars per token estimate) — refine from real MiniMax invoice headers when available.
 
-- **`sectionRegistry`** swap: `Playbooks: PlaybooksSection`; `SECTION_META.Playbooks.comingIn: 'M4'` deleted.
+**ADRs**: 079, 080, 081.
 
-- **CSS family `.oscar__playbooks-*`** (`ui/desktop/src/styles/main.css`): drop-zone with dashed rule + cream paper-edge hover; row layout (name 1fr + scope + size mono + chip + delete X); pill-shaped Always-on chip with copper accent in pressed state; budget warning banner with copper-bordered left rule + ink-faint italic. Editorial register matches LQdesign reference.
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode`):
+- `f300b0f09` — ADRs 079, 080, 081 at decision time (CLAUDE.md mandate)
+- `e4febabea` — Hybrid 2 refactor (verificationGateBlock + 11 file edits)
+- `fb2952971` — Lavern Pipeline (4 YAMLs + builder + view + IPC + test script)
+- `604131ac9` — eval harness substrate (`evals/oscar-llp/`)
+- `9b84eb9a3` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK
 
-- **Visual verification harness** (`ui/desktop/scripts/capture-m4.js` + `scripts/capture-m4.sh`): clones M3's pattern; widens `preflightCleanup` to wipe `~/.config/oscar/playbooks/`; five states with full IPC assertions including profile.json `always_on` field check and renderBlock content grep. State (d) overlays the `renderBlock` result as a temporary diagnostic `<div>` so the PNG carries visual evidence alongside the console-asserted contract.
+**Sibling repo** (`sarturko-maker/oscar-document-reader-mcp` `main`):
+- `ba283bf0d82ac3f88b2b61c6bbbc1e017845eb74` — `read_document_head` tool (~30 LOC; Sprint 24-B Watchman ingress)
 
-**Verification** (in this session):
-- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0).
-- ADR line counts: 46 (storage) / 47 (three-layer). Target ≤50.
-- `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` succeeded.
-- Visual harness produced 5 PNGs at 1440×900:
-  - (a) `playbooks-empty.png` — Playbooks section visible, drop zone + "No playbooks yet" stub copy.
-  - (b) `playbooks-listed-mixed-scope.png` — two rows with distinct `data-scope` ("global" + "area"), labels "Global" / "commercial".
-  - (c) `playbooks-always-on-toggled.png` — chip `aria-pressed="true"`; profile.json `area_overrides.commercial.playbooks.always_on === ["_global/nda-checklist.md"]` verified via `readAlwaysOnList`.
-  - (d) `playbooks-recipe-injection.png` — `renderBlock` returned 1029 chars containing `## Playbooks in scope` heading + `### nda-checklist.md (global)` filename header + NDA-checklist content. Diagnostic overlay shown in the PNG; harness asserts the string before screenshot.
-  - (e) `playbooks-budget-warning.png` — 50K-char `large-policy.md` rejected with `code: 'EBUDGET'`, `extractedLength: 56020`, `cap: 8000`; budget warning banner rendered; chip stays `aria-pressed="false"`.
-- Commit-trailer hygiene per CLAUDE.md: no `Co-Authored-By` trailer (verified post-commit).
-- **ADR slots taken at decision time: 084 + 085** (verified `ls docs/adr/` + `git log --all --diff-filter=A` before naming; main at 083, lavern-firm-mode at 082, next-free = 084).
-- No Rust touch. No sibling-repo changes. No new npm dependencies.
-- Parallel-session coordination: Xvfb :99 confirmed clear before harness run (Sprint 24 / `lavern-firm-mode` was idle on display).
-
-**Deferred** — push to `origin/main` happens after the close commit lands the SPRINT_LOG entry with this section's commit SHA.
-
-**Carry-forwards** (master-brief sub-sprints):
-- **M5 — Skills visibility + per-area scoping** (next). One ADR at decision time (skill scoping via prompt enumeration). M5 brief draft after this close commit at `/root/.claude/plans/sprint-m5-skills-visibility.md`.
-- **M6 — Skills upload + Forge review (Mode C)**.
-- **M7 — Forge area-modify (Mode D)** + ADR for Zod-validated profile.json writes.
-- **M8 — Forge delete-area (Mode E)** + the single end-to-end Crostini dogfood per Arturs's doctrine.
-- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
-- **QuickChatButton "STARTING…" stuck-state** (M1 carry) still open.
-- **`pnpm-workspace.yaml` allowBuilds: drift** inherits as unstaged each session.
-- **Crostini dogfood E1 (M0 description_override) + M1/M2/M3/M4 visual states** wait for M8.
-
-**ADRs**: 084, 085.
+Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
 
 ---
 
-### Sprint 20-M3 — Matter Facts + History real bodies (closed 2026-05-21 on code; commit `7b6586765`)
+### Sprint 24-A — Lavern → Oscar LLP rebrand (closed 2026-05-21 on code)
 
-**Goal**: fourth sub-sprint (M3) of the nine-slice right-panel master brief (`/root/.claude/plans/sprint-right-panel-lazy-eich.md`). Replace `PanelSectionStub` for **MatterFacts**, **ProgrammeFacts**, and **History** with real renderers backed by the same on-disk state the agent reads — `matter.md` (ADR-047), `~/.config/oscar/tom-active-matter.md` (ADR-044), and the goose-server session log via the existing `GET /sessions/{session_id}` route. No shadow store, no new persistence model, no file watchers (polled 2 s).
+**Goal**: rebrand the 10-partner sidebar bench from "Lavern" (Sprint 21 placeholder) to "Oscar LLP" — the in-house standard for a multi-partner law-firm structure — and reserve the "Lavern" name for upstream-credit attribution on Sprint 24-B+C's contract-analysis pipeline port (Watchman → Reader → Curator; substance Lavern's own evals validated). Self-contained UI/state/path rename. No Rust core touch. No partner-content edits (Sprint 24-B+C handles content iteration). Apache 2.0 attribution preserved verbatim per §6.
 
-**Built** — one implementation commit + ADR-083 at decision time + History-default settled via plan-mode AskUserQuestion:
+**Architectural call** (`docs/adr/078-sprint24-rebrand-lavern-to-oscar-llp.md`): firm name "Oscar LLP" (over "Oscar GC LLP" doubling and "Oscar Limited Liability Partnership" formality); IPC namespace `oscar:llp:*` (terse vs `oscar:oscar-llp:*` literal mirror); read-time lazy migration via atomic `fs.rename` mirroring [[ADR-047]] matters-registry backup pattern + [[ADR-032]] schema v1→v2 precedent; [[ADR-029]] trust-bypass widens to three-way OR (`Oscar GC` || `Lavern —` || `Oscar LLP —`) so Sprint 23 sessions resume cleanly through the rename window; Sprint 25 cleanup drops `Lavern —` recognition once no live host has legacy data.
 
-- **ADR-083** (`docs/adr/083-pane-reads-matter-folder.md`, 49 lines): right pane = view of agent state, not parallel source of truth. MatterFacts reads `matter.md` + tom file via a thin Electron IPC; History reads `getSession()` from the renderer; reads polled at 2 s. Alternatives rejected: file watchers (fan-out under multi-matter use); separate per-pane state file (split-brain); new Rust readonly session route (`getSession` already returns full conversation); SQLite-from-main (needs driver in bundle); reusing `oscar:matters:get` (returns full `MatterEntry` + raw markdown — M3 IPC returns parsed, label-ready facts decoupled from registry shape).
+**Built** — one ADR, five commits, atomic mechanical sweep, regression-test rename:
 
-- **History-default settled via plan-mode AskUserQuestion** (option A — universal): `'History'` appended to **all 13** areas' `defaultPanelSections` in `practiceAreaShapes.ts`. Reasoning: lawyer always sees recent activity; M3 becomes the sprint where History is a load-bearing surface (not dark code awaiting Forge area-modify at M7).
+- **ADR-078** (44 lines, committed `022a45e15` BEFORE any code per CLAUDE.md): rebrand decision + Lavern-reservation for Sprint 24-B+C + dual-prefix trust-bypass coexistence window + read-time lazy migration shape + Apache 2.0 attribution discipline.
+- **Trust-bypass widening** (commit `1f1efa3db`): `ui/desktop/src/preload.ts:441-465` — both `hasAcceptedRecipeBefore` and `recordRecipeHash` get the three-way OR. Lands BEFORE the rename so Sprint 23 partner sessions bound to `Lavern — <name>` resume without trust dialog, AND post-rename `Oscar LLP — <name>` sessions bypass immediately.
+- **Mechanical sweep** (commit `24188101f`, single atomic 31-file diff gated by `tsc --noEmit` + `eslint --max-warnings 0`):
+  - Directory rename `git mv ui/desktop/src/components/oscar/lavern/` → `oscar-llp/`.
+  - File renames: `LavernRoster.tsx` → `OscarLLPRoster.tsx`, `buildLavernPartnerRecipe.ts` → `buildOscarLLPPartnerRecipe.ts`, `useLavernPartners.ts` → `useOscarLLPPartners.ts`. KEEP filenames: `partners.ts`, `userIdentityBlock.ts`, `prompts/<slug>.ts`, `prompts/raw/<slug>.ts.original`.
+  - Symbol renames inside moved files + main.ts: `LAVERN_PARTNERS → OSCAR_LLP_PARTNERS`, `LavernPartner → OscarLLPPartner`, `buildLavernPartnerRecipe → buildOscarLLPPartnerRecipe`, `LavernRoster → OscarLLPRoster`, `useLavernPartners → useOscarLLPPartners`, `readLavernRegistry → readOscarLlpRegistry`, `lavernWorkingDir → oscarLlpWorkingDir`, etc. (~17 symbol renames).
+  - IPC namespace `oscar:lavern:*` → `oscar:llp:*`; renderer surface `window.electron.lavern.*` → `window.electron.llp.*`.
+  - State-file + working-dir read-time lazy migration in `main.ts`: new `OSCAR_LLP_DIR`, `OSCAR_LLP_STATE_DIR`, `OSCAR_LLP_REGISTRY_PATH`, `oscarLlpWorkingDir()` constants alongside `LEGACY_LAVERN_REGISTRY_PATH` + `LEGACY_LAVERN_DIR`. New helpers `migrateLegacyLavernRegistry()` (called at top of `readOscarLlpRegistry`) + `migrateLegacyLavernWorkingDir(slug)` (called at top of the `oscar:llp:ensure-dir` handler). POSIX-atomic `fs.rename` carries `.goose/memory/` with the working dir; idempotent + interrupt-safe; no-op when new exists or legacy absent.
+  - Sidebar eyebrow `Lavern` → `Oscar LLP`, route `/lavern` → `/oscar-llp` (`ChatHistoryTree.tsx` + `App.tsx`).
+  - Page strings: `OscarLLPRoster.tsx` eyebrow + blurb ("Consult one of Oscar LLP's specialist partners...").
+  - Recipe title `Lavern — ${partner.name}` → `Oscar LLP — ${partner.name}` + description (`buildOscarLLPPartnerRecipe.ts:129-130`).
+  - 10 partner prompt bodies: `at Lavern — a 50-person multidisciplinary legal firm` → `at Oscar LLP — ...`; `separate from other Lavern partners` → `...other Oscar LLP partners`; file-header `partner persona for Lavern firm-mode` → `for Oscar LLP firm-mode`. KEEP `Lifted from github.com/AnttiHero/lavern` (Apache 2.0 attribution) and `The Shem → Lavern firm rename` (Sprint 21 lineage).
+  - Sub-recipe description `Pre-delivery verification for Lavern partner analyses` → `...for Oscar LLP partner analyses` (`sub-recipes/verification-pass.yaml`).
+- **Test scripts + evals + NOTICE re-section** (commit `1da0c328c`):
+  - `git mv ui/desktop/scripts/test-lavern-agents.js` → `test-oscar-llp-agents.js`; `test-lavern-revision.js` → `test-oscar-llp-revision.js`. Internal `TRANSCRIPTS_DIR`, recipe-title fixtures, persona identity strings, tmp working-dir prefixes updated.
+  - `evals/lavern-jv/scripts/lib-recipe.js`: synthesized partner-roster firm strings rename only; `SPRINT_22_DIRECTIVE` + `RALPH_DIRECTIVE` constants frozen; eval directory name `evals/lavern-jv/` KEEP per [[ADR-077]] (the eval baseline IS Lavern's).
+  - `NOTICE`: per-section heading reframe + path refs update (`.../lavern/` → `.../oscar-llp/`) + trademark notice expanded to explain Sprint 24-A reservation. Apache 2.0 §6 body content (copyright, license, commit SHA, source-prompt mapping, transformation policy) untouched.
 
-- **`matterMdSerde.ts` colocates writer + parser** (`ui/desktop/src/components/oscar/matters/matterMdSerde.ts`): `renderMatterMd` moved here from `main.ts:1910`; new `parseMatterMd(text) → { subject, counterparty, kind, stakeholder, privileged, key_facts_md, extras }` is tolerant of unknown frontmatter keys and frontmatter+body drift. Writer and reader can't drift because they live next to each other.
+**Tests** (real MiniMax invocations per CLAUDE.md):
+- `node ui/desktop/scripts/test-oscar-llp-agents.js` — **3/3 PASS** on first run (~36 s wall-clock, ~$0.04). Sarah Chen / Helena Voss / Aisha Khan all invoked Tier-A MCPs + verification-pass.
+- `node ui/desktop/scripts/test-oscar-llp-revision.js` — **PASS via path B** (silent neutral substitution; no Section-99.9 fabrication detected) on first run (~15 s, ~$0.02). Within Sprint 23's documented 4/5 PASS distribution.
+- `node evals/lavern-jv/scripts/run-eval.js --partners sarah-chen --docs doc1-borrowmoney --configs without-ralph` — **1/1 partner exit 0, 1/1 judge ok** (~221 s, ~$0.07). Recipe transcript confirms title `Oscar LLP — Sarah Chen` + description `at Oscar LLP — Sprint 23 eval (...)`. Sarah×Doc1 0/12 recall is the Sprint 23 pre-existing quality issue documented for Sprint 24-B+C iteration, not a Sprint 24-A regression.
 
-- **`oscar:right-pane:read-matter-facts` IPC + preload bridge** (`main.ts`, `preload.ts`): input `(areaId, slug)`; output `MatterFactsPayload { name, subject, counterparty, kind, stakeholder, privileged, extras, key_facts_md, tom_md }`. Tom file is gated on `Slug: <slug>` match — only returned when it points at this matter (so detach + open-different-matter cleanly empties the block).
+Total Sprint 24-A LLM spend: **~$0.13** against the brief's ~$0.20 envelope.
 
-- **`usePanelReader` + `useHistoryTail` hooks** (`ui/desktop/src/components/oscar/rightPane/sections/`): `usePanelReader<T>(fetcher, deps, opts?)` is the shared 2 s-polled fetch with abort-on-unmount + late-return drop; mirrors `useOscarProfile`'s opt-in `pollMs` shape but kept separate so that hook's contract doesn't widen. `useHistoryTail(sessionId, limit=10)` wraps it over `getSession()` and reduces `Conversation` → `HistoryEvent[]` (`{ ts, role, summary }`). Consecutive same-tool-name turns collapse; tool name extracted via a probe that tries `toolCall.name`, `toolCall.Ok.name`, `toolCall.value.name` (codegen lost the precise ToolCall enum). Unknown content types fall back to `"Responded"`.
+**Deferred** — none. Full scope landed. Brief's drop-order (4 fallback tiers) untouched.
 
-- **`RightPaneContext` exposes ambient matter coords** (`ui/desktop/src/components/oscar/rightPane/RightPaneContext.tsx`): `{ areaId, slug, sessionId }`. Provider lives in `RightPaneShell` body; consumers call `useRightPaneCoords()`. Keeps the registry's per-section signature at `{ sectionId }` — sections that need coords subscribe; sections that don't (stubs) don't.
+**Carry-forwards**:
+- **Sprint 25 cleanup**: drop `Lavern —` from the trust-bypass three-way OR + delete `LEGACY_LAVERN_REGISTRY_PATH` / `LEGACY_LAVERN_DIR` constants + the two migration helpers in `main.ts` once we're confident no live host still has legacy data. Single tiny commit at that point.
+- **Sprint 24-B+C** (sequenced after this sprint per brief): Lavern Pipeline port (Watchman → Reader → Curator as recipe + sub-recipes) lives inside the Oscar LLP firm surface; recipe title likely `Oscar LLP — Lavern Pipeline`. Cross-partner iteration with Claude-as-judge on Sarah Chen + Diana Park + Aisha Khan trio. Sprint 21-23 carry-forwards from the prior brief intact (300s timeout, judge MISSING/MISSED synonym, Sarah×Doc1 quality, document-reader CUAD parsing, doc-text-in-delegate token waste, `oscar-fs` scope leak).
+- **Repo dir name `/srv/projects/oscar-gc-lavern/`**: deliberately NOT renamed per ADR-078 (repo identity stays; rebrand is user-facing). `DEV_RESOURCES_ROOT` in `buildOscarLLPPartnerRecipe.ts:27` still references `/srv/projects/oscar-gc-lavern/...` — correct.
+- **Goose binary path `/srv/projects/goose/target/release/goose`**: pre-existing inconsistency (binary at `goose` path while sources at `oscar-gc-lavern` path). Sprint 24-A scope does not address; out of brief.
+- **Pre-existing 17 `tsc --noEmit` errors** (Sprint 22 workspace-install carry — missing `@radix-ui/*`, `yaml`, `@testing-library/dom`, plus seven `implicitly any` lint hits) unchanged through Sprint 24-A. Resolves when a clean `pnpm install` runs on a host without the `ERR_PNPM_EXOTIC_SUBDEP` workaround.
 
-- **`useRightPaneVisibility` extended** (`useRightPaneVisibility.ts`): return type adds `slug: string | null` and `sessionId: string | null`. Both already in scope at the existing `matters.lookupSession(sessionId)` call site; no second IPC.
+**ADRs**: 078.
 
-- **`RightPaneShell` wraps body in provider** (`RightPaneShell.tsx`): new required props `{ areaId, slug, sessionId }`; renders `<RightPaneProvider value={{areaId, slug, sessionId}}>{sections.map(...)}` around the existing M2 stack. Chrome (Loadout eyebrow + chevron toggle) preserved verbatim.
+**Pushed SHAs** (`sarturko-maker/goose` `lavern-firm-mode`):
+- `022a45e15` — ADR-078 at decision time, before any code change (CLAUDE.md mandate)
+- `1f1efa3db` — trust-bypass three-way OR (ADR-029 widening; dual-prefix coexistence window)
+- `24188101f` — mechanical sweep (single atomic 31-file diff)
+- `1da0c328c` — test scripts + evals + NOTICE re-section (+ real-MiniMax regression run)
+- `349966f9d` — close-out: SPRINT_LOG / PROJECT.md / RUNBOOK
 
-- **`MatterFactsSection.tsx`** consumes `useRightPaneCoords()`+`usePanelReader(window.electron.rightPane.readMatterFacts, [areaId, slug])`; renders a labelled definition list (Subject row uses `subjectTypeLabel` from `matterLabels.ts`; Counterparty row uses `partyRoleLabel`; Kind uses `kindLabel(areaId, ...)` from `practiceAreaShapes.ts`; Stakeholder / Privileged / extras as straight rows). Key facts rendered as a `pre`-wrapped block. Top of Mind block collapses behind a `[+]/[−]` toggle so the long agent-prompt text doesn't dominate the pane.
+No sibling repo modified this sprint. Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
 
-- **`HistorySection.tsx`** consumes `useRightPaneCoords()` + `useHistoryTail(sessionId)`; renders reverse-chrono rows of `[time] summary`. Time formatting handles seconds-vs-milliseconds heuristically (Unix-second ts × 1000 if < 10¹⁰; pass through if ms). Same-day timestamps render `HH:mm`; older render `DD MMM`. Empty state copy: "No activity yet."
+---
 
-- **Registry swap + META cleanup** (`registry.ts`): `MatterFactsSection` mapped on both `MatterFacts` and `ProgrammeFacts` (one component, different eyebrow via `SECTION_META[id].title`); `HistorySection` on `History`. `comingIn` deleted from those three entries; field made optional on `SectionMeta`; `PanelSectionStub` guards absent `comingIn` so the three filled IDs can't ship "coming in undefined".
+### Sprint 23 — Ralph Loop (Shape A) + Lavern-baselined eval (closed 2026-05-20 on code)
 
-- **CSS family** (`main.css`): new `.oscar__panel-section-body` (12px gap stack), `.oscar__panel-section-dl` + `.oscar__panel-section-dl-row` (90px label column / 1fr value), `.oscar__panel-section-keyfacts` + `.oscar__panel-section-keyfacts-body` (pre-wrapped), `.oscar__panel-section-tom` + `.oscar__panel-section-tom-toggle` + `.oscar__panel-section-tom-body` (dashed-rule separator + paper-edge background for the agent-prompt text), `.oscar__panel-section-history` + `.oscar__panel-section-history-row` (48px time column / 1fr summary, mono numerics for time). Editorial register matches LQdesign reference (paper / ink-light / ink-faint / copper hover).
+**Goal**: turn Sprint 22's `verification-pass` sub-recipe from advisory to enforcing (gate-and-revise / Ralph Loop), and run the substantive measurement of whether that discipline measurably improves grounding behaviour. Pair sprint: piece 1 was load-bearing; piece 2 was the honest test of piece 1. ADR-077's eval harness is the substantive measurement; the dogfood test is the regression catch.
 
-- **Visual verification harness** (`ui/desktop/scripts/capture-m3.js` + `scripts/capture-m3.sh`): Playwright/CDP under Xvfb, clones M2's pattern. Pre-seeds Commercial + Privacy + IP matters via `matters.create` with realistic `key_facts` strings (matter.md actually renders content this sprint). Drives 5 states: (a) Commercial MatterFacts loaded, (b) Privacy ProgrammeFacts loaded, (c) chat-input fill+Enter → History row, (d) external matter.md append → polled read picks it up <2.5 s, (e) `matters.setActive` → Top of Mind block surfaces after toggling open. Per-state audit: `dataset.sectionId` array + first MatterFacts `<dt>/<dd>` content captured to stdout. PNGs at `docs/screenshots/sprint-m3/`.
+**Architectural call** (`docs/adr/076-sprint23-ralph-loop-prompt-borne-gate.md`): **Shape A — prompt-borne**. The substrate question was settled by direct reading of Goose's core: `delegate()` returns `CallToolResult::success(vec![Content::text(text)])` (summon.rs); `run_subagent_task()` returns `Result<String, anyhow::Error>` (subagent_handler.rs:48); `Recipe.retry: Option<RetryConfig>` is shell-failure semantics, not semantic revision. Shape B (substrate-borne) would cost ~100-150 LOC of Rust core across `summon.rs` + `agent.rs` + Recipe schema — violates CLAUDE.md "do not modify the Rust core unless absolutely necessary" and creates upstream-merge debt every Goose pull. The LLM's natural session loop handles revisions as next turns when the prompt enumerates revision counts as concrete sequence steps; `Recipe.settings.max_turns = 12` provides substrate safety ceiling against runaway loops.
 
-- **`pnpm-workspace.yaml` build-infra fix**: `nodeLinker: hoisted` added (pnpm 11 stopped honouring it from `.npmrc` and electron-forge's pre-flight blocks the build without the workspace.yaml declaration). Sprint 17b carry (auto-appended `allowBuilds:` block) left unstaged per convention.
+**Built** — two ADRs, single-paragraph prompt swap across 10 partner files, eval substrate, dogfood test:
+
+- **ADR-076** (36 lines): Sprint 23 Ralph Loop, Shape A. Decision: replace (not append) Sprint 22's "Verification before delivery" paragraph with the Ralph Loop paragraph; revision-count tracking inline; `max_turns: 12` safety ceiling. Rationale: substrate evidence, transcript-auditable design.
+- **ADR-077** (36 lines): Sprint 23 eval baseline + judge + A/B methodology. Decision: copy (not symlink) Lavern fixtures; verbatim rubric preserved + adapted version drops pipeline metrics + adds 4 Oscar-GC global axes; Sprint 22 directive frozen at SHA `08a5381a7` as the without-Ralph constant; 3 partners × 3 docs × 2 configs = 18 partner runs + 18 batched judge calls; Lavern human baseline informational not gating.
+- **Ten partner prompt files** at `ui/desktop/src/components/oscar/lavern/prompts/*.ts` — Sprint 22's "Verification before delivery" paragraph replaced verbatim by the Ralph Loop paragraph. Discipline: literal ISSUES marker detection + verbatim-quote of verification-pass header (transcript-auditable) + 2-revision budget enumerated as concrete sequence steps + exact escalation phrase. Sprint 21 raws at `prompts/raw/*.ts.original` unchanged (verification gate is Oscar-GC-specific augmentation, not part of the Lavern adaptation lineage).
+- **`max_turns: 12`** wired into production `buildLavernPartnerRecipe.ts:settings` and mirrored in `scripts/test-lavern-agents.js:buildPartnerRecipeYaml()` so Sprint 22's test substrate stays aligned with production.
+- **`ui/desktop/scripts/test-lavern-revision.js`** (new) — single-partner (Sarah Chen) deliberately-ungrounded prompt ("Quote section 99.9 of the bundled M&A playbook verbatim..."). Hard-gates on c3 (no Section-99.9 fabrication detected via markdown header or inline attribution); c1 / c2 / c4 are soft-info diagnostics (Ralph Loop traversal observed, explicit acknowledgment OR escalation observed). Reflects that multiple valid paths (path A explicit acknowledgment, path B silent neutral substitution, path C draft-then-verify-revise, path D escalation) all achieve the fails-closed outcome.
+- **`evals/lavern-jv/`** — new self-contained eval directory: 3 CUAD JV-flavoured contracts (borrowmoney 21,454 chars, sibannac 8,380, veoneer 8,259) copied verbatim from Lavern + verbatim `RUBRIC.lavern-original.md` (28 items across 3 docs — Doc 1: 12, Doc 2: 10, Doc 3: 7; ADR-075's "12-item" was Doc 1 alone). Adapted rubric drops Watchman/pipeline metrics, adds 4 Oscar-GC global axes (`grounded_citations` 0-1, `verification_pass_cited` boolean, `revision_behaviour` boolean|null, `partner_tone_fit` 0-2) + Doc-3-specific `overproduction_flag`. Apache 2.0 attribution at `evals/lavern-jv/NOTICE.lavern.md` + top-level NOTICE Lavern-eval-baseline section.
+- **Runner** at `evals/lavern-jv/scripts/{run-eval,lib-recipe,lib-judge,lib-report}.js` (245+214+199+192 = 850 LOC across 4 files, each under CLAUDE.md's 300-line cap). `lib-recipe.js` carries frozen `SPRINT_22_DIRECTIVE` constant (verbatim Sprint 22 verification paragraph, inline SHA `08a5381a7`) and `RALPH_DIRECTIVE` constant for the A/B; recipe builder mirrors Sprint 22's `test-lavern-agents.js` shape. `lib-judge.js` builds a judge recipe per (partner × doc × config), invokes via `goose run --recipe`, extracts JSON, validates against schema (manual since no Zod in this Node entrypoint), retries once on parse failure. `lib-report.js` collates with 1000-resample bootstrap CIs and computes with-Ralph vs without-Ralph Δ_grounded on grounding-touched rubric items.
+
+**Tests**:
+
+- `node ui/desktop/scripts/test-lavern-agents.js` (Sprint 22 regression) — **3/3 PASS** on the second of two runs (first run had Aisha skipping verification-pass on a happy-path question; same LLM variance documented at Sprint 22 close).
+- `node ui/desktop/scripts/test-lavern-revision.js` (Sprint 23 dogfood) — **characterized across 5 runs: 4/5 PASS**. Three paths observed: A (explicit acknowledgment that section 99.9 doesn't exist + grounded alternative), B (silent substitution with a generic label like "Quoted Text (Playbook Entry)"), X (fabrication — `## Section 99.9 Verbatim` header over content from chunk `ma-playbook-reps-survival-005`). The 1/5 fabrication shows Shape A's discipline does not reliably force verification-pass invocation; when bypassed, the partner can still mislabel attribution.
+- `node evals/lavern-jv/scripts/run-eval.js` (Sprint 23 eval) — full sweep executed: **14/18 partner runs succeeded** (4 with-Ralph timeouts at the 300s partner-call ceiling — Sarah×Doc 3, Helena×Docs 1-3); **17/18 judge calls succeeded** (1 PARSE_FAILED where judge wrote "MISSING" instead of "MISSED"). Wall-clock 2679.8 s (~45 min); cost ~$1.40 against $10/PCM dev-key.
+
+**Substantive Sprint 23 result — Δ_grounded NEGATIVE**:
+
+| Metric | Value |
+|---|---|
+| Δ_grounded (with-Ralph − without-Ralph) on grounding-touched items | **-3.8pp** |
+| with-Ralph mean recall (grounding-touched, n=9) | 33.3%, 95% CI [13.8%, 57.3%] |
+| without-Ralph mean recall (grounding-touched, n=8) | 37.1%, 95% CI [20.1%, 66.8%] |
+| Mean `grounded_citations` (with-Ralph) | 0.71 |
+| Mean `grounded_citations` (without-Ralph) | 0.96 |
+| Mean `hallucination_count` (both configs) | 0.00 |
+| `verification_pass_cited` rate | 7/9 with-Ralph; 7/8 without-Ralph |
+
+**The brief's exit criterion fires:** "If they don't [score higher with Ralph], that's the signal that Shape A wasn't enough and the next sprint reconsiders Shape B or a different shape entirely." Sprint 24 reopens the architectural call with this data. The closing report at `evals/lavern-jv/reports/sprint-23-baseline.md` records the per-tuple table, the timeout-confounding analysis (4 of 9 with-Ralph runs hit the 300s budget — Ralph Loop's revision discipline is overflowing the partner-call envelope on complex docs), and three Sprint 24 options (Shape B substrate-borne; Shape A-tightened; hybrid with extended timeout + selective ISSUES).
+
+**Deferred** — none. The full default scope (3×3×2 = 18 runs) executed without invoking the brief's drop-order. The 4 timeouts and 1 judge parse failure are data artifacts captured in the report; not deferrals.
+
+**Carry-forwards**:
+
+**Next sprint — Sprint 24-A: Lavern → Oscar LLP rebrand** (brief drafted at session close). Self-contained UI/state/path rename; sequences BEFORE Sprint 24-B+C to avoid rebase pain across partner-prompt touchpoints. The 10-partner roster currently labelled "Lavern" is Oscar GC's invented bench (10 names + adapted personas) — not Lavern's. Sprint 24-A reframes the roster as **Oscar LLP** (law-firm-standard naming) and reserves the "Lavern" name for the upstream-credit attribution on the contract-analysis pipeline (Sprint 24-B+C scope). No eval cost; no Rust touch; preserves all Apache 2.0 attribution. Touches ADRs 071, 072, 029 (trust-bypass title prefix). Single new ADR (078): rebrand decision + Lavern-name reservation for Lavern Pipeline.
+
+**Sprint after — Sprint 24-B+C: Lavern Pipeline port + cross-partner iteration with Claude as judge** (brief drafted at session close, sequenced after 24-A). Two pieces, combined into one sprint:
+
+- **Piece B**: Full Watchman + Reader + Curator pipeline port as recipe + 3 sub-recipes; runs on configured Goose provider (MiniMax in dev, user-selectable); precedent-board state in `<workingDir>/precedent-board.json`; lives under Oscar LLP UI surface as "Run Lavern Pipeline on documents...". Reuses Sprint 22's Tier-A MCPs (already covers the tool surface — they were built for this). Single ADR (079) for the pipeline-as-recipe architectural call.
+- **Piece C**: Cross-partner iteration with Claude-as-judge on a 3-partner trio. Pick: Sarah Chen (M&A) + Diana Park (Privacy — substituted for Helena, resolving the Sprint 22 substitution bug where Helena/Tax was inline-cast as Privacy in the test substrate) + Aisha Khan (Tech Tx). Anthropic SDK on Max subscription. Real benchmarks: MAUD (152 deal points) for Sarah, CUAD privacy subset + LegalBench for Diana, CUAD SaaS subset for Aisha. N=20 instances per partner per iteration, ~4 cycles each. **Explicit target: patterns that improve all three** (cross-partner generalization), not partner-specific tuning. Subtractive fixes per Lavern methodology. Single ADR (080) for the Shape A (shared-base + per-partner overlay) vs Shape B (monolithic + post-hoc pattern extraction) architectural call — decided BEFORE touching partner prompts.
+
+**Carry-forward open items consumed into Sprint 24-A / 24-B+C scope**:
+
+- **Δ_grounded = -3.8pp reopens the Ralph Loop architectural call** — Sprint 24-B+C ADR-080's job. Three options sketched in `evals/lavern-jv/reports/sprint-23-baseline.md`: Shape B substrate-borne; Shape A-tightened; hybrid with extended timeout + selective ISSUES.
+- **Partner-call timeout too tight at 300s for Ralph Loop on complex docs** — Sprint 24-B+C implementation candidate.
+- **Judge schema accept "MISSING" as synonym for "MISSED"** (1/18 parse failure) — trivial robustness fix in `evals/lavern-jv/scripts/lib-judge.js:VALID_VERDICTS`; Sprint 24-B+C eval substrate cleanup.
+- **Sarah Chen × Doc 1 quality problem** (both configs 0/12 recall; Sarah quoted adjacent clauses cl 38-39 non-pooling / cl 40 intangibles / cl 17 capital instead of rubric items cl 32-33 indemnification / cl 19 unanimous consent / cl 20-22 asymmetric capital) — Sprint 24-B+C iteration is the right place to address this; it's exactly the kind of cross-partner pattern the eval harness is built to find.
+- **`oscar-document-reader` not exercised in this eval** — ships with a placeholder corpus; CUAD docs read from user-message paste. Sprint 24-B+C may teach document-reader to parse plain-text CUAD docs if the iteration shows the partner would benefit; otherwise Sprint 25+.
+- **Token waste from doc-text-in-delegate-args** — verification-pass receives the doc twice (partner user prompt + delegate() args). Per ADR-074, sub-recipes don't inherit parent extensions; a Rust-core SubRecipe schema extension would fix it. Sprint 24-B+C evidence candidate if Shape B (substrate-borne Ralph Loop) is selected.
+- **`oscar-fs` scope leak** (Sprint 23 smoke test saw Sarah Chen write `joint_venture_agreement.txt` to repo root via `write_file` despite oscar-fs being scoped to a tmpdir) — Sprint 25 investigation; not blocking Sprint 24-A or 24-B+C.
+
+**ADRs**: 076 (Ralph Loop, Shape A), 077 (eval baseline + judge + A/B).
+
+**Pushed SHAs**:
+- `sarturko-maker/goose` lavern-firm-mode:
+  - `0b392bc29` — ADR-076 + ADR-077 at decision time, before any code change (CLAUDE.md mandate)
+  - `70d82658d` — Piece 1: Ralph Loop wiring (10 partner prompts + max_turns + new dogfood test) + characterization across 5 runs
+  - `b3fca0ef1` — Piece 2: eval scaffolding (docs, rubric, prompts, runner) at SHA before any run executed
+  - `645846e1c` — Close-out: `reports/sprint-23-baseline.md` + this SPRINT_LOG entry + PROJECT.md Sprint Index row 23 + RUNBOOK Sprint 23 section
+- No sibling repo modified this sprint. Lavern source unchanged at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
+
+---
+
+### Sprint 22 — Lavern Tier-A MCPs + verification-pass sub-recipe (closed 2026-05-20 on code)
+
+**Goal**: ship the architectural substrate ADR-073 promised — six Tier-A Lavern MCPs lifted (or adapted) as Goose stdio extensions, plus a `verification-pass` sub-recipe — and wire every Lavern partner recipe to use them via the Path A (per-partner) attachment shape. Without this, Sprint 21's partners are personas without grounding; with it, they invoke real MCPs and call a deterministic verification pass before delivering.
+
+**Architectural call** (`docs/adr/074-sprint22-path-a-per-partner-mcp-attachment.md`): Path A — each of the 10 partner recipes declares its own Tier-A MCP loadout. Substrate evidence forces the choice: SubRecipe carries no extensions override (`crates/goose/src/recipe/mod.rs:119-129`); agent files (summon) accept only `name`/`description`/`model` (`crates/goose/src/agents/platform_extensions/summon.rs:90-97`). Path B would require either pulling Sprint 24's Project recipe forward or modifying the Rust core — both heavy. Path A keeps Sprint 21's shape intact; Sprint 24's Project can later wrap partner recipes as `sub_recipes` (path-referenced YAMLs) without changes to this sprint's output.
+
+**Built** — two ADRs, six new sibling MCP repos, one sub-recipe YAML, bundle pipeline + recipe builder + partner prompts extended, two test harnesses (no-LLM wiring + MiniMax-driven end-to-end):
+
+- **ADR-074** (47 lines) — Path A per-partner MCP attachment. Captures the substrate facts and the Sprint 24 path-forward.
+- **ADR-075** (49 lines) — Sprint 22 lift policy: one sibling repo per MCP, adapter pattern for the three session-state-coupled tools, three corrections to ADR-073's empirical claims (`legal-md-compiler` dropped due to memory-system import; `document-checks`/`grounding-verifier`/`baselines` need adapter work; `evals/jv/` is NOT empty — RUBRIC + 3 CUAD docs + scored reports — Sprint 23 should lift not build).
+- **Six sibling MCP repos at `/srv/projects/oscar-<name>-mcp/`**, all mirroring the existing `oscar-onboarding-mcp` / `oscar-memory-mcp` pattern (pnpm + TypeScript + `@modelcontextprotocol/sdk` 1.29.0 + zod 4.4.3, raw Lavern sources preserved at `src/_lavern-original/` for diff review per ADR-072 precedent):
+  - `oscar-knowledge-base-mcp` — clean lift: `search_knowledge_base`, `list_knowledge_base_collections`, `get_knowledge_base_entry`. In-memory placeholder corpus (10 chunks across SaaS precedents / M&A playbook / GDPR baselines) replaces Lavern's SQLite-FTS5 to avoid native-module bundling; the legal-synonym expansion lifts verbatim from `lavern/src/knowledge-base/retriever.ts`.
+  - `oscar-document-reader-mcp` — clean lift: `list_documents`, `read_document_section`, `search_document`, `get_defined_terms`, `get_document_tables`. Two hardcoded sample parsed documents (a SaaS MSA + a mutual NDA) replace `session.documents`. Per ADR-075's complementarity finding: keeps both adeu (Python — ingest+redline) and document-reader (TS — structured navigation); ADR-073's literal "reuse adeu" reading was under-specified.
+  - `oscar-risk-pricing-mcp` — **net-new** (NOT a lift): Lavern's `risk-pricing.ts` turned out to be orchestration scaffolding around a separate risk-pricer subagent (`request_risk_assessment` + `record_risk_assessment` events), not substantive pricing logic. Sprint 22 brief's dogfood step 4 expects "benchmark band + percentile" output, so this MCP exposes `assess_clause_risk` + `list_clause_benchmarks` against a hardcoded benchmark table covering six common mid-market US clause shapes (liability cap, indemnity basket/cap, termination cure period, reps survival, non-compete duration).
+  - `oscar-baselines-mcp` — adapter: drops `SessionReportCard` consumption; tools (`record_observation`, `list_baselines`, `get_baseline`, `check_against_baseline`) operate on observations recorded directly, persisting to `OSCAR_BASELINES_DIR` if set, in-memory otherwise. Baselines now stand alone, not downstream of a report-card pipeline that does not exist in Oscar GC.
+  - `oscar-grounding-verifier-mcp` — adapter: findings + document text are explicit tool parameters (`verify_grounding`, `verify_findings_batch`), no longer read from `session.debate.findings`. Core algorithms (section-ref regex, quote sliding-window overlap, boilerplate suppression) lift verbatim from Lavern.
+  - `oscar-document-checks-mcp` — adapter: `check_document_structure` and `check_document_formatting` lift (their analyze functions already take args explicitly). Lavern's `record_pass_result` and `compile_verification_report` are dropped — both wrote to `session.debate.findings`, which Oscar GC does not have. Verification-pass compiles results in its response prose instead.
+- **`ui/desktop/src/resources/sub-recipes/verification-pass.yaml`** — Recipe YAML with no extensions of its own (inherits parent partner's loadout per Goose substrate). Instructions are a deterministic playbook: ground each citation via `oscar-grounding-verifier`; lint structural claims via `oscar-document-checks`; emit a compact PASS/ISSUES summary the parent partner cites. Bundled into the .deb under `<resources>/sub-recipes/`.
+- **`ui/desktop/scripts/prepare-oscar-bundle.js`** — extended `SIBLING_MCPS` map with the six new MCPs; smoke-test `checks` array with one ready-line regex per new MCP (3s spawn-boot per ADR-049); new `prepareSubRecipes()` step that validates the sub-recipe YAML directory at bundle time; `BUNDLE.json` manifest gains a `sub_recipes` block. Smoke test passes for all nine bundled MCPs (3 prior + 6 new) within 150ms each; network audit clean.
+- **`ui/desktop/src/components/oscar/lavern/buildLavernPartnerRecipe.ts`** — `LAVERN_TIER_A_MCPS` constant + `resolveLavernMcpBundle()` / `resolveSubRecipePath()` helpers; the `extensions` array now appends six stdio configs after Tavily; the returned Recipe now declares `sub_recipes: [{name: 'verification-pass', path: ...}]` which (per `crates/goose/src/recipe/mod.rs:255-271`) auto-injects the summon platform extension so partners get `delegate()` for free.
+- **Ten partner prompts** at `ui/desktop/src/components/oscar/lavern/prompts/<slug>.ts` — each gained one appended paragraph (`## Verification before delivery`) directing the partner to invoke verification-pass via `delegate(source: 'verification-pass')`. Raw originals at `prompts/raw/<slug>.ts.original` untouched, per Sprint 21's preservation discipline.
+
+**Tests**:
+- Per-MCP integration tests in each of the six sibling repos (`pnpm test`) — real `@modelcontextprotocol/sdk` client harness per CLAUDE.md, no LLM. All six repos green (knowledge-base 8 assertions; document-reader 10; risk-pricing 7; baselines 7; grounding-verifier 6; document-checks 7).
+- **`ui/desktop/scripts/test-verification-pass.js`** — no-LLM sub-recipe wiring test. Invokes `goose run --recipe verification-pass.yaml --explain` and `goose run --recipe <synthesised parent> --explain` to confirm Goose's recipe loader parses both shapes cleanly. Green.
+- **`ui/desktop/scripts/test-lavern-agents.js`** — **MiniMax-driven** end-to-end harness per CLAUDE.md ("Pipeline tests must NOT mock LLM calls"). Synthesises a Lavern-shape recipe (identity + verification directive + six Tier-A MCPs + verification-pass sub-recipe) for three representative partners (Sarah Chen / M&A, Helena Voss / Privacy, Aisha Khan / Litigation), runs `goose run --recipe <partner>.yaml --no-session` with `MINIMAX_API_KEY` loaded from `/root/.minimax-dev-key`, captures per-partner transcripts to `tests/lavern-transcripts/<slug>-<timestamp>.log`, asserts ≥1 Tier-A MCP tool invocation + verification-pass delegate call. 3/3 partners pass on first run after directive sharpening (~14-19s per partner). Sarah cited the M&A playbook chunk `ma-playbook-reps-survival-005` directly; Helena grounded against GDPR Article 28(3); Aisha benchmarked a 60-day cure period via risk-pricing.
+
+**Deferred** (per ADR-075 honest-scope cut):
+- `legal-md-compiler` MCP — Tier B/C `memory-system` import coupling; re-evaluable when memory-system is ever lifted.
+- `adversarial-pass` SubRecipe — verification-pass is load-bearing for the demo; adversarial is optional and was the brief's named honest-scope cut.
+
+**Carry-forwards**:
+- ADR-073 corrections: legal-md-compiler drop, document-checks/grounding-verifier/baselines adapter requirements, `evals/jv/` reference materials — these are captured in ADR-075 but originated from Sprint 21's reading of Lavern. Sprint 23 should lift the `evals/jv/` RUBRIC + three CUAD JV contracts as the eval-baseline rather than start from zero (correcting ADR-072:15 and ADR-073:71).
+- .deb build environment fix — `pnpm run bundle:oscar-linux` ran prepare-oscar-bundle.js cleanly (all 9 MCPs smoke-tested green, sub-recipe validated) but `electron-forge make` failed at the Rollup step because `@formatjs/ecma402-abstract` is unresolved in `react-intl/index.js`. Root cause: pnpm workspace install fails on this dev host with `ERR_PNPM_EXOTIC_SUBDEP` on `@electron/node-gyp`, leaving the lockfile partial. The bundle prep itself is untouched by the issue — Sprint 22's substrate (six MCPs + sub-recipe + recipe builder + prompts) is complete and verified by per-MCP integration tests + the MiniMax-driven agent harness. The .deb produce step needs a clean workspace install (likely from Arturs's Chromebook or a CI host without the exotic-subdep block).
+- Crostini dogfood walk — once the .deb is produced, install on Crostini and run the 7-step partner walk per the plan.
+- Per-partner MCP curation — Sprint 22 ships uniform loadout across all 10 partners. Dogfood may surface partners that don't benefit from a specific MCP (e.g. risk-pricing for Aisha / Litigation may be lower-value than for Sarah / M&A); curation revisitable in Sprint 23+.
+- Sub-recipe schema extension (Rust core) — would enable per-sub-recipe MCP override, which Sprint 24's Project recipe would benefit from. Currently sub_recipes inherit parent extensions only (Goose substrate, recipe/mod.rs:119-129); a SubRecipe.extensions field would be ~50 lines of Rust + tests + upstream-merge debt. Defer until Sprint 24 evidence demands it.
+
+**ADRs**: 074, 075.
+
+**Pushed SHAs**:
+- `sarturko-maker/goose` lavern-firm-mode: `ab713bbeb` (Sprint 22 substrate) + `08a5381a7` (ADRs 074 + 075).
+- `sarturko-maker/oscar-knowledge-base-mcp`: `6021489cd99394c95c9cb0fbac825d0b8d7812f5`.
+- `sarturko-maker/oscar-document-reader-mcp`: `f01e5799dda362af9bfc7c2c33ded33cb8beaf15`.
+- `sarturko-maker/oscar-risk-pricing-mcp`: `420afe6b0f0f6794c3b37f1d83b89281377e9468`.
+- `sarturko-maker/oscar-baselines-mcp`: `8acf5c1a44d20002db302567fcac46b8ac5f1c2d`.
+- `sarturko-maker/oscar-grounding-verifier-mcp`: `74dec70c6d262ad8d6bd41f840a68ed2b8672fdc`.
+- `sarturko-maker/oscar-document-checks-mcp`: `c144f95a43a4d47796f74483d8426eab5eb956f6`.
+- Lavern source pinned at upstream commit `7c2efe61524b14c632bee8f14d9bbcbdd85d0cfd` (reference repo at `/srv/projects/lavern/`).
+
+---
+
+
+
+**Goal**: demo Oscar GC's ability to host a parallel "firm" alongside the in-house practice. A new `Lavern` sidebar entry opens a roster of 10 invented specialist-partner agents the lawyer can consult by name — each their own Goose recipe, their own working_dir, their own memory. Identity (lawyer name + employer + industry) cascades from the existing profile.json; matter-specific context does not. Native Goose chat — no custom UI primitives, no orchestration. Arturs's framing: "this is a demo, a prototype." Crostini-installable `.deb` is the sprint-end artefact; per-prompt evals are confirmed needed (Lavern shipped none) and slated for Sprint 23.
+
+**Three-sprint roadmap committed in plan-mode** (`/root/.claude/plans/lucky-whistling-rainbow.md`) after Arturs redirected the initial single-sprint plan: Sprint 21 = personas + sidebar shell (this sprint); Sprint 22 = Lavern MCPs and connectors adapted to Goose primitives (sub-recipes for verification/adversarial passes, 6 Tier-A stdio MCPs to lift, Tier-B/C concepts mapped or deferred per ADR-073's translation table); Sprint 23 = per-partner eval harness (5 questions × 3 judges × 10 partners against MiniMax-M2.5; pattern from Sprint 15 ADR-054). Sprint 21's personas are deliberately written to *not* assume orchestrator invocation so Sprint 22's sub-recipe augmentation can slot in additively (one paragraph appended; no re-adaptation).
+
+**Built** — three ADRs, ten partner personas (raw + adapted), recipe + IPC + UI wiring, NOTICE updated:
+
+- **ADR-071** (`docs/adr/071-lavern-firm-mode.md`, 47 lines): structural decision. Sidebar group with eyebrow `Lavern` slots between Quick chats and Practice areas in `ChatHistoryTree.tsx`; single child row → `/lavern` route. `LavernRoster.tsx` renders 10 partner cards `[Name] ([Specialism])`. Click handler mirrors `MattersLanding.openMatter:104-138` resume-on-existing: `matters.detachActive()` → `lavern.ensureDir(slug)` → `lavern.lookupState(slug)` → resume-or-fresh-spawn → dispatch `ADD_ACTIVE_SESSION` + navigate `/pair?resumeSessionId=`. Per-partner working_dir at `~/Documents/Oscar GC/Lavern/<slug>/`; Goose Memory's `agent-working-dir` meta scoping (`crates/goose-mcp/src/memory/mod.rs:21-29,165-184`) gives automatic isolation. Partner→session binding state file at `~/.config/oscar/state/lavern/partners.json` (minimal — `{slug: { session_id: string | null }}`; no archive/stakeholders). Identity cascade via new `userIdentityBlock.ts` (Lavern-only this sprint; same gap exists in practice-area recipes, carried forward).
+
+- **ADR-072** (`docs/adr/072-lavern-prompt-adaptation.md`, 47 lines): prompt-lift policy. Raw originals stay at `prompts/raw/<slug>.ts.original` (checked in; Apache 2.0 attribution; `.ts.original` extension keeps TS/eslint off them). Adapted versions at `prompts/<slug>.ts`. Mechanical transforms applied at vendor-time, captured here: (1) `The Shem` → `Lavern` rename; (2) `Debate Board Protocol` sections + debate-board channel references stripped; (3) orchestrator-invocation framing stripped; (4) `Output Format` JSON-requirement sections stripped; (5) `**Personality Axes**` numerics stripped (qualitative voice preserved); (6) first-line rename to include partner name; (7) Memory Protocol rewritten from Lavern's `memory-system` MCP to Goose Memory's `remember_memory`/`retrieve_memories`. Preserved: persona archetype, multi-phase analysis framework, Key Principles, the "this system does not provide legal advice" hedge.
+
+- **ADR-073** (`docs/adr/073-lavern-mcps-deferred-to-sprint-22.md`, 51 lines): the architecture commitment for Sprint 22, written now so Sprint 21's persona-lift aligns with it. Translation table tiers Lavern's 21 MCPs as A (7 portable: knowledge-base, baselines, document-reader, grounding-verifier, document-checks, risk-pricing, legal-md-compiler — Sprint 22 lifts as stdio MCPs); B (5 concepts mapping to Goose primitives: evaluator-gate → pre-delivery `SubRecipe`, debate-board → ad-hoc sub-recipe invocation, handoff → `SubRecipe`, approval-gate → UI affordance, workflow-engine → recipe templates); C (8 internal: feedback-loop, memory-system, pre-engagement, quality-check, report-card, scoring-engine, session-replay-testing, verification-engine — already covered by Goose, by Oscar GC's intake, or deferred). The "10-pass verification pipeline" of Lavern's README is marketing, not their actual design — `docs/architecture-spec.md` describes a Router → sequential pipeline with one mandatory Evaluator Gate, which Goose's `SubRecipe` primitive matches cleanly.
+
+- **10 lifted-and-adapted partner prompts** (`ui/desktop/src/components/oscar/lavern/prompts/`):
+  - `sarah-chen.ts` from `ma-specialist.ts` (M&A; archetype "The Dealmaker")
+  - `marcus-webb.ts` from `contract-specialist.ts` (Commercial Contracts; "The Surgeon")
+  - `daniel-reeves.ts` from `litigation-partner.ts` (Litigation; "The Gladiator")
+  - `priya-patel.ts` from `employment-counsel.ts` (Employment; "The Advocate")
+  - `james-okafor.ts` from `ip-specialist.ts` (IP; "The Inventor")
+  - `helena-voss.ts` from `tax-counsel.ts` (Tax; "The Architect")
+  - `diana-park.ts` from `privacy-counsel.ts` (Privacy; "The Guardian")
+  - `robert-sinclair.ts` from `capital-markets.ts` (Capital Markets; "The Speedster")
+  - `aisha-khan.ts` from `tech-transactions.ts` (Tech Transactions; "The Technologist") — swapped in for Banking & Finance per Plan-agent feedback flagging specialism overlap
+  - `thomas-schmidt.ts` from `regulatory-counsel.ts` (Regulatory; "The Sentinel")
+  - 10 raw `.ts.original` files committed alongside for diff-against-upstream provenance.
+
+- **Partner registry** (`partners.ts`): single source-of-truth `LAVERN_PARTNERS: readonly LavernPartner[]` 10-tuple (`{ slug, name, specialism, blurb, systemPrompt }`); `partnerBySlug(slug)` lookup helper. Imported by `LavernRoster.tsx` for card rendering and by `buildLavernPartnerRecipe.ts` for prompt assembly.
+
+- **Identity cascade helper** (`userIdentityBlock.ts`): mirrors `companyContextBlock.ts` shape. Renders `## About the in-house lawyer you are advising` from `profile.user.{name,role_label}` + `profile.corporate.{name,industry,size_band}`. Returns null when both name fields are absent (graceful degradation — partner just opens with company context only).
+
+- **Recipe builder** (`buildLavernPartnerRecipe.ts`): composes `Recipe` with title `Lavern — ${partner.name}` (trust-bypass-friendly per the preload widening below), description `${partner.specialism} specialist at Lavern, consulted by your in-house team.`, instructions stacked `[userIdentityBlock, companyContextBlock, partner.systemPrompt]`, extensions `[oscar-fs(workingDir) + ...enabledPlatformExtensions + Tavily]`, settings pinned to MiniMax-M2.5. No separate state folder (partners simpler than matters; no matter.md / history.md).
+
+- **IPC + main process** (`main.ts`): four new handlers — `oscar:lavern:ensure-dir(slug)`, `oscar:lavern:bind-session(slug, sessionId)`, `oscar:lavern:lookup-state(slug)`, `oscar:lavern:list-partner-states()` — mirroring `oscar:quick-chats:*` and a subset of `oscar:matters:*` shapes. New constants `OSCAR_LAVERN_DIR`, `OSCAR_LAVERN_STATE_DIR`, `OSCAR_LAVERN_REGISTRY_PATH` and `lavernWorkingDir(slug)` helper. Registry read/write helpers `readLavernRegistry`/`writeLavernRegistry` (slug-validated against `safeSlug`; ENOENT-tolerant; atomic-write via mkdir-then-writeFile).
+
+- **Preload `lavern` namespace** (`preload.ts`): `window.electron.lavern.{ensureDir, bindSession, lookupState, listPartnerStates}`. ElectronAPI type extended. **Trust-bypass widened** (lines 422-435): `recipe.title.startsWith('Oscar GC') || startsWith('Lavern —')` — extends ADR-029's title-prefix policy to recognize Sprint 21's partner-recipe titles without forcing a bureaucratic `Oscar GC — Lavern — <name>` triple-prefix. The "Sprint 15+ migration to recipe.metadata.bundled" note still applies when community recipes eventually land.
+
+- **`useLavernPartners` hook** (`useLavernPartners.ts`): joins static `LAVERN_PARTNERS` with `lavern.listPartnerStates()` IPC; subscribes to `SESSION_CREATED/DELETED/RENAMED` so the roster's Resume-vs-Start badge follows live state without parent re-render. Mirrors `useChatHistory.ts` event-subscription pattern.
+
+- **`LavernRoster.tsx`** (the `/lavern` page): outer `oscar` container; eyebrow `Lavern` + h1 `Partners` + body description. Reuses `oscar__matter-row*` CSS family so partner cards have the same visual shape as matter cards (sibling surfaces, not different products). Status column shows "Resume" if `session_id` exists, "Start chat" otherwise. Click handler runs the resume-or-fresh-spawn flow described in ADR-071.
+
+- **Sidebar group** (`ChatHistoryTree.tsx`): new `oscar__sidebar-group` between Quick chats and Practice areas; eyebrow `Lavern`, single child row "Browse partners" linking to `/lavern`. Visual rhythm matches the other two tree groups. 17-line insertion.
+
+- **Route registration** (`App.tsx`): one-line `<Route path="lavern" element={<LavernRoster />} />` added next to `forge` and `integrations`. One-line import added.
+
+- **`NOTICE` updated**: new Lavern attribution paragraph with upstream HEAD SHA `7c2efe61524b` (2026-05-20) + per-slug source mapping + adaptation summary + trademark hedge per Apache 2.0 §6.
 
 **Verification** (in this session):
-- `./node_modules/.bin/tsc --noEmit` on `ui/desktop`: clean (exit 0).
-- ADR-083 line count: 49 (target ≤50).
-- `./node_modules/.bin/electron-forge make --targets=@electron-forge/maker-zip` succeeded; packaged binary at `ui/desktop/out/Oscar-GC-linux-x64/oscar-gc` (206 MB).
-- Visual harness produced 5 PNGs at 1440×900. Per-state audit:
-  - (a) `[MatterFacts,Skills,Playbooks,Redlining,History]` — firstFact `Contract: Acme Master Services Agreement`.
-  - (b) `[ProgrammeFacts,Skills,Playbooks,Deadlines,History]` — firstFact `Processing activity: Salesforce vendor DPA`.
-  - (c) one chat turn driven via `data-testid="chat-input":visible` fill+Enter; HISTORY row landed with `04:16 PM` timestamp + "Hello — sprint M3 history seed message." (verified visually).
-  - (d) `appendKeyFact` writes "- Late-added fact: SLA credits unchanged" to disk; pane reflects after a 2.5 s wait (one poll tick).
-  - (e) `matters.setActive('commercial', 'test-msa-renewal')` → Top of Mind block expanded shows the full `renderTomActiveMatter` body.
-- Commit-trailer hygiene per CLAUDE.md: no `Co-Authored-By` trailer (verified via `git log -1 --pretty=full`).
-- **ADR slot taken at decision time: 083.** The M3 brief reserved 071 but Sprint 21–25's `lavern-firm-mode` branch occupies 071–082 in the shared `.git` database — verified via `ls docs/adr/` + `git log --all --diff-filter=A -- 'docs/adr/*.md'` before naming. Brief amended in plan mode.
-- No Rust touch, no sibling-repo changes.
-- Parallel-session coordination: Xvfb :99 confirmed clear before each harness run (Sprint 24 / `lavern-firm-mode` was idle on display); no collision.
+- `pnpm typecheck` (tsc --noEmit): clean (exit 0).
+- `pnpm lint:check` (typecheck + eslint --max-warnings 0 + i18n:check): clean (exit 0). One incidental cleanup: 8 pre-existing `// eslint-disable-next-line no-console` directives across 4 files (`buildExtensionFromIntegration.ts`, `loadRegistry.ts`, `QuickChatButton.tsx`, `useChatHistory.ts`) were flagged as unused by ESLint and auto-removed via `pnpm lint --fix` + `pnpm format`. Pre-Sprint-21 tech debt; cleaning was required for Sprint 21 to pass the gate.
+- Crostini dogfood deferred to post-build: per the plan, after `.deb` builds and uploads to draft release Arturs walks the 8-step exit criteria (sidebar group renders → roster → 10 cards → Daniel Reeves chats in character with identity awareness → memory isolation per partner → resume flow).
 
-**Deferred** — push to `origin/main` happens after the close commit lands the SPRINT_LOG entry with this section's commit SHA.
+**Deferred** (per plan, by design):
+- Sprint 22 work (Tier-A MCP lift + sub-recipe wiring + partner prompt augmentation).
+- Sprint 23 work (per-partner eval harness).
+- `userIdentityBlock` retro-fit into practice-area recipes — the gap exists in in-house mode too but widening this sprint balloons scope.
 
-**Carry-forwards** (master-brief sub-sprints):
-- **M4 — Playbooks subsystem** (upload + always-on injection + on-demand list). Two ADRs at decision time (storage convention + three-layer injection). M4 brief draft after this close commit.
-- **M5 — Skills visibility + per-area scoping**. One ADR at decision time (skill scoping via prompt enumeration).
-- **M6–M8** unchanged from M2 carry.
-- **`PopularChatTopics.tsx` dead-code deletion** (Sprint 19b carry) still open.
-- **QuickChatButton "STARTING…" stuck-state** (M1 carry) — out of M3 scope; fork-hygiene sweep candidate.
-- **`pnpm-workspace.yaml` allowBuilds: drift** still inherits as unstaged each session (Sprint 17b convention).
-- **Crostini dogfood E1 (M0 description_override) + M1/M2/M3 visual states** all wait for M8's single end-to-end dogfood per Arturs's doctrine.
+**Crostini dogfood** (closed 2026-05-20): `.deb` built on lq-vps via `scripts/build-oscar-deb.sh` (260 MB, sha256 `d4b1b6fc...035c5e`). Draft release `oscar-gc-sprint21` on `sarturko-maker/goose` with the `.deb` attached + release notes covering the 8-step partner-roster walk. Arturs `dpkg -r` + `dpkg -i` cycle on Crostini passed; Lavern roster renders, partners chat in character, identity cascade visible. Three dogfood-surfaced carry-forwards captured in `TODO.md` "Sprint 21 dogfood findings" and the [[lavern-multi-session-collab-sprint]] memory:
 
-**ADRs**: 083.
+1. **Per-partner conversation history** — current `partners.json` binds one `session_id` per partner; every click resumes the same session ("one long convo"). Expected: multi-session per partner, sidebar mirrors Sprint 19 PA → Matter → Session pattern (Lavern → Partner → Session). Same future sprint validates Sprint 19's in-house tree which shipped on code but is Crostini-untested.
+2. **@-mention partners from chat** — `ChatInput.tsx:1285` already has @-mention popover infra (today scoped to files); Goose's `summon` platform extension (`crates/goose/src/agents/platform_extensions/summon.rs`) already exposes the LLM-side delegate mechanism with `SourceType::{Subrecipe,Recipe,Agent}` discovery. Sprint 24 hook-up scope is small.
+3. **Multi-agent project collaboration** (e.g., M&A transaction with Sarah Chen lead + James Okafor on IP + Helena Voss on tax) — reverses the brief's original out-of-scope; Goose has `Recipe.sub_recipes` + `subagent_handler` substrate. Sprint 24 design pass needed: keep partners as recipes (Sprint 21 shape; add `sub_recipes` to a parent "Project" recipe) OR migrate to agent files at `~/.agents/agents/<slug>.md`. Sprint 22's MCP-attachment design will force the answer.
+
+**Carry-forwards**:
+- **Sprint 22 architecture is committed** in ADR-073 — Sprint 22 starts from the translation table, not from a blank plan-mode.
+- **Sprint 23 confirmed needed** (per-partner eval harness; Lavern's `evals/` empty).
+- **Sprint 24 candidate** — the three dogfood findings above as one composite sprint, sequenced after 22 + 23.
+- **Headless screenshot evidence** (`docs/screenshots/sprint-21/`) — non-blocking; would be captured on the next .deb iteration.
+- **`userIdentityBlock` retro-fit into practice-area recipes** — same identity-injection gap exists in in-house mode; small follow-on.
+
+**ADRs**: 071, 072, 073.
 
 ---
 

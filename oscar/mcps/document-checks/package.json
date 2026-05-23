@@ -1,0 +1,31 @@
+{
+  "name": "oscar-document-checks-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Computational document-structure + formatting checks MCP for Oscar GC's Lavern partners. Adapter lift of Lavern's document-checks.ts (Apache-2.0; commit 7c2efe61). Two tools: check_document_structure (heading hierarchy + numbering + cross-refs) + check_document_formatting (defined-term consistency, numbering schemes, typography). Debate-board writes (record_pass_result, compile_verification_report) are dropped — verification-pass sub-recipe handles compilation in its response.",
+  "license": "Apache-2.0",
+  "author": "s-arturko",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oscar-document-checks-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "smoke": "node ./smoke.mjs",
+    "test": "node ./tests/integration.test.mjs",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@0.21.2 node ./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "=1.29.0",
+    "zod": "=4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "=25.8.0",
+    "typescript": "=6.0.3"
+  }
+}

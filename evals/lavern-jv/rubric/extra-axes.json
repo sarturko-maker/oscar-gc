@@ -1,0 +1,46 @@
+{
+  "global_axes": [
+    {
+      "id": "grounded_citations",
+      "type": "float",
+      "range": [0.0, 1.0],
+      "description": "Fraction of partner's clause/quote citations that resolve to actual passages in the source doc. Judge inspects partner output + source doc text. Default 1.0 if no citations made (no false positives possible)."
+    },
+    {
+      "id": "verification_pass_cited",
+      "type": "boolean",
+      "description": "Did the partner's response include a verification-pass result (PASS or ISSUES + what was checked)? Distinct from whether verification-pass was invoked — tests whether the partner surfaced its result in the user-visible response."
+    },
+    {
+      "id": "revision_behaviour",
+      "type": "boolean_or_null",
+      "description": "Does the partner's response indicate it revised in response to verification-pass ISSUES? Look for phrases like 'verification-pass flagged X, so I removed/corrected/clarified...' or similar. Null if verification-pass returned PASS or was not invoked."
+    },
+    {
+      "id": "partner_tone_fit",
+      "type": "ordinal",
+      "range": [0, 1, 2],
+      "description": "0 generic legal voice; 1 specialism-aware (uses some domain vocabulary correctly); 2 specialism-fluent (deeply natural domain voice). Specialism is partner-specific: M&A for Sarah Chen (reps survival, indemnity, escrow, basket vocabulary); Privacy for Helena Voss (lawful bases, cross-border transfers, DPIA); Litigation for Aisha Khan (cause of action, burden of proof, remedies)."
+    },
+    {
+      "id": "hallucination_count",
+      "type": "integer",
+      "description": "Count of partner statements referencing text NOT in the source document, invented dollar amounts, or invented clause numbers."
+    }
+  ],
+  "per_doc_axes": {
+    "doc3-veoneer": [
+      {
+        "id": "overproduction_flag",
+        "type": "boolean",
+        "description": "True if the partner raised more than 6 distinct risks on Doc 3. Lavern's rubric: 'a junior would flag every word; a senior would flag 2-3 things.' The threshold of 6 catches over-thorough behaviour without penalising thoroughness that stops short of generic blather."
+      }
+    ]
+  },
+  "grounding_touched_items": {
+    "doc1-borrowmoney": ["doc1-1", "doc1-2", "doc1-3", "doc1-4", "doc1-5", "doc1-6", "doc1-7", "doc1-9", "doc1-10", "doc1-11", "doc1-12"],
+    "doc2-sibannac": ["doc2-1", "doc2-2", "doc2-3", "doc2-4", "doc2-6", "doc2-8", "doc2-10"],
+    "doc3-veoneer": ["doc3-1", "doc3-2", "doc3-3", "doc3-4", "doc3-6"]
+  },
+  "_comment_grounding_touched": "Rubric items that reference specific clause numbers or quoted text. These are the items where 'grounded_citations' is most informative — the partner must cite a specific clause to mark them COVERED. Items in 'implicit' positions are not grounding-touched (they require inference from absence)."
+}

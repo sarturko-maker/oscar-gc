@@ -26,13 +26,12 @@ export default function QuickChatButton({ variant }: QuickChatButtonProps) {
     setStarting(true);
     try {
       await window.electron.matters.detachActive();
-      const { path: quickChatsDir } =
-        await window.electron.quickChats.ensureDir();
+      const { path: quickChatsDir } = await window.electron.quickChats.ensureDir();
       const session = await createSession(quickChatsDir);
       window.dispatchEvent(
         new CustomEvent(AppEvents.ADD_ACTIVE_SESSION, {
           detail: { sessionId: session.id, initialMessage: undefined },
-        }),
+        })
       );
       navigate(`/pair?resumeSessionId=${encodeURIComponent(session.id)}`, {
         state: { disableAnimation: true },
@@ -40,7 +39,7 @@ export default function QuickChatButton({ variant }: QuickChatButtonProps) {
     } catch (err) {
       // Failures here are unusual (mkdir is recursive/idempotent; createSession
       // is straight HTTP). Log and reset; the user can retry the click.
-      // eslint-disable-next-line no-console
+
       console.error('Quick chat start failed', err);
       setStarting(false);
     }
