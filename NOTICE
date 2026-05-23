@@ -1,10 +1,14 @@
 Oscar GC
 ========
 
-Oscar GC is a custom distribution of Goose, an open-source agent platform.
-See LICENSE for license terms (Apache License, Version 2.0).
+Oscar GC is a custom distribution of Goose (Apache-2.0). The repo is a
+multi-license codebase: Oscar-authored work is licensed under
+AGPL-3.0-or-later (see LICENSE); inherited and bundled work keeps its
+original license. See LICENSES/README.md for the per-path map and
+LICENSES/{Apache-2.0,MIT,MPL-2.0,Python-2.0}.txt for verbatim license
+texts.
 
-This product includes software developed by the following projects:
+This NOTICE file enumerates every upstream attribution Oscar GC carries.
 
 ----------------------------------------------------------------------------
 
@@ -17,6 +21,9 @@ Oscar GC forks Goose as a custom distribution under upstream's
 CUSTOM_DISTROS.md. The Rust agent core remains substantially upstream;
 the desktop UI (`ui/desktop/src/`) and sibling MCP servers
 (`oscar-onboarding-mcp`, `oscar-memory-mcp`) are Oscar GC additions.
+
+The upstream Apache-2.0 LICENSE is preserved verbatim at
+LICENSES/Apache-2.0.txt.
 
 ----------------------------------------------------------------------------
 
@@ -49,7 +56,7 @@ used to brand or promote Oscar GC.
 
 ----------------------------------------------------------------------------
 
-Lavern
+Lavern — prompts and MCPs
 Copyright 2025-2026 Antti Innanen.
 Licensed under the Apache License, Version 2.0.
 https://github.com/AnttiHero/lavern
@@ -88,14 +95,35 @@ Per-file provenance comments appear at the top of each adapted prompt
 file (`Lifted from github.com/AnttiHero/lavern (Apache 2.0, HEAD
 7c2efe61524b) src/agents/prompts/<slug>.ts. Adapted per ADR-072: ...`).
 
+Sprint 22 (ADR-075) lifted five MCPs from Lavern's `src/mcps/` and
+adapted them into Oscar GC's in-tree bundle. Each MCP is Apache-2.0,
+Copyright 2026 s-arturko (Oscar GC adapter), with the verbatim Lavern
+source preserved under `src/_lavern-original/` for diff-against-upstream
+review:
+
+  oscar/mcps/baselines/           ← Lavern src/mcps/baselines.ts
+  oscar/mcps/document-checks/     ← Lavern src/mcps/document-checks.ts
+  oscar/mcps/document-reader/     ← Lavern src/mcps/document-reader.ts
+  oscar/mcps/grounding-verifier/  ← Lavern src/mcps/grounding-verifier.ts
+  oscar/mcps/knowledge-base/      ← Lavern src/mcps/knowledge-base.ts
+
+ADR-075 originally framed the lift as six MCPs; after-the-fact, the
+sixth slot (`risk-pricing`) was discovered to be Lavern-scaffolding-
+only (no substantive risk logic upstream), so `oscar/mcps/risk-pricing/`
+is Oscar-authored from scratch — NOT Lavern-derived. It is listed here
+only to disambiguate.
+
+The Lavern Pipeline orchestration recipes (`ui/desktop/sub-recipes/
+lavern-{watchman,reader,curator,pipeline}.yaml`) are also Lavern-
+derived (Sprint 24-B per ADR-079).
+
 Trademark notice: "Lavern" is the name of Antti Innanen's project. Per
 Apache License 2.0 §6, this NOTICE file describes the origin of the
 vendored content; the mark is referenced openly in Oscar GC's NOTICE and
 provenance comments to credit the upstream design (per the Sprint 21
 brief's "no hiding" framing). Sprint 24-A (ADR-078) reframes the
 partner-roster UI surface as "Oscar LLP" (Oscar GC's invented bench) and
-reserves the "Lavern" name for the upstream-credit pipeline port arriving
-in Sprint 24-B+C — the substance Lavern's own evals validated. The
+reserves the "Lavern" name for the upstream-credit pipeline port. The
 "Lavern" mark is not used to imply endorsement.
 
 ----------------------------------------------------------------------------
@@ -125,5 +153,121 @@ partner-style consultation; direct score comparison is informational only.
 
 ----------------------------------------------------------------------------
 
-ADR-035 records the attribution scheme for this fork. Future Apache 2.0
-dependencies added to Oscar GC append entries here.
+@modelcontextprotocol/server-filesystem  (vendored as `oscar-fs`)
+Copyright (c) 2024-2026 Anthropic, PBC.
+Licensed under the MIT License.
+https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem
+
+The bundle at `ui/desktop/src/resources/mcps/oscar-fs/` is an esbuild-
+bundled single-file ESM emit of `@modelcontextprotocol/server-filesystem`
+v2026.1.14, vendored at build time by `ui/desktop/scripts/prepare-oscar-
+bundle.js`. Capability name `oscar-fs` per ADR-040; provides per-recipe
+filesystem scoping with `allowed_directories` locked to the active matter
+folder.
+
+The MCP project as a whole is mid-transition from MIT to Apache-2.0.
+The v2026.1.14 release of `@modelcontextprotocol/server-filesystem`
+declares `"license": "MIT"` in its published `package.json`. The
+per-bundle LICENSE at `ui/desktop/src/resources/mcps/oscar-fs/LICENSE`
+preserves that grant.
+
+----------------------------------------------------------------------------
+
+CPython 3.12.5 (via python-build-standalone)
+Copyright (c) 2001-2024 Python Software Foundation; All Rights Reserved.
+plus historical contributions from BeOpen, CNRI, and CWI.
+plus python-build-standalone modifications by Astral.
+Licensed under the Python Software Foundation License Version 2
+(Python-2.0) and the Mozilla Public License Version 2.0 (MPL-2.0).
+https://github.com/astral-sh/python-build-standalone
+
+The CPython runtime at `ui/desktop/src/resources/python/cpython/` is the
+`cpython-3.12.5+20240814-x86_64-unknown-linux-gnu` standalone build from
+astral-sh/python-build-standalone, downloaded and unpacked at build time
+by `ui/desktop/scripts/prepare-oscar-bundle.js`. It hosts the bundled
+`adeu` redline service plus its Python wheel cohort.
+
+CPython itself is licensed under the Python Software Foundation License
+Version 2; the full historical license stack (PSF + BeOpen + CNRI + CWI)
+is preserved verbatim at LICENSES/Python-2.0.txt. Portions added by
+python-build-standalone are licensed under MPL-2.0 (LICENSES/MPL-2.0.txt).
+
+----------------------------------------------------------------------------
+
+adeu 1.6.9
+Copyright (c) 2026 Dealfluence Oy.
+Licensed under the MIT License.
+https://github.com/dealfluence/adeu
+
+`adeu` provides the contract-redline / Track-Changes generation that the
+Commercial practice area wires in (e.g., for redlining a counterparty's
+markup). Bundled into the `.deb` as a Python wheel at
+`ui/desktop/src/resources/python/wheels/adeu-1.6.9-py3-none-any.whl` by
+`ui/desktop/scripts/prepare-oscar-bundle.js`; installed into the bundled
+CPython runtime at first launch and patched at install time with the
+Oscar-authored modification at
+`docs/redline/adeu-1.6.9-batch-path-word-diff.patch` (ADR-045).
+
+The unmodified wheel ships with its MIT LICENSE in its `dist-info/`
+directory. The Oscar-authored patch is licensed under AGPL-3.0-or-later
+(matching the rest of Oscar GC); the underlying wheel retains its MIT
+grant.
+
+----------------------------------------------------------------------------
+
+Bundled Python wheel cohort (~47 packages)
+Mixed permissive licenses (MIT, BSD, Apache-2.0, PSF).
+
+Alongside `adeu`, the `.deb` bundles approximately 47 transitive Python
+wheels at `ui/desktop/src/resources/python/wheels/` (e.g., `aiofile`,
+`authlib`, `beartype`, `cffi`, `cryptography`, `diff_match_patch`,
+`httpx`). Each wheel's `dist-info/` directory carries its own LICENSE
+and METADATA; per-wheel attribution travels with the wheel and is
+extracted at install time into the bundled CPython runtime.
+
+No copyleft-licensed wheels are knowingly bundled. If a future bundling
+pass introduces a wheel under copyleft terms, surface the conflict and
+either replace, vendor as a separate optional component, or add explicit
+acknowledgment here.
+
+----------------------------------------------------------------------------
+
+Rust transitive dependencies
+
+The full Rust dependency list for the goose runtime is in `Cargo.lock`
+at the repo root. All Rust dependencies are permissive (Apache-2.0, MIT,
+BSD, or dual-licensed combinations). Three Cargo `[patch]` entries pin
+git-tracked forks for ongoing upstream work — see `Cargo.toml`:
+
+  - `v8` (the V8 JavaScript engine Rust wrapper) — points at the local
+    `vendor/v8/` wrapper, which depends on `v8-goose` from crates.io
+    (Apache-2.0).
+  - `cudaforge` (https://github.com/jbg/cudaforge) — git pin, license to
+    be confirmed by maintainer at next pass; surface to the user whether
+    Oscar GC actually invokes any GPU code path (if not, the patch can
+    be removed entirely).
+  - Five `opentelemetry-*` packages — git pins to a specific
+    opentelemetry-rust commit (Apache-2.0), temporary per the `TODO`
+    comment in `Cargo.toml` ("switch to released version in
+    opentelemetry 0.32.0").
+
+----------------------------------------------------------------------------
+
+Node / Electron transitive dependencies
+
+The full Node dependency list for the desktop app is in
+`ui/desktop/pnpm-lock.yaml`. All direct dependencies are permissive:
+Electron (MIT), React (MIT), Radix UI (MIT), Tailwind CSS (MIT),
+framer-motion (MIT), zod (MIT), react-markdown (MIT), lucide-react
+(ISC), `@mcp-ui/client` (MIT), `@modelcontextprotocol/sdk` (MIT),
+`@modelcontextprotocol/ext-apps` (MIT). No copyleft-licensed npm
+dependencies are knowingly bundled.
+
+----------------------------------------------------------------------------
+
+ADR-035 records the original attribution scheme for this fork; this
+NOTICE was extended on the AGPL-3.0 relicense (rebrand-2026-05-23) to
+itemize bundled runtimes (`oscar-fs`, CPython, adeu) and the Lavern MCP
+lifts. Future Apache-2.0 / MIT / PSF / MPL-2.0 dependencies added to
+Oscar GC append entries here. Future AGPL/GPL dependencies need
+explicit compatibility review before being added.

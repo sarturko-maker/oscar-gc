@@ -1,0 +1,40 @@
+MIT License
+
+Copyright (c) <year> <copyright holders>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+This is the verbatim MIT License template (SPDX: MIT). Specific MIT-licensed
+components bundled into Oscar GC carry their own copyright lines:
+
+  - ui/desktop/src/resources/mcps/oscar-fs/ — @modelcontextprotocol/server-
+    filesystem v2026.1.14, Copyright (c) 2024-2026 Anthropic, PBC. See
+    ui/desktop/src/resources/mcps/oscar-fs/LICENSE for the per-component
+    MIT grant.
+
+  - The bundled `adeu` 1.6.9 Python wheel — Copyright (c) 2026 Dealfluence Oy
+    (https://github.com/dealfluence/adeu). Per-wheel LICENSE travels inside
+    the wheel's dist-info/ directory.
+
+  - Several of the ~47 bundled Python wheels packaged with adeu — see each
+    wheel's dist-info/LICENSE for the per-component copyright line.
+
+See ../NOTICE for the upstream URL and pull date of each component.

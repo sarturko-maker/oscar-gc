@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChatState } from '../../../types/chatState';
 import { useChatStream } from '../../../hooks/useChatStream';

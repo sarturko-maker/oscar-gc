@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
 // Sprint 10 (ADRs 021-024): prepare Oscar GC bundled runtime under
 // ui/desktop/src/resources/ before electron-forge make. Idempotent: cached
 // tarballs in .oscar-bundle-cache/ skip on re-runs. Run via the

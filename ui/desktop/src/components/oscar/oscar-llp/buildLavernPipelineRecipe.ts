@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
 // Sprint 24-B (ADR-079 pipeline shape; ADR-080 precedent-board persistence):
 // Lavern Pipeline parent recipe builder. Mirrors buildOscarLLPPartnerRecipe
 // but constructs the parent recipe that orchestrates Watchman → Reader →

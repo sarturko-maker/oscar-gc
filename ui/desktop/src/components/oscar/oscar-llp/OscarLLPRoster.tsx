@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
 // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
 // Oscar LLP firm-mode roster at /oscar-llp. Per partner: header (name +
 // specialism + blurb), an inline session list (top N visible, scrollable

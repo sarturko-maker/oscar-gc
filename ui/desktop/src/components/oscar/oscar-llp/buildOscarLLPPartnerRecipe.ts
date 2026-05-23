@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
 // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078): Oscar LLP partner
 // recipe builder. Mirrors buildPracticeAreaRecipe but for the partner-consult
 // use case:

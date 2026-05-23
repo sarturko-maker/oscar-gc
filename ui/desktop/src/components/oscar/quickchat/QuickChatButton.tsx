@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
 // Sprint 19 (ADR-066 D1, D3): single component, two visual variants.
 // Onclick path: detach Top of Mind (so the last matter's snapshot doesn't
 // bleed in) → ensure ~/Documents/Oscar GC/.quick-chats/ exists → start a

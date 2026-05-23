@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { buildServer } from "./server.js";
 

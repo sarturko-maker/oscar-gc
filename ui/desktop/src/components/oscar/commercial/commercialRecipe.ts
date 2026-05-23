@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import type { ExtensionConfig, Recipe } from '../../../api';
 import { SYSTEM_PROMPT } from './systemPrompt';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';

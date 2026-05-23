@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
 // Sprint 12 (ADR-041): per-recipe MCP loadout convention + matter scope-down.
 // Generic builder consumed by every practice area. Commercial composes on top
 // (its system prompt + redline MCP); the other 12 areas use the base shape.

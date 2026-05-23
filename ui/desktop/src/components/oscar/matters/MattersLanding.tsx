@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
 // Sprint 12 (ADRs 036, 038, 041, 044), Sprint 14 (ADR-047): practice-area
 // landing — list of matters + new-matter affordance. Now passes `area` (not
 // just name) to the dialog so per-area shape can drive the form, and groups

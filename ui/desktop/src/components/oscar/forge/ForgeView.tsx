@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+//
 // Sprint 12 (ADR-039): Forge chat surface. Same pattern as OscarCommercialView
 // pre-Sprint-12 — createSession on mount with the Forge recipe, dispatch
 // ADD_ACTIVE_SESSION, navigate to /pair. Trust dialog bypassed via "Oscar GC"
