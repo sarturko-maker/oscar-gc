@@ -2602,6 +2602,7 @@ interface ProfileShape {
     area_overrides?: {
       playbooks?: { always_on?: string[]; on_demand?: string[] };
       enabled_skills?: { mode?: string; slugs?: string[] };
+      enabled_mcps?: { mode?: string; ids?: string[] };
     } & Record<string, unknown>;
   } & Record<string, unknown>>;
 }
@@ -2903,11 +2904,6 @@ void isPlaybookAllowedExt;
 // (Goose did it server-side via serde_yaml); no new npm dep. Mirrors M4's
 // computercontroller-reuse pivot.
 
-const safeSkillMode = (raw: unknown): SkillMode | null => {
-  if (raw === 'all' || raw === 'allow' || raw === 'deny') return raw;
-  return null;
-};
-
 const bundledSourcesForArea = (areaId: string): readonly string[] => {
   const entry = PRACTICE_AREAS.find((a) => a.id === areaId);
   return entry?.bundled_skill_sources ?? [];
@@ -3124,59 +3120,36 @@ ipcMain.handle(
   },
 );
 
+// Sprint 28 M3 (ADR-093): single per-skill on/off toggle replaces the M5
+// tri-mode pill + chip handlers. Every write normalises to the deny
+// shape; existing 'all' / 'allow' rows are migrated by readEnabledSlugs
+// in the recipe-render path so older Forge writes still resolve.
 ipcMain.handle(
-  'oscar:skills:set-mode',
-  async (
-    _event,
-    areaIdRaw: unknown,
-    modeRaw: unknown,
-  ): Promise<
-    { ok: true; mode: SkillMode } | { ok: false; code: string; message: string }
-  > => {
-    const areaId = safeAreaId(areaIdRaw);
-    if (!areaId) return { ok: false, code: 'EBADAREA', message: 'Invalid area id' };
-    const mode = safeSkillMode(modeRaw);
-    if (!mode) return { ok: false, code: 'EBADMODE', message: 'Invalid skill mode' };
-    try {
-      const next = await mutateEnabledSkills(areaId, (current) => ({
-        mode,
-        slugs: current.slugs,
-      }));
-      return { ok: true, mode: next.mode };
-    } catch (err) {
-      return {
-        ok: false,
-        code: 'EWRITE',
-        message: errorMessage(err, 'Profile write failed'),
-      };
-    }
-  },
-);
-
-ipcMain.handle(
-  'oscar:skills:toggle-slug',
+  'oscar:skills:toggle',
   async (
     _event,
     areaIdRaw: unknown,
     slugRaw: unknown,
-    includedRaw: unknown,
+    enabledRaw: unknown,
   ): Promise<
-    | { ok: true; slugs: string[] }
+    | { ok: true; enabled: boolean }
     | { ok: false; code: string; message: string }
   > => {
     const areaId = safeAreaId(areaIdRaw);
     if (!areaId) return { ok: false, code: 'EBADAREA', message: 'Invalid area id' };
     const slug = safeSlug(slugRaw);
     if (!slug) return { ok: false, code: 'EBADSLUG', message: 'Invalid skill slug' };
-    const included = includedRaw === true;
+    const enabled = enabledRaw === true;
     try {
-      const next = await mutateEnabledSkills(areaId, (current) => {
-        const set = new Set(current.slugs);
-        if (included) set.add(slug);
-        else set.delete(slug);
-        return { mode: current.mode, slugs: Array.from(set).sort() };
+      await mutateEnabledSkills(areaId, (current) => {
+        let disabled = new Set<string>();
+        if (current.mode === 'deny') disabled = new Set(current.slugs);
+        else if (current.mode === 'allow') disabled = new Set(current.slugs);
+        if (enabled) disabled.delete(slug);
+        else disabled.add(slug);
+        return { mode: 'deny', slugs: Array.from(disabled).sort() };
       });
-      return { ok: true, slugs: next.slugs };
+      return { ok: true, enabled };
     } catch (err) {
       return {
         ok: false,
@@ -3296,6 +3269,194 @@ ipcMain.handle(
         err: errorMessage(err, 'Unknown error'),
       });
       return null;
+    }
+  },
+);
+
+// Sprint 28 M2 (ADR-092): right-pane Tools section. Lists the MCPs the
+// agent has access to for a matter — bundled-for-area (universal +
+// commercial's redline) and per-area installed integrations. Toggle on
+// installed-only persists to area_overrides.enabled_mcps using the same
+// `{ mode: 'deny', ids: [...disabled] }` shape Skills will land on in M3;
+// existing 'all' / 'allow' shapes are migrated on read.
+
+interface BundledToolStatic {
+  id: string;
+  displayName: string;
+  description: string;
+}
+
+const UNIVERSAL_BUNDLED_TOOLS: readonly BundledToolStatic[] = [
+  {
+    id: 'oscar-fs',
+    displayName: 'Filesystem (matter scope)',
+    description:
+      'Read and write files in this matter folder only. Sibling matters are not visible.',
+  },
+  {
+    id: 'computercontroller',
+    displayName: 'Document extraction',
+    description: 'Extracts text from PDF and DOCX files when the agent reads them.',
+  },
+  {
+    id: 'Tavily',
+    displayName: 'Web search (Tavily)',
+    description:
+      'Regulatory-currency lookups and open-web research. Queries leave the device.',
+  },
+];
+
+const COMMERCIAL_BUNDLED_REDLINE: BundledToolStatic = {
+  id: 'redline',
+  displayName: 'Redlining (Adeu)',
+  description: 'Generate tracked-change redlines on .docx files.',
+};
+
+function bundledToolsForArea(areaId: string): BundledToolStatic[] {
+  if (areaId === 'commercial') {
+    return [...UNIVERSAL_BUNDLED_TOOLS, COMMERCIAL_BUNDLED_REDLINE];
+  }
+  return [...UNIVERSAL_BUNDLED_TOOLS];
+}
+
+type McpMode = 'all' | 'allow' | 'deny';
+
+function readEnabledMcpsOverride(
+  profile: ProfileShape | null,
+  areaId: string,
+): { mode: McpMode; ids: string[] } {
+  const area = profile?.practice_areas?.find((a) => a.id === areaId);
+  const override = area?.area_overrides?.enabled_mcps;
+  const rawMode = override?.mode;
+  const mode: McpMode =
+    rawMode === 'allow' || rawMode === 'deny' ? rawMode : 'all';
+  const ids = Array.isArray(override?.ids)
+    ? (override?.ids as string[]).filter((s) => typeof s === 'string')
+    : [];
+  return { mode, ids };
+}
+
+async function mutateEnabledMcps(
+  areaId: string,
+  mutator: (current: { mode: McpMode; ids: string[] }) => {
+    mode: McpMode;
+    ids: string[];
+  },
+): Promise<{ mode: McpMode; ids: string[] }> {
+  const profile = await readProfileFile();
+  if (!profile) throw new Error('profile.json not found');
+  const areas = profile.practice_areas ?? [];
+  const idx = areas.findIndex((a) => a.id === areaId);
+  if (idx < 0) throw new Error(`area ${areaId} not in profile`);
+  const area = areas[idx];
+  const overrides = area.area_overrides ?? {};
+  const current = readEnabledMcpsOverride(profile, areaId);
+  const next = mutator(current);
+  const newProfile: ProfileShape = {
+    ...profile,
+    practice_areas: [
+      ...areas.slice(0, idx),
+      {
+        ...area,
+        area_overrides: {
+          ...overrides,
+          enabled_mcps: { mode: next.mode, ids: next.ids },
+        },
+      },
+      ...areas.slice(idx + 1),
+    ],
+  };
+  await writeProfileFile(newProfile);
+  return next;
+}
+
+interface ToolEntry {
+  id: string;
+  displayName: string;
+  description: string;
+  source: 'bundled' | 'installed';
+  enabled: boolean;
+}
+
+ipcMain.handle('oscar:tools:list', async (_event, areaIdRaw: unknown): Promise<{
+  tools: ToolEntry[];
+}> => {
+  const areaId = safeAreaId(areaIdRaw);
+  if (!areaId) return { tools: [] };
+  const bundled = bundledToolsForArea(areaId);
+  const installed = await readInstalledIntegrations(areaId);
+  const profile = await readProfileFile();
+  const { mode, ids } = readEnabledMcpsOverride(profile, areaId);
+  const isEnabled = (id: string): boolean => {
+    if (mode === 'all') return true;
+    if (mode === 'allow') return ids.includes(id);
+    return !ids.includes(id);
+  };
+  const tools: ToolEntry[] = bundled.map((t) => ({
+    ...t,
+    source: 'bundled',
+    enabled: true,
+  }));
+  for (const entry of installed.installed_integrations) {
+    if (!entry.trust_acknowledged) continue;
+    const overlay = INTEGRATIONS_OVERLAY[entry.id];
+    tools.push({
+      id: entry.id,
+      displayName: overlay?.overlay_title ?? entry.id,
+      description:
+        overlay?.overlay_description ?? overlay?.facts_note ?? '',
+      source: 'installed',
+      enabled: isEnabled(entry.id),
+    });
+  }
+  return { tools };
+});
+
+ipcMain.handle(
+  'oscar:tools:toggle',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    idRaw: unknown,
+    enabledRaw: unknown,
+  ): Promise<
+    | { ok: true; enabled: boolean }
+    | { ok: false; code: string; message: string }
+  > => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return { ok: false, code: 'EBADAREA', message: 'Invalid area id' };
+    if (typeof idRaw !== 'string' || idRaw.length === 0 || idRaw.length > 128) {
+      return { ok: false, code: 'EBADID', message: 'Invalid tool id' };
+    }
+    const toolId = idRaw;
+    const enabled = enabledRaw === true;
+    try {
+      await mutateEnabledMcps(areaId, (current) => {
+        // Normalize to the deny-shape on every write. The recipe filter
+        // (MattersLanding) reads { mode, ids } so disabling = adding to
+        // ids; enabling = removing from ids. Migration from older 'allow'
+        // shapes: precompute the would-be-disabled set from the area's
+        // current installed list and rewrite as deny. M3 takes the same
+        // approach for skills.
+        let disabled = new Set<string>();
+        if (current.mode === 'deny') {
+          disabled = new Set(current.ids);
+        } else if (current.mode === 'allow') {
+          // We don't have the full installed-set here; preserve the
+          // explicit toggle and let the next read collapse correctly.
+          disabled = new Set(current.ids);
+        }
+        if (enabled) disabled.delete(toolId);
+        else disabled.add(toolId);
+        return { mode: 'deny', ids: Array.from(disabled).sort() };
+      });
+      return { ok: true, enabled };
+    } catch (err) {
+      return {
+        ok: false,
+        code: 'EWRITE',
+        message: errorMessage(err, 'Profile write failed'),
+      };
     }
   },
 );

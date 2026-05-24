@@ -142,8 +142,12 @@ export const toastService = ToastService.getInstance();
 // Re-export ExtensionLoadingStatus for convenience
 export type { ExtensionLoadingStatus };
 
+// Sprint 28 M4: position moved from top-right → top-center. The right
+// pane's LOADOUT eyebrow + Edit link sit at top-right; the toast was
+// overlapping that zone on every matter open, making the pane chrome
+// hard to read until auto-dismiss.
 const commonToastOptions: ToastOptions = {
-  position: 'top-right',
+  position: 'top-center',
   closeButton: true,
   hideProgressBar: true,
   closeOnClick: true,

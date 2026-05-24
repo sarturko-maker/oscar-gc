@@ -1,18 +1,17 @@
-// Sprint 20-M5 (ADR-086): Skills section body. Three-segment mode pill
-// (All / Allow / Deny) + one row per skill in scope for the active area
-// (bundled plugins via practiceAreas.bundled_skill_sources × on-disk
-// SKILL.md presence, plus user-added skills under ~/.agents/skills/).
-// Polls oscar:skills:list every 2 s via usePanelReader — same shape M4's
-// PlaybooksSection uses. Mode change + per-slug toggle persist to
-// area_overrides.enabled_skills; resume semantics on next matter-open
-// (ADR-085) surfaced via chip tooltip.
+// Sprint 20-M5 (ADR-086): Skills section body. Lists every skill in scope
+// for the active area (bundled plugins via practiceAreas.bundled_skill_sources
+// × on-disk SKILL.md presence, plus user-added skills under ~/.agents/skills/).
+// Polls oscar:skills:list every 2 s via usePanelReader.
 //
 // Sprint 20-M6 (ADR-087): drop affordance. Drag a SKILL.md onto the zone
-// → IPC stages it under ~/.agents/skills/<slug>/SKILL.md → renderer
-// deep-links Forge to #/forge?reviewSkill=<absPath> where Mode C runs
-// the three-question interview (invocation / conflicts / area binding).
-// Mirrors M4 PlaybooksSection drop-zone (no scope picker — skills are
-// global-only).
+// → IPC stages it under ~/.agents/skills/<slug>/SKILL.md → renderer deep-
+// links Forge to #/forge?reviewSkill=<absPath>.
+//
+// Sprint 28 M3 (ADR-093): the M5 tri-mode pill is dropped. Each row is a
+// per-skill on/off toggle; default-on by inheritance from the existing
+// 'all' mode in profile.json. Toggling persists to area_overrides
+// .enabled_skills as the deny shape (mode='deny' + ids = disabled set).
+// Mirrors Tools (M2). Resume semantics carried over from ADR-086.
 import { useCallback, useRef, useState, type DragEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRightPaneCoords } from '../RightPaneContext';
@@ -21,12 +20,6 @@ import { SECTION_META, type PanelSectionProps } from './registry';
 import type { SkillEntry, SkillMode, SkillsListResult } from '../../../../preload';
 
 const RESUME_TOOLTIP = 'Applies on next matter open';
-
-const MODE_LABEL: Record<SkillMode, string> = {
-  all: 'All',
-  allow: 'Allow',
-  deny: 'Deny',
-};
 
 const SKILL_FILE_EXT = '.md';
 
@@ -52,7 +45,6 @@ export default function SkillsSection({ sectionId }: PanelSectionProps) {
     },
     [areaId],
   );
-  const mode: SkillMode = data?.mode ?? 'all';
   const skills = data?.skills ?? [];
   const [busy, setBusy] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
@@ -107,41 +99,23 @@ export default function SkillsSection({ sectionId }: PanelSectionProps) {
     e.preventDefault();
   }, []);
 
-  const onSetMode = useCallback(
-    async (next: SkillMode) => {
-      if (!areaId || next === mode) return;
-      setBusy(`mode:${next}`);
-      setOpError(null);
-      try {
-        const res = await window.electron.skills.setMode(areaId, next);
-        if (!res.ok) setOpError(res.message);
-      } finally {
-        setBusy(null);
-      }
-    },
-    [areaId, mode],
-  );
-
-  const onToggleSlug = useCallback(
+  const onToggle = useCallback(
     async (skill: SkillEntry) => {
-      if (!areaId || mode === 'all') return;
-      // In allow mode: chip-pressed === in-slugs; toggle to flip membership.
-      // In deny mode:  chip-pressed === NOT in-slugs; toggle to flip membership.
-      const included = mode === 'allow' ? !skill.enabled : skill.enabled;
+      if (!areaId) return;
       setBusy(`slug:${skill.slug}`);
       setOpError(null);
       try {
-        const res = await window.electron.skills.toggleSlug(
+        const res = await window.electron.skills.toggle(
           areaId,
           skill.slug,
-          included,
+          !skill.enabled,
         );
         if (!res.ok) setOpError(`${skill.slug}: ${res.message}`);
       } finally {
         setBusy(null);
       }
     },
-    [areaId, mode],
+    [areaId],
   );
 
   const onDelete = useCallback(
@@ -193,7 +167,6 @@ export default function SkillsSection({ sectionId }: PanelSectionProps) {
             {stageError}
           </p>
         )}
-        <SkillsModePill mode={mode} busy={busy} onSetMode={onSetMode} />
         {opError && (
           <p className="oscar__skills-error" data-testid="skills-error">
             {opError}
@@ -211,11 +184,10 @@ export default function SkillsSection({ sectionId }: PanelSectionProps) {
               <SkillRow
                 key={s.slug}
                 skill={s}
-                mode={mode}
                 busy={
                   busy === `slug:${s.slug}` || busy === `delete:${s.slug}`
                 }
-                onToggle={() => void onToggleSlug(s)}
+                onToggle={() => void onToggle(s)}
                 onDelete={() => void onDelete(s)}
               />
             ))}
@@ -226,48 +198,14 @@ export default function SkillsSection({ sectionId }: PanelSectionProps) {
   );
 }
 
-interface SkillsModePillProps {
-  mode: SkillMode;
-  busy: string | null;
-  onSetMode: (next: SkillMode) => void;
-}
-
-function SkillsModePill({ mode, busy, onSetMode }: SkillsModePillProps) {
-  const isBusy = busy?.startsWith('mode:') ?? false;
-  return (
-    <div
-      className="oscar__skills-mode-pill"
-      data-testid="skills-mode-pill"
-      role="group"
-      aria-label="Skill scope mode"
-    >
-      {(['all', 'allow', 'deny'] as const).map((m) => (
-        <button
-          key={m}
-          type="button"
-          className="oscar__skills-mode-pill-segment"
-          data-testid={`skills-mode-${m}`}
-          aria-pressed={mode === m}
-          disabled={isBusy}
-          title={RESUME_TOOLTIP}
-          onClick={() => void onSetMode(m)}
-        >
-          {MODE_LABEL[m]}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 interface SkillRowProps {
   skill: SkillEntry;
-  mode: SkillMode;
   busy: boolean;
   onToggle: () => void;
   onDelete: () => void;
 }
 
-function SkillRow({ skill, mode, busy, onToggle, onDelete }: SkillRowProps) {
+function SkillRow({ skill, busy, onToggle, onDelete }: SkillRowProps) {
   return (
     <li
       className="oscar__skills-row"
@@ -290,12 +228,11 @@ function SkillRow({ skill, mode, busy, onToggle, onDelete }: SkillRowProps) {
         className="oscar__skills-chip"
         data-testid="skills-chip"
         aria-pressed={skill.enabled}
-        aria-disabled={mode === 'all'}
-        disabled={busy || mode === 'all'}
+        disabled={busy}
         title={RESUME_TOOLTIP}
         onClick={onToggle}
       >
-        {mode === 'all' ? 'All allowed' : 'Allow'}
+        {skill.enabled ? 'On' : 'Off'}
       </button>
       {skill.source === 'user' && (
         <button

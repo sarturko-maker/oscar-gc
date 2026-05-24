@@ -3,6 +3,8 @@
 // MatterFacts + ProgrammeFacts + History; M4 fills Playbooks; M5 fills
 // Skills. RightPaneShell never imports section bodies directly — it reads
 // from sectionRegistry, so adding a real body is a one-line edit here.
+// Sprint 28 M2 (ADR-092): Tools added — surfaces MCPs (bundled + per-area
+// installed integrations) that today only Forge Mode D could affect.
 
 import type { ComponentType } from 'react';
 import PanelSectionStub from './PanelSectionStub';
@@ -10,10 +12,12 @@ import MatterFactsSection from './MatterFactsSection';
 import HistorySection from './HistorySection';
 import PlaybooksSection from './PlaybooksSection';
 import SkillsSection from './SkillsSection';
+import ToolsSection from './ToolsSection';
 
 export const PANEL_SECTION_IDS = [
   'MatterFacts',
   'ProgrammeFacts',
+  'Tools',
   'Skills',
   'Playbooks',
   'Redlining',
@@ -37,6 +41,7 @@ interface SectionMeta {
 export const SECTION_META: Record<PanelSectionId, SectionMeta> = {
   MatterFacts: { title: 'Matter Facts' },
   ProgrammeFacts: { title: 'Programme Facts' },
+  Tools: { title: 'Tools' },
   Skills: { title: 'Skills' },
   Playbooks: { title: 'Playbooks' },
   Redlining: { title: 'Redlining', comingIn: 'soon' },
@@ -55,6 +60,7 @@ export const sectionRegistry: Record<
 > = {
   MatterFacts: MatterFactsSection,
   ProgrammeFacts: MatterFactsSection,
+  Tools: ToolsSection,
   Skills: SkillsSection,
   Playbooks: PlaybooksSection,
   Redlining: PanelSectionStub,

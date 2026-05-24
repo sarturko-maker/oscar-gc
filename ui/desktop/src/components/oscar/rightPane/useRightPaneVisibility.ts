@@ -5,10 +5,10 @@
 // Sprint 20-M3 (ADR-083): extended again to expose slug + sessionId so
 // section bodies (MatterFacts reads matter.md, History tails the session
 // log) can fetch without a second lookup.
-//
-// Defaults: pane is on for matter-bound /pair sessions, off elsewhere
-// (Hub, MattersLanding, Forge, Settings, quick-chats). Explicit user
-// toggle (isRightPaneExpanded !== null) wins across routes and restarts.
+// Sprint 28 M1 (ADR-091): pane is ONLY mounted on matter-bound /pair
+// routes. Non-matter /pair (Forge, quick-chats) returns HIDDEN — never a
+// rail-only stranded state. Supersedes ADR-069's lawyer-toggleable-in-
+// quick-chat default; the toggle persistence is dropped in NavigationContext.
 //
 // Matter-bound detection uses matters.lookupSession(sessionId) — the
 // same probe MatterBackButton.tsx:29 uses (ADR-038 binding lookup).
@@ -90,14 +90,18 @@ export function useRightPaneVisibility(
   // whether the session is matter-bound. Same posture as MatterBackButton.
   if (matterRow === undefined) return HIDDEN;
 
-  const isMatterBound = matterRow !== null;
-  const routeDefault = isMatterBound;
-  const isExpanded = isRightPaneExpanded ?? routeDefault;
+  // Sprint 28 M1 (ADR-091): non-matter /pair (Forge, quick-chats) returns
+  // HIDDEN. Previously this branch mounted a rail-only collapsed pane —
+  // visually indistinguishable from a stranded post-toggle state, so
+  // lawyers reported "panel disappears" after clicking Edit.
+  if (matterRow === null) return HIDDEN;
+
+  const isExpanded = isRightPaneExpanded ?? true;
   return {
     isMounted: true,
     isExpanded,
-    areaId: matterRow?.area_id ?? null,
-    slug: matterRow?.slug ?? null,
+    areaId: matterRow.area_id,
+    slug: matterRow.slug,
     sessionId,
   };
 }

@@ -322,21 +322,28 @@ type ElectronAPI = {
   // setMode / toggleSlug drive SkillsSection (right pane); renderBlock is
   // the recipe-builder's prompt-enumeration helper (returns the `## Skills
   // available in this area` block or null when no slugs resolve).
-  skills: {
-    list: (areaId: string) => Promise<SkillsListResult>;
-    setMode: (
+  // Sprint 28 M2 (ADR-092): right-pane Tools section. Lists bundled-for-area
+  // MCPs (always-on) plus per-area installed integrations (toggleable). The
+  // toggle persists to area_overrides.enabled_mcps as { mode: 'deny', ids }.
+  tools: {
+    list: (areaId: string) => Promise<ToolsListResult>;
+    toggle: (
       areaId: string,
-      mode: SkillMode,
+      id: string,
+      enabled: boolean,
     ) => Promise<
-      | { ok: true; mode: SkillMode }
+      | { ok: true; enabled: boolean }
       | { ok: false; code: string; message: string }
     >;
-    toggleSlug: (
+  };
+  skills: {
+    list: (areaId: string) => Promise<SkillsListResult>;
+    toggle: (
       areaId: string,
       slug: string,
-      included: boolean,
+      enabled: boolean,
     ) => Promise<
-      | { ok: true; slugs: string[] }
+      | { ok: true; enabled: boolean }
       | { ok: false; code: string; message: string }
     >;
     delete: (
@@ -448,6 +455,22 @@ export interface SkillEntry {
 export interface SkillsListResult {
   mode: SkillMode;
   skills: SkillEntry[];
+}
+
+// Sprint 28 M2 (ADR-092): right-pane Tools section. Bundled-for-area MCPs
+// surface with source='bundled' and a static enabled=true (always-on);
+// per-area installed integrations surface with source='installed' and an
+// enabled state computed from area_overrides.enabled_mcps.
+export interface ToolEntry {
+  id: string;
+  displayName: string;
+  description: string;
+  source: 'bundled' | 'installed';
+  enabled: boolean;
+}
+
+export interface ToolsListResult {
+  tools: ToolEntry[];
 }
 
 // Sprint 20-M6 (ADR-087): result shape for window.electron.skills.stageForReview.
@@ -699,12 +722,15 @@ const electronAPI: ElectronAPI = {
     renderBlock: (relPaths: readonly string[], charCap: number) =>
       ipcRenderer.invoke('oscar:playbooks:render-block', relPaths, charCap),
   },
+  tools: {
+    list: (areaId: string) => ipcRenderer.invoke('oscar:tools:list', areaId),
+    toggle: (areaId: string, id: string, enabled: boolean) =>
+      ipcRenderer.invoke('oscar:tools:toggle', areaId, id, enabled),
+  },
   skills: {
     list: (areaId: string) => ipcRenderer.invoke('oscar:skills:list', areaId),
-    setMode: (areaId: string, mode: SkillMode) =>
-      ipcRenderer.invoke('oscar:skills:set-mode', areaId, mode),
-    toggleSlug: (areaId: string, slug: string, included: boolean) =>
-      ipcRenderer.invoke('oscar:skills:toggle-slug', areaId, slug, included),
+    toggle: (areaId: string, slug: string, enabled: boolean) =>
+      ipcRenderer.invoke('oscar:skills:toggle', areaId, slug, enabled),
     delete: (areaId: string, slug: string) =>
       ipcRenderer.invoke('oscar:skills:delete', areaId, slug),
     renderBlock: (areaId: string) =>

@@ -14,6 +14,34 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 28 — Right-panel polish: Edit-bug fix + Tools section + Skills toggle clarity (closed 2026-05-24 on code)
+
+**Goal**: Three load-bearing issues raised by Arturs on the post-M8 right pane: (1) clicking the M7 Edit link "makes the panel disappear forever, restart does not help"; (2) "no clear distinction between tools and skills" — Tools (MCPs like Redlining/Adeu) and Skills (SKILL.md files) compete for the same Skills section; (3) the All/Allow/Deny pill plus chip-label inversion (`mode === 'allow' ? !skill.enabled : skill.enabled`) makes the Skills mode ambiguous. Per-milestone CC visual verification on lq-vps; single .deb at sprint close.
+
+**Built**
+
+- **M1 — pane visibility recovery (ADR-091)**. `useRightPaneVisibility` now returns HIDDEN for non-matter `/pair` routes (Forge, quick-chats) — previously these mounted a 32-px rail-only strip visually indistinguishable from a stranded-collapsed state, so lawyers read it as "panel disappeared". Dropped `electron-settings` persistence of `isRightPaneExpanded` in `NavigationContext`: state lives only in React memory; default `null` honours route default (always-expanded on matter). Pre-existing stale persisted falses are silently ignored. Visual: `docs/screenshots/sprint-28-m1/` 4 states (matter-open / forge / back-to-matter / restart).
+
+- **M2 — Tools section (ADR-092)**. Extended the closed `PanelSectionId` union with `Tools`. New `ToolsSection.tsx` lists MCPs the agent has for this matter: universal bundled (`oscar-fs`, `computercontroller`, `Tavily`) plus Commercial-only `redline` (Adeu) — all read-only "Always on" — plus per-area installed integrations (toggleable on/off, default on). New IPCs `oscar:tools:list` + `oscar:tools:toggle` (main.ts); preload bridge `window.electron.tools`. `practiceAreaShapes.ts` inserts `Tools` between `MatterFacts`/`ProgrammeFacts` and `Skills` in every area's `defaultPanelSections`. Toggle persists to `area_overrides.enabled_mcps = { mode: 'deny', ids: [...disabled] }` — reuses M7's filter shape at `MattersLanding.tsx:174-180`, no recipe-builder change. Visual: `docs/screenshots/sprint-28-m2/` 4 states (default Commercial / installed Slack / toggled off / Privacy without redline).
+
+- **M3 — Skills toggle simplification (ADR-093)**. Dropped the M5 tri-mode pill from `SkillsSection.tsx`; collapsed `oscar:skills:set-mode` + `oscar:skills:toggle-slug` into a single `oscar:skills:toggle(areaId, slug, enabled)`. Chip text is now plain "On" / "Off". Every write normalises to the deny-shape `enabled_skills = { mode: 'deny', slugs: [...disabled] }`; existing 'all' / 'allow' rows continue rendering correctly via `joinSkills` (`skillStore.ts:111`) and migrate on first toggle. Visual: `docs/screenshots/sprint-28-m3/` 3 states (default all-On / two toggled-off / persists across restart).
+
+- **M4 — visual polish**. `.oscar__skills-name` `word-break: break-all` → `overflow-wrap: anywhere` (kebab-slugs no longer split mid-word). `toasts.tsx` `position: 'top-right'` → `'top-center'` for all toasts — the extension-loading toast had been overlapping the pane's LOADOUT eyebrow + Edit link on every matter open. Visual: `docs/screenshots/sprint-28-m4/` 2 states (no pane/toast overlap; long-slug skill computed-style overflowWrap=anywhere).
+
+- **M5 — .deb + this entry**. `pnpm bundle:oscar-linux` → `out/make/deb/x64/oscar-gc_1.34.0_amd64.deb` (260 MB). Per-sprint code gate `tsc --noEmit` clean throughout.
+
+**ADRs**: 091, 092, 093.
+
+**Deferred**: nothing scoped. Adjacent threads that surfaced but stayed out per the plan: Forge Mode C/D deep-link UX, sidebar, recipe-injection prompt copy, cross-agent All-Skills view, walker-fork hard-scoping.
+
+**Carry-forwards**: stale ADR references in code comments — `main.ts:2993` mentions a non-existent "ADR-091: area-level archive destination" (Sprint 20-M8 actually landed under ADR-090) and `preload.ts:371` mentions "ADR-092" for the LLP firm-mode (also no such ADR). Both pre-date Sprint 28 and are cosmetic; cleanup is a one-line edit if it bothers anyone. Sub-recipes copy step in dev: `pnpm package` (the lighter build path) fails until `ui/desktop/sub-recipes/` is copied to `ui/desktop/src/resources/sub-recipes/` — `prepare-oscar-bundle.js` (only run by `bundle:oscar-linux`) handles this. A `prepare-sub-recipes-only.js` mini-step before `package` would close the gap.
+
+**Crostini dogfood**: Arturs hand-test against six exit criteria (1) Commercial matter shows Matter Facts → Tools → Skills → Playbooks → History in that order; (2) Edit → Forge round-trip → pane visible on return + after restart; (3) Toggle Tool off → re-open matter → recipe omits; (4) Toggle Skill off → clear ON/OFF labels; (5) Long skill names wrap on hyphens not mid-word + toast doesn't collide with LOADOUT/Edit; (6) installs cleanly.
+
+**Commits**: this commit.
+
+---
+
 ### Sprint 27 — Per-partner conversation history on the Oscar LLP roster (closed 2026-05-22 on code)
 
 **Goal**: Evolve the `/oscar-llp` partner roster from one-bound-session-per-partner to multiple-sessions-per-partner. The Sprint 21 Crostini dogfood (Arturs, 2026-05-20) surfaced this as the load-bearing UX gap: "I want multiple sessions per partner. Right now clicking Sarah Chen always opens the same conversation. History should be on the Oscar LLP screen." No sidebar tree extension, no right-pane bolt-on, no Rust touch, no `main` rebase.

@@ -51,8 +51,10 @@ interface NavigationContextValue {
   isChatExpanded: boolean;
   setIsChatExpanded: (expanded: boolean) => void;
   // Sprint M1 (ADR-069): right-pane sticky toggle. null = honor route
-  // default (true on matter-bound /pair, false elsewhere); explicit boolean
-  // sticks across routes and restarts. Persisted via electron settings.
+  // default (true on matter-bound /pair). Sprint 28 M1 (ADR-091): dropped
+  // electron-settings persistence — pane visibility is a session-local
+  // chevron state; persisting it caused permanent stranding when stale
+  // false outlived the route shape that justified it.
   isRightPaneExpanded: boolean | null;
   setIsRightPaneExpanded: (expanded: boolean) => void;
 }
@@ -130,24 +132,11 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
     return stored !== 'false';
   });
 
-  // Sprint M1 (ADR-069): right-pane sticky toggle. Async-loaded from
-  // electron settings on mount (no localStorage source — new key, no
-  // lazy-migration). Initial null is intentional: null = honor route default.
+  // Sprint 28 M1 (ADR-091): in-memory only. Default null = honor route
+  // default. Chevron toggles within a session; cleared on restart.
   const [isRightPaneExpanded, setIsRightPaneExpandedState] = useState<
     boolean | null
   >(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    window.electron.getSetting('isRightPaneExpanded').then((v) => {
-      if (!cancelled && v !== null && v !== undefined) {
-        setIsRightPaneExpandedState(v);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${RESPONSIVE_BREAKPOINT - 1}px)`);
@@ -193,7 +182,6 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
 
   const setIsRightPaneExpanded = useCallback((expanded: boolean) => {
     setIsRightPaneExpandedState(expanded);
-    void window.electron.setSetting('isRightPaneExpanded', expanded);
   }, []);
 
   const isNavExpandedRef = useRef(isNavExpanded);
