@@ -1,0 +1,35 @@
+# DRAFT — FOR RELATIONSHIP LEAD TO SEND
+
+---
+
+**To:** Cypress Legal Team  
+**Cc:** [Internal relationship lead]  
+**Subject:** Re: Mutual Non-Disclosure Agreement — Feedback
+
+---
+
+Hi [Counsel],
+
+Thanks for sending over the NDA. We've reviewed it with our legal team and would like to propose three refinements to move this forward:
+
+**1. Term and survival.**
+The Agreement currently operates in perpetuity with no fixed expiry. We'd propose a fixed term of 2–3 years with survival obligations of 3 years post-disclosure — standard for NDAs of this type. This provides meaningful protection while giving both parties clarity on when obligations conclude.
+
+**2. Residuals carve-out.**
+The Agreement excludes any carve-out for residual information retained in the unaided memory of personnel. We'd request the standard carve-out — that individuals may use general knowledge, skills, and experience retained in memory without obligation of confidence. This is customary and doesn't diminish the protection on formally designated confidential information.
+
+**3. Reverse engineering.**
+The no reverse-engineering clause goes beyond what we typically see in a standard NDA. We'd suggest removing this provision, or limiting it to specifically identified software/source code disclosures rather than a blanket prohibition.
+
+Our general counsel is comfortable with California governing law and the equitable relief provision as drafted.
+
+Happy to jump on a call to discuss. Please let me know your thoughts.
+
+Best,  
+[Relationship Lead]  
+[Title]  
+Stanford Industrial Supply Co.
+
+---
+
+*References: nda-cypress-saas.docx (matter ADR-038)*

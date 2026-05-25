@@ -6,6 +6,9 @@
  * Subcommands:
  *   launch <session>     spawn the app, wait for chat input, capture
  *                        greeting + initial screenshot, log app PID
+ *   boot <session>       spawn the app, wait only for root mount (no
+ *                        onboarding chat wait). Use when a profile is
+ *                        pre-seeded and the app lands on Hub directly.
  *   send <text>          fill input, click send, wait for agent reply to
  *                        stabilise, screenshot, log the turn
  *                        (targets the onboarding Editorial chat selectors:
@@ -20,6 +23,10 @@
  *                        — [data-testid="chat-input"] + Enter. Waits for the
  *                        assistant turn(s) to settle, screenshots.
  *   pair-read            print BaseChat turns currently in the DOM
+ *   eval <js>            evaluate JS in the renderer (await-able); prints
+ *                        the resolved value. Used to drive Oscar IPC bridges
+ *                        (e.g. window.electron.matters.create) from outside
+ *                        the UI dialog flow when test setup needs determinism.
  *   screenshot <label>   capture a labelled screenshot without sending
  *   read                 print all chat turns currently in the DOM
  *   status               print app PID, profile-file presence, turn count
@@ -197,6 +204,62 @@ async function launch(session) {
     console.log(`[greeting] ${t}`);
   }
   console.log(`[launch] session=${session} pid=${proc.pid} ready (turns=${greeting.length})`);
+  await browser.close();
+}
+
+async function boot(session) {
+  ensureStateDir();
+  fs.writeFileSync(SESSION_FILE, session);
+  fs.writeFileSync(COUNTER_FILE, '1');
+  fs.writeFileSync(TURNS_FILE, '[]');
+
+  if (!fs.existsSync(PACKAGED_BINARY)) {
+    throw new Error(`binary not found: ${PACKAGED_BINARY}`);
+  }
+
+  const outFd = fs.openSync(APP_LOG, 'a');
+  const errFd = fs.openSync(APP_ERR, 'a');
+  const proc = spawn(PACKAGED_BINARY, ['--no-sandbox'], {
+    cwd: path.dirname(PACKAGED_BINARY),
+    stdio: ['ignore', outFd, errFd],
+    detached: true,
+    env: {
+      ...process.env,
+      ENABLE_PLAYWRIGHT: 'true',
+      PLAYWRIGHT_DEBUG_PORT: String(DEBUG_PORT),
+    },
+  });
+  proc.unref();
+  fs.writeFileSync(PID_FILE, String(proc.pid));
+
+  let browser = null;
+  for (let i = 0; i < 600; i++) {
+    try {
+      browser = await chromium.connectOverCDP(`http://127.0.0.1:${DEBUG_PORT}`);
+      break;
+    } catch {
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  if (!browser) throw new Error('CDP never came up');
+
+  const ctx = browser.contexts()[0];
+  let page = null;
+  for (let i = 0; i < 200; i++) {
+    page = ctx.pages()[0];
+    if (page) break;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  if (!page) throw new Error('no page after CDP up');
+
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForFunction(() => document.getElementById('root')?.children.length > 0, { timeout: 30000 });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await dismissTelemetryIfVisible(page);
+  await page.waitForTimeout(1200);
+
+  await takeScreenshot(page, 'boot-ready');
+  console.log(`[boot] session=${session} pid=${proc.pid} ready`);
   await browser.close();
 }
 
@@ -384,6 +447,22 @@ async function pairRead() {
   }
 }
 
+async function evalJs(code) {
+  if (!code) throw new Error('empty code');
+  const { browser, page } = await connect();
+  try {
+    const wrapped = `(async () => { ${code} })()`;
+    const result = await page.evaluate(wrapped);
+    if (result === undefined) {
+      console.log('[eval] ok (no return value)');
+    } else {
+      console.log('[eval-result]', JSON.stringify(result, null, 2));
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
 async function status() {
   const pid = fs.existsSync(PID_FILE) ? fs.readFileSync(PID_FILE, 'utf8').trim() : null;
   let alive = false;
@@ -427,11 +506,13 @@ const arg = process.argv.slice(3).join(' ');
 
 const action = {
   launch: () => launch(arg || 'primary'),
+  boot: () => boot(arg || 'primary'),
   send: () => sendMessage(arg),
   click: () => click(arg),
   goto: () => goto(arg),
   'pair-send': () => pairSend(arg),
   'pair-read': () => pairRead(),
+  eval: () => evalJs(arg),
   read: () => readState(),
   screenshot: () => screenshot(arg),
   status: () => status(),
@@ -439,7 +520,7 @@ const action = {
 }[cmd];
 
 if (!action) {
-  console.error('usage: launch <session> | send <text> | click <selector> | goto <route> | pair-send <text> | pair-read | read | screenshot <label> | status | quit');
+  console.error('usage: launch <session> | boot <session> | send <text> | click <selector> | goto <route> | pair-send <text> | pair-read | eval <js> | read | screenshot <label> | status | quit');
   process.exit(2);
 }
 

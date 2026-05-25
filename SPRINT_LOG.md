@@ -14,6 +14,38 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 30 — Dogfood: RFQ + 10-NDA wiring uptake measurement (closed 2026-05-25)
+
+**Goal**: Dogfood-only sprint. No product code lands. Test whether the wiring landed by Sprint 29 M6 ([[ADR-099]] on-demand playbook discovery), Sprint 20 M5 ([[ADR-086]] skill enumeration), Sprint 28 ([[ADR-092]] Tools section), and Sprint 18 ([[ADR-063]] default-on `summon`) is *used* by MiniMax-M2.5 on two real Commercial workflows: (1) RFQ pack review + redline; (2) 10 NDA batch triage. Success criterion: not legal-substance accuracy — exposure-and-uptake of the wired affordances.
+
+**Built (test reports + ADR-101 measurement)**
+
+- **Test 1 — RFQ review + redline (`docs/sprint-30/test-1-rfq/`)**. 7-doc fictional Pemberton Engineering RFQ pack (cover letter + draft MSA with seeded asymmetries + pricing schedule + SLA + GTCs + compliance annex + RFP questionnaire) + 1 late-drop supplementary T&Cs PDF + a generic RFQ-review playbook (Commercial scope, off-always-on). 5 turns + late-drop interleave + redline ask. Session `20260525_12`, 61 messages, 18 tool calls. **Findings**: agent listed dir + read 4 PDFs + 2 DOCXs + matter.md unprompted; did NOT consult the on-demand playbook; did NOT invoke any named skill; did NOT delegate; DID find the late-drop file unprompted on a vague re-prompt; DID construct a valid 7-change `redline__process_document_batch` call but the bundled-binary's adeu venv was missing in the zip build (deploy gap — `.deb`'s postinst creates it; zip build does not). Spot-check on isolated matter `20260525_13` after manually creating the venv: redline path works end-to-end (18.5 KB redlined DOCX, 6 edits applied). Cost $0.51 ($0.46 Pemberton + $0.05 validation).
+
+- **Test 2 — 10 NDAs simultaneously (`docs/sprint-30/test-2-ndas/`)**. 10 fictional NDA DOCX fixtures generated via python-docx with substantive variation (mutual/bilateral, term length, CI definition, residuals carve-out, governing law, beyond-confidentiality clauses) + an on-demand NDA-review playbook (Commercial scope, off-always-on, separate from the bundled `nda-review` skill — per plan §2 to distinguish skill-invoked vs playbook-read). 3 turns, 6-then-4 wave pattern. Session `20260525_14`, 60 messages, 21 tool calls. **Findings**: agent processed all 10 NDAs SERIALLY (no `delegate` calls — load-bearing negative finding for the multi-agent question); used `redline__read_docx` (12 reads wave 1 outline+full + 4 reads wave 2 full-only — picking up the Sprint 9 ADR-020 "always read before you redline" doctrine on a triage task); did NOT consult the NDA playbook; did NOT invoke `nda-review` skill by name; correctly identified the wave-2 4 new files without re-doing wave-1; Turn 3 counterparty email drawn from prior analysis without re-reading. Verdict spread: 5 GREEN / 2 YELLOW / 3 RED, matching designed-verdict intent at 7/10 (2 came out one notch stricter). Cost $0.12.
+
+- **ADR-101 ([[ADR-101]])**. Findings ADR (~50 lines) cataloguing the seven measurement findings (on-demand playbook unused; skill enumeration unused; `summon` unused on parallelisable task; tool surfaces used when well-described; late-drop handled cleanly; per-session memory carries; zip-build deploy gap; `developer` exposure doctrine violation) with priority-ordered Sprint 31 candidates (A: `developer` exposure investigation; B: sharpen playbook/skill discovery signals; C: re-scope ADR-020 "always read" doctrine; D: zip-build venv parity; E: probe multi-agent uptake).
+
+**Scaffolding**: two non-product subcommands added to `ui/desktop/scripts/dogfood-driver.mjs` (`boot` — spawn binary without waiting for onboarding chat input; `eval` — run JS in renderer, used to drive `window.electron.matters.create`/`setActive` deterministically). Test-harness only; lives in `scripts/`, not `src/`. Extraction helper `docs/sprint-30/extract-transcript.py` (Python sqlite3 reader for sessions.db → transcript.json + tool-timeline.md).
+
+**ADRs**: 101.
+
+**Deferred**: nothing scoped within the brief. Per brief's "out of scope" list: fixing what surfaced (Sprint 31's job); matter-folder watcher (late-drop friction measured low — sprint 31 candidate confirmed-low-priority); recipe-builder / Sprint 29 ADR surfaces (test targets, not change targets).
+
+**Carry-forwards**:
+
+- **Sprint 31 candidate set per ADR-101** in priority order — `developer` exposure investigation is the smallest-and-most-load-bearing.
+- **Zip-build venv parity** — `prepare-oscar-bundle.js` should mirror the `.deb`'s postinst venv creation so dogfood on zip binaries works first-time without manual remediation.
+- **Fixture-generation note** — weasyprint-generated PDFs extract as hex-escaped junk via pdftotext (used by `computercontroller__pdf_tool`). Did not invalidate this sprint's wiring test but worth swapping to wkhtmltopdf or similar if PDF-rich fixtures recur.
+
+**Cost discipline**: total MiniMax spend $0.63 across both tests + redline validation (6.3% of $10/PCM cap). Well under brief's $3 hard-pause threshold.
+
+**Test conditions**: MiniMax-M2.5 default settings; Xvfb `:99`; packaged binary at `ui/desktop/out/Oscar-GC-linux-x64/oscar-gc` (Sprint 29 M8 zip build); `AGENT_TIMEOUT_MS=900000`. Persona: Helena Marwick, General Counsel, Stanford Industrial Supply Co. (UK + EU industrial-distribution).
+
+**Commits**: this commit.
+
+---
+
 ### Sprint 29 — Right-pane Crostini polish: five issues + multi-chat research (closed 2026-05-25 on code)
 
 **Goal**: Arturs's 2026-05-25 Crostini dogfood on the Sprint 28 build surfaced five issues (Skills clarity, Skills toggle bug, Redlining stub redundancy, playbook visibility, Edit-only-routes-to-Forge), plus the new directory-shape ask for Skills (Issue 6), plus the research-only multi-chat-per-matter scoping pass (Issue 7). Per-milestone Xvfb visual verification on lq-vps; single .deb at sprint close.
