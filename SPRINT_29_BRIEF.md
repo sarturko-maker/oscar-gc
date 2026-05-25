@@ -29,6 +29,16 @@ five first; the next-comments tranche becomes a follow-up brief.
 >
 > I will have more comments but let's deal with these first.
 
+> (6) Skills should be a directory in the side panel. You click on it and
+> there are default skills that ship with Oscar GC and the custom ones that
+> a user creates. The ones that are switched on are visible in the main
+> panel not behind a directory? Makes sense?
+>
+> (7) Also, can we have multiple chats stored under one matter not one long
+> chat conversation? What would this do to the model context? You cannot
+> load the entire convo — does Goose compact it automatically? For next CC
+> session to review.
+
 ## The five issues
 
 ### 1. Edit needs a choice — manual edit OR open Forge
@@ -172,16 +182,113 @@ isn't *new mechanism* but *make the existing on-demand path visible to the
 agent and the lawyer*. Don't build Layer 3 in this sprint — that's a
 separate body of work.
 
+### 6. Skills section as directory + active-skills-on-the-surface
+
+**What's there now.** Sprint 28's Skills section lists every skill in scope
+for the area — bundled and user-added, on and off, in one flat list with
+per-row toggles. Even on Commercial (~9 bundled skills) it's a visually
+heavy block. On areas with richer libraries it'll get heavier.
+
+**What Arturs wants.** Two-zone shape:
+
+- *On the surface, in the pane*: the small set of skills currently
+  *enabled* for this matter. Lawyer glances at the pane and sees what
+  the agent will actually use.
+- *Behind a "directory" affordance*: everything available — bundled
+  defaults + custom skills the lawyer has created via Forge. This is
+  the management surface: browse, toggle on/off, delete custom ones.
+
+**Why it lands.** The current shape is a *settings* view masquerading as
+a *status* view. Lawyers reading the pane want to know "what does my
+agent have right now", not "everything that exists and which slice is
+enabled". Splitting the two zones answers each question cleanly.
+
+**Open question.** Does the same logic apply to **Tools**? Arturs only
+said Skills, but Tools today is structurally identical (bundled + per-area
+installed, all rendered in one list). Worth confirming with him before
+landing — the symmetry is appealing but may not be wanted.
+
+**Directional.** "Directory" doesn't have to mean a route change. A
+collapsed sub-block inside the existing Skills section, expanding inline,
+is probably enough. Think drawer not modal — keep it lightweight, in the
+pane, no navigation. Title the surface zone something like "In this matter"
+and the directory zone "All skills".
+
+### 7. Multi-chat per matter — research + scoping required
+
+**What Arturs wants.** Multiple discrete chats stored under one matter,
+not one ever-growing single conversation. Mirrors a real lawyer's workflow
+— same matter, different sub-questions ("draft the indemnity carve-out"
+vs. "review the side-letter terms" vs. "the new redline came back, walk
+me through changes"). Today the matter has one bound session that
+accumulates everything.
+
+**Why it matters.** Two angles. **UX**: a 6-month-old matter that's been
+worked on intermittently becomes a single 200-turn log impossible to
+re-orient inside. **Context**: a fresh chat per sub-question gives the
+agent a clean working memory for that question without dragging in
+unrelated prior turns.
+
+**Open questions Arturs flagged.** What does this do to model context?
+You can't load the entire conversation history into every new chat.
+Does Goose compact it automatically?
+
+**What needs answering before scoping.**
+
+- *Goose's built-in compaction.* Per CLAUDE.md "Upstream Goose
+  authoritative reference" — the next session must consult
+  `goose-docs.ai` for session / context-preservation features before
+  designing. Sprint 27 evidence (per-partner multi-session) suggests
+  Goose does handle context — partners pick up on next sessions with
+  some context awareness — but the exact mechanism (auto-compaction,
+  summary-on-spawn, manual /compact, none-of-the-above) needs
+  verifying from source, not assumed.
+- *Matter-level memory vs. session-level memory.* Top of Mind (ADR-044)
+  already gives each session the matter facts at spawn — that's the
+  minimum context floor for a fresh chat under a matter. The richer
+  question is whether prior chats' *content* should surface in some
+  form (summary? embeddings? user-curated key-decisions log written to
+  matter.md?). Sprint 27 didn't tackle this for partners; matters
+  might not need to either if the matter folder + Top of Mind do
+  enough.
+- *Sprint 27's pattern.* Per-partner conversation history landed as
+  `partners.json` schema v2 (`sessions: [{id, label?}, ...]`) with
+  PREPEND-on-bind + dedupe-by-id; OscarLLPRoster grew an inline
+  session list per card. The same pattern almost certainly applies to
+  matters — `matters.json[slug].sessions: [{id, label?}, ...]` instead
+  of `matters.json[slug].session_id` — but the migration touches a
+  lot more code paths than the Oscar LLP one did (matter back-button,
+  Top of Mind set-active, sidebar chat history tree, the
+  matter-bound-session lookup used by `useRightPaneVisibility`).
+
+**Suggested split.**
+
+- *Sprint 29*: research only. Read Goose's session / compaction source,
+  document findings in an ADR-shaped memo, sketch the schema migration
+  + UI shape, identify the affected surfaces. Don't ship — the answer
+  to "does Goose compact" determines whether the UI is "fresh chat,
+  Goose handles continuity" or "fresh chat, but Oscar GC needs to
+  inject summary context."
+- *Sprint 30+*: implement based on Sprint 29's research outcome.
+
+**Think deeply about this** — the Arturs question "what does this do to
+model context" is the load-bearing one. Get the answer from Goose source
+before designing the UI.
+
 ## Sprint shape
 
-- Five fixes, each with its own milestone + Xvfb visual verification per
-  Sprint 28's pattern. Issues 1, 2, 4 are scoped UI work. Issue 3 is a bug
-  fix with a regression-test addition. Issue 5 is part inspection, part
-  potentially a small wiring patch.
-- Single .deb at sprint close for Arturs's Crostini hand-test.
+- Issues 1, 2, 3, 4, 6 are scoped UI / bug-fix work — each gets its own
+  milestone + Xvfb visual verification per Sprint 28's pattern.
+- Issue 5 is part inspection, part potentially a small wiring patch (the
+  agent-knows-about-on-demand-playbooks question).
+- Issue 7 is **research-only this sprint**: read Goose source for
+  session / compaction behaviour, sketch schema + UI, write an ADR-shaped
+  memo. Implementation deferred to Sprint 30+ pending findings.
+- Single .deb at sprint close for Arturs's Crostini hand-test (covers
+  issues 1–6; #7 ships nothing).
 - Per-milestone visual inspection by CC on lq-vps is mandatory — Arturs's
   Sprint 28 RULE carries forward.
-- Numbered Sprint 29; ADRs allocated 094, 095, 096 if needed
+- Numbered Sprint 29; ADRs allocated 094, 095, 096+ as needed
   (single-decision-per-ADR per CLAUDE.md).
 
 ## Carry-forwards from Sprint 28 the new session should know
