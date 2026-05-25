@@ -15,6 +15,8 @@ export interface UsePanelReaderOptions {
 export interface UsePanelReaderResult<T> {
   data: T | null;
   error: Error | null;
+  /** Trigger an immediate re-fetch outside the poll cycle. */
+  refresh: () => Promise<void>;
 }
 
 export function usePanelReader<T>(
@@ -26,20 +28,21 @@ export function usePanelReader<T>(
   const [error, setError] = useState<Error | null>(null);
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
+  const activeRef = useRef(true);
 
   const pollMs = options?.pollMs ?? DEFAULT_POLL_MS;
 
   useEffect(() => {
-    let active = true;
+    activeRef.current = true;
 
     const tick = async () => {
       try {
         const next = await fetcherRef.current();
-        if (!active) return;
+        if (!activeRef.current) return;
         setData(next);
         setError(null);
       } catch (err) {
-        if (!active) return;
+        if (!activeRef.current) return;
         setError(err instanceof Error ? err : new Error(String(err)));
       }
     };
@@ -48,7 +51,7 @@ export function usePanelReader<T>(
     const interval = setInterval(() => void tick(), pollMs);
 
     return () => {
-      active = false;
+      activeRef.current = false;
       clearInterval(interval);
     };
     // deps is the caller-supplied dependency list — the lint rule can't
@@ -56,5 +59,17 @@ export function usePanelReader<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, pollMs]);
 
-  return { data, error };
+  const refresh = async (): Promise<void> => {
+    try {
+      const next = await fetcherRef.current();
+      if (!activeRef.current) return;
+      setData(next);
+      setError(null);
+    } catch (err) {
+      if (!activeRef.current) return;
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  };
+
+  return { data, error, refresh };
 }

@@ -279,6 +279,60 @@ function truncateAtBoundary(text: string, budget: number): string {
   return head.slice(0, cutAt).trimEnd() + TRUNCATION_SENTINEL;
 }
 
+// Sprint 29 M6 (ADR-099): on-demand playbook discovery block. Lists
+// every non-always-on playbook for the area so the agent knows what to
+// reach for via oscar-fs / computercontroller. Cheap: filename + size +
+// scope for everything; first-line peek for text formats only.
+export async function renderOnDemandPlaybooksBlock(
+  areaId: string,
+  alwaysOn: readonly string[],
+): Promise<string | null> {
+  const items = await listPlaybooks(areaId, alwaysOn);
+  const onDemand = items.filter((it) => !it.alwaysOn);
+  if (onDemand.length === 0) return null;
+
+  const lines: string[] = [];
+  for (const it of onDemand) {
+    const scopeLabel = it.scope === 'global' ? 'global' : 'this area';
+    const sizeKb =
+      it.sizeBytes < 1024
+        ? `${it.sizeBytes} B`
+        : `${Math.round(it.sizeBytes / 1024)} KB`;
+    let hint = '';
+    if ((TEXT_EXTS as readonly string[]).includes(extOf(it.filename))) {
+      hint = await peekFirstLine(path.join(PLAYBOOKS_ROOT, it.relPath));
+    }
+    const hintSuffix = hint ? ` — ${hint}` : '';
+    lines.push(`- \`${it.relPath}\` (${scopeLabel}, ${sizeKb})${hintSuffix}`);
+  }
+  return [
+    '## On-demand playbooks',
+    '',
+    'These playbooks live in `~/.config/oscar/playbooks/`. They are NOT auto-injected;',
+    'load any that apply to the question via `oscar-fs__read_file` (text formats) or',
+    "computercontroller's `pdf_tool` / `docx_tool` (binary formats). Filenames are the",
+    'load-bearing signal — pick by purpose.',
+    '',
+    ...lines,
+  ].join('\n');
+}
+
+const FIRST_LINE_MAX = 80;
+
+async function peekFirstLine(absPath: string): Promise<string> {
+  try {
+    const raw = await fs.readFile(absPath, 'utf8');
+    for (const line of raw.split('\n')) {
+      const t = line.trim().replace(/^#+\s*/, '').replace(/<!--.*?-->/g, '').trim();
+      if (t.length === 0) continue;
+      return t.length > FIRST_LINE_MAX ? `${t.slice(0, FIRST_LINE_MAX - 1)}…` : t;
+    }
+  } catch {
+    // ignore — fall through to no hint
+  }
+  return '';
+}
+
 export function absPathForRel(relPath: string): string {
   // relPath is "<scope>/<filename>" with POSIX separator. Reject anything
   // else as a path-traversal attempt.

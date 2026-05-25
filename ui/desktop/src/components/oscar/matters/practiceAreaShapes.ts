@@ -175,7 +175,7 @@ const COMMERCIAL: PracticeAreaShape = {
     },
   ],
   privileged: { fallback: false },
-  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'Redlining', 'History'],
+  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 const COMMERCIAL_DISPUTES: PracticeAreaShape = {
@@ -214,7 +214,7 @@ const COMMERCIAL_DISPUTES: PracticeAreaShape = {
     { key: 'internal_owner', label: 'Internal owner (BU / team)', placeholder: 'Sales — EMEA' },
   ],
   privileged: { fallback: true },
-  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'Forum', 'History'],
+  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 const CORPORATE: PracticeAreaShape = {
@@ -363,7 +363,7 @@ const EMPLOYMENT_DISPUTES: PracticeAreaShape = {
     { key: 'forum', label: 'Forum / tribunal', placeholder: 'London Central ET / EAT / ACAS' },
   ],
   privileged: { fallback: true },
-  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'Forum', 'History'],
+  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 const PRIVACY: PracticeAreaShape = {
@@ -444,7 +444,7 @@ const PRIVACY: PracticeAreaShape = {
     },
     fallback: false,
   },
-  defaultPanelSections: ['ProgrammeFacts', 'Tools', 'Skills', 'Playbooks', 'Deadlines', 'History'],
+  defaultPanelSections: ['ProgrammeFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 const IP: PracticeAreaShape = {
@@ -529,7 +529,7 @@ const IP_DISPUTES: PracticeAreaShape = {
     { key: 'forum', label: 'Forum / office', placeholder: 'EUIPO / UKIPO / Court' },
   ],
   privileged: { fallback: true },
-  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'Forum', 'History'],
+  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 const REGULATORY: PracticeAreaShape = {
@@ -572,7 +572,7 @@ const REGULATORY: PracticeAreaShape = {
     defaultByKind: { inquiry: true, audit_response: true },
     fallback: false,
   },
-  defaultPanelSections: ['ProgrammeFacts', 'Tools', 'Skills', 'Playbooks', 'Deadlines', 'History'],
+  defaultPanelSections: ['ProgrammeFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 const REGULATORY_DISPUTES: PracticeAreaShape = {
@@ -609,7 +609,7 @@ const REGULATORY_DISPUTES: PracticeAreaShape = {
     ],
   },
   privileged: { fallback: true },
-  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'Forum', 'Deadlines', 'History'],
+  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 const PRODUCT: PracticeAreaShape = {
@@ -721,7 +721,7 @@ const AI_GOVERNANCE: PracticeAreaShape = {
     defaultByKind: { incident_review: true },
     fallback: false,
   },
-  defaultPanelSections: ['ProgrammeFacts', 'Tools', 'Skills', 'Playbooks', 'Deadlines', 'History'],
+  defaultPanelSections: ['ProgrammeFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 const COSEC: PracticeAreaShape = {
@@ -778,7 +778,7 @@ const COSEC: PracticeAreaShape = {
     },
   ],
   privileged: { fallback: false },
-  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'Deadlines', 'History'],
+  defaultPanelSections: ['MatterFacts', 'Tools', 'Skills', 'Playbooks', 'History'],
 };
 
 export const PRACTICE_AREA_SHAPES: Record<string, PracticeAreaShape> = {

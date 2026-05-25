@@ -1195,6 +1195,12 @@ pre:has(> code.bg-inline-code) {
    eyebrow and the toggle chevron. Subtle mono italic copper; tiny so it
    sits below the eyebrow weight but stays readable as an affordance. */
 .oscar__right-pane-edit-link {
+  /* Sprint 29 M5 (ADR-098): same chrome as the prior <Link> but now a
+     <button> — the click toggles in-pane editing state instead of
+     deep-linking to Forge. */
+  background: transparent;
+  border: none;
+  cursor: pointer;
   font-family: var(--font-mono, 'IBM Plex Mono', monospace);
   font-size: 10px;
   font-style: italic;
@@ -1698,6 +1704,41 @@ pre:has(> code.bg-inline-code) {
   border-bottom: none;
 }
 
+/* Sprint 29 M4 (ADR-097): surface zone / directory zone scaffolding.
+   Each zone has a sub-eyebrow title; the directory zone's title is a
+   click target (the disclosure toggle). */
+.oscar__skills-zone {
+  margin-top: 4px;
+}
+
+.oscar__skills-zone:first-child {
+  margin-top: 0;
+}
+
+.oscar__skills-zone + .oscar__skills-zone {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.oscar__skills-zone-title {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.oscar__skills-directory-toggle {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.oscar__skills-directory-toggle:hover .oscar__skills-zone-title {
+  color: var(--ink-light);
+}
+
 .oscar__skills-name-block {
   grid-area: name;
   display: flex;
@@ -1707,12 +1748,13 @@ pre:has(> code.bg-inline-code) {
 }
 
 .oscar__skills-name {
-  font-family: var(--mono-editorial);
+  /* Sprint 29 M3 (ADR-096): mirror Tools row — sans-editorial 12/500
+     ink-light. The previous mono treatment read as a code identifier
+     against the humanised title; this aligns Skills with Tools. */
+  font-family: var(--sans-editorial);
   font-size: 12px;
+  font-weight: 500;
   color: var(--ink-light);
-  /* Sprint 28 M4: was word-break: break-all (split mid-word, e.g.
-     "amendment-his" / "tory"). overflow-wrap honours hyphens as
-     break points so kebab-slugs stay readable. */
   overflow-wrap: anywhere;
 }
 
@@ -3010,4 +3052,112 @@ pre:has(> code.bg-inline-code) {
   background: var(--paper);
   color: var(--ink);
   border-radius: 2px;
+}
+
+/* Sprint 29 M5 (ADR-098): in-pane MatterFactsEditor — labelled fields +
+   Save/Cancel + Forge entry footer. Keeps the editorial feel of the
+   pane (eyebrow labels + paper inputs) without modal chrome. */
+.oscar__matter-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.oscar__matter-edit-field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.oscar__matter-edit-field input[type='text'],
+.oscar__matter-edit-field select,
+.oscar__matter-edit-field textarea {
+  font-family: var(--sans-editorial);
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.oscar__matter-edit-field textarea {
+  font-family: var(--mono-editorial);
+  font-size: 11px;
+  resize: vertical;
+}
+
+.oscar__matter-edit-counterparty {
+  display: flex;
+  gap: 6px;
+}
+
+.oscar__matter-edit-counterparty select {
+  flex: 0 0 38%;
+}
+
+.oscar__matter-edit-counterparty input[type='text'] {
+  flex: 1 1 auto;
+}
+
+.oscar__matter-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.oscar__matter-edit-actions button {
+  font-family: var(--sans-editorial);
+  font-size: 11px;
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink-light);
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.oscar__matter-edit-actions button:last-child {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.oscar__matter-edit-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.oscar__matter-edit-forge {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-light);
+}
+
+.oscar__matter-edit-forge-button {
+  background: transparent;
+  border: none;
+  color: var(--copper);
+  font-family: var(--sans-editorial);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.oscar__matter-edit-forge-button:hover {
+  text-decoration: underline;
+}
+
+.oscar__matter-edit-forge-pitch {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin: 4px 0 0;
 }

@@ -9,10 +9,11 @@
 //
 // Sprint 28 M3 (ADR-093): the M5 tri-mode pill is dropped. Each row is a
 // per-skill on/off toggle; default-on by inheritance from the existing
-// 'all' mode in profile.json. Toggling persists to area_overrides
-// .enabled_skills as the deny shape (mode='deny' + ids = disabled set).
-// Mirrors Tools (M2). Resume semantics carried over from ADR-086.
-import { useCallback, useRef, useState, type DragEvent } from 'react';
+// 'all' mode in profile.json. Mirrors Tools (M2).
+//
+// Sprint 29 M4 (ADR-097): split into two zones — "In this matter" (enabled
+// only, surface) + "All skills" (everything, collapsed directory).
+import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRightPaneCoords } from '../RightPaneContext';
 import { usePanelReader } from './usePanelReader';
@@ -133,66 +134,123 @@ export default function SkillsSection({ sectionId }: PanelSectionProps) {
     [areaId],
   );
 
+  const enabledSkills = skills.filter((s) => s.enabled);
+  const surfaceEmpty = enabledSkills.length === 0;
+  const [directoryOpen, setDirectoryOpen] = useState(false);
+  // Auto-open the directory when the surface is empty so the lawyer
+  // sees what's available without an extra click. Closing manually
+  // sticks for the rest of the render until the surface fills.
+  const [userClosedWhileEmpty, setUserClosedWhileEmpty] = useState(false);
+  useEffect(() => {
+    if (!surfaceEmpty) setUserClosedWhileEmpty(false);
+  }, [surfaceEmpty]);
+  const directoryExpanded =
+    directoryOpen || (surfaceEmpty && !userClosedWhileEmpty);
+  const onToggleDirectory = useCallback(() => {
+    const next = !directoryExpanded;
+    setDirectoryOpen(next);
+    if (!next && surfaceEmpty) setUserClosedWhileEmpty(true);
+  }, [directoryExpanded, surfaceEmpty]);
+
   return (
     <section className="oscar__panel-section" data-section-id={sectionId}>
       <span className="oscar__eyebrow oscar__eyebrow--bare oscar__panel-section-title">
         {meta.title}
       </span>
       <div className="oscar__panel-section-body">
-        <div
-          className="oscar__skills-drop"
-          data-testid="skills-dropzone"
-          onDragOver={onDragOver}
-          onDrop={onDrop}
-          onClick={() => fileInputRef.current?.click()}
-          role="button"
-          tabIndex={0}
-          aria-label="Drop a SKILL.md or click to browse"
-          aria-busy={staging}
-        >
-          {staging
-            ? 'Staging…'
-            : 'Drop a SKILL.md — or click to browse.'}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".md"
-            style={{ display: 'none' }}
-            onChange={(e) => void handleStage(e.target.files)}
-            data-testid="skills-file-input"
-          />
-        </div>
-        {stageError && (
-          <p className="oscar__skills-upload-error" data-testid="skills-stage-error">
-            {stageError}
-          </p>
-        )}
         {opError && (
           <p className="oscar__skills-error" data-testid="skills-error">
             {opError}
           </p>
         )}
-        {skills.length === 0 ? (
-          <p className="oscar__skills-empty" data-testid="skills-empty">
-            {error
-              ? `List failed: ${error.message}`
-              : 'No skills available for this area.'}
-          </p>
-        ) : (
-          <ul className="oscar__skills-list" data-testid="skills-list">
-            {skills.map((s) => (
-              <SkillRow
-                key={s.slug}
-                skill={s}
-                busy={
-                  busy === `slug:${s.slug}` || busy === `delete:${s.slug}`
-                }
-                onToggle={() => void onToggle(s)}
-                onDelete={() => void onDelete(s)}
-              />
-            ))}
-          </ul>
-        )}
+        <div className="oscar__skills-zone" data-testid="skills-surface-zone">
+          <span className="oscar__eyebrow oscar__eyebrow--bare oscar__skills-zone-title">
+            In this matter
+          </span>
+          {surfaceEmpty ? (
+            <p className="oscar__skills-empty" data-testid="skills-surface-empty">
+              No skills enabled for this matter.
+            </p>
+          ) : (
+            <ul className="oscar__skills-list" data-testid="skills-surface-list">
+              {enabledSkills.map((s) => (
+                <SkillRow
+                  key={s.slug}
+                  skill={s}
+                  busy={busy === `slug:${s.slug}` || busy === `delete:${s.slug}`}
+                  onToggle={() => void onToggle(s)}
+                  onDelete={() => void onDelete(s)}
+                  variant="surface"
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="oscar__skills-zone" data-testid="skills-directory-zone">
+          <button
+            type="button"
+            className="oscar__skills-directory-toggle"
+            data-testid="skills-directory-toggle"
+            aria-expanded={directoryExpanded}
+            onClick={onToggleDirectory}
+          >
+            <span className="oscar__eyebrow oscar__eyebrow--bare oscar__skills-zone-title">
+              All skills {directoryExpanded ? '−' : '+'}
+            </span>
+          </button>
+          {directoryExpanded && (
+            <>
+              <div
+                className="oscar__skills-drop"
+                data-testid="skills-dropzone"
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+                onClick={() => fileInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+                aria-label="Drop a SKILL.md or click to browse"
+                aria-busy={staging}
+              >
+                {staging
+                  ? 'Staging…'
+                  : 'Drop a SKILL.md — or click to browse.'}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".md"
+                  style={{ display: 'none' }}
+                  onChange={(e) => void handleStage(e.target.files)}
+                  data-testid="skills-file-input"
+                />
+              </div>
+              {stageError && (
+                <p className="oscar__skills-upload-error" data-testid="skills-stage-error">
+                  {stageError}
+                </p>
+              )}
+              {skills.length === 0 ? (
+                <p className="oscar__skills-empty" data-testid="skills-empty">
+                  {error
+                    ? `List failed: ${error.message}`
+                    : 'No skills available for this area.'}
+                </p>
+              ) : (
+                <ul className="oscar__skills-list" data-testid="skills-list">
+                  {skills.map((s) => (
+                    <SkillRow
+                      key={s.slug}
+                      skill={s}
+                      busy={busy === `slug:${s.slug}` || busy === `delete:${s.slug}`}
+                      onToggle={() => void onToggle(s)}
+                      onDelete={() => void onDelete(s)}
+                      variant="directory"
+                    />
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -203,24 +261,30 @@ interface SkillRowProps {
   busy: boolean;
   onToggle: () => void;
   onDelete: () => void;
+  variant: 'surface' | 'directory';
 }
 
-function SkillRow({ skill, busy, onToggle, onDelete }: SkillRowProps) {
+function SkillRow({ skill, busy, onToggle, onDelete, variant }: SkillRowProps) {
+  const showBundledTag = variant === 'directory' && skill.bundled;
+  const showDelete = variant === 'directory' && skill.source === 'user';
+  const showDescription = variant === 'directory' && Boolean(skill.description);
   return (
     <li
       className="oscar__skills-row"
       data-testid={`skills-row-${skill.slug}`}
       data-source={skill.source}
+      data-variant={variant}
+      title={skill.slug}
     >
       <div className="oscar__skills-name-block">
         <span className="oscar__skills-name">{skill.name}</span>
-        {skill.bundled && (
+        {showBundledTag && (
           <span className="oscar__skills-tag" data-testid="skills-bundled-tag">
             [bundled]
           </span>
         )}
       </div>
-      {skill.description && (
+      {showDescription && (
         <p className="oscar__skills-description">{skill.description}</p>
       )}
       <button
@@ -234,7 +298,7 @@ function SkillRow({ skill, busy, onToggle, onDelete }: SkillRowProps) {
       >
         {skill.enabled ? 'On' : 'Off'}
       </button>
-      {skill.source === 'user' && (
+      {showDelete && (
         <button
           type="button"
           className="oscar__skills-delete"

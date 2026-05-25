@@ -18,7 +18,10 @@ import type {
   OscarCompanyContext,
 } from '../hooks/useOscarProfile';
 import { renderCompanyContextBlock } from './companyContextBlock';
-import { renderPlaybooksBlock } from './renderPlaybooksBlock';
+import {
+  renderPlaybooksBlock,
+  renderOnDemandPlaybooksBlock,
+} from './renderPlaybooksBlock';
 import { renderSkillsBlock } from './renderSkillsBlock';
 
 const DEV_NODE_CMD = '/usr/bin/node';
@@ -186,6 +189,13 @@ export async function buildPracticeAreaRecipe(
   // Sprint 20-M4 (ADR-085 Layer 1): renderer asks main process to extract
   // always-on playbooks and format the block. Bounded at 8K chars per area.
   const playbooksBlock = await renderPlaybooksBlock(opts.areaOverrides);
+  // Sprint 29 M6 (ADR-099): the on-demand discovery block. Lists every
+  // non-always-on playbook so the agent knows what's reachable via
+  // oscar-fs / computercontroller. Closes the Layer 2 visibility gap.
+  const onDemandPlaybooksBlock = await renderOnDemandPlaybooksBlock(
+    opts.area.id,
+    opts.areaOverrides,
+  );
   // Sprint 20-M5 (ADR-086): per-area skill scoping via prompt enumeration.
   // Main reads area_overrides.enabled_skills + bundled inventory + user
   // ~/.agents/skills/ and composes a `## Skills available in this area`
@@ -195,6 +205,7 @@ export async function buildPracticeAreaRecipe(
     companyBlock,
     areaDescriptionBlock,
     playbooksBlock,
+    onDemandPlaybooksBlock,
     skillsBlock,
     baseInstructions,
   ]

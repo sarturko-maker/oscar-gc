@@ -27,3 +27,18 @@ export async function renderPlaybooksBlock(
     return null;
   }
 }
+
+// Sprint 29 M6 (ADR-099): on-demand discovery block. Empty list → null;
+// builder skips the slot.
+export async function renderOnDemandPlaybooksBlock(
+  areaId: string,
+  areaOverrides: OscarAreaOverrides | null | undefined,
+): Promise<string | null> {
+  const alwaysOn = areaOverrides?.playbooks?.always_on ?? [];
+  try {
+    return await window.electron.playbooks.renderOnDemandBlock(areaId, alwaysOn);
+  } catch (err) {
+    console.warn('[playbooks] renderOnDemandBlock failed; recipe omits on-demand block', err);
+    return null;
+  }
+}

@@ -171,8 +171,8 @@ Procedure:
    change** from this menu:
    - **description** — agent's "About this practice area" first-turn text.
    - **panel_sections** — right-pane section ids in order. Valid:
-     \`MatterFacts\`, \`ProgrammeFacts\`, \`Skills\`, \`Playbooks\`,
-     \`Redlining\`, \`Forum\`, \`Deadlines\`, \`History\`.
+     \`MatterFacts\`, \`ProgrammeFacts\`, \`Tools\`, \`Skills\`,
+     \`Playbooks\`, \`History\`.
    - **enabled_skills** — three modes (\`all\` / \`allow\` / \`deny\`)
      on skill slugs.
    - **enabled_mcps** — same three modes on integration ids; read

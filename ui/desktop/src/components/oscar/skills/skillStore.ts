@@ -9,6 +9,7 @@
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { humanizeSlug } from './humanizeSlug';
 
 export type SkillMode = 'all' | 'allow' | 'deny';
 
@@ -132,7 +133,7 @@ export function joinSkills(
     else enabled = !overrideSet.has(slug);
     rows.push({
       slug,
-      name: slug,
+      name: humanizeSlug(slug),
       description: cmd.help ?? '',
       source: bundled ? 'bundled' : 'user',
       bundled,

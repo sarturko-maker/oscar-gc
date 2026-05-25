@@ -1779,6 +1779,7 @@ import {
   MatterEntrySchema,
   MattersFileSchema,
   NewMatterInputSchema,
+  UpdateMatterInputSchema,
   type MatterEntry,
   type MattersFile,
 } from './components/oscar/matters/types';
@@ -1809,6 +1810,7 @@ import {
   isBinaryExt as isPlaybookBinaryExt,
   listPlaybooks,
   renderPlaybooksBlock as renderPlaybooksBlockMain,
+  renderOnDemandPlaybooksBlock as renderOnDemandPlaybooksBlockMain,
   sanitiseFilename as sanitisePlaybookFilename,
   type PlaybookEntry,
   type PlaybookScope,
@@ -2100,6 +2102,60 @@ ipcMain.handle(
     registry.matters.push(entry);
     await writeMattersRegistry(areaId, registry);
     return entry;
+  },
+);
+
+// Sprint 29 M5 (ADR-098): in-pane manual edit. Slug is immutable; the
+// working dir name was set at create time and renaming it is out of scope.
+// We re-render matter.md from the merged entry + new key_facts so the
+// agent reads the updated facts on the next set-active. The bound session
+// keeps its baked recipe (matter description / loadout caveats already
+// carry the next-session-open semantics from ADR-085 / ADR-086).
+ipcMain.handle(
+  'oscar:matters:update',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown, inputRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    if (!areaId) return { ok: false as const, message: 'invalid practice area id' };
+    if (!slug) return { ok: false as const, message: 'invalid matter slug' };
+    const parsed = UpdateMatterInputSchema.safeParse(inputRaw);
+    if (!parsed.success) {
+      return { ok: false as const, message: parsed.error.message };
+    }
+    const update = parsed.data;
+    const registry = await readMattersRegistry(areaId);
+    const entry = registry.matters.find((m) => m.slug === slug);
+    if (!entry) return { ok: false as const, message: 'matter not found' };
+    const next: MatterEntry = {
+      ...entry,
+      name: update.name,
+      kind: update.kind,
+      subject: update.subject,
+      counterparty: update.counterparty,
+      stakeholder: update.stakeholder,
+      extras: update.extras,
+      privileged: update.privileged,
+      last_accessed_at: new Date().toISOString(),
+    };
+    MatterEntrySchema.parse(next);
+    const idx = registry.matters.indexOf(entry);
+    registry.matters[idx] = next;
+    await writeMattersRegistry(areaId, registry);
+    try {
+      await fs.writeFile(
+        path.join(entry.working_dir, 'matter.md'),
+        renderMatterMd(next, update.key_facts),
+        'utf8',
+      );
+    } catch (err) {
+      log.warn('oscar:matters:update matter.md write failed', {
+        areaId,
+        slug,
+        err: errorMessage(err, 'Unknown error'),
+      });
+      return { ok: false as const, message: errorMessage(err, 'matter.md write failed') };
+    }
+    return { ok: true as const, matter: next };
   },
 );
 
@@ -2890,6 +2946,34 @@ ipcMain.handle(
   },
 );
 
+// Sprint 29 M6 (ADR-099): on-demand playbook discovery block. Lists
+// non-always-on playbooks for the area so the agent knows what to
+// reach for. Empty list → null block → builder skips the slot.
+ipcMain.handle(
+  'oscar:playbooks:render-on-demand-block',
+  async (
+    _event,
+    areaIdRaw: unknown,
+    alwaysOnRaw: unknown,
+  ): Promise<string | null> => {
+    const areaId = safeAreaId(areaIdRaw);
+    if (!areaId) return null;
+    const alwaysOn = Array.isArray(alwaysOnRaw)
+      ? (alwaysOnRaw as unknown[])
+          .map((r) => safeRelPath(r))
+          .filter((r): r is string => r !== null)
+      : [];
+    try {
+      return await renderOnDemandPlaybooksBlockMain(areaId, alwaysOn);
+    } catch (err) {
+      log.warn('oscar:playbooks:render-on-demand-block failed', {
+        err: errorMessage(err, 'Unknown error'),
+      });
+      return null;
+    }
+  },
+);
+
 // Suppress unused-import lint for narrow helpers used only by typed handlers.
 void isPlaybookAllowedExt;
 
@@ -2986,9 +3070,11 @@ async function mutateEnabledSkills(
   return next;
 }
 
-// Sprint 20-M8 (ADR-091): area-level archive destination. One folder per
-// delete event, suffix = ISO timestamp from the marker (with ':' replaced
-// so filesystems on Windows / FAT-rooted volumes don't reject it).
+// Sprint 20-M8 (ADR-091 archive-don't-delete): area-level archive
+// destination. One folder per delete event, suffix = ISO timestamp from
+// the marker (with ':' replaced so filesystems on Windows / FAT-rooted
+// volumes don't reject it). Disambiguated from the second ADR-091
+// (pane-visibility-recovery, Sprint 28).
 const OSCAR_ARCHIVE_DIR = path.join(OSCAR_STATE_DIR, '_archive');
 
 const archiveSuffixFromIso = (iso: string): string =>
@@ -3120,10 +3206,12 @@ ipcMain.handle(
   },
 );
 
-// Sprint 28 M3 (ADR-093): single per-skill on/off toggle replaces the M5
-// tri-mode pill + chip handlers. Every write normalises to the deny
-// shape; existing 'all' / 'allow' rows are migrated by readEnabledSlugs
-// in the recipe-render path so older Forge writes still resolve.
+// Sprint 29 M1 (ADR-094): toggle preserves the existing mode shape.
+// Sprint 28's deny-shape coercion mishandled the 'allow' migration
+// (current.slugs in allow-mode is the ENABLED set, not the disabled
+// one), so flipping one skill on inverted every other slug's meaning.
+// Read-path joinSkills already honours all three modes; only the write
+// path needed to stop coercing.
 ipcMain.handle(
   'oscar:skills:toggle',
   async (
@@ -3142,12 +3230,20 @@ ipcMain.handle(
     const enabled = enabledRaw === true;
     try {
       await mutateEnabledSkills(areaId, (current) => {
-        let disabled = new Set<string>();
-        if (current.mode === 'deny') disabled = new Set(current.slugs);
-        else if (current.mode === 'allow') disabled = new Set(current.slugs);
-        if (enabled) disabled.delete(slug);
-        else disabled.add(slug);
-        return { mode: 'deny', slugs: Array.from(disabled).sort() };
+        if (current.mode === 'all') {
+          if (enabled) return { mode: 'all', slugs: [] };
+          return { mode: 'deny', slugs: [slug] };
+        }
+        if (current.mode === 'allow') {
+          const enabledSet = new Set(current.slugs);
+          if (enabled) enabledSet.add(slug);
+          else enabledSet.delete(slug);
+          return { mode: 'allow', slugs: Array.from(enabledSet).sort() };
+        }
+        const disabledSet = new Set(current.slugs);
+        if (enabled) disabledSet.delete(slug);
+        else disabledSet.add(slug);
+        return { mode: 'deny', slugs: Array.from(disabledSet).sort() };
       });
       return { ok: true, enabled };
     } catch (err) {

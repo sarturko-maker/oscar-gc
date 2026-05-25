@@ -6,6 +6,7 @@ import { defaultSettings } from './utils/settings';
 import type {
   MatterEntry,
   NewMatterInput,
+  UpdateMatterInput,
 } from './components/oscar/matters/types';
 
 // Sprint 20-M3 (ADR-083): right-pane MatterFacts/ProgrammeFacts IPC payload.
@@ -236,6 +237,11 @@ type ElectronAPI = {
       slug: string,
     ) => Promise<{ entry: MatterEntry; matter_md: string | null } | null>;
     create: (areaId: string, input: NewMatterInput) => Promise<MatterEntry>;
+    update: (
+      areaId: string,
+      slug: string,
+      input: UpdateMatterInput,
+    ) => Promise<{ ok: true; matter: MatterEntry } | { ok: false; message: string }>;
     bindSession: (areaId: string, slug: string, sessionId: string) => Promise<{ ok: boolean }>;
     archive: (areaId: string, slug: string) => Promise<{ ok: boolean }>;
     setActive: (
@@ -317,6 +323,10 @@ type ElectronAPI = {
       relPaths: readonly string[],
       charCap: number,
     ) => Promise<string | null>;
+    renderOnDemandBlock: (
+      areaId: string,
+      alwaysOn: readonly string[],
+    ) => Promise<string | null>;
   };
   // Sprint 20-M5 (ADR-086): skills visibility + per-area scoping. List /
   // setMode / toggleSlug drive SkillsSection (right pane); renderBlock is
@@ -375,10 +385,12 @@ type ElectronAPI = {
       areaId: string,
     ) => Promise<{ ok: true } | { ok: false; reason: string }>;
   };
-  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27 (ADR-092):
-  // Oscar LLP firm-mode. Per-partner working_dir + state file binding partner
-  // slug → array of sessions (most-recent first). Optional user-set label per
-  // session entry; session metadata read from goosed via listSessions().
+  // Sprint 21 (ADR-071) + Sprint 24-A rebrand (ADR-078) + Sprint 27
+  // (ADR-092 sprint27-multi-session-per-partner): Oscar LLP firm-mode.
+  // Per-partner working_dir + state file binding partner slug → array of
+  // sessions (most-recent first). Optional user-set label per session
+  // entry; session metadata read from goosed via listSessions().
+  // Disambiguated from the second ADR-092 (tools-section, Sprint 28).
   llp: {
     ensureDir: (slug: string) => Promise<{ ok: boolean; path: string }>;
     bindSession: (
@@ -682,6 +694,8 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.invoke('oscar:matters:get', areaId, slug),
     create: (areaId: string, input: unknown) =>
       ipcRenderer.invoke('oscar:matters:create', areaId, input),
+    update: (areaId: string, slug: string, input: unknown) =>
+      ipcRenderer.invoke('oscar:matters:update', areaId, slug, input),
     bindSession: (areaId: string, slug: string, sessionId: string) =>
       ipcRenderer.invoke('oscar:matters:bind-session', areaId, slug, sessionId),
     archive: (areaId: string, slug: string) =>
@@ -721,6 +735,8 @@ const electronAPI: ElectronAPI = {
       ipcRenderer.invoke('oscar:playbooks:delete', areaId, relPath),
     renderBlock: (relPaths: readonly string[], charCap: number) =>
       ipcRenderer.invoke('oscar:playbooks:render-block', relPaths, charCap),
+    renderOnDemandBlock: (areaId: string, alwaysOn: readonly string[]) =>
+      ipcRenderer.invoke('oscar:playbooks:render-on-demand-block', areaId, alwaysOn),
   },
   tools: {
     list: (areaId: string) => ipcRenderer.invoke('oscar:tools:list', areaId),

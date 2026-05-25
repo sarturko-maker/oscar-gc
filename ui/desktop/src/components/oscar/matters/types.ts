@@ -124,3 +124,17 @@ export const NewMatterInputSchema = z.object({
   key_facts: z.string().max(4000),
 });
 export type NewMatterInput = z.infer<typeof NewMatterInputSchema>;
+
+// Sprint 29 M5 (ADR-098): in-pane manual edit. Slug is immutable
+// (working_dir + registry key); everything else can change.
+export const UpdateMatterInputSchema = z.object({
+  name: MatterEntrySchema.shape.name,
+  kind: MatterEntrySchema.shape.kind,
+  subject: SubjectSchema,
+  counterparty: PartySchema.nullable(),
+  stakeholder: z.string().max(120).nullable(),
+  extras: ExtrasSchema.optional(),
+  privileged: z.boolean(),
+  key_facts: z.string().max(4000),
+});
+export type UpdateMatterInput = z.infer<typeof UpdateMatterInputSchema>;

@@ -4,6 +4,10 @@
 // passes only { sectionId } to each entry. Context keeps the registry
 // signature clean and lets sections subscribe to whichever coords they
 // need. Provider lives in RightPaneShell; consumers call useRightPaneCoords.
+//
+// Sprint 29 M5 (ADR-098): editingFacts is owned by RightPaneShell so the
+// header (Edit / Cancel) and the section (form vs display) stay in sync;
+// the provider plumbs it through to sections.
 
 import {
   createContext,
@@ -17,20 +21,24 @@ export interface RightPaneCoords {
   sessionId: string | null;
 }
 
-const RightPaneContext = createContext<RightPaneCoords | null>(null);
+export interface RightPaneState extends RightPaneCoords {
+  editingFacts: boolean;
+  beginEditingFacts: () => void;
+  endEditingFacts: () => void;
+}
 
-interface RightPaneProviderProps extends RightPaneCoords {
+const RightPaneContext = createContext<RightPaneState | null>(null);
+
+interface RightPaneProviderProps extends RightPaneState {
   children: ReactNode;
 }
 
 export function RightPaneProvider({
-  areaId,
-  slug,
-  sessionId,
   children,
+  ...state
 }: RightPaneProviderProps) {
   return (
-    <RightPaneContext.Provider value={{ areaId, slug, sessionId }}>
+    <RightPaneContext.Provider value={state}>
       {children}
     </RightPaneContext.Provider>
   );
@@ -38,8 +46,26 @@ export function RightPaneProvider({
 
 export function useRightPaneCoords(): RightPaneCoords {
   const ctx = useContext(RightPaneContext);
+  if (!ctx) return { areaId: null, slug: null, sessionId: null };
+  return { areaId: ctx.areaId, slug: ctx.slug, sessionId: ctx.sessionId };
+}
+
+export function useRightPaneEditing(): {
+  editingFacts: boolean;
+  beginEditingFacts: () => void;
+  endEditingFacts: () => void;
+} {
+  const ctx = useContext(RightPaneContext);
   if (!ctx) {
-    return { areaId: null, slug: null, sessionId: null };
+    return {
+      editingFacts: false,
+      beginEditingFacts: () => undefined,
+      endEditingFacts: () => undefined,
+    };
   }
-  return ctx;
+  return {
+    editingFacts: ctx.editingFacts,
+    beginEditingFacts: ctx.beginEditingFacts,
+    endEditingFacts: ctx.endEditingFacts,
+  };
 }

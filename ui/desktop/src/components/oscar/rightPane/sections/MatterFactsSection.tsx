@@ -3,6 +3,10 @@
 // which comes from SECTION_META[sectionId]. Polls
 // oscar:right-pane:read-matter-facts every 2 s; renders a labelled fact
 // list when the matter has content, a faint placeholder when it doesn't.
+//
+// Sprint 29 M5 (ADR-098): when editingFacts is on, the section body swaps
+// to a manual editor (MatterFactsEditor) that writes through
+// oscar:matters:update + carries the Forge entry as a labelled footer.
 
 import { useState } from 'react';
 import {
@@ -12,9 +16,10 @@ import {
 } from '../../matters/matterLabels';
 import { kindLabel } from '../../matters/practiceAreaShapes';
 import type { PartyRole, SubjectType } from '../../matters/types';
-import { useRightPaneCoords } from '../RightPaneContext';
+import { useRightPaneCoords, useRightPaneEditing } from '../RightPaneContext';
 import { SECTION_META, type PanelSectionProps } from './registry';
 import { usePanelReader } from './usePanelReader';
+import MatterFactsEditor from './MatterFactsEditor';
 
 interface FactRow {
   key: string;
@@ -24,13 +29,42 @@ interface FactRow {
 export default function MatterFactsSection({ sectionId }: PanelSectionProps) {
   const meta = SECTION_META[sectionId];
   const { areaId, slug } = useRightPaneCoords();
-  const { data } = usePanelReader(
+  const { editingFacts, endEditingFacts } = useRightPaneEditing();
+  const { data, refresh } = usePanelReader(
     async () => {
       if (!areaId || !slug) return null;
       return window.electron.rightPane.readMatterFacts(areaId, slug);
     },
     [areaId, slug],
   );
+  if (editingFacts && areaId && slug && data) {
+    return (
+      <section className="oscar__panel-section" data-section-id={sectionId} data-editing="true">
+        <span className="oscar__eyebrow oscar__eyebrow--bare oscar__panel-section-title">
+          {meta.title} — editing
+        </span>
+        <MatterFactsEditor
+          areaId={areaId}
+          slug={slug}
+          initial={{
+            name: data.name,
+            subject: data.subject,
+            counterparty: data.counterparty,
+            kind: data.kind,
+            stakeholder: data.stakeholder,
+            privileged: data.privileged,
+            key_facts_md: data.key_facts_md,
+            extras: data.extras ?? {},
+          }}
+          onCancel={endEditingFacts}
+          onSaved={() => {
+            endEditingFacts();
+            void refresh();
+          }}
+        />
+      </section>
+    );
+  }
 
   const rows: FactRow[] = [];
   if (data?.subject) {
