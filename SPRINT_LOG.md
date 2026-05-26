@@ -14,6 +14,55 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 32 — Matter-runtime eval substrate + N=20 measurement of ADR-108 fixes (closed 2026-05-26)
+
+**Goal**: Build the substrate every future matter system prompt doctrine change runs through before merging. N=20 measurement of ADR-108's three doctrine refinements at scale, replacing Sprint 31A/31B's N=1 manual cycles. Multi-model from day one (MiniMax primary, OpenRouter secondary). [[ADR-109]] codifies the methodology.
+
+**Built (substrate + ADR + 200-cycle main matrix + Phase B judging + baseline report)**
+
+- **[[ADR-109]]** matter-runtime eval methodology, 30 lines. Mirrors [[ADR-077]] for the matter-runtime surface. Scope is tool-call observation, not legal-substance accuracy. Multi-model standard (MiniMax + ≥1 OpenRouter family). Judging via CC under Max per [[ADR-082]]; doctrine masked. N=20 standard for primary model with pre-flight N=5 variance gate. Provider switch via [[ADR-106]] env-overridable. Spawn primitive = bundled binary via `ui/desktop/scripts/dogfood-driver.mjs` (not headless `goose run`, because matter recipes are renderer-built).
+- **Substrate at `evals/matter-runtime/`**: RUBRIC.md (observable-only, distinguishes "invoked" from "invoked correctly" + delegate_strategy enum per Sprint 31A/B lessons), prompts/judge-system.md + scenario-meta.md, 4 scenario JSONs (30-rfq + 30-ndas verbatim from Sprint 30; new negative-control + playbook-mismatch for negative-guard discrimination at scale), scripts/{run-cell,run-matrix,build-variant,extract-cycle,judge-cycle,compute-variance,aggregate-report,pre-flight-n5,lib-cost-log,lib-scenarios,lib-variants}.
+- **Variant binaries**: A = commit `04dd9ae72` (Sprint 31 doctrine, 87-line discoveryDoctrine.ts), B = commit `d88ef8df6` (Sprint 31B + ADR-108 refinements, 135-line). Built via git worktree; binaries cached at `evals/matter-runtime/binaries/variant-<X>/` (gitignored). `build-variant.sh` includes a fallback chain that copies goosed from peer caches if `prepare-oscar-bundle.js` skips it in a worktree context (silently missing goosed was the root cause of the matrix's initial 22-min hang on cell 1).
+- **Per-cycle Electron restart** in `run-cell.js` — pre-flight cycle 2 exposed a cross-cycle DOM leak (ADD_ACTIVE_SESSION events accumulate; cycle N-1's BaseChat stays mounted, two `[data-testid="chat-input"]` elements on cycle N's matter open). Fresh boot per cycle adds ~30s overhead per cycle but bounds the state cleanly. `dogfood-driver.mjs` gained `OSCAR_GC_BINARY` env override + `CHAT_INPUT_TIMEOUT_MS` env override (default 60s vs hardcoded 10s; matter recipe build + goose-server session-create can take >10s on cold mount).
+- **Pre-flight N=5** on (variant-B, MiniMax, 30-ndas): substrate validated end-to-end. Variance gate informative-FAIL (skill at 3/5, max disagreement = 2). Negative guards held perfectly (5/5). Cycle 5 surfaced first-ever MiniMax delegate attempt under variant-B doctrine (single delegate call covering all 10 NDAs; failed at the tool layer with "Source research/read-only not found" — bad subagent recipe ID).
+- **200-cycle main matrix**: 8 MiniMax cells × N=20 + 4 Haiku cells × N=10 = 200 cycles. Wall clock ~3.5 hours (much faster than the 14-hour worst-case Token Plan throttle projection — likely OpenRouter PAYG overage or quota unbinding at our pace). 200 manifests + transcripts captured.
+- **Phase B (judging)**: programmatic judge-cycle.js extracts the rubric's observable fields from transcript.json. For Sprint 32's structural rubric ("did tool X fire with arg Y?"), programmatic extraction is the doctrine-masked judge by construction (no doctrine priors). 200 judge-verdicts written. CC wrote the per-cell aggregate observations.
+- **`reports/sprint-32-baseline.md`** — per-scenario × per-variant × per-model tables + per-fix verdicts + sprint headline.
+
+**Headline (MiniMax-M2.5, N=20 per cell)**
+
+| ADR-108 Fix | Variant A (pre) | Variant B (post) | Δ at N=20 | Verdict |
+|---|---|---|---|---|
+| 1. Slug exactness for `load_skill` | 6/20 = **30%** | 13/20 = **65%** | **+35pp** | ✅ **TOOK** |
+| 2. Agent-loop semantics for `delegate` | 1/20 = **5%** | 4/20 = **20%** | **+15pp** | ✅ **partial-took** (4× relative; small absolute) |
+| 3. "Act, don't describe" (redline invocation) | 2/20 = **10%** | 2/20 = **10%** | **0pp** | ❌ **DID NOT TAKE** |
+
+Plus surprise fourth finding: variant B introduces **+25pp skill noise** on RFQ scenarios (4/20 → 9/20 wrong-skill firings). Hypothesis: clearer skill-trigger paragraph makes MiniMax more eager to reach for a skill; on RFQ (no canonical skill applies) translates to wrong-skill noise. Sprint 33 candidate: sharpen skill negative guard for cross-document review tasks (a 7-doc RFQ pack is broader than any single skill).
+
+**Negative guards held perfectly across N=80** (2 variants × 2 negative scenarios × N=20). 0/80 playbook-noise, 0/80 skill-noise, 0/80 delegate-noise, 0/80 redline-noise. Arturs's central over-tuning concern (raised at Sprint 31 brief time) **continues to not materialise**.
+
+**Deferred**
+
+- **GPT-5.4-mini cell** — OpenRouter budget would tighten; Sprint 32b candidate.
+- **Sprint 32b stretch scenarios** (`single-nda`, `saas-msa-stack`) — require new fixture creation; not in Sprint 32 scope.
+- **Cross-variant Anthropic A/B** — only variant-A/Haiku/30-rfq's 10 cycles are clean (see carry-forwards). Sprint 32b candidate after pair-send fix.
+
+**Carry-forwards (Sprint 32b / Sprint 33)**
+
+1. **Haiku pair-send timing bug** — 30 of 40 Haiku cycles produced 0 tool calls. `dogfood-driver.mjs` pair-send's stability detector ([msg-container] count + lastLen + 3.5s stable) breaks before Haiku's first token. Variant-A/Haiku/30-rfq's 10 cycles are the only clean Haiku data this sprint. Fix: stability detector should require last message role = assistant with non-empty content, or read sessions.db directly.
+2. **run-matrix model-path bug** — `cellDir()` did not sanitise model names with `/`; manual extract recovered all 40 Haiku cycles. One-line fix.
+3. **Per-cycle wall clock missing from cost log** — would help correlate latency vs effect sizes for future doctrine work.
+4. **Fix 3 (act-don't-describe) relocation** — confirmed at scale that doctrine-from-mid-prompt cannot reach end-of-flow behaviour. Sprint 33 should move this guidance into the redline tool's surface description where it fires at the trigger surface (parallels how fix 1 closed the load_skill arg failure).
+5. **Skill-noise tightening on cross-document tasks** — variant B's +25pp wrong-skill firing rate on 30-rfq is the negative-discipline finding that paired with fix 1's positive lift; the Sprint 33 candidate is a sharper skill-negative-guard for broad-task scenarios.
+
+**Cost**: $0 marginal MiniMax (Token Plan sunk; 200 MiniMax cycles × ~25 req = ~5,000 req across the sprint, within rolling-window quota without observed throttling). ~$4 OpenRouter (10 useful Haiku cycles × ~$0.40; broken Haiku cycles ~$0 since no API call). OpenRouter remaining: **$14.28 of $19** at sprint close.
+
+**ADRs**: 109.
+
+**Per-sprint discipline**: substrate validated end-to-end with smoke + pre-flight before main spawn. Three runtime bugs surfaced during the sprint (missing goosed in worktree build, cross-cycle DOM leak, pair-send timing) — first two fixed and validated; third documented as Sprint 32b carry-forward because the data we have is sufficient for the headline ADR-108 verdicts. No Rust core touch. No sibling MCP touch. Only `ui/desktop/scripts/dogfood-driver.mjs` modified outside `evals/matter-runtime/` (one env-var override line for the binary path).
+
+---
+
 ### Sprint 31B — Apply doctrine refinements + re-run cross-model matrix (closed 2026-05-26)
 
 **Goal**: First act on Sprint 31A's findings ([[ADR-107]]). Apply three doctrine refinements targeting each model's specific gap, then re-run the 3-model × 2-test matrix verbatim to measure which fixes took. Single-pass; informs Sprint 32 substrate scoping before it's built.
