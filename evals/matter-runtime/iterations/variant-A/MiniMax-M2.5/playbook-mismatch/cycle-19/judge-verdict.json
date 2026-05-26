@@ -1,0 +1,40 @@
+{
+  "cycle_id": "variant-A-MiniMax-M2.5-playbook-mismatch-cycle-19",
+  "session_id": "20260526_121",
+  "playbook_read_on_relevant_turn": {
+    "fired": false,
+    "which": null
+  },
+  "playbook_read_on_irrelevant_turn": {
+    "fired": false,
+    "which": null
+  },
+  "skill_invoked_when_applicable": {
+    "fired": false,
+    "which": null
+  },
+  "skill_invoked_when_not_applicable": {
+    "fired": false,
+    "which": null
+  },
+  "skill_arg_correct": {
+    "fired": false,
+    "passed_arg": null,
+    "canonical_slug": null
+  },
+  "delegate_used_when_applicable": {
+    "fired": false,
+    "count": 0,
+    "scope_per": ""
+  },
+  "delegate_used_when_not_applicable": {
+    "fired": false,
+    "count": 0
+  },
+  "delegate_strategy": "none",
+  "redline_invoked_when_asked": false,
+  "redline_succeeded_when_invoked": null,
+  "extra_observations": "no tool calls — agent did not engage tools",
+  "_judge": "programmatic-v1",
+  "_tool_call_count": 0
+}
