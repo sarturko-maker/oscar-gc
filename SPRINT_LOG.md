@@ -47,13 +47,16 @@ Plus surprise fourth finding: variant B introduces **+25pp skill noise** on RFQ 
 - **Sprint 32b stretch scenarios** (`single-nda`, `saas-msa-stack`) — require new fixture creation; not in Sprint 32 scope.
 - **Cross-variant Anthropic A/B** — only variant-A/Haiku/30-rfq's 10 cycles are clean (see carry-forwards). Sprint 32b candidate after pair-send fix.
 
+**Post-sprint correction (commit `a61bb13a4`)**: initial hypothesis that 30 broken Haiku cycles were a `dogfood-driver` pair-send timing bug was **wrong**. A direct `curl` to OpenRouter (run as part of the carry-forward fix-up) revealed the actual cause: variant-A/Haiku/30-rfq's 10 cycles burned the OpenRouter monthly key limit. All 30 subsequent Haiku cycles received **HTTP 403 "Key limit exceeded (monthly limit)"**; goosed swallowed the API error and pair-send's DOM stability returned silently. The pair-send-verification fix (sessions.db assistant-message poll, committed in the same post-sprint commit) is still valuable — it would have surfaced "no new assistant message in 10 min" in real time rather than silently advancing — but the Haiku data needs an OpenRouter cap reset OR account refresh before a re-run is possible.
+
 **Carry-forwards (Sprint 32b / Sprint 33)**
 
-1. **Haiku pair-send timing bug** — 30 of 40 Haiku cycles produced 0 tool calls. `dogfood-driver.mjs` pair-send's stability detector ([msg-container] count + lastLen + 3.5s stable) breaks before Haiku's first token. Variant-A/Haiku/30-rfq's 10 cycles are the only clean Haiku data this sprint. Fix: stability detector should require last message role = assistant with non-empty content, or read sessions.db directly.
-2. **run-matrix model-path bug** — `cellDir()` did not sanitise model names with `/`; manual extract recovered all 40 Haiku cycles. One-line fix.
-3. **Per-cycle wall clock missing from cost log** — would help correlate latency vs effect sizes for future doctrine work.
-4. **Fix 3 (act-don't-describe) relocation** — confirmed at scale that doctrine-from-mid-prompt cannot reach end-of-flow behaviour. Sprint 33 should move this guidance into the redline tool's surface description where it fires at the trigger surface (parallels how fix 1 closed the load_skill arg failure).
-5. **Skill-noise tightening on cross-document tasks** — variant B's +25pp wrong-skill firing rate on 30-rfq is the negative-discipline finding that paired with fix 1's positive lift; the Sprint 33 candidate is a sharper skill-negative-guard for broad-task scenarios.
+1. **Haiku re-run blocked on OpenRouter monthly limit** — variant-A/Haiku/30-rfq's 10 cycles are the only clean Haiku data this sprint. The 30 broken Haiku cycles can be re-spawned with `node evals/matter-runtime/scripts/run-cell.js` (now hardened with assistant-message verification) once the OpenRouter cap resets OR the account is refreshed.
+2. **Pair-send verification fix** committed post-sprint (`a61bb13a4`) — `run-cell.js` polls sessions.db for new assistant messages after each turn rather than trusting `dogfood-driver`'s DOM stability detector. Validated on MiniMax. Future runs benefit; the Sprint 32 matrix was already done.
+3. **run-matrix model-path sanitisation** committed post-sprint (`a61bb13a4`) — one-line fix in `cellDir()` so auto-extract works on models whose names contain `/` (e.g. `anthropic/claude-haiku-4-5`).
+4. **Per-cycle wall clock missing from cost log** — would help correlate latency vs effect sizes for future doctrine work.
+5. **Fix 3 (act-don't-describe) relocation** — confirmed at scale that doctrine-from-mid-prompt cannot reach end-of-flow behaviour. Sprint 33 should move this guidance into the redline tool's surface description where it fires at the trigger surface (parallels how fix 1 closed the load_skill arg failure).
+6. **Skill-noise tightening on cross-document tasks** — variant B's +25pp wrong-skill firing rate on 30-rfq is the negative-discipline finding that paired with fix 1's positive lift; the Sprint 33 candidate is a sharper skill-negative-guard for broad-task scenarios.
 
 **Cost**: $0 marginal MiniMax (Token Plan sunk; 200 MiniMax cycles × ~25 req = ~5,000 req across the sprint, within rolling-window quota without observed throttling). ~$4 OpenRouter (10 useful Haiku cycles × ~$0.40; broken Haiku cycles ~$0 since no API call). OpenRouter remaining: **$14.28 of $19** at sprint close.
 

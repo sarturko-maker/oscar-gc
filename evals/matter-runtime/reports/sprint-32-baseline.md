@@ -85,11 +85,11 @@ Sprint 31B applied three doctrine fixes. Variant A = pre-ADR-108 (Sprint 31 doct
 
 ## Substrate carry-forwards (Sprint 32b candidates)
 
-1. **Haiku pair-send timing bug** — 3 of 4 Haiku cells (30 cycles) produced 0 tool calls because dogfood-driver's pair-send stability detector returned before Haiku's first token. The DOM container count grew on user msg + thinking indicator, satisfying the "2 new turns + stable" break before the agent responded. Fix: stability detector should require last message role = assistant with non-empty content, or read sessions.db directly.
-2. **run-matrix model path bug** — extract-cycle was passed unsanitised model name (`anthropic/claude-haiku-4-5` with slash); cycle dirs use `__`. Manual re-extract recovered all 40 Haiku cycles. Fix: sanitise in `cellDir()`.
+1. **Haiku cells broke on OpenRouter monthly key limit** — initial hypothesis was a `dogfood-driver` pair-send timing bug (DOM stability returning before Haiku's first token). Investigation post-matrix revealed the real cause: variant-A/Haiku/30-rfq's 10 cycles burned the remainder of the OpenRouter monthly limit. All 30 subsequent Haiku cycles received **HTTP 403 "Key limit exceeded (monthly limit)"**; goosed swallowed the error and pair-send's DOM stability returned without an assistant message landing. **Fix committed during Sprint 32 close-out** (`a61bb13a4`): `run-cell.js` now wraps each pair-send with a sessions.db poll on assistant-message count — if no new assistant message lands within the 10-min cap, surfaces a warning rather than silently advancing. Verified on a MiniMax cycle (3:42 wall clock; 19 tool calls, matches the original matrix data quality). The Haiku data itself needs a re-run after OpenRouter cap reset OR an account refresh; Sprint 32b candidate.
+2. **run-matrix model path bug** — extract-cycle was passed unsanitised model name (`anthropic/claude-haiku-4-5` with slash); cycle dirs use `__`. Manual re-extract recovered all 40 Haiku cycles at sprint time. **Fix committed during Sprint 32 close-out** (`a61bb13a4`): `cellDir()` now applies the same sanitisation `run-cell.js` uses.
 3. **Per-cycle latency missing from cost log** — cycle wall-clock varied 60s to 5+ min. Recording per-cycle wall clock would let us correlate model latency vs effect sizes.
 4. **GPT-5.4-mini cell still deferred** — Sprint 32b candidate; closes the OpenAI-family gap at the price of OpenRouter budget refresh.
-5. **Anthropic A/B incomplete** — Sprint 32 has variant-A/Haiku/30-rfq (10 cycles, clean) only. Variant-B Haiku and Haiku 30-ndas need a redo after the pair-send fix.
+5. **Anthropic A/B incomplete** — Sprint 32 has variant-A/Haiku/30-rfq (10 cycles, clean) only. Variant-B Haiku and Haiku 30-ndas need re-spawning after the OpenRouter cap resets.
 
 ## Sprint 32 headline
 
