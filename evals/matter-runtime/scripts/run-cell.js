@@ -165,6 +165,14 @@ function readSessionIdFromMattersJson(areaId, slug) {
   return entry?.session_id ?? null;
 }
 
+function killOrphans() {
+  // Hard-kill any orphan oscar-gc/goosed (goosed survives Electron SIGTERM in our setup).
+  spawnSync('pkill', ['-9', '-f', 'oscar-gc'], { stdio: 'ignore' });
+  spawnSync('pkill', ['-9', '-f', 'goosed'], { stdio: 'ignore' });
+  // Brief wait for ports to release.
+  spawnSync('sleep', ['1'], { stdio: 'ignore' });
+}
+
 function runCell({ variantId, model, scenarioSlug, n, areaId }) {
   const variant = lib_variants.getVariant(variantId);
   if (!fs.existsSync(variant.binary_path)) {
@@ -182,25 +190,21 @@ function runCell({ variantId, model, scenarioSlug, n, areaId }) {
   console.log(`[cell] binary=${variant.binary_path}`);
   console.log(`[cell] cellDir=${cellDir}`);
 
-  // Register teardown BEFORE boot — if boot throws, we still kill any orphans.
+  // Global teardown — fires on script exit; kills any lingering processes.
+  // Per-cycle boot/quit happens inline below to avoid cross-cycle DOM state leaks
+  // (cycle N-1's BaseChat remains in activeSessions and the chat-input selector
+  // returns multiple elements on cycle N's matter open).
   let teardownRan = false;
   const teardown = () => {
     if (teardownRan) return;
     teardownRan = true;
     try { dogfood('quit', null, env); } catch {}
-    // Hard-kill orphans (goosed survives Electron SIGTERM in our setup)
-    spawnSync('pkill', ['-9', '-f', 'oscar-gc'], { stdio: 'ignore' });
-    spawnSync('pkill', ['-9', '-f', 'goosed'], { stdio: 'ignore' });
+    killOrphans();
   };
   process.on('exit', teardown);
   process.on('SIGINT', () => { teardown(); process.exit(130); });
   process.on('SIGTERM', () => { teardown(); process.exit(143); });
   process.on('uncaughtException', (e) => { console.error('[run-cell] uncaught:', e); teardown(); process.exit(1); });
-
-  // Boot Electron once for the whole cell
-  const sessionName = `s32-${variantId}-${model.replace(/[\W]+/g, '_')}-${scenarioSlug}`;
-  console.log(`[cell] booting Electron (session=${sessionName})`);
-  dogfood('boot', sessionName, env);
 
   const runStamp = String(Math.floor(Date.now() / 1000)).slice(-6);
   const cellManifest = { variant: variantId, model, scenario: scenarioSlug, n, cycles: [], started_at: new Date().toISOString() };
@@ -209,6 +213,13 @@ function runCell({ variantId, model, scenarioSlug, n, areaId }) {
     const cycleId = String(cycleIdx).padStart(2, '0');
     const cycleDir = path.join(cellDir, `cycle-${cycleId}`);
     console.log(`\n[cycle ${cycleId}/${n}] starting`);
+
+    // 0) Boot Electron fresh per cycle — avoids cross-cycle BaseChat / activeSessions
+    // leakage where cycle N-1's chat-input remains in the DOM and the selector matches
+    // multiple elements on cycle N's matter open.
+    const sessionName = `s32-${variantId}-${model.replace(/[\W]+/g, '_')}-${scenarioSlug}-c${cycleId}`;
+    console.log(`[cycle ${cycleId}] booting Electron (session=${sessionName})`);
+    dogfood('boot', sessionName, env);
 
     const input = makeMatterInput({ scenario, cycleIdx, runStamp });
 
@@ -253,8 +264,10 @@ function runCell({ variantId, model, scenarioSlug, n, areaId }) {
     if (sessionId) console.log(`[cycle ${cycleId}] session_id=${sessionId}`);
     else console.warn(`[cycle ${cycleId}] WARN: no session_id bound for slug=${input.slug}`);
 
-    // 5) Detach matter (so next cycle's create+setActive doesn't conflict)
-    dogfoodEval(`await window.electron.matters.detachActive(); return true;`, env);
+    // 5) Detach matter then quit Electron — next cycle re-boots fresh.
+    try { dogfoodEval(`await window.electron.matters.detachActive(); return true;`, env); } catch {}
+    try { dogfood('quit', null, env); } catch {}
+    killOrphans();
 
     // 6) Persist per-cycle manifest
     const manifest = {
@@ -279,8 +292,7 @@ function runCell({ variantId, model, scenarioSlug, n, areaId }) {
     console.log(`[cycle ${cycleId}] done — manifest at ${cycleDir}/manifest.json`);
   }
 
-  // Quit Electron (orderly path; teardown handler is the safety net)
-  console.log(`[cell] quitting Electron`);
+  // Final cleanup (per-cycle quit already happened; this is a safety net)
   teardown();
 
   cellManifest.completed_at = new Date().toISOString();
