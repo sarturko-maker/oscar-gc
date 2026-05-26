@@ -1,0 +1,15 @@
+{
+  "variant": "B",
+  "model": "MiniMax-M2.5",
+  "scenario": "30-ndas",
+  "n": 1,
+  "cycles": [
+    {
+      "cycle_n": 1,
+      "session_id": null,
+      "matter_slug": "30-ndas-c01-795898"
+    }
+  ],
+  "started_at": "2026-05-26T11:44:58.729Z",
+  "completed_at": "2026-05-26T11:45:57.688Z"
+}

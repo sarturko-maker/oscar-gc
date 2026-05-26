@@ -6,6 +6,8 @@
   "playbook_to_install": null,
   "matter_shape": {
     "practice_area": "commercial",
+    "kind": "other",
+    "subject_type": "contract",
     "subject_label": "Series B Term Sheet — Confidentiality Clause",
     "slug": "neg-control-confidentiality-clause-32",
     "counterparty": null,

@@ -47,7 +47,8 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '../../..');
-const PACKAGED_BINARY = path.join(repoRoot, 'ui/desktop/out/Oscar-GC-linux-x64/oscar-gc');
+const PACKAGED_BINARY =
+  process.env.OSCAR_GC_BINARY || path.join(repoRoot, 'ui/desktop/out/Oscar-GC-linux-x64/oscar-gc');
 const STATE_DIR = '/tmp/oscar-dogfood';
 const PID_FILE = path.join(STATE_DIR, 'app.pid');
 const COUNTER_FILE = path.join(STATE_DIR, 'screenshot-counter');

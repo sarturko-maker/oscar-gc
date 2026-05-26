@@ -6,9 +6,11 @@
   "playbook_to_install": "rfq-review-playbook.md",
   "matter_shape": {
     "practice_area": "commercial",
+    "kind": "rfp",
+    "subject_type": "contract",
     "subject_label": "Pemberton RFQ — 3yr supply",
     "slug": "pemberton-rfq-32",
-    "counterparty": { "role": "buyer", "name": "Pemberton Engineering" },
+    "counterparty": { "role": "customer", "name": "Pemberton Engineering" },
     "playbooks_present": ["rfq-review-playbook.md"],
     "always_on_playbooks": []
   },

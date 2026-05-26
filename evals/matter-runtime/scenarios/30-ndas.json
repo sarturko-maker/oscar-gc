@@ -6,6 +6,8 @@
   "playbook_to_install": "nda-review-playbook.md",
   "matter_shape": {
     "practice_area": "commercial",
+    "kind": "nda",
+    "subject_type": "contract",
     "subject_label": "NDA triage week 21",
     "slug": "nda-triage-week-21-32",
     "counterparty": null,
