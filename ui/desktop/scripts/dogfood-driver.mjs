@@ -392,7 +392,11 @@ async function pairSend(msg) {
   if (!msg) throw new Error('empty message');
   const { browser, page } = await connect();
   try {
-    await page.waitForSelector('[data-testid="chat-input"]', { timeout: 10000 });
+    // CHAT_INPUT_TIMEOUT_MS env override — matter open includes recipe build +
+    // goose-server session create, which can take >10s on first call after
+    // navigation. Default 60s.
+    const chatInputTimeout = Number(process.env.CHAT_INPUT_TIMEOUT_MS || 60000);
+    await page.waitForSelector('[data-testid="chat-input"]', { timeout: chatInputTimeout });
     const before = await readPairTurns(page);
 
     await page.fill('[data-testid="chat-input"]', msg);
