@@ -1,0 +1,54 @@
+{
+  "slug": "30-ndas",
+  "label": "Sprint 30 — 10-NDA triage",
+  "fixture_dir": "docs/sprint-30/test-2-ndas/fixtures/staged",
+  "playbook_dir": "docs/sprint-30/test-2-ndas/fixtures",
+  "playbook_to_install": "nda-review-playbook.md",
+  "matter_shape": {
+    "practice_area": "commercial",
+    "subject_label": "NDA triage week 21",
+    "slug": "nda-triage-week-21-32",
+    "counterparty": null,
+    "playbooks_present": ["nda-review-playbook.md"],
+    "always_on_playbooks": []
+  },
+  "initial_fixtures": [
+    "nda-acme-tooling.docx",
+    "nda-betacorp-logistics.docx",
+    "nda-cypress-saas.docx",
+    "nda-delphi-components.docx",
+    "nda-emberlake-cobidder.docx",
+    "nda-folium-research.docx"
+  ],
+  "events": [
+    { "kind": "prompt", "turn": 1, "text": "I've dropped the latest NDAs in the matter folder from prospective counterparties this week. Give me a per-NDA read on each — GREEN / YELLOW / RED — with the top issues for each, so I can decide which ones legal needs to touch and which can go straight to sign." },
+    { "kind": "fixture_drop", "files": ["nda-greenline-erp.docx", "nda-harborwave-cloud.docx", "nda-iris-consulting.docx", "nda-jadestone-mfg.docx"], "rationale": "Sprint 30 wave-2 late drop" },
+    { "kind": "prompt", "turn": 2, "text": "A few more came in — same triage, please." },
+    { "kind": "prompt", "turn": 3, "text": "Draft a counterparty email to Cypress's legal team walking through our top-3 issues on their NDA — keep it tight and professional, ready for the relationship lead to send." }
+  ],
+  "expectations": {
+    "playbook": {
+      "should_fire": "nda-review-playbook.md",
+      "should_not_fire": [],
+      "fire_on_turn": 1,
+      "rationale": "Filename noun matches NDA task noun."
+    },
+    "skill": {
+      "should_fire": true,
+      "canonical_slug": "nda-review",
+      "not_applicable_slugs": ["vendor-agreement-review", "saas-msa-review", "mna-due-diligence", "review"],
+      "rationale": "nda-review slug names the task at its actual level."
+    },
+    "delegate": {
+      "should_fire": true,
+      "min_count_when_applicable": 2,
+      "rationale": "Turn 1 names a quantity of independent items (6+4=10 NDAs). Independent reads — explicit positive case for delegate."
+    },
+    "redline": {
+      "should_be_invoked": false,
+      "invoked_on_turn": null,
+      "rationale": "No redline asked. Turn 3 is an email draft, not a redline."
+    }
+  },
+  "notes": "Sprint 30 Test 2 verbatim. Persona is Helena Marwick, GC. Wave 1 (6 NDAs) in matter folder at session open; wave 2 (4 NDAs) dropped between Turn 1 and Turn 2. This is the highest-discrimination scenario in Sprint 32 — all three affordances (playbook, skill, delegate) target it."
+}

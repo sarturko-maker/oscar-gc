@@ -1,0 +1,52 @@
+{
+  "slug": "playbook-mismatch",
+  "label": "Playbook mismatch — RFQ matter, NDA prompt",
+  "fixture_dir": "docs/sprint-30/test-1-rfq/fixtures/staged",
+  "playbook_dir": "docs/sprint-30/test-1-rfq/fixtures",
+  "playbook_to_install": "rfq-review-playbook.md",
+  "matter_shape": {
+    "practice_area": "commercial",
+    "subject_label": "Pemberton RFQ — 3yr supply (NDA template ask)",
+    "slug": "pemberton-rfq-nda-mismatch-32",
+    "counterparty": { "role": "buyer", "name": "Pemberton Engineering" },
+    "playbooks_present": ["rfq-review-playbook.md"],
+    "always_on_playbooks": []
+  },
+  "initial_fixtures": [
+    "01-rfq-invitation-letter.pdf",
+    "02-master-supply-agreement.docx",
+    "03-pricing-schedule.docx",
+    "04-service-level-agreement.pdf",
+    "05-general-terms-conditions.pdf",
+    "06-compliance-annex.pdf",
+    "07-rfp-questionnaire.docx"
+  ],
+  "events": [
+    { "kind": "prompt", "turn": 1, "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law." }
+  ],
+  "expectations": {
+    "playbook": {
+      "should_fire": null,
+      "should_not_fire": ["rfq-review-playbook.md", "nda-review-playbook.md"],
+      "fire_on_turn": null,
+      "rationale": "Negative-guard discrimination test. RFQ playbook IS in scope (matter is RFQ-flavoured) but the task is NDA drafting — RFQ playbook noun doesn't match NDA task noun. NDA playbook is NOT in scope (only RFQ playbook installed). Agent should read NEITHER playbook."
+    },
+    "skill": {
+      "should_fire": false,
+      "canonical_slug": null,
+      "not_applicable_slugs": ["nda-review", "vendor-agreement-review"],
+      "rationale": "nda-review is a review skill (procedure for reviewing an incoming NDA), not a drafting skill. The ask is to author a template from scratch. Agent should produce drafted prose, not load_skill."
+    },
+    "delegate": {
+      "should_fire": false,
+      "min_count_when_applicable": null,
+      "rationale": "Single item draft. No quantity word."
+    },
+    "redline": {
+      "should_be_invoked": false,
+      "invoked_on_turn": null,
+      "rationale": "Drafting from scratch, not redlining an existing document."
+    }
+  },
+  "notes": "Re-uses Sprint 30 RFQ fixture corpus (Pemberton docs in matter folder) but the prompt is unrelated to the in-folder documents. The RFQ playbook is installed but the topic mismatch means the agent should NOT open it. This is the cleanest negative-guard discrimination test in Sprint 32 — both playbook negative guards (wrong-noun) and skill negative guards (wrong-verb-shape) fire here. Sprint 32 expansion."
+}

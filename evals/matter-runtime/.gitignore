@@ -1,0 +1,5 @@
+# Variant binaries (≈200 MB each); rebuilt by scripts/build-variant.sh
+binaries/
+
+# Per-cycle goosed working dirs (created/torn down by run-cell.js)
+*.tmp-workdir/

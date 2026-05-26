@@ -1,0 +1,57 @@
+{
+  "slug": "30-rfq",
+  "label": "Sprint 30 — Pemberton RFQ pack + redline",
+  "fixture_dir": "docs/sprint-30/test-1-rfq/fixtures/staged",
+  "playbook_dir": "docs/sprint-30/test-1-rfq/fixtures",
+  "playbook_to_install": "rfq-review-playbook.md",
+  "matter_shape": {
+    "practice_area": "commercial",
+    "subject_label": "Pemberton RFQ — 3yr supply",
+    "slug": "pemberton-rfq-32",
+    "counterparty": { "role": "buyer", "name": "Pemberton Engineering" },
+    "playbooks_present": ["rfq-review-playbook.md"],
+    "always_on_playbooks": []
+  },
+  "initial_fixtures": [
+    "01-rfq-invitation-letter.pdf",
+    "02-master-supply-agreement.docx",
+    "03-pricing-schedule.docx",
+    "04-service-level-agreement.pdf",
+    "05-general-terms-conditions.pdf",
+    "06-compliance-annex.pdf",
+    "07-rfp-questionnaire.docx"
+  ],
+  "events": [
+    { "kind": "prompt", "turn": 1, "text": "We received an RFQ pack from Pemberton Engineering for a 3-year MRO supply framework. The documents are in the matter folder. Review them and give me your read — what needs pushback, what's standard, what's commercially material?" },
+    { "kind": "prompt", "turn": 2, "text": "What's our exposure if their GTCs (Document 05) override the MSA on indemnities? Worst case, what are we signing up to?" },
+    { "kind": "prompt", "turn": 3, "text": "Walk me through your top-3 redline targets and why each matters. Imagine I'm pitching this to the commercial sponsor in 5 minutes." },
+    { "kind": "fixture_drop", "files": ["08-supplementary-tcs.pdf"], "rationale": "Sprint 30 late-drop fixture" },
+    { "kind": "prompt", "turn": 4, "text": "Anything to add given what they sent over after the first batch?" },
+    { "kind": "prompt", "turn": 5, "text": "Mark up the Master Supply Agreement (02-master-supply-agreement.docx) with our redline based on your analysis. Save the output to the outputs/ subfolder of this matter." }
+  ],
+  "expectations": {
+    "playbook": {
+      "should_fire": "rfq-review-playbook.md",
+      "should_not_fire": [],
+      "fire_on_turn": 1,
+      "rationale": "Filename noun matches RFQ task noun. Single playbook in scope; canonical positive case."
+    },
+    "skill": {
+      "should_fire": false,
+      "canonical_slug": null,
+      "not_applicable_slugs": ["nda-review"],
+      "rationale": "No commercial-legal skill names the 'RFQ pack review' task at its actual level (7-doc cross-document review is broader than any single slug like vendor-agreement-review)."
+    },
+    "delegate": {
+      "should_fire": false,
+      "min_count_when_applicable": null,
+      "rationale": "RFQ docs (MSA + GTC + SLA + pricing + compliance annex) must be read together for coherence — explicit skip case per the doctrine."
+    },
+    "redline": {
+      "should_be_invoked": true,
+      "invoked_on_turn": 5,
+      "rationale": "Turn 5 explicitly asks for redline of the MSA."
+    }
+  },
+  "notes": "Sprint 30 Test 1 verbatim. Persona is Helena Marwick, GC at Stanford Industrial Supply. Late-drop fixture (08-supplementary-tcs.pdf) is moved into the matter folder between Turn 3 and Turn 4 — the agent should re-list the directory and find it on Turn 4 without being told the filename."
+}

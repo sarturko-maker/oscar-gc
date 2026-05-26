@@ -1,0 +1,44 @@
+{
+  "slug": "negative-control",
+  "label": "Negative control — generic confidentiality clause draft",
+  "fixture_dir": null,
+  "playbook_dir": null,
+  "playbook_to_install": null,
+  "matter_shape": {
+    "practice_area": "commercial",
+    "subject_label": "Series B Term Sheet — Confidentiality Clause",
+    "slug": "neg-control-confidentiality-clause-32",
+    "counterparty": null,
+    "playbooks_present": [],
+    "always_on_playbooks": []
+  },
+  "initial_fixtures": [],
+  "events": [
+    { "kind": "prompt", "turn": 1, "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival." }
+  ],
+  "expectations": {
+    "playbook": {
+      "should_fire": null,
+      "should_not_fire": ["nda-review-playbook.md", "rfq-review-playbook.md"],
+      "fire_on_turn": null,
+      "rationale": "No playbooks in scope (matter folder has no playbook installed). Negative guard: nothing should be opened against ~/.config/oscar/playbooks/."
+    },
+    "skill": {
+      "should_fire": false,
+      "canonical_slug": null,
+      "not_applicable_slugs": ["nda-review", "vendor-agreement-review", "saas-msa-review", "mna-due-diligence"],
+      "rationale": "No skill names 'draft a confidentiality clause' at its actual level. A drafting task with no source documents has no playbook+skill trigger."
+    },
+    "delegate": {
+      "should_fire": false,
+      "min_count_when_applicable": null,
+      "rationale": "Single item ask. Explicit skip case per doctrine."
+    },
+    "redline": {
+      "should_be_invoked": false,
+      "invoked_on_turn": null,
+      "rationale": "Not a redline ask; the agent should produce a drafted clause in prose."
+    }
+  },
+  "notes": "Pure noise-denominator measurement. Matter folder contains only matter.md (no fixtures, no playbooks installed for this matter). Anything the agent reads beyond matter.md is noise. Sprint 32 expansion — leverages MiniMax's effectively-free-at-scale property."
+}
