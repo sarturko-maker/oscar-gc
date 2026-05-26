@@ -53,7 +53,7 @@ Sprint 31B applied three doctrine fixes. Variant A = pre-ADR-108 (Sprint 31 doct
 
 When fired, both variants used the canonical `nda-review` slug on both models. Slug-exactness lift on MiniMax is real (the doctrine clarifies the *fire-or-don't* decision when slug is correct). The **inverse effect on Haiku** is the new finding: Haiku reads the stricter "never path, never prefix" wording as a higher bar to clear, becoming MORE cautious. Variant A's looser doctrine triggers Haiku to fire 50%; variant B's tighter rules trip Haiku into "skip if uncertain" behavior at 30%.
 
-This is the doctrine-tuning lesson at scale: **the same paragraph can help one model family and hurt another**. Sprint 33 candidate: per-family doctrine variants OR more careful negative-guard calibration.
+This is the doctrine-tuning lesson at scale: **the same paragraph can help one model family and hurt another**. Per CLAUDE.md ("Reuse over rebuild — Goose": providers are DI), per-family doctrine variants are not an option — doctrine must work across whatever provider the user has wired up. Sprint 33 candidate: **recalibrate wording for cross-family balance**. Hypothesis: replace the "never path, never prefix, never description" negative-constraint list with a single positive imperative ("pass the slug verbatim as listed"), separating the "when to fire" decision (driven by positive trigger only) from the "how to fire when firing" specification.
 
 ### Fix 2 — agent-loop semantics for `delegate` (Step C addendum)
 
@@ -134,9 +134,9 @@ Sprint 32 establishes the matter-runtime eval substrate AND surfaces the load-be
 **Cross-family confirmation of Sprint 31A's [[ADR-107]] finding:** Haiku delegates at 50-60% on 30-ndas; MiniMax barely fires delegate (5-20%). The Anthropic-family behavior Sprint 31A saw on Sonnet 4.6 (N=1) replicates on Haiku 4.5 (N=10).
 
 **Sprint 33 candidates clarified:**
-1. Relocate "act don't describe" into the redline tool's surface description (where it fires at the trigger surface)
-2. Sharpen skill negative guard for cross-document review tasks — variant-B skill-noise regression on RFQ is MiniMax-specific (4/20→9/20); Haiku didn't show this regression (0/10→0/10), so the fix can be MiniMax-targeted
-3. Per-family doctrine variants OR more neutral wording — fix 1's split effect demonstrates the cost of one-paragraph-fits-all doctrine. Stricter slug rules trigger different cognitive shapes across families (MiniMax: clearer trigger; Haiku: higher bar to clear)
+1. **Recalibrate fix 1's wording for cross-family balance** — the load-bearing Sprint 33 question. Per CLAUDE.md, provider is DI; per-family doctrine variants are off the table. Doctrine must work across whatever provider is wired up. Hypothesis: replace the negative-constraint list ("never a path, never a prefix, never a description") with a single positive imperative ("pass the slug verbatim as listed"). Separates *when to fire* (positive trigger; same across families) from *how to fire when firing* (slug shape; only applies once the model has decided to fire).
+2. Relocate "act don't describe" into the redline tool's surface description (where it fires at the trigger surface). Confirmed cross-family at scale that doctrine-from-mid-prompt cannot reach end-of-flow behaviour.
+3. Sharpen skill negative guard for cross-document review tasks. Variant-B skill-noise regression on RFQ is **MiniMax-specific** (4/20→9/20); Haiku correctly stays at 0/10 on both variants. The wording change should target the cross-document trigger shape — narrower than fix 1's slug specification but applies uniformly across models.
 
 **Negative guards held perfectly across N=80 MiniMax negative-scenario cycles.** Cross-family Haiku negative-discipline data deferred to Sprint 32b.
 
