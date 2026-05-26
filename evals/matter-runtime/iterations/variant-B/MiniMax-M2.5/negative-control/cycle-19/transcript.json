@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25062,
+    "message_id": "7tam7z4z",
+    "role": "user",
+    "timestamp": "2026-05-26 15:32:39",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25063,
+    "message_id": "0664f0180c4478947199e9d260b889bc",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:32:43",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a confidentiality clause for a Series B term sheet. This is a drafting task without a document attachment — I'm working in plain text.\n\nKey parameters provided:\n- UK manufacturing company (disclosing party)\n- US lead investor (receiving party)\n- Mutual confidentiality\n- 3-year survival/post-term duration\n- Standard market terms\n\nI should draft this directly in plain text. For a Series B term sheet, the confidentiality clause should be relatively concise but cover the essentials:\n- Definition of confidential information\n- Exclusions (publicly available, previously known, independently developed, etc.)\n- Obligations (protect,use only for the purpose, limit disclosure)\n- Permitted disclosures (directors, advisors, need-to-know)\n- Survival section tied to the 3-year term\n\nLet me draft this concisely.\n",
+        "signature": "4fa313de506bd9d061e600387c47945edf387ec83fa9b7cccc409da825f9140a"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the Series B term sheet:\n\n---\n\n**Confidentiality**\n\nEach party (the \"Receiving Party\") agrees to hold in confidence all confidential information disclosed by the other party (the \"Disclosing Party\") and shall not use such confidential information for any purpose except in connection with the evaluation, negotiation and consummation of the Proposed Investment (the \"Purpose\"). The Receiving Party shall protect the confidential information using the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\n\"Confidential Information\" means any information disclosed by the Disclosing Party that is marked as \"Confidential\" or \"Proprietary\" or otherwise identified as confidential at the time of disclosure, excluding information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was rightfully known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of the confidential information; or (d) is rightfully obtained from a third party without restriction.\n\nThe Receiving Party may disclose confidential information only to its directors, officers, employees, agents and professional advisors who need to know such information for the Purpose, and who are bound by confidentiality obligations at least as restrictive as those herein. The Receiving Party shall be responsible for any breach by such persons.\n\nThis obligation of confidentiality shall survive termination or expiration of this Agreement for a period of three (3) years.\n\n---\n\nWant me to adjust the scope (narrow to only the company's confidential information?), add carve-outs for legal/process requirements, or tailor further?"
+      }
+    ]
+  }
+]

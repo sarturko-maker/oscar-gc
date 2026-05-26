@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23341,
+    "message_id": "3wuj1oxf",
+    "role": "user",
+    "timestamp": "2026-05-26 14:03:33",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23342,
+    "message_id": "0664db36d12f1de959f47a96b9c37b98",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:03:42",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a confidentiality clause for a Series B term sheet. This is a straightforward drafting task - they want a mutual confidentiality clause with 3-year survival, for a UK company and US investor.\n\nLet me think through the requirements:\n- Mutual confidentiality (both parties bound)\n- 3-year survival post-termination\n- Series B term sheet context\n- UK company / US investor\n- Standard market terms\n\nThis is a plain-text drafting task (no document attached), so I should work with them in plain text as per my instructions. I have a strong prior on commercial drafting - I'll offer my view, mark assumptions, and ask for inputs I need.\n\nKey elements I should include:\n1. Definition of Confidential Information\n2. Obligation - mutual (each party as receiving party)\n3. Standard carve-outs (publicly available, prior knowledge, independently developed, etc.)\n4. Permitted disclosures (legal compulsion, advisors, need-to-know)\n5. Return/destruction provisions\n6. Term - typically indefinite or fixed, with survival\n7. 3-year post-termination survival is specifically requested\n8. Injunctive relief (standard remedy)\n9. Governing law - likely English law given UK company context\n10. Jurisdiction - courts of England and Wales or arbitration\n\nI'll draft this concisely and ask for confirmation of assumptions (governing law, jurisdiction, whether they want any specific carve-outs).\n",
+        "signature": "f608ecb37bae125e1df06b60573f0f6b1ce650e3ee36738353288c4d77ab73a5"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the Series B term sheet:\n\n---\n\n**Confidentiality.** Each party agrees to hold in confidence all confidential or proprietary information disclosed by the other party (\"Confidential Information\") and not to disclose such information to any third party, except to its directors, officers, employees, professional advisers and financing sources who need to know such information for the Purpose (as defined below) and who are bound by confidentiality obligations no less protective than those contained herein. \"Purpose\" means evaluating, negotiating and consummating the proposed Series B investment. Each party shall protect the Confidential Information using at least the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\nConfidential Information shall not include information that: (a) is or becomes publicly available through no fault of the receiving party; (b) was rightfully known to the receiving party prior to disclosure; (c) is independently developed by the receiving party without use of the Confidential Information; or (d) is rightfully obtained from a third party without restriction on disclosure.\n\nUpon termination of this letter agreement, or upon request by the disclosing party, the receiving party shall promptly return or destroy all Confidential Information (except for archival copies retained for legal compliance), certify such return or destruction in writing.\n\nThis confidentiality obligation shall survive termination of this letter agreement for a period of three (3) years.\n\nNothing herein restricts either party from disclosing Confidential Information as required by law, court order or governmental authority, provided the receiving party gives prompt notice to the disclosing party (to the extent legally permitted) to permit the disclosing party to seek protective measures.\n\n---\n\n**Assumptions:** English governing law and jurisdiction of the English courts. The 3-year survival runs from termination of the term sheet/投融资交易.\n\nWant me to adjust governing law/jurisdiction, tighten the carve-outs, or add anything else?"
+      }
+    ]
+  }
+]

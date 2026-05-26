@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23406,
+    "message_id": "1zcp1wlt",
+    "role": "user",
+    "timestamp": "2026-05-26 14:19:46",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23407,
+    "message_id": "0664df033557eea8eef55d91b2c7b917",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:19:51",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for use with prospective bidders before sharing pricing/volume data. Quick ask - short, mutual, 2-year term, English law.\n\nNo document attached, no redline - just drafting. I should work with them in plain text per the \"Working without an attachment\" instruction.\n\nLet me draft a short mutual NDA - 2 year term, English law, for pre-bidding diligence (pricing, volumes).\n",
+        "signature": "8579a77cf7d49a75bd55e8c3f717f5b4feaa9f10d98432342b8ad3e2d68f3dd9"
+      },
+      {
+        "type": "text",
+        "text": "\n\n\n\n**Mutual Non-Disclosure Agreement**\n\n---\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any pricing, volume, technical, or commercial information disclosed by one party to the other in connection with a prospective business relationship, whether orally, in writing, or by inspection.\n\n**2. Obligations**\nEach party shall:\n(a) protect the other's Confidential Information using the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care;\n(b) use the Confidential Information solely for the purpose of evaluating the proposed transaction; and\n(c) disclose the Confidential Information only to those of its officers, employees, and professional advisers who need to know it for that purpose and who are bound by equivalent confidentiality obligations.\n\n**3. Exclusions**\nThe obligations in Clause 2 do not apply to information that:\n(a) is or becomes publicly available through no fault of the receiving party;\n(b) was already known to the receiving party at the time of disclosure (evidenced in writing);\n(c) is independently developed by the receiving party without use of the Confidential Information; or\n(d) is rightfully obtained from a third party without restriction.\n\n**4. Term**\nThis agreement shall remain in effect for **two (2) years** from the date of first disclosure. The confidentiality obligations shall survive termination.\n\n**5. Governing Law**\nThis agreement shall be governed by the laws of England and Wales.\n\n---\n\nThat's the template. Want me to adjust anything — add a termination notice period, tighten the carve-outs, or swap to one-way (your NDA on their data)?"
+      }
+    ]
+  }
+]

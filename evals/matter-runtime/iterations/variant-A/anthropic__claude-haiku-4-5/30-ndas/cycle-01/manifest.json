@@ -1,0 +1,17 @@
+{
+  "cycle_id": "variant-A-anthropic/claude-haiku-4-5-30-ndas-cycle-01",
+  "variant": "A",
+  "model": "anthropic/claude-haiku-4-5",
+  "scenario": "30-ndas",
+  "cycle_n": 1,
+  "area_id": "commercial",
+  "matter": {
+    "slug": "30-ndas-c01-813926",
+    "name": "S32-813926 Sprint 30 — 10-NDA triage c01",
+    "working_dir": "/root/Documents/Oscar GC/Commercial/S32-813926 Sprint 30 — 10-NDA triage c01",
+    "state_folder": "/root/.config/oscar/state/commercial/matters/30-ndas-c01-813926"
+  },
+  "session_id": "20260526_249",
+  "provider": "openrouter",
+  "started_at": "2026-05-26T16:45:57.202Z"
+}

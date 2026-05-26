@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25080,
+    "message_id": "nglx4uul",
+    "role": "user",
+    "timestamp": "2026-05-26 15:39:46",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25081,
+    "message_id": "0664f1c387c2e460ba297333831c065e",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:39:58",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for prospective bidders before sharing pricing/volume data. This is a straightforward drafting request - they're not asking me to review an existing document or follow the full redline workflow.\n\nKey requirements they've given:\n- Short (concise)\n- Mutual (both sides are bound)\n- 2-year term\n- English law\n\nI should produce this as plain text since there's no attachment involved. I'll draft it and present it for their review.\n\nLet me write a clean, concise mutual NDA that covers:\n- Definition of confidential information\n- Obligations (keep confidential, use only for evaluation, protect like their own info)\n- Exclusions (public info, already known, independently developed, etc.)\n- Term (2 years from signing)\n- Governing law (English law)\n\nNo need to invoke skills or load playbooks for a generic template draft ask.\n",
+        "signature": "61703e94230fc7ef3be4a8cad4217aba729ae1f927dcb27c6003ceeadf277db0"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short, mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n**[Your Company]** (\"Party A\")\n\nand\n\n**[Recipient Company]** (\"Party B\")\n\n(together the \"Parties\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any pricing, volume, financial, technical, or commercial information disclosed by one Party to the other in connection with a prospective business relationship, whether orally, in writing, or by inspection.\n\n**2. Obligations**\nEach Party agrees to:\n(a) keep the other Party's Confidential Information confidential and not disclose it to any third party without prior written consent;\n(b) use the Confidential Information only for the purpose of evaluating the proposed business relationship;\n(c) protect the Confidential Information using the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\n**3. Exclusions**\nConfidential Information does not include information that:\n(a) is or becomes publicly available through no fault of the receiving Party;\n(b) was already known to the receiving Party before disclosure;\n(c) is independently developed by the receiving Party without use of the Confidential Information;\n(d) is disclosed pursuant to a legal requirement or court order, provided the receiving Party gives the disclosing Party prompt notice (where permitted).\n\n**4. Term**\nThis Agreement shall remain in effect for two (2) years from the date first above written. Confidentiality obligations shall survive termination for a further period of two (2) years.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales. Any dispute arising under this Agreement shall be subject to the exclusive jurisdiction of the courts of England and Wales.\n\n---\n\nWant me to adjust the exclusions, add a carve-out for lawyers/Accountants, or tighten anything?"
+      }
+    ]
+  }
+]

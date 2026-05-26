@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23330,
+    "message_id": "wlejrzb6",
+    "role": "user",
+    "timestamp": "2026-05-26 14:02:16",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23331,
+    "message_id": "0664dae98eeab6e0562732085c97b918",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:02:23",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. This is a straightforward drafting task - they're not asking me to review or redline an existing document; they want me to create new text.\n\nKey requirements from the ask:\n- Series B term sheet context\n- UK manufacturing company (disclosing party)\n- US lead investor (receiving party)\n- Standard market terms\n- Mutual (both sides confidential)\n- 3-year survival (survival of obligations post-termination)\n\nI don't need to load a playbook or skill for this - it's a clean drafting task where I should produce the clause based on my knowledge of market-standard terms for VC term sheets.\n\nLet me draft a mutual confidentiality clause appropriate for a Series B term sheet.\n",
+        "signature": "9f2cf3b08ba34ef87f08ef7150a3badf27a47dfeda22b7a97ddca905e8126fde"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for your Series B term sheet — standard market terms, mutual, 3-year survival:\n\n---\n\n**13. Confidentiality**\n\nEach party (the \"Receiving Party\") agrees to hold in confidence all Confidential Information of the other party (the \"Disclosing Party\") and shall not use such Confidential Information for any purpose except in connection with the evaluation, negotiation and consummation of the Proposed Transaction (as defined in the Summary of Terms dated [●], 2026). The Receiving Party shall disclose Confidential Information only to those of its officers, directors, employees, professional advisers and prospective financing sources who need to know such information for the foregoing purposes and who are bound by confidentiality obligations no less restrictive than those contained herein.\n\n\"Confidential Information\" means all non-public information relating to the Disclosing Party's business, financial condition, technology, intellectual property, customers, suppliers and affairs, whether disclosed orally, in writing or by any other means, that is marked as confidential or would reasonably be understood to be confidential given the nature of the information and the circumstances of disclosure.\n\nThe obligations in this Section 13 shall not apply to information that: (a) is or becomes publicly available other than as a result of a breach of this Section; (b) was lawfully known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of Confidential Information; or (d) is disclosed pursuant to a court order or regulatory requirement, provided that the Receiving Party gives the Disclosing Party prompt written notice (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\nThe confidentiality obligations in this Section 13 shall survive termination or expiration of this Agreement for a period of three (3) years.\n\n---\n\nAdjust the marked field `[●]` to your term sheet date. Let me know if you need carve-outs for specific categories (e.g., press releases, public filings) or a different survival period."
+      }
+    ]
+  }
+]

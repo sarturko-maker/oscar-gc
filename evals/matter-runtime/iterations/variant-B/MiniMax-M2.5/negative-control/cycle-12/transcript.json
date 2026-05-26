@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25048,
+    "message_id": "kl3uihpq",
+    "role": "user",
+    "timestamp": "2026-05-26 15:27:44",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25049,
+    "message_id": "0664eef175dbeed2f0d8209f5c87e029",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:27:49",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The user wants me to draft a confidentiality clause for a Series B term sheet. This is a straightforward commercial drafting task - they're asking for a confidentiality clause, not asking me to review an existing document.\n\nLet me think about what they need:\n- UK manufacturing company (issuer)\n- US lead investor (investor)\n- Series B term sheet context\n- Mutual confidentiality (both sides protect each other's info)\n- 3-year survival/conclusion\n- Standard market terms\n\nI don't need to load a skill for this - it's a plain text drafting request with no document attached. I'll draft a clause that reflects standard market terms for venture financing term sheets.\n\nKey elements I'll include:\n1. Definition of confidential information\n2. Mutual obligations (both parties)\n3. Standard carve-outs (publicly available, already known, received from third parties, independently developed, required by law/court order)\n4. Survival period (3 years)\n5. Return/destruction of confidential information\n6. Note that this is a term sheet exhibit/clause, not a standalone NDA\n\nI'll keep it concise and fit for a term sheet - these are typically shorter than standalone NDAs.\n",
+        "signature": "1f606b43215887e57274b8b89266a99e75cb58370055f288b0dff2a4a145fdd8"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a confidentiality clause suitable for a Series B term sheet:\n\n---\n\n**Confidentially**\n\nEach party (the \"Receiving Party\") agrees to hold in confidence all Confidential Information disclosed by the other party (the \"Disclosing Party\") and shall not use such Confidential Information except as necessary to evaluate, negotiate and consummate the Series B financing contemplated by this Term Sheet. The Receiving Party shall not disclose Confidential Information to any third party without the prior written consent of the Disclosing Party, except that the Receiving Party may disclose Confidential Information to its officers, directors, employees, professional advisers and potential co-investors who (i) have a need to know such information in connection with the Series B financing and (ii) are bound by confidentiality obligations no less protective than those contained herein.\n\nThe obligations under this Section shall not apply to information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was rightfully in the Receiving Party's possession prior to disclosure by the Disclosing Party; (c) is rightfully obtained by the Receiving Party from a third party without restriction on disclosure; (d) is independently developed by the Receiving Party without use of the Disclosing Party's Confidential Information; or (e) is required to be disclosed by applicable law, regulation or court order, provided that the Receiving Party gives prompt notice to the Disclosing Party to permit an opportunity to seek protective measures.\n\nUpon reasonable request or the termination of this Term Sheet, the Receiving Party shall return or destroy all Confidential Information of the Disclosing Party, except that the Receiving Party may retain one archival copy for compliance purposes only.\n\nThe confidentiality obligations of this Section shall survive for three (3) years following the termination or expiry of this Term Sheet.\n\n---\n\n**Notes:**\n- **Mutual** — protects both directions\n- **Three-year survival** — as requested\n- **Term-sheet appropriate** — narrower scope than a standalone NDA (limited to the transaction)\n- **Carve-outs** — standard public-domain, prior-knowledge, third-party, independent-development, legal compulsion exceptions\n\nDo you want me to adjust any terms — e.g., shorten/lengthen the survival period, add a \"no-shop\" provision for the company, or tweak the carve-outs?"
+      }
+    ]
+  }
+]

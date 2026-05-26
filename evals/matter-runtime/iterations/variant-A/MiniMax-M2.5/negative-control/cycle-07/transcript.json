@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23328,
+    "message_id": "pgeb1e3r",
+    "role": "user",
+    "timestamp": "2026-05-26 14:01:22",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23329,
+    "message_id": "0664dab303d1be4155fef344ac058bfe",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:01:28",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a confidentiality clause for a Series B term sheet. This is a commercial document drafting task, not a redline task. I don't have a document attached - they're asking me to work in plain text.\n\nLet me recall my commercial drafting prior for confidentiality clauses. For a Series B term sheet with:\n- UK company / US investor\n- Mutual confidentiality\n- 3-year survival\n\nI'll draft this in plain text and flag assumptions.\n",
+        "signature": "3e3e3a8e777334dd35377e6f56a5fe5870b11e7f56a38100908b3614e67b5655"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a draft_confidentiality clause for the term sheet:\n\n---\n\n**CONFIDENTIALITY**\n\nEach party (the \"Receiving Party\") agrees to hold in strict confidence all Confidential Information of the other party (the \"Disclosing Party\") disclosed in connection with the transactions contemplated by this Term Sheet. \"Confidential Information\" means any information that is designated as confidential or that reasonably ought to be understood to be confidential given the nature of the information and the circumstances of disclosure, including, without limitation, financial information, technical data, trade secrets, know-how, business plans, and customer lists.\n\nThe Receiving Party shall not disclose the Disclosing Party's Confidential Information to any third party except to its directors, officers, employees, professional advisers, and potential co-investors (if any) who (a) have a need to know such information for the purposes of evaluating the proposed investment, and (b) are bound by confidentiality obligations no less protective than those contained herein.\n\nThe obligations of confidentiality shall not apply to information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) is rightfully known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of the Disclosing Party's Confidential Information; or (d) is rightfully obtained from a third party without restriction on disclosure.\n\nThe confidentiality obligations under this Clause shall survive termination or expiration of this Term Sheet for a period of three (3) years from the date of disclosure of the relevant Confidential Information.\n\n---\n\n**Assumptions I'm making:**\n\n1. **Mutual** — both sides bound (as you said \"mutual\")\n2. **3-year survival** — survives termination/expiration for 3 years (standard forVC deals)\n3. **Standard carve-outs** — public domain, prior knowledge, independent development, third-party rightful disclosure\n4. **Permitted recipients** — includes potential co-investors for the US lead investor's fund LP reporting\n5. **No \"representative\" carve-out on liability** — want the receiving party's direct obligation\n\nDo you want me to narrow the survival period, add a representatives/carve-out, or adjust any other term?"
+      }
+    ]
+  }
+]

@@ -1,0 +1,110 @@
+{
+  "variant": "A",
+  "model": "MiniMax-M2.5",
+  "scenario": "playbook-mismatch",
+  "n": 20,
+  "cycles": [
+    {
+      "cycle_n": 1,
+      "session_id": "20260526_103",
+      "matter_slug": "playbook-mismatch-c01-804553"
+    },
+    {
+      "cycle_n": 2,
+      "session_id": "20260526_104",
+      "matter_slug": "playbook-mismatch-c02-804553"
+    },
+    {
+      "cycle_n": 3,
+      "session_id": "20260526_105",
+      "matter_slug": "playbook-mismatch-c03-804553"
+    },
+    {
+      "cycle_n": 4,
+      "session_id": "20260526_106",
+      "matter_slug": "playbook-mismatch-c04-804553"
+    },
+    {
+      "cycle_n": 5,
+      "session_id": "20260526_107",
+      "matter_slug": "playbook-mismatch-c05-804553"
+    },
+    {
+      "cycle_n": 6,
+      "session_id": "20260526_108",
+      "matter_slug": "playbook-mismatch-c06-804553"
+    },
+    {
+      "cycle_n": 7,
+      "session_id": "20260526_109",
+      "matter_slug": "playbook-mismatch-c07-804553"
+    },
+    {
+      "cycle_n": 8,
+      "session_id": "20260526_110",
+      "matter_slug": "playbook-mismatch-c08-804553"
+    },
+    {
+      "cycle_n": 9,
+      "session_id": "20260526_111",
+      "matter_slug": "playbook-mismatch-c09-804553"
+    },
+    {
+      "cycle_n": 10,
+      "session_id": "20260526_112",
+      "matter_slug": "playbook-mismatch-c10-804553"
+    },
+    {
+      "cycle_n": 11,
+      "session_id": "20260526_113",
+      "matter_slug": "playbook-mismatch-c11-804553"
+    },
+    {
+      "cycle_n": 12,
+      "session_id": "20260526_114",
+      "matter_slug": "playbook-mismatch-c12-804553"
+    },
+    {
+      "cycle_n": 13,
+      "session_id": "20260526_115",
+      "matter_slug": "playbook-mismatch-c13-804553"
+    },
+    {
+      "cycle_n": 14,
+      "session_id": "20260526_116",
+      "matter_slug": "playbook-mismatch-c14-804553"
+    },
+    {
+      "cycle_n": 15,
+      "session_id": "20260526_117",
+      "matter_slug": "playbook-mismatch-c15-804553"
+    },
+    {
+      "cycle_n": 16,
+      "session_id": "20260526_118",
+      "matter_slug": "playbook-mismatch-c16-804553"
+    },
+    {
+      "cycle_n": 17,
+      "session_id": "20260526_119",
+      "matter_slug": "playbook-mismatch-c17-804553"
+    },
+    {
+      "cycle_n": 18,
+      "session_id": "20260526_120",
+      "matter_slug": "playbook-mismatch-c18-804553"
+    },
+    {
+      "cycle_n": 19,
+      "session_id": "20260526_121",
+      "matter_slug": "playbook-mismatch-c19-804553"
+    },
+    {
+      "cycle_n": 20,
+      "session_id": "20260526_122",
+      "matter_slug": "playbook-mismatch-c20-804553"
+    }
+  ],
+  "started_at": "2026-05-26T14:09:13.892Z",
+  "completed_at": "2026-05-26T14:20:56.335Z"
+}

@@ -1,0 +1,15 @@
+{
+  "variant": "A",
+  "model": "anthropic/claude-haiku-4-5",
+  "scenario": "30-ndas",
+  "n": 1,
+  "cycles": [
+    {
+      "cycle_n": 1,
+      "session_id": "20260526_249",
+      "matter_slug": "30-ndas-c01-813926"
+    }
+  ],
+  "started_at": "2026-05-26T16:45:26.160Z",
+  "completed_at": "2026-05-26T16:45:58.836Z"
+}

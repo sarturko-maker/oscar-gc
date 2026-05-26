@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25030,
+    "message_id": "dmuwpk79",
+    "role": "user",
+    "timestamp": "2026-05-26 15:20:57",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25031,
+    "message_id": "0664ed5a0b5e78feff7c4d6bdec02462",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:21:03",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a confidentiality clause for a Series B term sheet. This is a different task from reviewing an existing document - they're asking for a plain-text draft.\n\nLooking at my instructions:\n- \"Working without an attachment\" section: If the lawyer is asking a Commercial-law question without attaching a document — \"what's the standard for indemnity carve-outs in vendor MSAs?\", \"draft me a confidentiality clause for a Series B term sheet\" — work with them in plain text. You have a strong prior on commercial drafting; offer your view, mark assumptions, and ask for the inputs you need.\n\nThis is a drafting task, not a redline task. The Turn 1 discovery protocol applies to matter tasks - but this is a drafting request, not a document review task. The protocol asks me to scan playbooks and skills, but those are for document review/redline tasks. For plain-text drafting, I should just proceed with drafting.\n\nKey requirements from the ask:\n- UK manufacturing company / US lead investor\n- Series B term sheet\n- Mutual confidentiality\n- 3-year survival\n- Standard market terms\n\nI should draft this directly. Let me produce a clean, mutual confidentiality clause suitable for a term sheet.\n",
+        "signature": "199e4c7020be603836a9d7f85e4294e6e5b47ad50a6e21bd856618e9d68bc5e2"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause suitable for a Series B term sheet:\n\n---\n\n**Confidentiality**\n\nEach party (the \"Disclosing Party\") may disclose to the other party (the \"Receiving Party\") certain confidential and proprietary information relating to its business, technology, products, finances and affairs (the \"Confidential Information\"). The Receiving Party shall:\n\n(a) use the Confidential Information solely for the Purpose of evaluating, negotiating and consummating the Proposed Transaction;\n\n(b) not disclose the Confidential Information to any third party without the Disclosing Party's prior written consent, except to its professional advisers bound by professional duty of confidence;\n\n(c) protect the Confidential Information with at least the same degree of care as it protects its own confidential information, but in no event less than reasonable care;\n\n(d) limit access to the Confidential Information to those of its officers, employees and agents who need to know for the Purpose and who are bound by confidentiality obligations no less restrictive than this Clause.\n\nThe obligations in this Clause shall not apply to information that: (i) is or becomes publicly available other than as a result of a breach; (ii) was lawfully in the Receiving Party's possession prior to disclosure; (iii) is independently developed by the Receiving Party without use of Confidential Information; or (iv) is disclosed pursuant to a legal requirement or court order, provided the Receiving Party gives the Disclosing Party prompt notice (where permitted by law) and reasonably assists in seeking protective measures.\n\nThis Clause shall survive termination or expiry of this Agreement for a period of **three (3) years** from the date of disclosure of the relevant Confidential Information.\n\n---\n\n**Assumptions made:**\n- Dual-sided mutual obligations (both parties receive and disclose)\n- Purpose: evaluation/consummation of the Series B investment (\"Purpose\")\n- Carve-outs: public availability, prior knowledge, independent development, legal compulsion\n- Professional adviser exemption (with duty of confidence)\n- Reasonably-assisted protective measure carve-out for court orders\n- 3-year survival from disclosure date (not termination)\n\nWant me to adjust the survival period (from termination or from disclosure), tighten/loosen the carve-outs, or add any other terms?"
+      }
+    ]
+  }
+]

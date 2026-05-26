@@ -1,0 +1,41 @@
+[
+  {
+    "db_id": 25492,
+    "message_id": "s44v21lu",
+    "role": "user",
+    "timestamp": "2026-05-26 16:20:18",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "I've dropped the latest NDAs in the matter folder from prospective counterparties this week. Give me a per-NDA read on each — GREEN / YELLOW / RED — with the top issues for each, so I can decide which ones legal needs to touch and which can go straight to sign."
+      }
+    ]
+  },
+  {
+    "db_id": 25493,
+    "message_id": "hqo2h7z4",
+    "role": "user",
+    "timestamp": "2026-05-26 16:20:23",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "A few more came in — same triage, please."
+      }
+    ]
+  },
+  {
+    "db_id": 25494,
+    "message_id": "qb9hfrxn",
+    "role": "user",
+    "timestamp": "2026-05-26 16:20:29",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft a counterparty email to Cypress's legal team walking through our top-3 issues on their NDA — keep it tight and professional, ready for the relationship lead to send."
+      }
+    ]
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "variant": "A",
+  "model": "anthropic/claude-haiku-4-5",
+  "scenario": "30-rfq",
+  "n": 10,
+  "cycles": [
+    {
+      "cycle_n": 1,
+      "session_id": "20260526_209",
+      "matter_slug": "30-rfq-c01-810479"
+    },
+    {
+      "cycle_n": 2,
+      "session_id": "20260526_210",
+      "matter_slug": "30-rfq-c02-810479"
+    },
+    {
+      "cycle_n": 3,
+      "session_id": "20260526_211",
+      "matter_slug": "30-rfq-c03-810479"
+    },
+    {
+      "cycle_n": 4,
+      "session_id": "20260526_212",
+      "matter_slug": "30-rfq-c04-810479"
+    },
+    {
+      "cycle_n": 5,
+      "session_id": "20260526_213",
+      "matter_slug": "30-rfq-c05-810479"
+    },
+    {
+      "cycle_n": 6,
+      "session_id": "20260526_214",
+      "matter_slug": "30-rfq-c06-810479"
+    },
+    {
+      "cycle_n": 7,
+      "session_id": "20260526_215",
+      "matter_slug": "30-rfq-c07-810479"
+    },
+    {
+      "cycle_n": 8,
+      "session_id": "20260526_216",
+      "matter_slug": "30-rfq-c08-810479"
+    },
+    {
+      "cycle_n": 9,
+      "session_id": "20260526_217",
+      "matter_slug": "30-rfq-c09-810479"
+    },
+    {
+      "cycle_n": 10,
+      "session_id": "20260526_218",
+      "matter_slug": "30-rfq-c10-810479"
+    }
+  ],
+  "started_at": "2026-05-26T15:47:59.459Z",
+  "completed_at": "2026-05-26T16:14:29.223Z"
+}

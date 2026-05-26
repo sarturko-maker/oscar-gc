@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25040,
+    "message_id": "yd17pnw0",
+    "role": "user",
+    "timestamp": "2026-05-26 15:25:04",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25041,
+    "message_id": "0664ee514ef67c4fcda27760901b0f7d",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:25:10",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The user is asking me to draft a confidentiality clause for a Series B term sheet. This is a straightforward drafting request - they're asking for a mutual confidentiality clause with 3-year survival, for a UK company and US investor.\n\nThis is NOT a redline task - there's no document attached to edit. This is a plain-text drafting request based on the description they've given.\n\nLet me think about the key elements:\n- Mutual confidentiality (both parties)\n- UK manufacturing company (Disclosing Party) and US lead investor (Receiving Party)\n- Series B term sheet context\n- 3-year survival post-termination\n- Standard market terms\n\nI should draft this in plain text, not reach for any playbook or skill - the Turn 1 discovery protocol applies to \"matter task\" but this is a drafting request from description, not a review/redline task on an attached document. There's no noun to match in the playbooks section (there's no document to review), and no skill specifically for \"draft confidentiality clause from scratch\" - the closest would be general commercial drafting judgment.\n\nI'll provide a clean, standard market mutual NDA clause suitable for a Series B term sheet, with the specifics they've asked for (mutual, 3-year survival).\n\nLet me draft this:\n\n---\n\nCONFIDENTIALITY\n\nEach party (the \"Receiving Party\") acknowledges that, in connection with the Series B financing (the \"Purpose\"), it may receive confidential or proprietary information of the other party (the \"Disclosing Party\"), including but not limited to financial information, business plans, customer and supplier lists, technical data, trade secrets and other non-public information relating to the Disclosing Party's business (the \"Confidential Information\").\n\nThe Receiving Party agrees to:\n(a) hold all Confidential Information in strict confidence and not disclose such information to any third party without the prior written consent of the Disclosing Party;\n(b) use the Confidential Information solely for the Purpose and not for any other purpose;\n\n\n(c) protect the Confidential Information using at least the same degree of care it uses to protect its own confidential information of a similar nature, but in no event less than reasonable care.\n\nConfidential Information shall not include information that: (i) is or becomes publicly available other than as a result of a breach of this clause; (ii) was known to the Receiving Party prior to disclosure; (iii) is independently developed by the Receiving Party without use of Confidential Information; or (iv) is rightfully obtained from a third party without restriction.\n\nThe obligations under this clause shall survive for a period of three (3) years following termination or expiry of this Agreement.\n\nI notice this is framed as a term sheet rather than a full agreement, so I should clarify the appropriate structure with the user before proceeding further.\n",
+        "signature": "3eb7ec4623b23f9d72a38adb27f571ff158cdbf9661a772628b1e228e9e1d56d"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for a Series B term sheet — standard market terms, 3-year survival:\n\n---\n\n**13. Confidentiality**\n\nEach party (the \"Receiving Party\") understands that in connection with the Series B financing (the \"Purpose\"), it may receive confidential or proprietary information of the other party (the \"Disclosing Party\"), including financial information, business plans, customer and supplier lists, technical data, trade secrets and other non-public information relating to the Disclosing Party's business (\"Confidential Information\").\n\nThe Receiving Party shall:\n\n(a) hold all Confidential Information in strict confidence and not disclose it to any third party without the prior written consent of the Disclosing Party;\n\n(b) use the Confidential Information solely for the Purpose;\n\n(c) protect the Confidential Information using at least the same degree of care it uses to protect its own confidential information of a similar nature, but in no event less than reasonable care.\n\nConfidential Information does not include information that: (i) is or becomes publicly available other than as a result of a breach of this clause; (ii) was known to the Receiving Party prior to disclosure; (iii) is independently developed by the Receiving Party without use of the Confidential Information; or (iv) is rightfully obtained from a third party without restriction.\n\nThe obligations in this clause shall survive termination or expiry of this Term Sheet for a period of **three (3) years**.\n\n---\n\nNeed me to adjust anything — narrow the carve-outs, add a return/destruction provision, or tailor further?"
+      }
+    ]
+  }
+]

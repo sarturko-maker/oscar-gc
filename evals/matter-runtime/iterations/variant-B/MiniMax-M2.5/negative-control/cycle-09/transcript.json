@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25042,
+    "message_id": "pu31gnrd",
+    "role": "user",
+    "timestamp": "2026-05-26 15:25:28",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25043,
+    "message_id": "0664ee698c90e6126615169bd8378905",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:25:35",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a draft confidentiality clause for a Series B term sheet. This is a straightforward drafting task - no document attached, just a request for a clause. \n\nLooking at the Turn 1 discovery protocol:\n- Noun in the lawyer's ask: \"confidentiality clause\" \n- This doesn't match an on-demand playbook noun (NDA, RFQ)\n- Skills block: there's no \"confidentiality-clause\" or similar slug\n- Not a batch situation\n\nSo I'll work with my commercial drafting knowledge. Key parameters:\n- UK manufacturing company (disclosing party) / US lead investor (receiving party)\n- Mutual (both directions)\n- 3-year survival\n- Series B term sheet context\n\nI should draft this in plain text, flag assumptions, and deliver.\n",
+        "signature": "644874392b29117fca8e3fdafcf638f3da40c55a78fcb9756b30e137cccad33d"
+      },
+      {
+        "type": "text",
+        "text": "\n\n\n**Confidentiality Clause — Draft**\n\n*Assumptions: mutual obligations; 3-year survival post-termination; no carve-out for public information or legally required disclosure.*\n\n---\n\n**Confidentiality**\n\nEach party (the \"Disclosing Party\") may disclose to the other party (the \"Receiving Party\") certain confidential and proprietary information relating to its business, technology, products, finances, and affairs (the \"Confidential Information\"). The Receiving Party shall:\n\n(a) hold all Confidential Information of the Disclosing Party in strict confidence and not disclose such Confidential Information to any third party without the prior written consent of the Disclosing Party;\n\n(b) use the Confidential Information solely for the purposes of evaluating, negotiating, and consummating the proposed Series B financing (the \"Purpose\");\n\n(c) protect the Confidential Information using the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care; and\n\n(d) limit disclosure of the Confidential Information to those of its officers, employees, agents, and professional advisers who need to know the Confidential Information for the Purpose and who are bound by confidentiality obligations no less protective than those contained herein.\n\n**Exclusions.** The obligations in this clause shall not apply to information that: (i) is or becomes publicly available through no fault of the Receiving Party; (ii) was rightfully known to the Receiving Party prior to disclosure by the Disclosing Party, as evidenced by contemporaneous written records; (iii) is rightfully received by the Receiving Party from a third party without restriction on disclosure; or (iv) is independently developed by the Receiving Party without use of the Confidential Information.\n\n**Legally Required Disclosure.** If the Receiving Party is required by applicable law, regulation, or order of a court or governmental authority to disclose any Confidential Information, the Receiving Party shall promptly notify the Disclosing Party (to the extent legally permitted) and cooperate with the Disclosing Party's reasonable efforts to seek protective treatment.\n\n**Term.** The confidentiality obligations under this clause shall survive termination or expiration of this letter agreement for a period of three (3) years from the date of disclosure of the respective Confidential Information.\n\n**Return or Destruction.** Upon request by the Disclosing Party, the Receiving Party shall promptly return or destroy all tangible Confidential Information (and certify such destruction in writing), except for archival copies retained for legal compliance purposes.\n\n---\n\n**Points to flag:**\n\n- **Territorial law:** I've assumed English law governs (typical for UK company as lead party). Say if US law applies instead.\n- **Scope carve-out:** The usual carve-outs for investors in term sheets — if the lead investor wants to share with its fund co-investors or lenders, you may want to add a carve-out for \"affiliates\" or \"permitted assigns.\"\n- **Standstill:** Does the lawyer want a standstill undertaking (no acquisition activity during exclusivity)? Often paired with confidentiality in Series B term sheets. Let me know if needed.\n- **Survival drafting:** 3-year survival is standard, though some investors push for 5 years or perpetual on \"trade secrets.\" Want me to adjust?"
+      }
+    ]
+  }
+]

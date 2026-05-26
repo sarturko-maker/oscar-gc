@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25086,
+    "message_id": "uybeuvv6",
+    "role": "user",
+    "timestamp": "2026-05-26 15:41:33",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25087,
+    "message_id": "0664f22e7eddd6ff13e09231be882a29",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:41:38",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for prospective bidders before sharing pricing/volume data. They've specified: mutual, 2-year term, English law.\n\nNo playbook match here—this is a plain drafting task, not a review/redline. I'll draft directly in plain text and note the key terms I'm assuming.\n",
+        "signature": "2704f729d2d1b6a561715ee13ecd0c6a2e157c6a4378dc9545313f588a6e1b22"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a draft:\n\n---\n\n**MUTUAL CONFIDENTIALITY AGREEMENT**\n\nThis Mutual Confidentiality Agreement (\"Agreement\") is entered into between **[Company]** (\"Party A\") and **[Bidder]** (\"Party B\") (each a \"Party\", together the \"Parties\").\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one Party to the other in connection with the Purpose, including but not limited to pricing, volumes, technical specifications, business plans, and supplier arrangements, whether disclosed orally, in writing, or by inspection.\n\n**2. Obligations**\nEach Party agrees to:\n(a) protect the other Party's Confidential Information using the same degree of care it uses to protect its own confidential information, but no less than reasonable care;\n(b) use the Confidential Information solely for the Purpose of evaluating a potential business relationship (\"Purpose\");\n(c) not disclose the Confidential Information to any third party without prior written consent;\n(d) limit disclosure to employees, agents, and advisors who need to know and are bound by confidentiality obligations.\n\n**3. Exclusions**\nThis Agreement does not apply to information that:\n(a) is or becomes publicly available through no breach by the receiving Party;\n(b) was lawfully known to the receiving Party prior to disclosure;\n(c) is independently developed by the receiving Party without use of the Confidential Information;\n(d) is disclosed pursuant to a legal requirement or court order, provided the receiving Party gives prompt notice to allow the disclosing Party to seek protective measures.\n\n**4. Term**\nThis Agreement will remain in effect for two (2) years from the date of first disclosure. confidentiality obligations survive termination for a further two (2) years.\n\n**5. Governing Law**\nThis Agreement is governed by the laws of England and Wales.\n\n---\n\nAssumed: mutual symmetry (both sides bound), no carve-out for competitively acquired info, non-disclosure only (no licence/use rights). Want me to tighten anything or add other terms?"
+      }
+    ]
+  }
+]

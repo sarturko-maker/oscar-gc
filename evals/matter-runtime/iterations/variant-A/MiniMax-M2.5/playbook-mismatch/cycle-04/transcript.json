@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23373,
+    "message_id": "3xvpy52d",
+    "role": "user",
+    "timestamp": "2026-05-26 14:11:36",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23374,
+    "message_id": "0664dd191ebdcaf265130d572303cf39",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:11:41",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for prospective bidders before sharing pricing/volume data. Short, mutual, 2-year term, English law.\n\nThis is a drafting task, not a redline task. I should work with them in plain text - no document attached, just drafting advice.\n\nLet me draft this directly. Key requirements:\n- Short\n- Mutual (both ways)\n- 2-year term\n- English law\n- For prospective bidders (pre-contract, pricing/volume data)\n\nI'll draft a concise NDA in plain text for their review.\n",
+        "signature": "56ac8867addee44f7521137d623f14c44435b1c6eea42847eadab51fe3443ae0"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short, mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement is entered into on [DATE] between:\n\n1. **[YOUR COMPANY]** (\"First Party\")\n2. **[BIDDER NAME]** (\"Second Party\")\n(together, the \"Parties\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any pricing, volume, technical, or商业 information disclosed by one Party to the other in connection with [PROJECT/PROPOSAL], which is marked as confidential or would reasonably be understood to be confidential.\n\n**2. Obligations**\nEach Party shall:\n(a) hold the other Party's Confidential Information in strict confidence;\n(b) not disclose it to any third party without prior written consent;\n(c) use it only for the purpose of evaluating the proposed [project/supply arrangement].\n\n**3. Exclusions**\nConfidential Information does not include information that:\n(a) is or becomes publicly available through no breach of this Agreement;\n(b) was already known to the receiving Party prior to disclosure;\n(c) is independently developed without use of the Confidential Information; or\n(d) is disclosed pursuant to a legal requirement or court order (provided the receiving Party gives prompt notice).\n\n**4. Term**\nThis Agreement shall remain in effect for two (2) years from the date first above written.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\n**[YOUR COMPANY]**  \nDate: _______________  \nSignature: _______________  \nName: _______________  \nTitle: _______________\n\n**[BIDDER NAME]**  \nDate: _______________  \nSignature: _______________  \nName: _______________  \nTitle: _______________\n\n---\n\nWant me to adjust the scope, add a return-delivery obligation, or convert this to a Word document?"
+      }
+    ]
+  }
+]

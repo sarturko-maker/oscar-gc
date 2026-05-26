@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25104,
+    "message_id": "rpqnv13c",
+    "role": "user",
+    "timestamp": "2026-05-26 15:47:43",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25105,
+    "message_id": "0664f3a043f52fa70483f49c4861d50a",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:47:48",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for use with prospective bidders before sharing pricing or volume data. This is a straightforward drafting request - not a redline task, not a review task, just drafting from scratch.\n\nKey specs:\n- Mutual (both sides confidential)\n- Short\n- 2-year term\n- English law\n\nI should draft this in plain text since no document is attached. This is a commercial-law drafting question, so I'll work with them in plain text.\n",
+        "signature": "9f4710675c651790b8dc5f34bb2fde69103da8cc962ad0315626ba53159e9e66"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Agreement is entered into on [DATE] between:\n\n(1) **[YOUR COMPANY]** (\"Party A\"); and  \n(2) **[BIDDER/BACKER NAME]** (\"Party B\")\n\n(each a \"Party\").\n\n**1. Confidentiality Obligation**\nEach Party undertakes to keep confidential and not disclose to any third party any Confidential Information received from the other Party. \"Confidential Information\" means any non-public information relating to the other Party's business, pricing, volumes, or commercial arrangements, disclosed for the purpose of evaluating a potential business relationship (the \"Purpose\").\n\n**2. Exclusions**\nThis obligation does not apply to information which:\n- (a) is or becomes publicly available other than by breach of this Agreement;\n- (b) was already lawfully known to the receiving Party prior to disclosure;\n- (c) is independently developed without use of the Confidential Information; or\n- (d) is required to be disclosed by law, court order, or regulatory authority, provided the receiving Party gives prompt notice to the disclosing Party (to the extent legally permitted).\n\n**3. Permitted Disclosure**\nEach Party may disclose the other Party's Confidential Information only to those of its officers, employees, and professional advisers who need to know it for the Purpose, and who are bound by equivalent confidentiality obligations.\n\n**4. Return or Destruction**\nOn request, or upon termination of discussions, the receiving Party shall return or destroy all Confidential Information (including copies), except for any archived backup copies made in the ordinary course of business.\n\n**5. Term**\nThis Agreement shall remain in force for two (2) years from the date of first disclosure of Confidential Information.\n\n**6. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales. Any dispute arising under it shall be subject to the exclusive jurisdiction of the English courts.\n\n---\n\nWant me to adjust the scope (e.g., tighter carve-outs on pricing), add an injunction clause, or tailor it further for your procurement workflow?"
+      }
+    ]
+  }
+]

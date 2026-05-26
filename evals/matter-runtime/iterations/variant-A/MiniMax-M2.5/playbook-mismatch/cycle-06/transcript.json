@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23377,
+    "message_id": "037v8478",
+    "role": "user",
+    "timestamp": "2026-05-26 14:12:29",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23378,
+    "message_id": "0664dd4e3364dd1cd78585827656d019",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:12:34",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for prospective bidders. This is a straightforward drafting request - no document attached, just a plain text ask.\n\nKey requirements:\n- Mutual (both parties confidential)\n- 2-year term\n- English law\n- Short\n- For prospective bidders sharing pricing/volume data\n\nI have a strong prior on NDA drafting. I'll draft a short, balanced mutual NDA and present it in plain text for the lawyer to review.\n",
+        "signature": "a051d93e6c4255331c694af64ab31b1ef945559b11596c83d85d5d2599a17a3c"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into by and between **[Your Company]** and **[Counterparty]** (each a \"Party\", together the \"Parties\").\n\n**1. Purpose**\nThe Parties may disclose to each other certain confidential and proprietary information in connection with discussions regarding a potential business relationship (\"Purpose\").\n\n**2. Confidential Information**\n\"Confidential Information\" means any information disclosed by one Party to the other that is marked as confidential or would reasonably be understood to be confidential, including but not limited to pricing, volume数据, technical data, and business plans. It does not include information that: (a) is or becomes publicly available; (b) was already known to the receiving Party; (c) is independently developed; or (d) is lawfully obtained from a third party.\n\n**3. Obligations**\nEach Party shall: (a) protect the other's Confidential Information using the same degree of care it uses to protect its own confidential information (and in no event less than reasonable care); (b) use the other's Confidential Information only for the Purpose; and (c) disclose such information only to those who need to know and are bound by confidentiality obligations.\n\n**4. Term**\nThis Agreement shall remain in effect for two (2) years from the date of first disclosure, except that confidentiality obligations shall survive for a further two (2) years after termination for Confidential Information disclosed during the term.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n**[Your Company]**  \nDate: \\_\\_\\_\\_\\_\\_\\_\\_  \nSignature: \\_\\_\\_\\_\\_\\_\\_\\_  \nName: \\_\\_\\_\\_\\_\\_\\_\\_  \nTitle: \\_\\_\\_\\_\\_\\_\\_\\_  \n\n**[Counterparty]**  \nDate: \\_\\_\\_\\_\\_\\_\\_\\_  \nSignature: \\_\\_\\_\\_\\_\\_\\_\\_  \nName: \\_\\_\\_\\_\\_\\_\\_\\_  \nTitle: \\_\\_\\_\\_\\_\\_\\_\\_  \n\n---\n\nWant me to adjust the term length, add exclusions for compelled disclosure, or tailor it further?"
+      }
+    ]
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25034,
+    "message_id": "qbd8d04q",
+    "role": "user",
+    "timestamp": "2026-05-26 15:22:47",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25035,
+    "message_id": "0664edc81c9d38338fda90d68f8687d0",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:22:55",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The user wants me to draft a confidentiality clause for a Series B term sheet. Let me break down the requirements:\n\n1. Series B term sheet context\n2. UK manufacturing company (discloser) / US lead investor (recipient)\n3. Mutual confidentiality\n4. Standard market terms\n5. 3-year survival\n\nThis is a drafting task in plain text — no document attachment. I should work with my prior on commercial drafting and produce a clause. Let me draft this directly.\n\nKey elements for a mutual confidentiality clause in this context:\n- Definition of Confidential Information\n- Exclusions (what's not confidential)\n- Obligations of receiving party\n- Permitted disclosures (legal requirement, etc.)\n- Return/destruction of confidential information\n- Term and survival\n- Remedies/injunction relief (common in M&A/term sheets)\n\nLet me draft a standard market mutual clause.\n",
+        "signature": "beb77a56d68b6955f9c421944e72f146d53da46f2bf0f18d38e2875994c12a49"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the Series B term sheet:\n\n---\n\n**13. Confidentiality**\n\n**13.1 Definition.** \"Confidential Information\" means any non-public information disclosed by either party (the \"Disclosing Party\") to the other party (the \"Receiving Party\") in connection with the Proposed Transaction, including but not limited to financial information, business plans, customer data, technical data, trade secrets, pricing information, and any analyses, compilations, or summaries prepared by the Receiving Party that contain or derive from such information.\n\n**13.2 Exclusions.** Confidential Information does not include information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was rightfully known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of Confidential Information; or (d) is rightfully obtained by the Receiving Party from a third party without restriction on disclosure.\n\n**13.3 Obligations.** The Receiving Party shall: (a) hold all Confidential Information in strict confidence; (b) not disclose Confidential Information to any third party without the prior written consent of the Disclosing Party; and (c) use Confidential Information solely for the purpose of evaluating and consummating the Proposed Transaction.\n\n**13.4 Permitted Disclosure.** Notwithstanding Section 13.3, the Receiving Party may disclose Confidential Information to its officers, directors, employees, agents, and professional advisers (including attorneys, accountants, and financial advisors) who need to know such information for the purposes set forth in Section 13.3(c), provided that the Receiving Party informs such persons of the confidential nature of the information and procures their agreement to be bound by confidentiality obligations at least as protective as those contained herein.\n\n**13.5 Legal Process.** The Receiving Party may disclose Confidential Information as required by applicable law, regulation, or legal process (including SEC filings, stock exchange requirements, or court order), provided that the Receiving Party promptly notifies the Disclosing Party (to the extent legally permitted) and cooperates with the Disclosing Party's reasonable efforts to seek protective treatment or confidential treatment for such information.\n\n**13.6 Return or Destruction.** Upon the written request of the Disclosing Party, or upon termination of discussions regarding the Proposed Transaction, the Receiving Party shall, at its option, promptly return or destroy all tangible Confidential Information (including all copies, extracts, and summaries) and certify such return or destruction in writing. Notwithstanding the foregoing, the Receiving Party may retain one archival copy of Confidential Information for legal hold or regulatory compliance purposes only, subject to the continuing confidentiality obligations herein.\n\n**13.7 Injunctive Relief.** The Receiving Party acknowledges that monetary damages may be inadequate to remedy any breach of this Section 13 and that the Disclosing Party shall be entitled to seek equitable relief, including injunction and specific performance, in addition to all other remedies available at law or in equity.\n\n**13.8 Term.** The confidentiality obligations under this Section 13 shall survive for a period of three (3) years from the date of disclosure of each item of Confidential Information, or until the Confidential Information falls within an exclusion under Section 13.2, whichever occurs first.\n\n---\n\n**Key drafting choices:**\n- **Mutual structure** — both sides bound equally\n- **Exclusions** — standard carve-outs for public domain, prior knowledge, independent development, and third-party sources\n- **Permitted recipients** — officers, directors, employees, agents, professional advisers with need-to-know\n- **Legal-process carve-out** — allows disclosure for SEC/regulatory requirements (critical for a US investor likely to have public markets obligations)\n- **Return/destruction** — with archival exception for legal hold\n- **Injunctive relief** — standard in M&A/term sheet contexts\n- **3-year survival** — as you specified\n\nWant me to adjust any elements — for example, tightening the exclusions, adding a \"no-use\" covenant, or adjusting the survival period?"
+      }
+    ]
+  }
+]

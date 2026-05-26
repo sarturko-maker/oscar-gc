@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23332,
+    "message_id": "hfg10yiy",
+    "role": "user",
+    "timestamp": "2026-05-26 14:02:42",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23333,
+    "message_id": "0664db039f5cfe4b2df2b8f7c6260a0a",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:02:48",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. Let me work through the Turn 1 protocol:\n\nStep A: There's no playbook for \"confidentiality clause\" specifically — it's part of a broader NDA/commercial context. The `nda-review-playbook.md` could apply but this isn't a review task, it's a drafting task.\n\nStep B: No skill directly names \"confidentiality clause drafting\" — closest would be `nda-review` but that's for reviewing existing NDAs, not drafting new clauses.\n\nStep C: No batch — it's a single clause.\n\nThis is a drafting task without an attachment. I should work with my prior on commercial drafting and offer a draft.\n\nKey parameters:\n- UK manufacturing company (disclosing party typically)\n- US lead investor (receiving party typically, but mutual)\n- Series B term sheet context\n- Mutual confidentiality\n- 3-year survival\n\nI'll draft a standard market confidentiality clause and ask any clarifying questions I need.\n",
+        "signature": "d610d7c3539e01b702b5916c9b8bf67d86569944dab600db57b76088d1b1932e"
+      },
+      {
+        "type": "text",
+        "text": "\n\nI'll draft a mutual confidentiality clause for the term sheet. Working from standard market terms: mutual obligations, 3-year survival post-termination, standard exclusions, and a clear purpose limitation.\n\n**Assumptions I'll build in:**\n- Both parties are bound (mutual)\n- Survival of 3 years after the term sheet terminates or closes\n- Permitted disclosures to affiliates, professional advisers, and due diligence parties on need-to-know\n- Standard trade secret/excluded information carve-outs\n- No \"standstill\" or \"non-solicit\" — those are usually separate Series B provisions\n\nLet me draft:\n\n---\n\n**CONFIDENTIALITY**\n\n**13.1 Mutual Confidentiality.** Each party (the \"Receiving Party\") agrees to hold in confidence all Confidential Information disclosed by the other party (the \"Disclosing Party\") and shall not use such Confidential Information except for the purpose of evaluating, negotiating, and documenting the Proposed Transaction (as defined in the Summary of Terms attached hereto). The Receiving Party shall disclose Confidential Information only to its officers, directors, employees, professional advisers, and potential co-investors (if any) who (a) have a need-to-know such information for such purpose and (b) are bound by confidentiality obligations at least as restrictive as those contained herein. The Receiving Party shall protect the Disclosing Party's Confidential Information using at least the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\n**13.2 Exclusions.** \"Confidential Information\" shall not include information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was rightfully in the Receiving Party's possession prior to disclosure, as evidenced by contemporaneous written records; (c) is independently developed by the Receiving Party without use of or reference to the Disclosing Party's Confidential Information; or (d) is rightfully obtained by the Receiving Party from a third party without restriction on disclosure.\n\n**13.3 Compelled Disclosure.** If the Receiving Party is compelled by applicable law, regulation, or court order to disclose any Confidential Information, the Receiving Party shall: (i) give the Disclosing Party prompt written notice of such requirement (to the extent legally permitted); (ii) use commercially reasonable efforts to obtain protective treatment for such disclosure; and (iii) disclose only the minimum information required to satisfy such requirement.\n\n**13.4 Return or Destruction.** Upon request by the Disclosing Party following the termination of discussions or the closing of the Proposed Transaction, the Receiving Party shall, at its election, promptly return or destroy all tangible embodiments of the Disclosing Party's Confidential Information and erase any electronic copies, except that the Receiving Party may retain one archival copy solely for legal compliant purposes.\n\n**13.5 Term.** The obligations of confidentiality under this Section 13 shall survive for a period of three (3) years from the date of disclosure of the relevant Confidential Information, or until such Confidential Information falls within an exclusion under Section 13.2, whichever occurs first.\n\n**13.6 No License.** No license or other right is granted to the Receiving Party under any patent, copyright, trademark, or other intellectual property right except as expressly set forth herein.\n\n---\n\nWant me to adjust the scope — for example, add a standstill, restrict to the lead investor only (one-way), or add a specific \"no publicity\" provision? Also: should this bind just the term sheet, or carry forward into the SPA closing?"
+      }
+    ]
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23324,
+    "message_id": "qpatdvgl",
+    "role": "user",
+    "timestamp": "2026-05-26 14:00:29",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23325,
+    "message_id": "0664da7edd15c7245d72f8ff3ac4a215",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:00:37",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a confidentiality clause for a Series B term sheet. Let me work through the Turn 1 discovery protocol.\n\nThe noun in the lawyer's ask is \"confidentiality clause\" - this is a clause, not a full NDA. Looking at the playbooks:\n- nda-review-playbook.md - for NDA tasks\n- rfq-review-playbook.md - for RFQ tasks\n\nNeither playbook directly addresses drafting a confidentiality clause for a term sheet. This isn't an NDA review task - it's a clause drafting task.\n\nLooking at skills:\n- nda-review - for reviewing NDAs\n- vendor-agreement-review - for vendor agreements\n- saas-msa-review - for SaaS agreements\n\nNo skill directly tackles \"draft a confidentiality clause\" - though this falls under commercial drafting more broadly.\n\nThis is a straightforward drafting request - drafting a confidentiality clause for a term sheet. I should work with them in plain text (no redline doctrine applies because there's no document attached).\n\nLet me draft a standard market-term confidentiality clause for a Series B term sheet:\n- Mutual (both sides keep confidential)\n- Standard exclusions (publicly available, previously known, independently developed, third party disclosure, etc.)\n- 3-year survival\n- UK company / US investor context\n\nI'll produce this as a clause they can drop into the term sheet, then ask if they need adjustments.\n",
+        "signature": "c59a10cfd5f355d938fdee85e7485952bf6706c8a0ff19052067c80c53da28a0"
+      },
+      {
+        "type": "text",
+        "text": "\n\nThis is a clause-drafting task, not a document review — no playbook or skill triggers. I'll draft in plain text.\n\n---\n\n**Confidentiality Clause — Series B Term Sheet**\n\n> **Confidentiality**\n>\n> Each party (the \"Receiving Party\") agrees to hold in confidence all Confidential Information of the other party (the \"Disclosing Party\") and shall not use such Confidential Information for any purpose except in connection with the contemplated Series B funding (the \"Purpose\"). The Receiving Party shall not disclose Confidential Information to any third party without the prior written consent of the Disclosing Party, except to its legal counsel, financial advisors, and prospective investors in connection with the Purpose, provided that such recipients are bound by confidentiality obligations no less protective than those contained herein.\n>\n> \"Confidential Information\" means any non-public information disclosed by the Disclosing Party to the Receiving Party, whether orally, in writing, or by inspection, that is designated as confidential or that reasonably ought to be understood to be confidential given the nature of the information and circumstances of disclosure. Confidential Information does not include information that: (a) is or becomes publicly available through no breach of this provision by the Receiving Party; (b) was lawfully known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of Confidential Information; or (d) is rightfully obtained from a third party without restriction on disclosure.\n>\n> Notwithstanding the foregoing, each party may disclose the existence and general nature of the contemplated transaction to the extent required by applicable securities law or regulation, provided that the disclosing party promptly notifies the other party of such disclosure requirement and uses commercially reasonable efforts to seek confidential treatment of the terms hereof to theextent permitted by law.\n>\n> The confidentiality obligations under this clause shall survive for a period of three (3) years from the date of disclosure of the applicable Confidential Information. All Confidential Information remains the property of the Disclosing Party, and no licence or rights thereto is granted by disclosure.\n\n---\n\n**Notes:**\n- **Mutual** — both parties bound symmetrically.\n- **Standard exclusions** — publicly available, prior knowledge, independent development, lawful third-party disclosure.\n- **Permitted disclosures** — legal counsel, financial advisors, prospective investors (standard carve-out for professional advisors bound to confidentiality).\n- **Securities-law carve-out** — needed for a Series B; allows disclosure as required by SEC/FCA rules with prompt notice and efforts to seek confidential treatment.\n- **3-year survival** — standard for term sheets.\n\nWant me to adjust the carve-outs, tighten the permitted-disclosure scope, or add a return/destruction provision?"
+      }
+    ]
+  }
+]

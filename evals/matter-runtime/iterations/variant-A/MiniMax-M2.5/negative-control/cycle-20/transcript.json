@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23365,
+    "message_id": "gofasxkk",
+    "role": "user",
+    "timestamp": "2026-05-26 14:08:54",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23366,
+    "message_id": "0664dc775efcb23e89988cb94a26d05b",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:09:03",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "Turn 1 discovery protocol:\n\n1. The noun is \"confidentiality clause\" - this is for inclusion in a Series B term sheet, not a standalone NDA.\n\n2. There's no playbook that specifically matches \"confidentiality clause\" as a noun - but there's the NDA playbook that would be used for a standalone NDA. This isn't that.\n\n3. Looking at skills: I don't see a skill specifically for \"confidentiality clause drafting\" - but `ip-clause-review` is for reviewing IP clauses in agreements. There's no \"draft confidentiality clause\" skill.\n\n4. The batch shape doesn't apply - this is a single clause request.\n\nSo I'm in \"working without an attachment\" mode - the lawyer wants me to draft a confidentiality clause directly. They've given me clear parameters:\n- Series B term sheet context\n- UK manufacturing company (disclosing party) / US lead investor (receiving party)\n- Mutual\n- 3-year survival\n- Standard market terms\n\nLet me draft this. I have a strong prior on what these look like. I'll mark my assumptions and provide the clause.\n",
+        "signature": "3f55af246d6d99296eaf9a05abe9acbdee62f4cdb9fce05a9b6024daa2abe96e"
+      },
+      {
+        "type": "text",
+        "text": "\n\nDrafting the clause now. Assumptions: the lead investor is also a VC fund; mutual obligations with standard carve-outs (public domain, prior knowledge, lawful disclosure, directors need-to-know); survives for 3 years post-termination. Let me know if any parameter differs.\n\n---\n\n**Confidentiality**\n\n*Each party (the \"Receiving Party\") agrees to hold in confidence all Confidential Information of the other party (the \"Disclosing Party\") and not to disclose such Confidential Information to any third party except as permitted hereunder. \"Confidential Information\" means any non-public information disclosed by the Disclosing Party to the Receiving Party, whether orally, in writing, or by inspection, that is designated as confidential or that reasonably ought to be understood to be confidential given the nature of the information and the circumstances of disclosure.*\n\n*The foregoing obligations shall not apply to information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was rightfully known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of the Confidential Information; or (d) is rightfully obtained from a third party without restriction on disclosure.*\n\n*The Receiving Party may disclose Confidential Information only to its officers, employees, agents, and professional advisors who need to know such information for the purposes contemplated by this Agreement, provided such persons are bound by confidentiality obligations no less protective than those contained herein.*\n\n*Neither party shall disclose the existence or terms of this Agreement or the Series B financing to any third party without the prior written consent of the other party, except (i) as required by applicable law, regulation, or legal process, (ii) to such party's legal counsel, accountants, or financial advisors, or (iii) to potential investors in the Receiving Party's funds, provided such recipients are bound by substantially similar confidentiality obligations.*\n\n*This Section shall survive termination or expiry of this Agreement for a period of three (3) years.*\n\n---\n\nWant me to adjust the carve-outs, add a \"mutual\" preamble at the top, or modify the permitted-disclosure carve-outs?"
+      }
+    ]
+  }
+]

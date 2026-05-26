@@ -1,0 +1,79 @@
+[
+  {
+    "db_id": 23355,
+    "message_id": "dye1i8rt",
+    "role": "user",
+    "timestamp": "2026-05-26 14:06:35",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23356,
+    "message_id": "0664dbec9c3d880f3a6f6c3ac943c299",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:06:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a confidentiality clause for a Series B term sheet. This is a drafting request - they're asking me to produce text, not review or redline an existing document.\n\nLet me check the Turn 1 discovery protocol:\n- Noun: confidentiality clause (or term sheet)\n- On-demand playbooks: Neither RFQ nor NDA specifically matches \"confidentiality clause\"\n- Skills: There's no skill that specifically names \"confidentiality clause\" or \"term sheet\" - closest would be NDA review but that's for reviewing, not drafting\n- Batch: Single item, no delegation needed\n\nThis is a drafting task. I should draft the clause in plain text since there's no document to edit. I'll also update the todo.\n\nThe specs:\n- UK manufacturing company\n- US lead investor\n- Series B term sheet\n- Mutual confidentiality (both sides)\n- 3-year survival on termination/expiry\n\nStandard market terms for a Series B term sheet confidentiality clause:\n- Mutual obligation\n- Definition of confidential information\n- Exclusions (publicly available, independently developed, lawfully received, prior knowledge, required by law)\n- Permitted disclosure to advisors bound by confidentiality\n- Standard term (indefinite or specific) with survival\n- Return/destruction of confidential information\n- No license or rights granted\n- Injunctive relief (equitable remedy) - common in VC term sheets\n\nLet me draft this concisely.\n",
+        "signature": "e98d48482e1b5aca283d9e2f2949d817f91692e32a59f327aa1052c06090fe3f"
+      }
+    ]
+  },
+  {
+    "db_id": 23357,
+    "message_id": "msg_e678bb9b-e144-46f4-aefb-b207cc776b0f",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:06:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "call_function_gda81mhg810c_1",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "todo__todo_write",
+            "arguments": {
+              "content": "- [ ] Draft mutual confidentiality clause for Series B term sheet\n- [ ] UK manufacturing company (disclosing party) / US lead investor\n- [ ] 3-year survival on termination/expiry\n- [ ] Confirm draft with lawyer"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "todo"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 23358,
+    "message_id": "msg_98b22eab-d95e-4263-b558-56db34ad8cd9",
+    "role": "user",
+    "timestamp": "2026-05-26 14:06:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "call_function_gda81mhg810c_1",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Updated (210 chars)"
+              }
+            ],
+            "isError": false
+          }
+        }
+      }
+    ]
+  }
+]

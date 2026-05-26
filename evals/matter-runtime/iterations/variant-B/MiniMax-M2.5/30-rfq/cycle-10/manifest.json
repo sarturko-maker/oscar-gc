@@ -1,0 +1,17 @@
+{
+  "cycle_id": "variant-B-MiniMax-M2.5-30-rfq-cycle-10",
+  "variant": "B",
+  "model": "MiniMax-M2.5",
+  "scenario": "30-rfq",
+  "cycle_n": 10,
+  "area_id": "commercial",
+  "matter": {
+    "slug": "30-rfq-c10-805257",
+    "name": "S32-805257 Sprint 30 — Pemberton RFQ pack + redline c10",
+    "working_dir": "/root/Documents/Oscar GC/Commercial/S32-805257 Sprint 30 — Pemberton RFQ pack + redline c10",
+    "state_folder": "/root/.config/oscar/state/commercial/matters/30-rfq-c10-805257"
+  },
+  "session_id": "20260526_132",
+  "provider": "minimax",
+  "started_at": "2026-05-26T14:36:51.192Z"
+}

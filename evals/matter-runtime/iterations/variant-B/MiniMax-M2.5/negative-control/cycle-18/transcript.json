@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25060,
+    "message_id": "qcp95v7g",
+    "role": "user",
+    "timestamp": "2026-05-26 15:31:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25061,
+    "message_id": "0664efe2602959e10a9010172cf26694",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:31:50",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. This is a plain-text drafting task - no document attachment, just working in text.\n\nKey parameters from the request:\n- Series B term sheet\n- UK manufacturing company (Issuer) / US lead investor (Investor)\n- Mutual confidentiality\n- 3-year survival\n- Standard market terms\n\nI should draft this directly in text, as my instructions say \"work with them in plain text\" when there's no attachment. Let me produce a commercial-grade confidentiality clause.\n\nI'll note the assumptions I'm making:\n- No defined term cross-references needed (term sheet level)\n- Should include the standard carve-outs (legally required disclosure, judicial order, to advisors under duty of confidentiality)\n- May need to reference the governing law (likely English law for a UK company)\n- Survival period runs from termination/expiration of the agreement\n\nLet me draft this cleanly.\n",
+        "signature": "b5a04d032eedcbf23046d0048c1dd98bb1fc4a0b476b9fee11e654c44c7353ae"
+      },
+      {
+        "type": "text",
+        "text": "\n\nI'll draft a mutual confidentiality clause for your Series B term sheet. Assumption: English law governs; survival clocks from termination or closing, whichever is later.\n\n---\n\n**Confidentiality**\n\n1. **Obligation.** Each party (\"Recipient\") agrees to hold in confidence all Confidential Information of the other party (\"Discloser\") and shall not disclose such information to any third party except as permitted by this clause.\n\n2. **Exclusions.** The obligations in paragraph 1 shall not apply to information that:\n   - (a) is or becomes publicly available other than as a result of a breach by Recipient;\n   - (b) was already known to Recipient prior to disclosure by Discloser, as evidenced by contemporaneous written records;\n   - (c) is independently developed by Recipient without use of or reference to Confidential Information;\n   - (d) is rightfully obtained by Recipient from a third party without restriction on disclosure; or\n   - (e) is required to be disclosed by applicable law, regulation, or judicial order, provided that Recipient gives Discloser prompt written notice (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\n3. **Permitted Disclosure.** Recipient may disclose Confidential Information to its officers, directors, employees, professional advisers, and the Due Diligence Group (if any) who need to know such information for the Purpose, provided such persons are bound by comparable confidentiality obligations.\n\n4. **Return or Destruction.** Upon request by Discloser following termination or expiration of this Agreement, Recipient shall, at Discloser's election, return or destroy all copies of Confidential Information (except for archival backups retained under automated retention policies).\n\n5. **Duration.** The obligations under this clause shall survive for a period of three (3) years following termination or expiration of this Agreement.\n\n6. **No Licence.** No licence or other right is granted under this clause except as expressly stated.\n\n---\n\nWant me to adjust the carve-outs, add a press-release exception, or tailor the \"Purpose\" definition to the term sheet context?"
+      }
+    ]
+  }
+]

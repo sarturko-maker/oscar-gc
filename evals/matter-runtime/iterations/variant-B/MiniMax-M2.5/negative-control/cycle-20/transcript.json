@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25064,
+    "message_id": "q53vyyue",
+    "role": "user",
+    "timestamp": "2026-05-26 15:33:31",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25065,
+    "message_id": "0664f04c130c277307075dc97d8671a7",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:33:38",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a confidentiality clause for a Series B term sheet. They've specified:\n- UK manufacturing company (portfolio company)\n- US lead investor\n- Mutual confidentiality\n- 3-year survival\n- Standard market terms\n\nThis is a drafting request, not a redline on an existing document. I should work with them in plain text.\n\nLet me draft a standard mutual NDA clause suitable for a term sheet context, adapted for this specific scenario.\n",
+        "signature": "6ce6f0c01afff2364d17cc658e282ed580ddcb61623d9fa52c1fcbfc652f4bff"
+      },
+      {
+        "type": "text",
+        "text": "\n\nDrafting a mutual confidentiality clause suitable for a Series B term sheet — UK manufacturing co / US investor, mutual, 3-year survival.\n\n---\n\n**CONFIDENTIALITY**\n\n**20.1 Mutual Confidentiality.**\n\nEach party (the \"**Receiving Party**\") agrees that it shall:\n\n\n(a) keep the other party's (the \"**Disclosing Party**\") Confidential Information strictly confidential and not disclose such Confidential Information to any third party, except as permitted under clause 20.3;\n\n(b) use the Confidential Information solely for the Purpose;\n\n(c) protect the Confidential Information with at least the same degree of care as it protects its own confidential information of a similar nature, but in no event less than a reasonable standard of care; and\n\n(d) not copy or reproduce the Confidential Information except as reasonably necessary for the Purpose.\n\n**20.2 Definition.**\n\n\"**Confidential Information**\" means all information, including (without limitation) technical, commercial, financial, operational, and scientific information, whether disclosed orally, in writing, or by any other means, that is marked as \"confidential\" or \"proprietary\" or that would reasonably be understood to be confidential given the nature of the information and the circumstances of disclosure, together with any analyses, compilations, summaries, or other documents derived from or reflecting such information.\n\n**Disclosure Exclusions.** Confidential Information does not include information that:\n\n(i) is or becomes publicly available through no fault of the Receiving Party;\n\n(ii) was properly known to the Receiving Party prior to disclosure, as evidenced by contemporaneous written records;\n\n(iii) is rightfully received from a third party without breach of any obligation of confidentiality; or\n\n(iv) is independently developed by the Receiving Party without use of the Confidential Information.\n\n**20.3 Permitted Disclosures.**\n\nThe Receiving Party may disclose Confidential Information only to:\n\n\n(a) its officers, employees, agents, and professional advisers who need to know the Confidential Information for the Purpose, in each case subject to obligations of confidentiality at least as protective as those in this clause 20;\n\n(b) as required by applicable law, regulation, or order of a court or governmental authority, provided that the Receiving Party gives the Disclosing Party prompt written notice (to the extent legally permitted) and cooperates reasonably in seeking protective measures; or\n\n(c) with the prior written consent of the Disclosing Party.\n\n**20.4 Term.**\n\nThe obligations under this clause 20 shall survive for a period of three (3) years from the date of disclosure of the relevant Confidential Information, unless a longer period is required by applicable law.\n\n**20.5 Return or Destruction.**\n\nUpon request by the Disclosing Party (or upon termination of this Letter), the Receiving Party shall promptly return or destroy all tangible embodiments of the Confidential Information (and any copies) and certify such return or destruction in writing, except that the Receiving Party may retain one archival copy for legal compliance purposes only.\n\n**20.6 No License.**\n\nNothing in this Letter grants any licence or other rights to any patent, copyright, trademark, or other intellectual property right of the Disclosing Party.\n\n**20.7 Remedies.**\n\nEach party acknowledges that any breach of this clause 20 may cause irreparable harm for which monetary damages may be an inadequate remedy. Accordingly, the Disclosing Party shall be entitled to seek equitable relief (including injunction and specific performance) in addition to any other remedies available at law.\n\n---\n\nWant me to tune any elements — e.g., extend the survival beyond 3 years, add a specific-purpose carve-out for VDR access, or adjust the remedies provision?"
+      }
+    ]
+  }
+]

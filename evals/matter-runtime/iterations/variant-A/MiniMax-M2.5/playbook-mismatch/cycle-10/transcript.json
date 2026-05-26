@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23385,
+    "message_id": "a8rhhcbo",
+    "role": "user",
+    "timestamp": "2026-05-26 14:15:01",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23386,
+    "message_id": "0664dde6028846fd930a6692a139b62a",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:15:06",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a generic NDA template for prospective bidders. This is a straightforward drafting request - not a redline task because there's no existing document attached. They're asking for a short, mutual, 2-year term, English law NDA.\n\nLet me think through what they need:\n- Mutual confidentiality (both sides)\n- 2-year term\n- English law jurisdiction\n- Short format\n- For use with prospective bidders before sharing pricing/volume data\n\nI'll draft this in plain text - it's a template request, not a review or redline. I'll keep it concise and mark where customization might be needed (like the definition of confidential information, carve-outs, etc.).\n\nI'll offer my view directly in plain text.\n",
+        "signature": "aadd2369fd29896e57b173fee32e41bc33f747a9f4d49e0c4dce3c05579491c1"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis agreement is entered into on [DATE] between:\n\n1. **[YOUR COMPANY]** (\"Company\")\n2. **[COUNTERPARTY]** (\"Bidder\")\n\n**1. Definition**\n\"Confidential Information\" means any pricing, volume, technical, or business information disclosed by one party to the other in connection with [the RFQ / prospective bidding opportunity], that is marked as confidential or would reasonably be understood to be confidential.\n\n**2. Obligations**\nEach party agrees to:\n- hold the other party's Confidential Information in confidence;\n- use it only for the purpose of evaluating the proposed transaction;\n- not disclose it to any third party without prior written consent;\n- protect it using at least the same degree of care as its own confidential information (but no less than reasonable care).\n\n**3. Exclusions**\nConfidential Information does not include information that:\n- is or becomes publicly available through no fault of the receiving party;\n- was already known to the receiving party before disclosure;\n- is independently developed without use of Confidential Information;\n- is received from a third party without breach of this agreement.\n\n**4. Term**\nThis agreement expires [two years] from the date above, except that confidentiality obligations regarding specifically disclosed information survive for [two years] from the date of disclosure of that information.\n\n**5. Governing Law**\nThis agreement is governed by English law.\n\n---\n\n**Two gaps to flag:**\n- **Legals contact details** — fill in your company address and the Bidder's name/address\n- **Return of information** — most templates include a destruction/return clause; wanted to keep this one lean but can add if preferred\n\nWant me to adjust the scope, add a return clause, or convert this to a .docx you can fill in?"
+      }
+    ]
+  }
+]

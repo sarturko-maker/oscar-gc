@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25088,
+    "message_id": "wknbj4xb",
+    "role": "user",
+    "timestamp": "2026-05-26 15:41:56",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25089,
+    "message_id": "0664f24503b70a57e9ad41e91be0fa04",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:42:02",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a generic NDA template for use with prospective bidders before sharing pricing or volume data. This is a straightforward drafting request - they want:\n\n- Mutual (both ways)\n- Short\n- 2-year term\n- English law\n- For prospective bidders sharing pricing/volume data\n\nThis isn't a redline task - they're asking me to create a new template, not review or mark up an existing document. I should work with them in plain text.\n\nLet me draft a clean, brief mutual NDA that fits their spec.\n",
+        "signature": "0498fad0ac5d5faa6e4fc498613cb32ecf35a5e39a9423f7979f4c621a167e04"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template for pre-bid confidentiality:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Agreement is entered into on [DATE] between:\n\n(1) **[YOUR COMPANY]** (\"Company\")\nand  \n(2) **[BIDDER NAME]** (\"Bidder\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one party to the other in connection with [the RFQ/bidding process for PROJECT], including but not limited to pricing, volumes, technical specifications, and commercial terms.\n\n**2. Obligations**\nEach party agrees to:\n(a) hold the other party's Confidential Information in strict confidence;\n(b) use it solely for the purpose of evaluating and responding to the contemplated transaction;\n(c) not disclose it to any third party without prior written consent; and\n(d) protect it using at least the same degree of care it uses for its own confidential information, and in no event less than reasonable care.\n\n**3. Exclusions**\nThe obligations in Clause 2 do not apply to information that:\n(a) is or becomes publicly available through no fault of the receiving party;\n(b) was already known to the receiving party at the time of disclosure;\n(c) is independently developed by the receiving party; or\n(d) is disclosed pursuant to a legal requirement or court order, provided the receiving party gives prompt notice to the disclosing party.\n\n**4. Term**\nThis Agreement shall remain in effect for two (2) years from the date of first disclosure, unless terminated earlier by mutual written agreement or by either party on thirty (30) days' written notice. Confidentiality obligations shall survive termination for a further two (2) years.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\nWant me to adjust anything — tighter carve-outs, specific purpose wording, or add a return-destruction clause?"
+      }
+    ]
+  }
+]

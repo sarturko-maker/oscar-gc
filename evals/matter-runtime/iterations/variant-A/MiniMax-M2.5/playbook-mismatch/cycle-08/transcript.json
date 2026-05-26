@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23381,
+    "message_id": "hyl3v8iz",
+    "role": "user",
+    "timestamp": "2026-05-26 14:13:44",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23382,
+    "message_id": "0664dd99a8ce6f60981327bdf1f159d6",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:13:49",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for prospective bidders before sharing pricing/volume data. They've specified: short, mutual, 2-year term, English law.\n\nThis is a straightforward drafting task - no document to redline, just plain text drafting. I should produce a concise mutual NDA that meets these specs.\n\nLet me draft this directly - no need for Turn 1 discovery protocol since there's no attached document and it's a pure drafting ask.\n",
+        "signature": "cbfb08504c3f6ba2823793384b018dcabeb51e9b669d0592dd660b136da65139"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n(1) **[YOUR COMPANY]** (\"Company\"); and  \n(2) **[COUNTERPARTY]** (\"Recipient\")\n\n**1. Definition of Confidential Information**\n\n\"Confidential Information\" means any non-public information disclosed by one party to the other in connection with [potential business relationship / bidding opportunity], including but not limited to pricing, volume data, technical specifications, and business plans.\n\n**2. Obligations**\n\nEach party agrees to:\n(a) hold the other's Confidential Information in strict confidence;\n(b) use such information solely for the Purpose;\n(c) not disclose it to any third party without prior written consent;\n(d) protect it using at least the same degree of care as its own confidential information, but no less than reasonable care.\n\n**3. Exclusions**\n\nThis obligation does not apply to information that:\n(a) is or becomes publicly available through no fault of the Recipient;\n(b) was already known to the Recipient prior to disclosure;\n(c) is independently developed by the Recipient without use of Confidential Information;\n(d) is disclosed pursuant to a legal requirement or court order, provided prompt notice is given to the disclosing party.\n\n**4. Term**\n\nThis Agreement expires [two (2) years] from the date of disclosure, except that obligations concerning Confidential Information shall survive indefinitely with respect to trade secrets and for [five (5) years] from disclosure for all other Confidential Information.\n\n**5. Governing Law**\n\nThis Agreement is governed by the laws of England and Wales.\n\n---\n\nWant me to adjust the exclusions, expand the Purpose clause, or add anything else?"
+      }
+    ]
+  }
+]

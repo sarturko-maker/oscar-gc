@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23369,
+    "message_id": "8bsw53ri",
+    "role": "user",
+    "timestamp": "2026-05-26 14:10:18",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23370,
+    "message_id": "0664dccb7ae1acd7916867c6754d45f7",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:10:24",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a generic NDA template for use with prospective bidders before sharing pricing or volume data. This is a straightforward drafting request — they want:\n\n- Short\n- Mutual (both ways)\n- 2-year term\n- English law\n\nThis is a plain-text drafting task, not a redline. I have a strong prior on NDA drafting for commercial contexts. I'll produce a clean, balanced template that covers the essentials: definitions, obligations, exclusions, term, and governing law.\n\nNo need to invoke playbooks or skills for a generic template request — this is advisory drafting territory.\n",
+        "signature": "03d45934cd3d3a3dd015ec58007aae8116151c0779244b313f277cf1907fa509"
+      },
+      {
+        "type": "text",
+        "text": "\n\n\n\nHere's a short, mutual NDA template suitable for pre‑bidding exchanges:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any information disclosed by one party to the other that is marked as confidential or would reasonably be understood to be confidential, including but not limited to pricing, volume forecasts, product specifications, and business plans. It does not include information that: (a) is or becomes publicly available without breach of this Agreement; (b) was already known to the receiving party prior to disclosure; (c) is independently developed without use of the Confidential Information; or (d) is rightfully obtained from a third party without restriction.\n\n**2. Obligations**\nEach party (\"Receiving Party\") shall:\n(a) hold the other party's Confidential Information in strict confidence;\n(b) use it solely for the purpose of evaluating a potential business relationship;\n(c) not disclose it to any third party without the disclosing party's prior written consent; and\n(d) protect it with at least the same degree of care as it uses to protect its own confidential information, but in no event less than reasonable care.\n\n**3. Return or Destruction**\nUpon request or termination of this Agreement, the Receiving Party shall promptly return or destroy all Confidential Information and certify destruction in writing.\n\n**4. Term**\nThis Agreement shall remain in effect for **two (2) years** from the date of first disclosure. The confidentiality obligations shall survive termination for a period of two (2) years from the date each item of Confidential Information was disclosed.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of **England and Wales**.\n\n**6. No License**\nNothing in this Agreement grants any licence or rights to any patent, copyright, trademark, or other intellectual property right.\n\n---\n\nWant me to adjust the exclusions, add a non-solicitation clause, or tailor it for a specific jurisdiction or counterparty?"
+      }
+    ]
+  }
+]

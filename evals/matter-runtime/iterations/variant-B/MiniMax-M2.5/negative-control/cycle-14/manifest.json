@@ -1,0 +1,17 @@
+{
+  "cycle_id": "variant-B-MiniMax-M2.5-negative-control-cycle-14",
+  "variant": "B",
+  "model": "MiniMax-M2.5",
+  "scenario": "negative-control",
+  "cycle_n": 14,
+  "area_id": "commercial",
+  "matter": {
+    "slug": "negative-control-c14-808705",
+    "name": "S32-808705 Negative control — generic confidentiality clause  c14",
+    "working_dir": "/root/Documents/Oscar GC/Commercial/S32-808705 Negative control — generic confidentiality clause c14",
+    "state_folder": "/root/.config/oscar/state/commercial/matters/negative-control-c14-808705"
+  },
+  "session_id": "20260526_182",
+  "provider": "minimax",
+  "started_at": "2026-05-26T15:29:17.109Z"
+}

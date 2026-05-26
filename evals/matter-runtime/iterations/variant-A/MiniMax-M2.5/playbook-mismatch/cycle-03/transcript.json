@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23371,
+    "message_id": "v9i6f3fc",
+    "role": "user",
+    "timestamp": "2026-05-26 14:10:42",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23372,
+    "message_id": "0664dce37b5cc8c2c5ae906febeca856",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:10:47",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for prospective bidders - short, mutual, 2-year term, English law. This is a straightforward drafting request, not attached to a specific document.\n\nI should provide a short, balanced NDA template. Key elements:\n- Mutual confidentiality\n- 2-year term\n- English law\n- Short/efficient\n\nNo need for a playbook or skill - this is a plain-text drafting task.\n",
+        "signature": "f905ec7a3fe0b7e255ab209ef92480db8d5f0ba9d5294388c29c587e350ab439"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short, mutual NDA template suitable for pre-bid pricing/volume disclosures:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n(1) **[Your Company]** (\"Party A\"); and\n(2) **[Bidder Name]** (\"Party Party B\")\n\n(each a \"Party\" and together the \"Parties\").\n\n**1. Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one Party to the other in connection with [description of purpose, e.g.: a potential supply arrangement], including but not limited to pricing, volumes, technical specifications, and business plans.\n\n**2. Obligations**\nEach Party undertakes to:\n(a) hold the other Party's Confidential Information in strict confidence;\n(b) use it solely for the Purpose;\n(c) not disclose it to any third party without prior written consent; and\n(d) protect it with at least the same degree of care it uses for its own confidential information, but no less than reasonable care.\n\n**3. Exclusions**\nConfidential Information does not include information that:\n(a) is or becomes publicly available through no breach of this Agreement;\n(b) was rightfully known to the receiving Party before disclosure;\n(c) is independently developed without use of Confidential Information; or\n(d) is disclosed under a legal requirement or court order, provided the receiving Party gives prompt notice to allow the disclosing Party to seek protective measures.\n\n**4. Term**\nThis Agreement expires [two (2) years] from the date first above written, except that obligations of confidentiality survive for a further [two (2) years] as to any Confidential Information disclosed prior to expiry.\n\n**5. Governing Law**\nThis Agreement is governed by the laws of England and Wales.\n\n---\n\nWant me to adjust the exclusions, add a return/destruction clause, or tweak anything else?"
+      }
+    ]
+  }
+]

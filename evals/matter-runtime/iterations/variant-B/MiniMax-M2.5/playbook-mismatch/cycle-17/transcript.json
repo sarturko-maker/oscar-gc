@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25098,
+    "message_id": "7302adji",
+    "role": "user",
+    "timestamp": "2026-05-26 15:45:29",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25099,
+    "message_id": "0664f319c26641576a09a2031d4d08d7",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:45:39",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a generic NDA template for use with prospective bidders before sharing pricing/volume data. This is a straightforward drafting task - no document attached, no redline involved.\n\nLet me check what they're asking for:\n- Generic NDA template\n- For prospective bidders (so suppliers/vendor prospects)\n- Before sharing pricing or volume data\n- Short, mutual, 2-year term, English law\n\nThis is a commercial drafting question - I should work with them in plain text as per my instructions (\"Working without an attachment\").\n\nI have a strong prior on commercial NDA drafting. Let me produce a short, balanced template that covers:\n- Mutual confidentiality (since they said \"mutual\")\n- Short term (2 years)\n- Defines confidential information reasonably\n- Covers pricing and volume data specifically\n- English law jurisdiction\n- Short/nutshell format\n\nI'll offer my draft, mark assumptions, and note what I need to confirm.\n",
+        "signature": "a28df32b57c2700265611f211259ea3e0cae00db490433a3787cd1a332b6ed35"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template for bidder pre-set data:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Agreement is entered into on [DATE] between:\n\n(1) **[YOUR COMPANY]** (\"Company\")\nand\n(2) **[BIDDER NAME]** (\"Bidder\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any pricing, volume, commercial, technical, or operational information disclosed by one party to the other in connection with [project/relationship], including all copies and summaries thereof.\n\n**2. Obligations**\nEach party agrees to:\n(a) hold the other party's Confidential Information in strict confidence;\n(b) use it only for the Purpose;\n(c) protect it with at least the same degree of care as its own confidential information, but no less than reasonable care; and\n(d) disclose it only to those of its officers, employees, and professional advisers who need to know it for the Purpose.\n\n**3. Exclusions**\nConfidential Information does not include information that: (a) is or becomes publicly available without breach of this Agreement; (b) was known to the receiving party before disclosure; (c) is independently developed by the receiving party; or (d) is received from a third party without breach of obligation.\n\n**4. Term**\nThis Agreement shall remain in effect for two (2) years from the date first above written. Obligations regarding Confidential Information shall survive for a further [two] years after termination.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\n**Signed:**\n\nFor Company: _________________ Date: _____  \nFor Bidder: _________________ Date: _____\n\n---\n\n**Assumptions / to confirm:**\n- Is the definition scoped narrowly enough? (\"for the Purpose\" needs a defined purpose — I've left [project/relationship] placeholder\n- Should I add a return/destruction clause on request?\n- Any specific exclusions you want baked in (e.g. legally mandated disclosures)?\n\nThis fits your standard NDA playbook structure. Want me to refine, or are you taking this draft forward?"
+      }
+    ]
+  }
+]

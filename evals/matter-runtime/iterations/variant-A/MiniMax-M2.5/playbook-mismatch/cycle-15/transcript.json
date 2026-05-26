@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23398,
+    "message_id": "pa18zerr",
+    "role": "user",
+    "timestamp": "2026-05-26 14:17:10",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23399,
+    "message_id": "0664de6743872353664ccd854ecf5e8d",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:17:14",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for prospective bidders. This is a straightforward drafting task, not a redline or document review. They want:\n- Mutual (both ways)\n- Short\n- 2-year term\n- English law\n\nI should draft this in plain text since there's no attachment. Let me provide a standard mutual NDA that's brief and covers the basics.\n",
+        "signature": "f3bea1a14b2345de207e331f3e5d72a89337ca6dc94ca3ab8a734af51af2e565"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template:\n\n---\n\n**MUTUAL CONFIDENTIALITY AGREEMENT**\n\nThis agreement is entered into on [DATE] between:\n\n(1) **[Your Company]** (\"Party A\")\n(2) **[Bidder Name]** (\"Party B\")\n\n**1. Definition**\n\"Confidential Information\" means any non-public information disclosed by one party to the other in connection with [the RFQ / prospective business relationship], including pricing, volume, technical or commercial data.\n\n**2. Obligations**\nEach party shall:\n(a) use the other party's Confidential Information solely for the Purpose;\n(b) protect it with at least the same degree of care it uses to protect its own confidential information, but in any event no less than reasonable care;\n(c) not disclose it to any third party without prior written consent;\n(d) restrict disclosure to personnel who need to know for the Purpose and bind them to confidentiality obligations at least as protective as this agreement.\n\n**3. Exclusions**\nConfidential Information does not include information that: is or becomes publicly available; was known to the receiving party before disclosure; is independently developed; or is disclosed by a third party lawfully in possession.\n\n**4. Return or Destruction**\nOn request or termination, the receiving party shall promptly return or destroy all Confidential Information and certify destruction.\n\n**5. Term**\nThis agreement expires [24 months] from the date of disclosure, or earlier upon written agreement. Obligations survive for [3 years] after disclosure.\n\n**6. Governing Law**\nGoverned by English law. Courts of England and Wales have exclusive jurisdiction.\n\n---\n\nWant me to adjust any terms — stronger remedies, specific return timelines, anything else?"
+      }
+    ]
+  }
+]

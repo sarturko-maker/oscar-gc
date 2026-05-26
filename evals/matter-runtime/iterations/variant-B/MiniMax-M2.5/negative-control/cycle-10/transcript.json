@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25044,
+    "message_id": "09ut3ur3",
+    "role": "user",
+    "timestamp": "2026-05-26 15:26:23",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25045,
+    "message_id": "0664eea26e3bbec23779d7d8ca2507ef",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:26:31",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a confidentiality clause for a Series B term sheet. This is a commercial document drafting task - they're asking for \"a confidentiality clause\", not asking me to review or redline an existing document.\n\nKey parameters they've specified:\n- UK manufacturing company (disclosing party)\n- US lead investor (receiving party)\n- Standard market terms\n- Mutual (both ways)\n- 3-year survival\n\nI should work with them in plain text. This isn't a redline task - there's no document to redline. They're asking me to draft a clause.\n\nLet me draft this directly. For a Series B term sheet confidentiality clause with these parameters:\n\n1. Mutual (both parties bound)\n2. Standard confidential information definition\n3. Standard carve-outs (publicly available, already known, independently developed, etc.)\n4. Need-to-know basis for disclosure\n5. 3-year survival (but often term sheets have perpetual confidentiality for certain items like the existence of the transaction)\n6. Return/destruction on request\n\nI'll draft this in plain text. Let me be concise and get to it.\n",
+        "signature": "c873343574132649201f80e5319ca4cc05c56a0f8d5a63b17cbaa034b15f8ff0"
+      },
+      {
+        "type": "text",
+        "text": "\n\n**Confidentiality Clause — Draft**\n\n> **Article [X] — Confidentiality**\n>\n> 1. **Definition.** \"Confidential Information\" means any non-public information disclosed by either Party to the other in connection with the Proposed Transaction, including all technical, business, financial, customer, and operational information, whether disclosed orally, in writing, or by any other means.\n>\n> 2. **Obligations.** Each Party (the \"Receiving Party\") agrees to:\n>     (a) hold the other Party's Confidential Information in strict confidence;\n>     (b) not disclose Confidential Information to any third party without the prior written consent of the disclosing Party;\n>     (c) use Confidential Information solely for the purpose of evaluating and consummating the Proposed Transaction; and\n>     (d) protect Confidential Information with at least the same degree of care as it protects its own confidential information, but in no event less than reasonable care.\n>\n> 3. **Exclusions.** The obligations in Section 2 shall not apply to information that:\n>     (a) is or becomes publicly available through no fault of the Receiving Party;\n>     (b) was rightfully in the Receiving Party's possession prior to disclosure;\n>     (c) is independently developed by the Receiving Party without use of Confidential Information;\n>     (d) is rightfully obtained by the Receiving Party from a third party without restriction; or\n>     (e) is required to be disclosed by law, regulation, or court order, provided the Receiving Party gives prompt notice to the disclosing Party to permit intervention.\n>\n> 4. **Term.** This Article shall survive for a period of three (3) years from the date of disclosure of the relevant Confidential Information; **provided** that the existence and terms of this Agreement and the Proposed Transaction shall remain confidential indefinitely unless otherwise agreed in writing.\n>\n> 5. **Return.** Upon request, the Receiving Party shall promptly return or destroy all Confidential Information and certify such destruction in writing.\n\n---\n\n**Notes:**\n- The \"Proposed Transaction\" placeholder should be defined or replaced with \"Series B financing\" or similar.\n- The carve-outs in Section 3 are standard.\n- Section 4 distinguishes between operational confidentiality (3-year) and deal confidentiality (perpetual) — standard for term sheets.\n- If you want a specific remedy (injunctive relief, specific performance), that can be added.\n\nWant me to adjust the scope, add remedies, or tailor further?"
+      }
+    ]
+  }
+]

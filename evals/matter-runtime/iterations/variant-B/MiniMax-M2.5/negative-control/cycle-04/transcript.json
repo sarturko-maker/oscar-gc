@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25032,
+    "message_id": "envzxcti",
+    "role": "user",
+    "timestamp": "2026-05-26 15:21:51",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25033,
+    "message_id": "0664ed907b6a1c158a9c6810daab9b93",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:21:58",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a confidentiality clause for a Series B term sheet. This is a straightforward drafting task - not a redline or document review. I should work in plain text with the lawyer.\n\nKey parameters from the ask:\n- UK manufacturing company (disclosing party)\n- US lead investor (receiving party)\n- Standard market terms\n- Mutual (both sides confidential)\n- 3-year survival\n\nI have a strong prior on confidentiality clause drafting. Let me draft this directly and ask for any specific requirements I should know.\n",
+        "signature": "14bd7895f083a7173e2baddc7231d617706c6f1c1e8021621e45291dda387c82"
+      },
+      {
+        "type": "text",
+        "text": "\n\nDrafting a mutual confidentiality clause for a Series B term sheet — UK company as disclosing party, US investor as receiving party.\n\nAssumptions:\n- No standstill or non-solicit included (those go in separate clauses if needed)\n- \"Purpose\" limited to evaluating the investment (standard)\n- Exclusions standard (publicly available, prior knowledge, independently developed, legally compelled disclosure)\n\nIs that the scope you want, or do you need additional terms (e.g., press release language, no-shop, diligence lock-in)?\n\n```\nCONFIDENTIALITY\n\n Each party (the \"Disclosing Party\") may disclose to the other party (the \"Receiving Party\") certain confidential and proprietary information in connection with the proposed investment by the Investor in the Company (the \"Purpose\"). Each Receiving Party agrees to:\n\n (a) hold all Confidential Information of the Disclosing Party in strict confidence and not disclose such Confidential Information to any third party except as expressly permitted in writing by the Disclosing Party;\n\n (b) use the Confidential Information solely for the Purpose and for no other purpose whatsoever;\n\n (c) protect the Confidential Information using the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care;\n\n (d) restrict disclosure of the Confidential Information to those of its officers, employees, agents, and professional advisers who need to know the Confidential Information for the Purpose, and who are bound by confidentiality obligations at least as restrictive as those contained herein.\n\n CONFIDENTIAL INFORMATION\n\n \"Confidential Information\" means any information disclosed by the Disclosing Party to the Receiving Party, whether orally, in writing, or by any other means, that is designated as confidential or that reasonably ought to be understood to be confidential given the nature of the information and the circumstances of disclosure. Confidential Information does not include information that:\n\n (i) is or becomes publicly available through no fault of the Receiving Party;\n\n (ii) was rightfully known to the Receiving Party prior to disclosure, as evidenced by written records;\n\n (iii) is independently developed by the Receiving Party without use of or reference to the Confidential Information;\n\n (iv) is rightfully obtained by the Receiving Party from a third party without restriction on disclosure; or\n\n (v) is required to be disclosed by applicable law, regulation, or court order, provided that the Receiving Party gives prompt written notice to the Disclosing Party (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\n TERM AND SURVIVAL\n\n This Agreement shall remain in effect for a period of three (3) years from the date of execution of this Agreement. The obligations of confidentiality shall survive termination or expiration of this Agreement for a period of three (3) years from the date ofdisclosure of the relevant Confidential Information.\n\n ASSIGNABILITY\n\n Neither party may assign or transfer its rights or obligations under this Agreement without the prior written consent of the other party, except that the Investor may assign its rights to any affiliated fund or entity without the Company's consent.\n\n GOVERNING LAW\n\n This Agreement shall be governed by and construed in accordance with the laws of England and Wales.\n```"
+      }
+    ]
+  }
+]

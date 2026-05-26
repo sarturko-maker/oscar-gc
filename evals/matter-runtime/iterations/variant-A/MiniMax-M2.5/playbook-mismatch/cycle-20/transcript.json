@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23408,
+    "message_id": "a00cxqcf",
+    "role": "user",
+    "timestamp": "2026-05-26 14:20:40",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23409,
+    "message_id": "0664df398a0db26467172a0c8085779d",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:20:46",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for use with prospective bidders before sharing pricing/volume data. This is a straightforward drafting request - not a redline on an attached document. \n\nLet me check what I need:\n- Mutual confidentiality (both parties bound)\n- 2-year term\n- English law\n- Short/standard\n\nI should draft this in plain text since no document is attached. This is a template request, not a contract review or redline task. I'll produce a brief, mutual NDA and offer adjustments.\n\nGiven the Turn 1 discovery protocol - this is a single noun (NDA template) but it's a drafting request, not a review of an existing NDA. The playbook would apply if they were reviewing an inbound NDA. Here they're asking me to draft from scratch. I'll proceed with drafting.\n\nLet me draft a concise mutual NDA:\n",
+        "signature": "d35aec0d73e8a16aaf51437c1381e4ec9497e42641a3d2a4e269ef80ce3832e1"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template — suitable for pre-bidding data exchange:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis agreement is entered into on [DATE] between:\n\n(1) **[Your Company]** and  \n(2) **[Bidder Name]**  \n\n(the \"Parties\")\n\n**1. Definition**  \n\"Confidential Information\" means any non-public information disclosed by one Party to the other relating to pricing, volumes, technical specifications, or commercial terms, whether orally, in writing, or by inspection.\n\n**2. Obligations**  \nEach Party agrees to:\n- (a) hold the other Party's Confidential Information in strict confidence;\n- (b) use it only for evaluating the proposed supply relationship;\n- (c) not disclose it to any third party without prior written consent; and\n- (d) protect it with at least the same degree of care it uses for its own confidential information, and in no event less than reasonable care.\n\n**3. Exclusions**  \nConfidential Information does not include information that: (a) is or becomes publicly available; (b) was known to the receiving Party before disclosure; (c) is independently developed; or (d) is rightfully obtained from a third party.\n\n**4. Term**  \nThis agreement expires [two years from the date above] unless otherwise agreed in writing.\n\n**5. Governing Law**  \nThis agreement is governed by English law.\n\n---\n\n**Your Company:** _________________________  \n**Bidder:** _________________________\n\n---\n\nWant me to adjust the scope (e.g. carve out agents/consultants), tighten the protection standard, or add a return/destruction clause?"
+      }
+    ]
+  }
+]

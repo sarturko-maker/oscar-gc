@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23400,
+    "message_id": "3gz89x5c",
+    "role": "user",
+    "timestamp": "2026-05-26 14:17:33",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23401,
+    "message_id": "0664de7e3cb9c4b335b2f31ff588c3fa",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:17:38",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for prospective bidders before sharing pricing/volume data. Quick task - no document attached, just drafting. Let me produce a short, mutual, 2-year term, English law NDA.\n\nKey specs:\n- Mutual (both parties confidential)\n- 2-year term\n- English law\n- Short/generic\n- For pricing/volume data\n\nI'll draft this in plain text - they're asking me to keep it short.\n",
+        "signature": "7b70205e49d8bca96ffd2584f2db1bdf8621de71e8ada8c35a5d132130cd8762"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short, mutual NDA template：\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis agreement is entered into between **[Your Company]** and **[Other Party]** (each a \"Party\").\n\n**1. Definition of Confidential Information**\nConfidential Information means any non-public information disclosed by either Party to the other in connection with the proposed [describe purpose: e.g., evaluation of potential supply arrangement], including but not limited to pricing, volumes, technical specifications, and business plans.\n\n**2. Obligations**\nEach Party agrees to:\n(a) protect the other Party's Confidential Information using the same degree of care it uses to protect its own confidential information, but no less than reasonable care;\n(b) use the Confidential Information solely for the Purpose;\n(c) not disclose the Confidential Information to any third party without prior written consent;\n(d) limit disclosure to employees and advisers who need to know the information for the Purpose.\n\n**3. Exclusions**\nObligations do not apply to information that: (a) is or becomes publicly available; (b) was already known to the receiving Party; (c) is independently developed; or (d) is required to be disclosed by law or court order.\n\n**4. Term**\nThis agreement expires **two (2) years** from the date first disclosed, unless terminated earlier by either Party on 30 days' written notice. Obligations regarding Confidential Information received before termination survive for a period of two years from the date of receipt.\n\n**5. Governing Law**\nThis agreement is governed by the laws of England and Wales.\n\nWant me to adjust the scope, add a return-delivery clause, or tailor the purpose field?"
+      }
+    ]
+  }
+]

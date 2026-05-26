@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25094,
+    "message_id": "7hs9ki1x",
+    "role": "user",
+    "timestamp": "2026-05-26 15:44:08",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25095,
+    "message_id": "0664f2c967745a5f8b73b0793a893598",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:44:14",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for use with prospective bidders before sharing pricing/volume data. This is a straightforward drafting request - not a redline on an existing document.\n\nRequirements:\n- Short (concise)\n- Mutual (both ways)\n- 2-year term\n- English law\n\nI should draft this in plain text since there's no attachment. Let me write a clean, commercial NDA template that meets these specs.\n",
+        "signature": "cb4fad7f30cdb281017df717d7f4c6f6c1475d48593865c1d6afefca44da5790"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short, mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into by and between **[Your Company]** and **[Recipient]** (each a \"Party\").\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one Party to the other in connection with **[describe purpose, e.g., evaluating a potential business relationship]**, including but not limited to pricing, volumes, technical specifications, and business plans.\n\n**2. Obligations**\nEach Party agrees to:\n(a) use the other Party's Confidential Information solely for the Purpose;\n(b) protect the Confidential Information with at least the same degree of care it uses to protect its own confidential information, and in no event less than reasonable care;\n(c) not disclose the Confidential Information to any third party without prior written consent, except to its officers, employees, and professional advisers who need to know such information for the Purpose and who are bound by confidentiality obligations no less restrictive than this Agreement.\n\n**3. Exclusions**\nConfidential Information does not include information that: (a) is or becomes publicly available without breach of this Agreement; (b) was rightfully known prior to disclosure; (c) is independently developed; or (d) is disclosed pursuant to a legal requirement, provided the receiving Party gives prompt notice to enable the disclosing Party to seek protective measures.\n\n**4. Term**\nThis Agreement shall remain in effect for **two (2) years** from the date of first disclosure of Confidential Information. Confidentiality obligations under clause 2 shall survive termination for a period of two (2) years from the date of disclosure of the relevant Confidential Information.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n**6. No License**\nNo licence or right is granted under any patent, copyright, or other intellectual property right unless expressly stated.\n\n---\n\nWant me to adjust the scope, add a return-of-information clause, or tailor any other terms?"
+      }
+    ]
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25036,
+    "message_id": "jr1pqe27",
+    "role": "user",
+    "timestamp": "2026-05-26 15:23:44",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25037,
+    "message_id": "0664ee01eb570b575d8ed283045fbbd8",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:23:48",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a draft confidentiality clause for a Series B term sheet. This is a plain text drafting request—no document attached, no redline task. Let me work with them directly in text.\n\nKey parameters:\n- UK manufacturing company (recipient/disclosing party typically)\n- US lead investor \n- Mutual (both sides confidential)\n- 3-year survival (duration)\n- Series B term sheet context\n\nI have a strong prior on commercial confidentiality clauses. I'll draft a clause that fits the Series B term sheet context—not too detailed (term sheets are high-level) but with the key commercial points.\n\nLet me draft this directly.\n",
+        "signature": "831556fce63f7d506330f475402c9cb0d16b3c773ff8f1964f7179a68df3cf4b"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause suitable for a Series B term sheet:\n\n---\n\n**Confidentiality**\n\nEach party (the \"Receiving Party\") agrees to keep confidential and not disclose to any third party (other than its officers, employees, professional advisers, or potential co-investors who need to know for the Purpose and are bound by equivalent confidentiality obligations) any Confidential Information of the other party (the \"Disclosing Party\") obtained in connection with the Proposed Investment.\n\n\"Confidential Information\" means this Term Sheet and any information, oral or written, disclosed by either party relating to the business, finances, technology, customers, suppliers, or operations of the other party, excluding information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was already known to the Receiving Party prior to disclosure and can be evidenced in writing; (c) is independently developed by the Receiving Party without use of Confidential Information; or (d) is rightfully obtained from a third party without restriction on disclosure.\n\nThe Receiving Party shall protect Confidential Information using at least the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\nThis obligation shall survive for **three (3) years** from the date of disclosure of each item of Confidential Information.\n\nNothing in this clause prevents disclosure: (i) as required by applicable law, regulation, or court order, provided the Receiving Party gives prompt notice to the Disclosing Party (to the legally permitted extent) to allow the Disclosing Party to seek protective measures; or (ii) to prospective co-investors in connection with the Proposed Investment, subject to confidentiality obligations no less protective than those herein.\n\n---\n\nWant me to adjust the carve-outs, add a \"no use\" restriction, or tailor for a specific deal structure?"
+      }
+    ]
+  }
+]

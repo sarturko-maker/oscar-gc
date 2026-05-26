@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23318,
+    "message_id": "l79zpwnn",
+    "role": "user",
+    "timestamp": "2026-05-26 13:58:44",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23319,
+    "message_id": "0664da15fc06bc257b46bea070ad519d",
+    "role": "assistant",
+    "timestamp": "2026-05-26 13:58:51",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a confidentiality clause for a Series B term sheet. Let me break down the requirements:\n\n1. Series B term sheet context\n2. Parties: UK manufacturing company (disclosing party) vs. US lead investor\n3. Mutual confidentiality\n4. 3-year survival post-termination\n5. Standard market terms\n\nSince there's no document attached and this is a drafting request, I should work in plain text with my standard commercial clause. I don't need to load a playbook or skill for a standalone clause drafting task — that's below the threshold.\n\nLet me draft a mutual confidentiality clause with 3-year survival, suitable for a Series B term sheet between these parties.\n",
+        "signature": "405d04d636fc392adea762c1e1461e88377a1707ff8781cae8857c67c3cf0bb3"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the Series B term sheet:\n\n---\n\n**CONFIDENTIALITY**\n\nEach party (a \"**Disclosing Party**\") may disclose Confidential Information to the other party (a \"**Receiving Party**\") in connection with the Proposed Investment. The Receiving Party shall:\n\n(a) hold and maintain the Confidential Information in strict confidence;\n\n(b) not disclose the Confidential Information to any third party without the Disclosing Party's prior written consent, except to its directors, officers, employees, professional advisers, and potential co-investors who (i) have a need to know such information for the purposes of evaluating the Proposed Investment, and (ii) are bound by confidentiality obligations no less protective than those contained herein;\n\n(c) not use the Confidential Information for any purpose other than evaluating or consummating the Proposed Investment;\n\n(d) protect the Confidential Information using at least the same degree of care it uses to protect its own confidential information of a similar nature, but in no event less than reasonable care.\n\n**Exclusions.** The obligations in this Section shall not apply to information that: (i) is or becomes publicly available other than as a result of a breach of this Section; (ii) was rightfully in the possession of the Receiving Party prior to disclosure by the Disclosing Party; (iii) is independently developed by the Receiving Party without use of the Confidential Information; or (iv) is rightfully obtained by the Receiving Party from a third party without restriction on disclosure.\n\n**Term.** The confidentiality obligations under this Section shall survive termination or expiration of this Term Sheet for a period of **three (3) years**, except that Confidential Information constituting atrade secret shall be protected for so long as it remains a trade secret under applicable law.\n\n**Legally Required Disclosure.** Notwithstanding the foregoing, a Receiving Party may disclose Confidential Information as required by applicable law, regulation, or governmental order, provided that the Receiving Party: (i) gives the Disclosing Party prompt written notice of such requirement (to the extent legally permitted); and (ii) reasonably cooperates with the Disclosing Party's efforts to seek protective treatment of such information.\n\n---\n\nWant me to adjust the scope (e.g., add \"parent affiliates\" to extend coverage), the exclusions, or the survival period? Also: do you want a mutual NDA acknowledgment built into the term sheet itself, or standalone?"
+      }
+    ]
+  }
+]

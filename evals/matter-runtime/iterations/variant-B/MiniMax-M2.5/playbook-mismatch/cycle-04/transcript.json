@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25072,
+    "message_id": "2dfveo2h",
+    "role": "user",
+    "timestamp": "2026-05-26 15:37:09",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25073,
+    "message_id": "0664f126892d6c031b93586e8d2c2f8f",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:37:16",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for use with prospective bidders before sharing pricing/volume data. This is a straightforward drafting request - they're not asking me to review an existing document or follow a playbook workflow. They're asking for:\n\n- Mutual confidentiality\n- 2-year term\n- English law\n- Short/concise\n\nThis is a simple drafting task. I'll draft the NDA in plain text for them to review. No need for the Turn 1 discovery protocol here since they're explicitly asking me to draft a new template, not review something.\n\nLet me draft a concise, mutual NDA appropriate for pre-bidding preliminary confidentiality.\n",
+        "signature": "3a05f9294695c7d429b93a2be62b05a90f358095b3c17da9a95e478a748593a0"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a draft mutual NDA:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n(1) **[YOUR COMPANY]** (\"Company\")\nand\n(2) **[PROSPECTIVE BIDDER]** (\"Bidder\")\n\n(together, the \"Parties\")\n\n**1. CONFIDENTIAL INFORMATION**\n\"Confidential Information\" means any non-public information disclosed by one Party to the other in connection with [potential commercial relationship / bidding opportunity], including but not limited to pricing, volumes, technical specifications, and business plans.\n\n**2. OBLIGATIONS**\nThe receiving Party shall:\n(a) hold the disclosing Party's Confidential Information in strict confidence;\n(b) not disclose it to any third party without prior written consent;\n(c) use it solely for the purpose of evaluating the potential relationship; and\n(d) protect it with at least the same degree of care as its own confidential information, but no less than reasonable care.\n\n**3. EXCLUSIONS**\nThis Agreement does not apply to information that:\n(a) is or becomes publicly available through no fault of the receiving Party;\n(b) was already lawfully in the receiving Party's possession before disclosure;\n(c) is independently developed by the receiving Party; or\n(d) is disclosed pursuant to a legal requirement or court order (provided notice is given to the disclosing Party).\n\n**4. TERM**\nThis Agreement shall remain in effect for two (2) years from the date first written above. The obligations of confidentiality shall survive termination.\n\n**5. GOVERNING LAW**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\nWant me to adjust the scope (e.g., tighten the purpose to \"pricing and volume data\" specifically), add an injunction remedy, or change anything else?"
+      }
+    ]
+  }
+]

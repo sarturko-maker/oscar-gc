@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25096,
+    "message_id": "3c3os55g",
+    "role": "user",
+    "timestamp": "2026-05-26 15:45:03",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25097,
+    "message_id": "0664f3007f9c463e9109a3cb775df666",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:45:10",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template — short, mutual, 2-year term, English law — for use with prospective bidders before sharing pricing/volume data.\n\nThis is a drafting task, not a review/redline of an attached document. I should work with them in plain text, as the instructions say \"Working without an attachment\" applies.\n\nNo playbook matched for an NDA template draft (the noun is \"template\" not \"NDA review\"). No skill loads needed for drafting plain text.\n\nI'll draft a concise mutual NDA — 2-year term, English law jurisdiction, short form.\n",
+        "signature": "6b35dcd75fd8000325933f9d5ea946ba9cf1da388912a18ef852228f6b420458"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short form mutual NDA:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n**[YOUR COMPANY]** (\"Company\")\nand\n**[BIDDER NAME]** (\"Recipient\")\n\n1. **Confidential Information** means any non-public information disclosed by either party relating to pricing, volumes, technical specifications, or business affairs, whether orally, in writing, or by inspection.\n\n2. **Obligations**: Recipient shall (a) use Confidential Information only for evaluating a potential business relationship, (b) protect it with at least the same degree of care as its own confidential information (and no less than reasonable care), and (c) restrict disclosure to officers, employees, and professional advisers who need to know it for the Purpose.\n\n3. **Exclusions**: Confidential Information does not include information that (a) is or becomes publicly available through no breach of this Agreement, (b) was properly in Recipient's possession before disclosure, (c) is independently developed, or (d) is received from a third party without breach of obligation.\n\n4. **Term**: This Agreement expires two (2) years from the date first disclosed hereunder. Confidentiality obligations survive for a further 2-year period after termination, after which neither party has further obligations.\n\n5. **Governing Law**: This Agreement is governed by the laws of England and Wales. Disputes submit to the exclusive jurisdiction of the courts of England and Wales.\n\n---\n\nWant me to adjust the term length, add a return-of-information clause, or tailor it further?"
+      }
+    ]
+  }
+]

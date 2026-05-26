@@ -1,0 +1,67 @@
+[
+  {
+    "db_id": 25506,
+    "message_id": "40mrxxf3",
+    "role": "user",
+    "timestamp": "2026-05-26 16:23:35",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "We received an RFQ pack from Pemberton Engineering for a 3-year MRO supply framework. The documents are in the matter folder. Review them and give me your read — what needs pushback, what's standard, what's commercially material?"
+      }
+    ]
+  },
+  {
+    "db_id": 25507,
+    "message_id": "td881qbz",
+    "role": "user",
+    "timestamp": "2026-05-26 16:23:41",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "What's our exposure if their GTCs (Document 05) override the MSA on indemnities? Worst case, what are we signing up to?"
+      }
+    ]
+  },
+  {
+    "db_id": 25508,
+    "message_id": "0dyss2qs",
+    "role": "user",
+    "timestamp": "2026-05-26 16:23:47",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Walk me through your top-3 redline targets and why each matters. Imagine I'm pitching this to the commercial sponsor in 5 minutes."
+      }
+    ]
+  },
+  {
+    "db_id": 25509,
+    "message_id": "xj5tzvhb",
+    "role": "user",
+    "timestamp": "2026-05-26 16:23:53",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Anything to add given what they sent over after the first batch?"
+      }
+    ]
+  },
+  {
+    "db_id": 25510,
+    "message_id": "9j91epf0",
+    "role": "user",
+    "timestamp": "2026-05-26 16:23:58",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Mark up the Master Supply Agreement (02-master-supply-agreement.docx) with our redline based on your analysis. Save the output to the outputs/ subfolder of this matter."
+      }
+    ]
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25038,
+    "message_id": "xppkl7x8",
+    "role": "user",
+    "timestamp": "2026-05-26 15:24:07",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25039,
+    "message_id": "0664ee18f2e6ef078a74d8f5024a7e15",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:24:15",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. This is a straightforward drafting task - no document attachment, no playbook needed, no skill specifically for drafting (that's more of a plain-text task).\n\nLet me draft a mutual confidentiality clause suitable for a term sheet context. The key parameters:\n- Mutual (both parties bound)\n- 3-year survival post-termination\n- UK company / US investor context\n- Series B term sheet level (so it's concise but legally robust)\n\nI should draft this in plain text and present it for their review.\n",
+        "signature": "cd261ce60368c23cf1ac356a58ba93c2dc7563a8f4dacf84c54e95f79157d758"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the Series B term sheet:\n\n---\n\n**Confidentiality**\n\nEach party (the \"Receiving Party\") agrees to hold in confidence all Confidential Information disclosed by the other party (the \"Disclosing Party\") and shall not use such Confidential Information except for the purpose of evaluating, negotiating and consummating the Proposed Transaction. The Receiving Party shall not disclose Confidential Information to any third party without the prior written consent of the Disclosing Party, except to its officers, directors, employees, professional advisers, investors or potential investors (solely in connection with the Proposed Transaction) who have a need to know and who are bound by confidentiality obligations no less protective than those contained herein.\n\n\"Confidential Information\" means any information disclosed by either party that is marked as \"confidential\" or \"proprietary\" or otherwise indicated as confidential, including but not limited to financial information, business plans, customer data, technical data, trade secrets and the terms and conditions of this Term Sheet. Confidential Information does not include information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of Confidential Information; or (d) is rightfully obtained from third parties without restriction.\n\nThe obligations of confidentiality shall survive termination of this Term Sheet for a period of three (3) years, except that confidentiality obligations regarding trade secrets shall survive for as long as such information remains a trade secret under applicable law.\n\nNothing in this clause shall prohibit disclosure required by applicable securities laws, regulation or judicial order, provided that the Receiving Party gives prompt notice to the Disclosing Party (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\n---\n\nWant me to adjust the scope (e.g., narrower carve-outs, different survival period), add a return/destruction clause, or tailor any other element?"
+      }
+    ]
+  }
+]

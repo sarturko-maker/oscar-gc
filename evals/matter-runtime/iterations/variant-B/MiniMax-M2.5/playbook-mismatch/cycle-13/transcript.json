@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25090,
+    "message_id": "imq42n4z",
+    "role": "user",
+    "timestamp": "2026-05-26 15:42:50",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25091,
+    "message_id": "0664f27b09b4644a033553a9e9ab9664",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:42:54",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for prospective bidders. This is a straightforward commercial drafting task - not a review or redline, so I should work in plain text.\n\nNo playbook mismatch applies here - this is a fresh drafting request, not a review task. The noun is \"NDA template\" which could be covered by an NDA playbook, but the instruction says \"draft\" (create new), not \"review.\" So I skip Turn 1 discovery.\n\nLet me draft a short, mutual NDA with:\n- 2-year term\n- English law\n- For pricing/volume data with prospective bidders\n- Keep it concise\n",
+        "signature": "698f46fef059e2b0f6be5956add33cb522e7bf10dfed90ff9f2894dc556bb40b"
+      },
+      {
+        "type": "text",
+        "text": "\n\nGot it. Here's a short, mutual NDA template for bidder pre-qualification:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Agreement is entered into by and between **[Company]** (\"Party A\") and **[Bidder]** (\"Party B\") dated **[Date]**.\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by either party to the other in connection with **[project/tender purpose]**, including but not limited to pricing, volume forecasts, technical specifications, and business terms.\n\n**2. Obligations**\nEach party shall:\n(a) protect the other's Confidential Information using the same degree of care it uses to protect its own confidential information, and in no event less than reasonable care;\n(b) use the Confidential Information solely for the Purpose;\n(c) not disclose the Confidential Information to any third party without prior written consent, except to professional advisers bound by equivalent confidentiality obligations.\n\n**3. Exclusions**\nThis Agreement does not apply to information that is: (a) publicly available; (b) rightfully known prior to disclosure; (c) independently developed; or (d) received from a third party without breach of this Agreement.\n\n**4. Term**\nThis Agreement shall remain in effect for **two (2) years** from the date first above written, or until sooner terminated by either party upon thirty (30) days' written notice.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\nWant me to save this to a file in the matter directory, adjust the scope, or add any bidder-specific carve-outs?"
+      }
+    ]
+  }
+]

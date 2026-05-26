@@ -1,0 +1,110 @@
+{
+  "variant": "A",
+  "model": "MiniMax-M2.5",
+  "scenario": "negative-control",
+  "n": 20,
+  "cycles": [
+    {
+      "cycle_n": 1,
+      "session_id": "20260526_83",
+      "matter_slug": "negative-control-c01-803886"
+    },
+    {
+      "cycle_n": 2,
+      "session_id": "20260526_84",
+      "matter_slug": "negative-control-c02-803886"
+    },
+    {
+      "cycle_n": 3,
+      "session_id": "20260526_85",
+      "matter_slug": "negative-control-c03-803886"
+    },
+    {
+      "cycle_n": 4,
+      "session_id": "20260526_86",
+      "matter_slug": "negative-control-c04-803886"
+    },
+    {
+      "cycle_n": 5,
+      "session_id": "20260526_87",
+      "matter_slug": "negative-control-c05-803886"
+    },
+    {
+      "cycle_n": 6,
+      "session_id": "20260526_88",
+      "matter_slug": "negative-control-c06-803886"
+    },
+    {
+      "cycle_n": 7,
+      "session_id": "20260526_89",
+      "matter_slug": "negative-control-c07-803886"
+    },
+    {
+      "cycle_n": 8,
+      "session_id": "20260526_90",
+      "matter_slug": "negative-control-c08-803886"
+    },
+    {
+      "cycle_n": 9,
+      "session_id": "20260526_91",
+      "matter_slug": "negative-control-c09-803886"
+    },
+    {
+      "cycle_n": 10,
+      "session_id": "20260526_92",
+      "matter_slug": "negative-control-c10-803886"
+    },
+    {
+      "cycle_n": 11,
+      "session_id": "20260526_93",
+      "matter_slug": "negative-control-c11-803886"
+    },
+    {
+      "cycle_n": 12,
+      "session_id": "20260526_94",
+      "matter_slug": "negative-control-c12-803886"
+    },
+    {
+      "cycle_n": 13,
+      "session_id": "20260526_95",
+      "matter_slug": "negative-control-c13-803886"
+    },
+    {
+      "cycle_n": 14,
+      "session_id": "20260526_96",
+      "matter_slug": "negative-control-c14-803886"
+    },
+    {
+      "cycle_n": 15,
+      "session_id": "20260526_97",
+      "matter_slug": "negative-control-c15-803886"
+    },
+    {
+      "cycle_n": 16,
+      "session_id": "20260526_98",
+      "matter_slug": "negative-control-c16-803886"
+    },
+    {
+      "cycle_n": 17,
+      "session_id": "20260526_99",
+      "matter_slug": "negative-control-c17-803886"
+    },
+    {
+      "cycle_n": 18,
+      "session_id": "20260526_100",
+      "matter_slug": "negative-control-c18-803886"
+    },
+    {
+      "cycle_n": 19,
+      "session_id": "20260526_101",
+      "matter_slug": "negative-control-c19-803886"
+    },
+    {
+      "cycle_n": 20,
+      "session_id": "20260526_102",
+      "matter_slug": "negative-control-c20-803886"
+    }
+  ],
+  "started_at": "2026-05-26T13:58:06.691Z",
+  "completed_at": "2026-05-26T14:09:12.759Z"
+}

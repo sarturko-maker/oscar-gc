@@ -1,0 +1,17 @@
+{
+  "cycle_id": "variant-A-MiniMax-M2.5-playbook-mismatch-cycle-05",
+  "variant": "A",
+  "model": "MiniMax-M2.5",
+  "scenario": "playbook-mismatch",
+  "cycle_n": 5,
+  "area_id": "commercial",
+  "matter": {
+    "slug": "playbook-mismatch-c05-804553",
+    "name": "S32-804553 Playbook mismatch — RFQ matter, NDA prompt c05",
+    "working_dir": "/root/Documents/Oscar GC/Commercial/S32-804553 Playbook mismatch — RFQ matter, NDA prompt c05",
+    "state_folder": "/root/.config/oscar/state/commercial/matters/playbook-mismatch-c05-804553"
+  },
+  "session_id": "20260526_107",
+  "provider": "minimax",
+  "started_at": "2026-05-26T14:12:19.158Z"
+}

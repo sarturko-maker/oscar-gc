@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23383,
+    "message_id": "0kh3hx8a",
+    "role": "user",
+    "timestamp": "2026-05-26 14:14:08",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23384,
+    "message_id": "0664ddb1c5a8336d2d0c6c19604bdf3a",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:14:12",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for prospective bidders — short, mutual, 2-year term, English law. This is a straightforward drafting request, no document attached to review.\n\nLet me draft this directly in plain text. Key specs:\n- Mutual (both sides confidentiality)\n- 2-year term\n- English law\n- Short (for bidding/pre-pricing context)\n- No executory obligations — just confidentiality\n\nI'll produce a clean template they can use.\n",
+        "signature": "4229ed1fa0b8861ea597caed03e8f9d4179632dacabb5dc90d2f88cf1def7293"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short, mutual NDA — suitable for sharing pricing/volume data with prospective bidders:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis agreement is made on [DATE] between:\n\n(1) **[YOUR COMPANY]** (\"**First Party**\")\nand\n(2) **[BIDDER NAME]** (\"**Second Party**\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one party to the other in connection with [the proposed transaction / the RFP process], including but not limited to pricing, volumes, technical specifications, and commercial terms, whether orally, in writing, or by inspection.\n\n**2. Obligations**\nThe receiving party shall:\n(a) protect Confidential Information using at least the same degree of care it uses to protect its own confidential information, and in no event less than reasonable care;\n(b) use Confidential Information only for the purpose of evaluating or progressing the proposed engagement;\n(c) not disclose Confidential Information to any third party without prior written consent.\n\n**3. Exclusions**\nConfidential Information does not include information that:\n(a) is or becomes publicly available through no fault of the receiving party;\n(b) was already known to the receiving party prior to disclosure;\n(c) is independently developed by the receiving party without use of Confidential Information;\n(d) is disclosed pursuant to a legal requirement or court order, provided the receiving party gives prompt notice to enable the disclosing party to seek protective measures.\n\n**4. Term**\nThis agreement shall remain in effect for **two (2) years** from the date first disclosed hereunder. Obligations of confidentiality shall survive termination.\n\n**5. No License**\nNo licence or other rights are granted under this agreement.\n\n**6. Governing Law**\nThis agreement shall be governed by the laws of England and Wales.\n\n---\n\nSigned for and on behalf of **First Party**:\n\n_________________________  \nName:  \nTitle:  \nDate:\n\nSigned for and on behalf of **Second Party**:\n\n_________________________  \nName:  \nTitle:  \nDate:\n\n---\n\nFill in the bracketed fields. Want me to adjust the scope or add anything?"
+      }
+    ]
+  }
+]

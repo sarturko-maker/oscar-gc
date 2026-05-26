@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23343,
+    "message_id": "o0ol34qu",
+    "role": "user",
+    "timestamp": "2026-05-26 14:04:01",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23344,
+    "message_id": "0664db526870d1fd36cc7c1e512b10f1",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:04:13",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a drafted confidentiality clause for a Series B term sheet. This is a drafting task, not a redline task — there's no document attached to mark up. The ask is:\n\n- Series B term sheet\n- UK manufacturing company (disclosing party) \n- US lead investor (receiving party)\n- Standard market terms\n- Mutual (both sides bound)\n- 3-year survival on termination/expiration\n\nLet me draft this directly in plain text. I don't need to scan playbooks or load skills for a straightforward drafting task like this — it's within my standard commercial drafting competence.\n\nKey elements for a mutual confidentiality clause in a term sheet context:\n1. Definition of confidential information (mutual)\n2. Obligations — protect at least as favorably as one's own confidential info, no less than reasonable care\n3. Exclusions — public info, prior knowledge, independently developed, third party disclosure\n4. Permitted disclosures — need-to-know, legal process\n5. Term / survival — 3 years post-termination\n6. Return / destruction of confidential information\n7. No license/grant implied\n8. Governing law — England & Wales is appropriate since the company is UK\n\nLet me write this cleanly.\n",
+        "signature": "fb2d54dda45fb59398b65aa6c3a624da502dcb6a65056c70f7b7b5eb1d1b9cd3"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause suitable for the Series B term sheet:\n\n---\n\n**Confidentiality**\n\nEach party (the \"Receiving Party\") agrees to hold in confidence all confidential or proprietary information of the other party (the \"Disclosing Party\") disclosed in connection with the transactions contemplated by this Term Sheet, including but not limited to financial projections, business plans, technical data, trade secrets, and customer lists (collectively, \"Confidential Information\").\n\nThe Receiving Party shall:\n\n(a) protect the Confidential Information using at least the same degree of care it uses to protect its own confidential information of a similar nature, and in no event less than reasonable care;\n\n(b) limit disclosure of Confidential Information to those of its officers, employees, advisers, and representatives who have a need to know such information for the purposes of the transactions contemplated hereby and who are subject to confidentiality obligations no less restrictive than those contained herein; and\n\n(c) not disclose Confidential Information to any third party without the prior written consent of the Disclosing Party, except as required by applicable law, regulation, or legal process, provided that the Receiving Party gives prompt notice to the Disclosing Party (to the extent legally permitted) to permit the Disclosing Party to seek protective treatment.\n\nThe obligations under this Section shall not apply to information that: (i) is or becomes publicly available through no fault of the Receiving Party; (ii) was rightfully in the possession of the Receiving Party prior to disclosure; (iii) is independently developed by the Receiving Party without use of or reference to Confidential Information; or (iv) is rightfully obtained by the Receiving Party from a third party without restriction on disclosure.\n\nUpon termination of this Term Sheet or request by the Disclosing Party, the Receiving Party shall promptly return or destroy all tangible Confidential Information (and retain no copies), except for information retained in archival backup pursuant to ordinary business practices.\n\nNeither party shall have any obligation under this Section with respect to any Confidential Information that is no longer required to be maintained in confidence by applicable law or regulation, or as required by a competent court or governmental authority.\n\nThis confidentiality obligation shall survive termination or expiration of this Term Sheet for a period of **three (3) years**.\n\n---\n\n**Governing law:** England & Wales (appropriate given the UK company's domicile).\n\nWant me to adjust the scope, add carve-outs for board members/noteholders, or tailor any other element?"
+      }
+    ]
+  }
+]

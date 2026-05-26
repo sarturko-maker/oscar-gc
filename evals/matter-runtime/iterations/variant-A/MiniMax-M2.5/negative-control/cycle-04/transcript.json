@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23322,
+    "message_id": "b2vn3d1s",
+    "role": "user",
+    "timestamp": "2026-05-26 14:00:04",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23323,
+    "message_id": "0664da65a39cfd3f10090c0ba4fe28b2",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:00:11",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a plain-text draft of a confidentiality clause for a Series B term sheet. This is a commercial document, not a redline task, so I don't need to use the redline doctrine. They're asking me to draft in plain text.\n\nKey parameters from the ask:\n- UK manufacturing company (disclosing party)\n- US lead investor (receiving party)\n- Series B term sheet context\n- Mutual confidentiality\n- 3-year survival\n- Standard market terms\n\nI should draft a mutual confidentiality clause that fits a term sheet (succinct, not a full NDA), with appropriate:\n- Definition of confidential information\n- Exclusions (already public, legitimately known, etc.)\n- Use restriction (purpose-bound)\n- Term/survival (3 years)\n- Return/destruction\n- Mandatory law catch-outs\n\nLet me draft this succinctly.\n",
+        "signature": "d8514c47453ca76536c6f6f2831425c83cd56822dd81908ccd25c5b91beacd00"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the Series B term sheet:\n\n---\n\n**Confidentiality.** Each party agrees to hold in confidence all Confidential Information of the other party disclosed in connection with the Proposed Transaction. \"Confidential Information\" means any non-public information relating to the disclosing party's business, finances, technology, customers, suppliers, or the Proposed Transaction, that is marked as confidential or would reasonably be understood to be confidential given its nature and circumstances of disclosure.\n\n**Exclusions.** Confidential Information does not include information that: (a) is or becomes publicly available through no breach by the receiving party; (b) was rightfully known to the receiving party prior to disclosure; (c) is independently developed by the receiving party without use of Confidential Information; or (d) is rightfully received from a third party without restriction.\n\n**Use and Disclosure.** The receiving party may use Confidential Information solely in connection with the Proposed Transaction and may not disclose it to any third party without the disclosing party's prior written consent, except to the receiving party's directors, officers, employees, agents, and professional advisers who need to know such information for the Purpose and who are bound by confidentiality obligations no less restrictive than this clause.\n\n**Term.** The confidentiality obligations under this clause shall survive for three (3) years from the date of disclosure of the applicable Confidential Information, except that obligations with respect to trade secrets shall remain in effect for as long as such information retains its trade secret status.\n\n**Return.** Upon request or the termination of discussions regarding the Proposed Transaction, the receiving party shall promptly return or destroy all Confidential Information (including all copies) and certify such destruction in writing.\n\n**Permitted Disclosure.** Notwithstanding the foregoing, either party may disclose Confidential Information as required by applicable law, regulation, or court order, provided that the disclosing party is notified (to the extent legally permitted) and the receiving party cooperates to seek protective treatment.\n\n---\n\nTwo observations:\n1. **Mutual, but asymmetric exposure** — the UK company discloses operational/proprietary data (manufacturing processes, customer lists); the US investor discloses fund terms, investment thesis. Consider whether you want exceptions carved for each side's specific exposures.\n2. **Survival starts from disclosure**, not signing — typical for term sheets where info exchanged during diligence precedes formal docs. Confirm this fits your deal timeline.\n\nWant me to adjust the carve-outs, the purpose definition, or add a non-solicitation provision?"
+      }
+    ]
+  }
+]

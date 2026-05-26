@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23361,
+    "message_id": "bg6ejf5x",
+    "role": "user",
+    "timestamp": "2026-05-26 14:08:01",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23362,
+    "message_id": "0664dc4212cf081c2439aa97c3306f78",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:08:07",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. Let me break this down:\n\n- Series B term sheet\n- UK manufacturing company (receiving party / disclosing party)\n- US lead investor (receiving party / disclosing party)\n- Standard market terms\n- Mutual (both sides bound)\n- 3-year survival (confidentiality survives termination)\n\nThis is a drafting task, not a redline task. There's no document attached to mark up. I should draft the clause in plain text.\n\nLet me draft a standard mutual confidentiality clause with:\n1. Definition of confidential information\n2. Exclusions (already public, received lawfully, independently developed, etc.)\n3. Obligations (use only for the purpose, protect with reasonable measures)\n4. Term (3 years survival)\n5. Permitted disclosures (legal requirement, advisors bound)\n6. Return/destruction\n\nI'll anchor in UK law (governing law) since the company is UK-based, but this is fairly standard regardless.\n",
+        "signature": "3589952efed005854d444d4897096df5316d23844f29e941ea47856dc648b076"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the term sheet:\n\n---\n\n**CONFIDENTIALITY**\n\nEach party (the \"Receiving Party\") acknowledges that, in connection with the Proposed Transaction (as defined in the Term Sheet), it may receive or become aware of certain confidential or proprietary information of the other party (the \"Disclosing Party\"), including but not limited to financial information, business plans, customer lists, technical data, trade secrets and know-how (collectively, \"Confidential Information\").\n\nThe Receiving Party agrees to:\n\n(a) hold all Confidential Information in strict confidence and not disclose it to any third party except as permitted hereunder;\n\n(b) use the Confidential Information solely for the purpose of evaluating and consummating the Proposed Transaction (the \"Purpose\");\n\n(c) protect the Confidential Information using at least the same degree of care as it uses to protect its own confidential information, and in no event less than a reasonable standard of care;\n\n(d) limit disclosure of Confidential Information to those of its officers, employees, agents and professional advisers who need to know the Confidential Information for the Purpose and who are bound by confidentiality obligations no less restrictive than those contained herein.\n\nThe obligations in this clause shall not apply to Confidential Information that: (i) is or becomes publicly available through no fault of the Receiving Party; (ii) was rightfully in the possession of the Receiving Party prior to disclosure; (iii) is independently developed by the Receiving Party without use of the Confidential Information; or (iv) is rightfully received from a third party without restriction on disclosure.\n\nThe Receiving Party may disclose Confidential Information to the extent required by law, regulation or court order, provided that, to the extent legally permitted, it gives the Disclosing Party prior written notice of such disclosure and reasonably cooperates in seeking protective measures.\n\nUpon termination of the Term Sheet or request by the Disclosing Party, the Receiving Party shall promptly return or destroy all Confidential Information (including all copies) and, upon request, certify such destruction in writing.\n\nThe obligations of confidentiality contained herein shall survive termination of this Term Sheet for a period of **three (3) years**.\n\n---\n\n**Notes:**\n- Governing law: English law (standard for UK company as host)\n- Mutual structure: both sides bound symmetrically\n- carve-outs cover the standard exclusions\n- 3-year survival aligns with Series B market practice\n- No non-use covenant included — add if you want to prohibit use beyond the Purpose\n\nWant me to adjust the governing law to New York law (for US investor), tighten the exclusions, or add a non-use provision?"
+      }
+    ]
+  }
+]

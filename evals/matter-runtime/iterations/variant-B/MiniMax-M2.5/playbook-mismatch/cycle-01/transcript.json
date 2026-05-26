@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25066,
+    "message_id": "axhn9d7o",
+    "role": "user",
+    "timestamp": "2026-05-26 15:34:29",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25067,
+    "message_id": "0664f086f46efb601f43082c81d156ab",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:34:34",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "This is a quick ask — the lawyer wants a generic NDA template for prospective bidders. No document attached, just drafting in plain text. No playbook or skill needed — this is a straightforward drafting request.\n\nKey requirements:\n- Short (so keep it concise)\n- Mutual (both sides protect each other's confidential info)\n- 2-year term\n- English law\n- For prospective bidders before sharing pricing/volume data\n\nI'll draft a clean, short mutual NDA and ask if they need any tweaks.\n",
+        "signature": "85d24e2bc7a24f47f03aa73e31e758d935a21d9da58a9fe4e5310b485d2ead9a"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement is made on [DATE] between:\n\n(1) **[YOUR COMPANY]** (\"**First Party**\")\n(2) **[COUNTERPARTY NAME]** (\"**Second Party**\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one party to the other in connection with [RFQ/reference], including but not limited to pricing, volume forecasts, technical specifications, and business Terms, whether orally, in writing, or by inspection.\n\n**2. Obligations**\nEach party shall:\n(a) protect the other party's Confidential Information using the same degree of care it uses to protect its own confidential information, but no less than reasonable care;\n(b) use the Confidential Information only for the Purpose;\n(c) not disclose the Confidential Information to any third party without prior written consent;\n(d) return or destroy the Confidential Information upon request.\n\n**3. Exclusions**\nConfidential Information does not include information that: (a) is or becomes publicly available; (b) was known to the receiving party before disclosure; (c) is independently developed; or (d) is received from a third party without breach of obligation.\n\n**4. Term**\nThis Agreement shall remain in effect for two (2) years from the date first above written. Obligations under **Clause 2** shall survive expiry for a period of two (2) years thereafter.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\nWant me to tweak any terms — wider/narrower scope, carve-outs, signature blocks?"
+      }
+    ]
+  }
+]

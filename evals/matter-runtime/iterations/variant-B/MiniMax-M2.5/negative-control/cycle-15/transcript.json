@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25054,
+    "message_id": "y2olrbkp",
+    "role": "user",
+    "timestamp": "2026-05-26 15:29:57",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25055,
+    "message_id": "0664ef76037a63b06e3f467b027e7f9e",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:30:03",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. This is a commercial document drafting task, not a redline task — there's no attachment to edit.\n\nLet me check the Turn 1 discovery protocol:\n- Step A: Scan playbooks — noun is \"confidentiality clause\" or \"term sheet\" — neither matches the playbooks listed (NDA, RFQ)\n- Step B: Scan skills — noun is \"confidentiality\" or \"term sheet\" — no matching slug in the skills list\n- Step C: Detect batch — this is a single clause, no batch\n\nSo I proceed to draft in plain text. The lawyer has given me clear parameters:\n- UK manufacturing company (Discloser)\n- US lead investor (Recipient)\n- Mutual\n- 3-year survival\n- Standard market terms\n\nI should draft this concisely, noting my assumptions.\n",
+        "signature": "a64700a9263663349c0756153a3750b8190200907cec1de872d03824dd9a22df"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the term sheet:\n\n---\n\n**13. Confidentiality**\n\n(a) **Definition.** \"Confidential Information\" means any non-public information disclosed by either Party (\"Disclosing Party\") to the other Party (\"Receiving Party\"), whether orally, in writing, or by inspection, relating to the Disclosing Party's business, technology, products, financials, customers, suppliers, or business affairs, including the existence and terms of this Agreement.\n\n(b) **Obligations.** The Receiving Party shall:\n(i) hold the Disclosing Party's Confidential Information in strict confidence;\n(ii) not disclose such Confidential Information to any third party without the Disclosing Party's prior written consent;\n(iii) use the Confidential Information solely for the purpose of evaluating, negotiating, or performing the transaction contemplated by this Agreement (\"Purpose\"); and\n(iv) protect the Confidential Information with at least the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\n(c) **Exclusions.** The obligations in Section 13(b) shall not apply to information that:\n(i) is or becomes publicly available through no fault of the Receiving Party;\n(ii) was properly in the Receiving Party's possession prior to disclosure, as evidenced by written records;\n(iii) is independently developed by the Receiving Party without use of the Confidential Information; or\n(iv) is rightfully obtained from a third party without restriction on disclosure.\n\n(d) **Permitted Disclosure.** The Receiving Party may disclose Confidential Information to its officers, directors, employees, agents, professional advisers, and potential financing sources who need to know such information for the Purpose, provided that such persons are bound by confidentiality obligations at least as restrictive as those in this Section 13.\n\n(e) **Legally Required Disclosure.** If the Receiving Party is required by applicable law, regulation, or court order to disclose any Confidential Information, the Receiving Party shall (to the extent lawfully permitted) promptly notify the Disclosing Party in writing and reasonably cooperate in seeking protective measures, and shall disclose only that portion legally required to be disclosed.\n\n(f) **Return or Destruction.** Upon the Disclosing Party's written request or upon termination of this Agreement, the Receiving Party shall, at its option, promptly return or destroy all Confidential Information (including all copies and extracts) and certify such destruction in writing.\n\n(g) **Duration.** The obligations of confidentiality under this Section 13 shall survive termination or expiration of this Agreement for a period of three (3) years from the date of disclosure of each item of Confidential Information.\n\n(h) **No License.** No license or other right is granted to the Receiving Party under any intellectual property rights of the Disclosing Party except as expressly provided herein.\n\n---\n\n**Assumptions:**\n- Term sheet itself will be confidential between the parties\n- \"Applicable law\" = UK law (you may want to specify English courts / arbitration if material)\n- No standstill or non-solicit obligations (typically separate in Series B)\n\nWant me to adjust the jurisdiction, carve-outs, or add a non-disparagement element?"
+      }
+    ]
+  }
+]

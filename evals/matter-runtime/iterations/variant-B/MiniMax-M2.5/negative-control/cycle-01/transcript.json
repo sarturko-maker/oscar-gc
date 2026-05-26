@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25026,
+    "message_id": "qmzygqb6",
+    "role": "user",
+    "timestamp": "2026-05-26 15:19:06",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25027,
+    "message_id": "0664ecebdd211a26f592f424f697d5cd",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:19:12",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. This is a \"working without an attachment\" scenario - there's no document to review, I'm drafting from scratch.\n\nKey parameters:\n- UK manufacturing company (target/counterparty)\n- US lead investor\n- Series B term sheet context\n- Mutual confidentiality\n- 3-year survival\n- Standard market terms\n\nLet me draft this in plain text. I'll note my assumptions and ask if needed.\n",
+        "signature": "852a851bf008af6b37b5fdd17f14aeff54e31155cacdf07072c189777e27a1ff"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause suitable for a Series B term sheet:\n\n---\n\n**13. Confidentiality**\n\n*The parties agree to reciprocal confidentiality obligations with standard carve-outs.*\n\n**13.1 Confidentiality Obligations.** Each party (the \"**Receiving Party**\") undertakes that it shall:\n\n(a) keep confidential and not disclose to any third party (other than its officers, employees, agents, professional advisers or potential investors who need to know the Confidential Information for the Purpose, in each case who have been made aware of the confidential nature of the Confidential Information and are bound by obligations of confidence at least as protective as those contained herein) any Confidential Information of the other party (the \"**Disclosing Party**\");\n\n(b) use the Confidential Information solely for the Purpose; and\n\n(c) protect the Confidential Information with at least the same degree of care as it protects its own confidential information, but in no event less than reasonable care.\n\n**13.2 Exclusions.** The obligations in Clause 13.1 shall not apply to any Confidential Information that:\n\n(a) is or becomes publicly available other than as a result of a breach of this Clause 13;\n\n(b) was lawfully known to the Receiving Party prior to disclosure by the Disclosing Party, as evidenced by the Receiving Party's contemporaneous written records;\n\n(c) is independently developed by the Receiving Party without use of or reference to the Confidential Information, as evidenced by the Receiving Party's written records;\n\n(d) is rightfully obtained by the Receiving Party from a third party without restriction on disclosure; or\n\n(e) is required to be disclosed by applicable law, regulation, or court order, provided that the Receiving Party gives the Disclosing Party prompt written notice (where legally permitted) and reasonably cooperates in seeking protective measures.\n\n**13.3 Return of Information.** Upon request by the Disclosing Party following the earlier of (i) the closing of the Transaction contemplated by this Agreement, or (ii) termination of this Agreement, the Receiving Party shall promptly return or destroy all Confidential Information (including all copies) and certify such destruction in writing, except for any copies retained in accordance with legal or regulatory retention requirements or in-archival backups made in the ordinary course of business, which shall remain subject to the obligations of this Clause 13.\n\n**13.4 Term.** The confidentiality obligations under this Clause 13 shall survive for a period of **three (3) years** from the date of disclosure of the relevant Confidential Information, unless such information is no longer confidential due to an exception in Clause 13.2.\n\n**13.5 Disclosure of Terms.** Neither party shall disclose the terms of this Agreement (including the valuation, board composition, or other economic terms) to any third party without the prior written consent of the other party, except to its professional advisers under confidential cover, or as required by applicable law or regulation.\n\n---\n\n**Notes:**\n- *Mutual structure* — appropriate for founder-investor symmetry on a term sheet\n- *Need-to-know carve-out* — covers officers, employees, agents, advisers, potential investors\n- *Purpose limitation* — tied to evaluation/consummation of the financing\n- *Standard exclusions* — public domain, prior knowledge, independent development, lawful third-party capture, legal compulsion\n- *Return/destruction* — triggered on close or termination\n- *3-year survival* — as requested\n- *Publicity ban* — separate from substantive confidentiality, caps disclosure of deal terms\n\nAssumes: No government/judicial export controls beyond typical US/UK; no unusual sensitivity (IP, customer data). Let me know if you need variations."
+      }
+    ]
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23359,
+    "message_id": "siw91itg",
+    "role": "user",
+    "timestamp": "2026-05-26 14:07:34",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23360,
+    "message_id": "0664dc2734768d392ed199b288f67363",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:07:42",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. This is a standalone drafting task, not a redline of an existing document.\n\nLet me think through what's needed:\n- Series B term sheet context\n- UK manufacturing company (target/issuer) + US lead investor\n- Mutual confidentiality (both sides)\n- 3-year survival post-termination\n- Standard market terms\n\nThis is a drafting task in plain text - no document attachment. I should produce a clause that meets these requirements.\n\nKey elements to include:\n1. Definition of Confidential Information\n2. Mutual obligations (both parties bound)\n3. Standard carve-outs (legally required disclosures, prior knowledge, public domain, etc.)\n4. Permitted disclosures (directors, officers, employees, advisers who need to know)\n5. Return/destruction provisions\n6. Term/survival (3 years after termination)\n7. No license implied\n\nI don't need to load a playbook or skill for this - it's drafting a single clause from scratch with clear requirements. I'll draft it directly.\n",
+        "signature": "b1a670a4f007bff73e82263b3078f4ecdafe46ef74f5160b38f289162e7b076a"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the Series B term sheet:\n\n---\n\n**Confidentiality**\n\nEach party (the \"Disclosing Party\") agrees that any Confidential Information disclosed by the other party (the \"Receiving Party\") pursuant to the Proposed Transaction shall be kept confidential and shall not be disclosed to any third party, except as permitted under this clause.\n\n\"Confidential Information\" means all non-public information disclosed by the Disclosing Party in connection with the Proposed Transaction, whether orally, in writing, or by any other means, that is designated as confidential or that reasonably ought to be understood to be confidential given the nature of the information and the circumstances of disclosure.\n\n**Permitted Disclosures.** The Receiving Party may disclose Confidential Information only to its directors, officers, employees, professional advisers, and financing sources who (a) have a need to know such information for the purposes of the Proposed Transaction, and (b) are bound by confidentiality obligations at least as protective as those contained in this clause.\n\n**Carve-Outs.** The restrictions in this clause shall not apply to any information that:\n(a) is or becomes publicly available through no fault of the Receiving Party;\n(b) was already known to the Receiving Party prior to disclosure, as evidenced by contemporaneous written records;\n(c) is independently developed by the Receiving Party without use of the Confidential Information;\n(d) is rightfully obtained from a third party without restriction on disclosure; or\n(e) is required to be disclosed by applicable law, regulation, or court order, provided that the Receiving Party gives prompt notice to the Disclosing Party (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\n**Return or Destruction.** Upon request by the Disclosing Party following termination of discussions regarding the Proposed Transaction, the Receiving Party shall promptly return or destroy all Confidential Information (including all copies, summaries, and extracts) and certify such return or destruction in writing, except that backup copies retained solely for disaster recovery purposes may be retained in accordance with the Receiving Party's standard archival practices.\n\n**Term.** The obligations under this clause shall survive for a period of three (3) years from the date of disclosure of the relevant Confidential Information, unless the Confidential Information falls within one of the exceptions in paragraphs (a) through (e) above, in which case the obligations shall terminate for that information.\n\n**No Licence.** Nothing in this clause grants any licence or other right to any patent, copyright, trademark, or other intellectual property right of the Disclosing Party.\n\n---\n\nWant me to adjust the carve-outs, add a press-release coordinating clause, or tweak the survival structure?"
+      }
+    ]
+  }
+]

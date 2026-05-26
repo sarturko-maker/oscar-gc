@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25068,
+    "message_id": "a4a9f3yt",
+    "role": "user",
+    "timestamp": "2026-05-26 15:35:23",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25069,
+    "message_id": "0664f0bcc4f8312463dce4a9d120bf08",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:35:28",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for prospective bidders before sharing pricing/volume data. Quick task - no document attached, just drafting. Let me draft this directly.\n\nRequirements:\n- Mutual confidentiality\n- Short (keep it brief)\n- 2-year term\n- English law\n- For prospective bidders sharing pricing/volume data\n\nI don't need to scan playbooks for this - it's a straightforward NDA drafting request, not a review task. I'll draft concisely.\n",
+        "signature": "be3486b8a0e8251d08f8f3dd4e1513511433111d114e5eed6d7655a24387f0f4"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA — two pages, standard reciprocal confidentiality with a 2-year term and English law jurisdiction:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\n**BETWEEN:**\n\n(1) **[Company Name]** (\"Party A\")\n**AND**\n(2) **[Bidder Name]** (\"Party B\")\n\n(together the \"Parties\")\n\n**BACKGROUND:** The Parties wish to explore a potential business relationship and may disclose confidential information to each other for that purpose.\n\n**AGREED TERMS:**\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any information disclosed by one Party to the other that is marked as confidential or would reasonably be understood to be confidential, including but not limited to pricing, volume data, technical specifications, commercial strategies, and business plans. It does not include information that: (a) is or becomes publicly available through no breach of this Agreement; (b) was already known to the receiving Party prior to disclosure; (c) is independently developed by the receiving Party without use of the Confidential Information; or (d) is rightfully obtained from a third party without restriction.\n\n**2. Obligations**\nThe receiving Party shall: (a) protect the Confidential Information using at least the same degree of care it uses to protect its own confidential information, but no less than reasonable care; (b) use the Confidential Information solely for the Purpose; (c) not disclose the Confidential Information to any third party without the disclosing Party's prior written consent; and (d) limit disclosure to those of its employees, officers, and professional advisers who need to know the information for the Purpose and who are bound by equivalent confidentiality obligations.\n\n**3. Exclusions**\nThe obligations above shall not apply to any Confidential Information that: (a) is required to be disclosed by applicable law, regulation, or court order, provided the receiving Party gives the disclosing Party prompt written notice (where permitted by law) to allow it to seek protective measures; or (b) is disclosed to the receiving Party's professional advisors bound by professional secrecy.\n\n**4. Return or Destruction**\nUpon request or termination of this Agreement, the receiving Party shall promptly return or destroy all Confidential Information in its possession (except for archived backup copies held in accordance with its ordinary retention policies) and certify destruction upon request.\n\n**5. No Warranty**\nThe-disclosing Party provides no warranty as to the accuracy or completeness of the Confidential Information. The receiving Party acknowledges it relies on the Confidential Information at its own risk.\n\n**6. Term**\nThis Agreement shall remain in force for **two (2) years** from the date of signature, or until terminated by either Party upon thirty (30) days' written notice to the other. The confidentiality obligations shall survive termination for a period of **two (2) years** from the date of disclosure of the relevant Confidential Information.\n\n**7. Governing Law**\nThis Agreement shall be governed by and construed in accordance with the laws of **England and Wales**.\n\n**8. Entire Agreement**\nThis Agreement constitutes the entire agreement between the Parties concerning its subject matter and supersedes all prior understandings. It may only be amended in writing signed by both Parties.\n\n---\n\nWant me to save this to your templates folder, or do you want any adjustments to the scope or term?"
+      }
+    ]
+  }
+]

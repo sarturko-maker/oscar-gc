@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25074,
+    "message_id": "i192xw1s",
+    "role": "user",
+    "timestamp": "2026-05-26 15:37:36",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25075,
+    "message_id": "0664f1407d57408ec8cf106efc8fb8bf",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:37:40",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for prospective bidders before sharing pricing/volume data. Quick drafting task, not a redline. I'll draft directly in plain text as instructed.\n\nKey specs:\n- Mutual\n- 2-year term\n- English law\n- Short\n- For pricing/volume data in RFQ context\n",
+        "signature": "22904f79e07449f6a2fe8114c9d0e9a1ad266ba100d69b9b6ac54ea9fd30095a"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n**[YOUR COMPANY]** (\"Party A\")\n\nand\n\n**[PROSPECTIVE BIDDER]** (\"Party B\")\n\n(together the \"Parties\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any pricing, volume, financial, technical, or commercial information disclosed by one Party to the other in connection with [RFQ / tender / procurement discussions], whether orally, in writing, or by inspection.\n\n**2. Obligations**\nEach Party agrees to:\n(a) hold the other Party's Confidential Information in strict confidence;\n(b) not disclose it to any third party without prior written consent;\n(c) use it only for the purpose of evaluating or responding to the contemplated business relationship (\"Purpose\");\n(d) protect it using at least the same degree of care as its own confidential information, but no less than reasonable care.\n\n**3. Exclusions**\nConfidential Information does not include information that:\n(a) is or becomes publicly available through no fault of the receiving Party;\n(b) was already known to the receiving Party prior to disclosure;\n(c) is independently developed by the receiving Party without use of the Confidential Information;\n(d) is disclosed pursuant to a legal requirement or court order, provided the receiving Party gives prompt notice to the disclosing Party.\n\n**4. Term**\nThis Agreement expires on the earlier of:\n(a) two (2) years from the date first disclosed; or\n(b) the Parties entering into a binding agreement covering the Purpose.\n\n**5. Governing Law**\nThis Agreement is governed by the laws of England and Wales.\n\n---\n\nWant me to adjust the scope, add an exception for legally required disclosures, or tailor it further?"
+      }
+    ]
+  }
+]

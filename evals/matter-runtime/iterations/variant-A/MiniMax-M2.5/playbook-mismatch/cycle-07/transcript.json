@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23379,
+    "message_id": "x4c2tdnr",
+    "role": "user",
+    "timestamp": "2026-05-26 14:13:23",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23380,
+    "message_id": "0664dd840f10d3dea0399729ad674ab6",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:13:26",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for prospective bidders - short, mutual, 2-year term, English law. This is a straightforward drafting request without an attachment, so I should work in plain text.\n\nLet me draft this directly - keeping it concise as requested.\n",
+        "signature": "65736c52d769d771fa34f2717c44109cd07860707cad18e796935fdc7a443b85"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\n**Parties:** [Our Company] and [Bidder]\n\n**1. Confidential Information.** Each party may disclose to the other confidential or proprietary information relating to a potential commercial relationship (\"Confidential Information\").\n\n**2. Obligations.** The recipient shall:\n- (a) hold Confidential Information in strict confidence;\n- (b) use it only for the Purpose of evaluating the potential relationship;\n- (c) not disclose it to any third party without prior written consent;\n- (d) protect it using at least the same degree of care it uses to protect its own confidential information (and no less than reasonable care).\n\n**3. Exclusions.** This does not apply to information that: (a) is or becomes publicly available; (b) was already known to the recipient; (c) is independently developed; or (d) is received lawfully from a third party.\n\n**4. Return or Destruction.** On request, or when no longer needed, the recipient shall return or destroy the Confidential Information and certify destruction.\n\n**5. Term.** This expires 2 years from the date of disclosure of any Confidential Information.\n\n**6. Governing Law.** English law.\n\n---\n\nWant me to adjust anything — disclosure scope, the exclusions, or add a specific purpose clause?"
+      }
+    ]
+  }
+]

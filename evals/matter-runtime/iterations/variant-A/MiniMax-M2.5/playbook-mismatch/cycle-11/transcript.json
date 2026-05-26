@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23387,
+    "message_id": "5c4yk45y",
+    "role": "user",
+    "timestamp": "2026-05-26 14:15:25",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23388,
+    "message_id": "0664ddfeb95612579037ac76e084bf80",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:15:31",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for prospective bidders - mutual, 2-year term, English law. This is a straightforward drafting task, not a redline on an existing document. They've given me the key parameters:\n\n- Mutual (both ways)\n- 2-year term\n- English law\n- Short format\n- For prospective bidders sharing pricing/volume data\n\nI should draft this in plain text since there's no document to redline. Given the matter context (Pemberton RFQ, NDA template ask), I'll produce a concise, commercial NDA template.\n",
+        "signature": "eb89b11cd17076a8849d1958e61a615689a9878ece566a578ad6dd698318436f"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template for the Pemberton RFQ:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n**(1) [Your Company]** (\"Company\")\n\nand\n\n**(2) [Prospective Supplier]** (\"Supplier\")\n\n(together, the \"Parties\").\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one Party to the other in connection with [evaluation of a potential supply arrangement / the Request for Quotation dated [DATE]], including but not limited to pricing, volume forecasts, technical specifications, and commercial terms.\n\n**2. Obligations**\nEach Party undertakes to:\n(a) keep the other's Confidential Information confidential and not disclose it to any third party except as necessary for the Purpose;\n(b) use the other's Confidential Information solely for the purpose of evaluating or negotiating a potential supply arrangement (\"Purpose\");\n(c) protect the Confidential Information using the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\n**3. Exclusions**\nThe obligations in clause 2 shall not apply to information that:\n(a) is or becomes publicly available through no fault of the receiving Party;\n(b) was lawfully in the receiving Party's possession prior to disclosure;\n(c) is independently developed by the receiving Party without use of the Confidential Information; or\n(d) is disclosed pursuant to a legal obligation, provided the receiving Party gives the disclosing Party reasonable notice.\n\n**4. Term**\nThis Agreement shall terminate on the earlier of (i) two (2) years from the date hereof, or (ii) the execution of a definitive supply agreement between the Parties. The confidentiality obligations shall survive termination for a period of [two (2)] years.\n\n**5. Governing Law**\nThis Agreement shall be governed by and construed in accordance with the laws of England and Wales.\n\n---\n\nSigned for and on behalf of **[Your Company]**\n\nSigned for and on behalf of **[Prospective Supplier]**\n\n---\n\nWant me to adjust any terms — perpetual survival, specific carve-outs for anonymised benchmarking, or something else?"
+      }
+    ]
+  }
+]

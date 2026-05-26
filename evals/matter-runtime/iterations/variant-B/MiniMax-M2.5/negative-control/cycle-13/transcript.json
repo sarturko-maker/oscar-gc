@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25050,
+    "message_id": "5h649v8f",
+    "role": "user",
+    "timestamp": "2026-05-26 15:28:08",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25051,
+    "message_id": "0664ef09feb0b1f6961dea9afbb55c40",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:28:14",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. Key parameters:\n- UK manufacturing company (target/issuer)\n- US lead investor\n- Mutual (both ways)\n- 3-year survival on termination\n- Standard market terms\n\nThis is a drafting task, not a redline task (no attachment). I should work in plain text, offer my view, and note assumptions.\n\nLet me draft a standard mutual NDA clause suitable for a Series B term sheet. I'll note:\n1. Mutual confidentiality\n2. Defined terms (Confidential Information, Purpose, etc.)\n3. Exclusions (publicly available, rightfully received, independently developed, etc.)\n4. Standardcare obligations\n5. Permitted disclosures (legal requirement, with notice)\n6. Term and survival (3 years post-termination)\n7. Return/destruction on request\n\nI'll draft this concisely and flag any assumptions I'm making.\n",
+        "signature": "9f586b01136e95237ab1e98f0cfaeed37c3692f9b7415d6a2dacbc118ec0260b"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause for the term sheet, drafted for a Series B with a US investor:\n\n---\n\n**Confidentiality**\n\nEach party (the **\"Receiving Party\"**) agrees that any Confidential Information of the other party (the **\"Disclosing Party\"**) disclosed to it by the Disclosing Party shall be held in confidence and shall not be disclosed to any third party or used for any purpose other than evaluating, negotiating, and consummating the Proposed Transaction (the **\"Purpose\"**).\n\n**\"Confidential Information\"** means any information disclosed by either party to the other in connection with the Proposed Transaction, whether orally, in writing, or by inspection, that is designated as confidential or that reasonably would be understood to be confidential given the nature of the information and circumstances of disclosure. Confidential Information does not include information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was rightfully known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of Confidential Information; or (d) is rightfully received from a third party without restriction.\n\nThe Receiving Party shall protect Confidential Information with at least the same degree of care it uses to protect its own confidential information, but no less than reasonable care. Access shall be limited to those officers, employees, agents, and professional advisers who need to know the Confidential Information for the Purpose and who are bound by confidentiality obligations at least as protective as this Clause.\n\nThe Receiving Party may disclose Confidential Information as required by applicable law, regulation, or legal process, provided that the Receiving Party gives the Disclosing Party prompt written notice (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\nUpon request or termination of this Term Sheet, the Receiving Party shall promptly return or destroy all Confidential Information and any copies thereof, except for information retained in ordinary backup archives solely for disaster recovery purposes, subject to continued confidentiality obligations.\n\n**Term:** This Clause shall survive for three (3) years following termination or expiry of this Term Sheet.\n\n---\n\nAssumptions I made:\n- **Mutual** — as you requested. If you need this weighted toward the company (one-way from investor), say so.\n- **No standstill** — typical for term sheets but sometimes paired with confidentiality. Let me know if you want a standstill clause added.\n- **Governing law** — impliedly English law given the UK target. If the investor pushes for NY law, that usually trades in negotiation.\n- **\"Proposed Transaction\"** as the defined purpose — substitute your deal name if preferred.\n\nWant me to adjust the balance (investor-skewed, company-neutral, or fully mutual)? Want me to add a standstill or carve for portfolio companies if the US investor typically wants those?"
+      }
+    ]
+  }
+]

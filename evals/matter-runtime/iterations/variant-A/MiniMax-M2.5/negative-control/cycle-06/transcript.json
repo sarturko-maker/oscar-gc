@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23326,
+    "message_id": "wvwmtsnd",
+    "role": "user",
+    "timestamp": "2026-05-26 14:00:56",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23327,
+    "message_id": "0664da9989d68b9f4cf2f34cacd0e709",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:01:04",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. No attachment provided - they're asking me to work in plain text. This is a drafting task, not a redline task.\n\nLet me apply the Turn 1 discovery protocol:\n- Noun: \"confidentiality clause\" / \"term sheet\" \n- No playbook matches this noun specifically - it's not an NDA task per se, it's drafting a clause for a term sheet\n- There's no batch to detect\n- There's a skill that could apply: `nda-review` but that's for reviewing NDAs, not drafting clauses\n\nThis is a straightforward drafting task - I'll work in plain text with my view on market-standard confidentiality provisions for a Series B term sheet, mutuality, and 3-year survival.\n\nKey elements to cover:\n1. Definition of Confidential Information (standard carve-outs: publicly known, already known, received from third party, independently developed, required by law/LSE)\n2. Obligations - no disclosure, no use except for evaluating the investment\n3. Limitations - directors/officers/employees/advisors need to know\n4. Term - 3 years survival is requested\n5. Return/provision of information (optional but market)\n6. Mutuality - bind both parties\n\nUK company + US investor context - but confidentiality clauses are generally standard across jurisdictions for venture deals.\n",
+        "signature": "2d96990490a64da7ecdbccb47eac887da6d0a4d8d098d0cf3697103344aa56d3"
+      },
+      {
+        "type": "text",
+        "text": "\n\nI'll draft this in plain text. Here's a market-standard mutual confidentiality clause for a Series B term sheet:\n\n---\n\n**13. Confidentiality**\n\n**13.1 Definition.** \"Confidential Information\" means any information disclosed by either party to the other in connection with the Proposed Transaction, whether orally, in writing, or by any other means, that is marked as confidential or that reasonably ought to be understood to be confidential given the nature of the information and the circumstances of disclosure.\n\n**13.2 Exclusions.** Confidential Information does not include information that: (a) is or becomes publicly available through no fault of the receiving party; (b) was rightfully known to the receiving party prior to disclosure; (c) is independently developed by the receiving party without use of Confidential Information; (d) is lawfully obtained from a third party without restriction; or (e) is required to be disclosed by applicable law, regulation, or court order, provided the receiving party gives prompt notice to allow the disclosing party to seek protective treatment.\n\n**13.3 Obligations.** Each party shall: (a) hold the other's Confidential Information in strict confidence; (b) not disclose Confidential Information to any third party without prior written consent; (c) use Confidential Information solely for the purpose of evaluating and consummating the Proposed Transaction; and (d) protect Confidential Information using at least the same degree of care it uses to protect its own confidential information, but no less than reasonable care.\n\n**13.4 Permitted Disclosure.** Each party may disclose Confidential Information only to its directors, officers, employees, advisors, and their respective legal counsel who have a need to know such information for the Purpose, and who are bound by confidentiality obligations at least as restrictive as those in this Clause 13.\n\n**13.5 Return or Destruction.** Upon request by the disclosing party, or upon termination of this Term Sheet, the receiving party shall promptly return or destroy all tangible Confidential Information and certify such destruction in writing, provided that the receiving party may retain one archival copy for legal compliance purposes only.\n\n**13.6 Term.** The obligations of confidentiality under this Clause 13 shall survive termination or expiry of this Term Sheet for a period of **three (3) years**.\n\n**13.7 Warranty Disclaimer.** Each party acknowledges that the other party makes no warranty as to the accuracy or completeness of Confidential Information, and disclaims all liability for any reliance placed thereon.\n\n---\n\nWant me to adjust the carve-outs, add a specific definition of \"Purpose,\" tweak the survival period, or add anything else?"
+      }
+    ]
+  }
+]

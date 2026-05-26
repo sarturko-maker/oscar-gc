@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25056,
+    "message_id": "c31f9ygc",
+    "role": "user",
+    "timestamp": "2026-05-26 15:30:51",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25057,
+    "message_id": "0664efacd78cce0aec87466bb98eb50e",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:30:58",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. This is a plain-text drafting task, not a redline task — there's no attached document to markup. \n\nKey parameters:\n- UK manufacturing company (disclosing party)\n- US lead investor (receiving party)\n- Series B term sheet context\n- Mutual confidentiality\n- 3-year survival\n- Standard market terms\n\nI should draft this directly in plain text. Let me produce a commercial-grade confidentiality clause that fits a term sheet (concise, effective, no longer than necessary).\n\nI'll note my assumptions and produce the clause.\n",
+        "signature": "894585ce02ddd61050519b41af42bfdf3a32c4eeca7e191a96d343d3f1417e63"
+      },
+      {
+        "type": "text",
+        "text": "\n\nDrafting directly — no document attached means plain-text output.\n\n**Assumptions:**\n- Both parties bound (mutual)\n- Standard term sheet brevity (not a full NDA)\n- \"Confidential Information\" defined; standard exclusions (publicly available, already known, independently developed, lawfully obtained)\n- Remedies / injunctive relief available\n- 3-year survival post-termination\n- No mandatory-law catch-out needed (this is UK/US; both recognise合同义务)\n\n---\n\n**CONFIDENTIALITY**\n\n**14.1 Definition.** \"Confidential Information\" means any confidential or proprietary information disclosed by either party (the \"Disclosing Party\") to the other (the \"Receiving Party\"), whether orally, in writing, or by inspection, relating to the Disclosing Party's business, products, technology, customers, finances, or affairs, including the terms of this Agreement.\n\n**14.2 Obligations.** The Receiving Party shall:\n(a) hold all Confidential Information of the Disclosing Party in strict confidence;\n(b) not disclose Confidential Information to any third party without the Disclosing Party's prior written consent;\n(c) use Confidential Information solely for the purpose of evaluating and consummating the transaction contemplated by this Agreement (the \"Purpose\"); and\n(d) protect Confidential Information using at least the degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\n**14.3 Exclusions.** The obligations in Section 14.2 shall not apply to information that:\n(a) is or becomes publicly available through no fault of the Receiving Party;\n(b) was rightfully known to the Receiving Party prior to disclosure;\n(c) is independently developed by the Receiving Party without use of Confidential Information; or\n(d) is rightfully obtained by the Receiving Party from a third party without restriction.\n\n**14.4 Permitted Disclosure.** Notwithstanding Section 14.2, the Receiving Party may disclose Confidential Information to its officers, directors, employees, agents, and professional advisers (including lawyers, accountants, and financial advisors) who need to know such information for the Purpose, provided that the Receiving Party informs such persons of the confidential nature of the information and ensures their compliance with this Section 14.\n\n**14.5 Return or Destruction.** Upon request by the Disclosing Party, or upon termination of this Agreement, the Receiving Party shall promptly return or destroy all tangible Confidential Information (and all copies thereof) in its possession, except for archival copies retained in accordance with the Receiving Party's standard document retention policies or as required by applicable law.\n\n**14.6 Survival.** The obligations under this Section 14 shall survive termination or expiration of this Agreement for a period of three (3) years.\n\n**14.7 Remedies.** Each party acknowledges that any breach of this Section 14 may cause irreparable harm for which monetary damages may be inadequate. Accordingly, the non-breaching party shall be entitled to seek injunctive or other equitable relief without proof of actual damages or posting of bond.\n\n---\n\nLet me know if you want any adjustments — tighter/longer survival, addition of a \"reasonable time\" qualifier, specific exclusions (e.g., GAAP financial info), or anything else."
+      }
+    ]
+  }
+]

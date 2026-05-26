@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23396,
+    "message_id": "plhqqwb7",
+    "role": "user",
+    "timestamp": "2026-05-26 14:16:47",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23397,
+    "message_id": "0664de4f59c5d2a5025230c5572135b7",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:16:52",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a generic NDA template for prospective bidders - short, mutual, 2-year term, English law. This is a straightforward drafting request, not a redline task (no document attached). I should draft it in plain text.\n\nLet me check if there's a playbook for NDA that I should reference - yes, there's an nda-review-playbook.md in the playbooks block. But this is a drafting request from scratch, not a review task, so I'll just proceed with the drafting.\n\nKey requirements:\n- Short\n- Mutual (both sides bound)\n- 2-year term\n- English law\n- For prospective bidders sharing pricing/volume data\n\nI'll draft a concise双边 NDA and present it for the lawyer to review.\n",
+        "signature": "d944984f8a72b1b8c7dea89bff3872dce1b79f9a347fe7cc17f2d547c0ab7eec"
+      },
+      {
+        "type": "text",
+        "text": "\n\nI'll draft a short, mutual NDA template in English law for you.\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\n**Between:** [Our company name] (\"Company\")  \n**And:** [Bidder name] (\"Other Party\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any pricing, volume, technical, commercial or business information disclosed by one party to the other in connection with [the RFQ/bidding process], whether orally, in writing, or by inspection.\n\n**2. Obligations**\nEach party shall:\n(a) protect the other's Confidential Information using the same degree of care it uses to protect its own confidential information, but no less than reasonable care;\n(b) use the Confidential Information solely for the purpose of evaluating and responding to [the RFQ/bidding process];\n(c) not disclose the Confidential Information to any third party without prior written consent.\n\n**3. Exclusions**\nThe obligations in Clause 2 do not apply to information that:\n(a) is or becomes publicly available through no fault of the receiving party;\n(b) was lawfully known to the receiving party before disclosure;\n(c) is independently developed by the receiving party without use of the Confidential Information;\n(d) is disclosed pursuant to a legal requirement or court order, provided the receiving party gives prompt notice to allow the disclosing party to seek protective measures.\n\n**4. Term**\nThis Agreement shall expire two (2) years from the date of first disclosure of Confidential Information hereunder. Confidentiality obligations shall survive expiration for a further period of two (2) years, or until the information ceases to be confidential, whichever is earlier.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\nWant me to adjust the scope, add an execution block, or tailor it further?"
+      }
+    ]
+  }
+]

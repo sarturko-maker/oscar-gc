@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23367,
+    "message_id": "sp7bmrgq",
+    "role": "user",
+    "timestamp": "2026-05-26 14:09:24",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 23368,
+    "message_id": "0664dc9532d73aa60f4b18381abece80",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:09:29",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking me to draft a generic NDA template for use with prospective bidders before sharing pricing/volume data. This is a straightforward drafting request - not a redline task on an existing document.\n\nKey requirements they've specified:\n- Mutual (both parties confidential)\n- 2-year term\n- English law\n- Short / compact\n- For prospective bidders (pre-contract due diligence)\n\nI don't need to load a skill or playbook for this - it's a simple drafting request where I should produce a concise, balanced short-form NDA. I'll draft it directly in plain text.\n\nLet me produce a short, balanced NDA template.\n",
+        "signature": "98a045bf7ca0e54dc663e178b2c8f97c0ca838bf803f8c17cd8c6944fbc0d038"
+      },
+      {
+        "type": "text",
+        "text": "\n\nGot it. Here's a short mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n(1) [COMPANY A] (\"Party A\"); and  \n(2) [COMPANY B] (\"Party B\")  \n(collectively, the \"Parties\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any information disclosed by one Party to the other in connection with [purpose: evaluating a potential commercial arrangement], including but not limited to pricing, volume data, technical specifications, and business plans, that is marked as confidential or would reasonably be understood to be confidential.\n\n**2. Obligations**\nEach Party shall:\n(a) protect the other Party's Confidential Information using the same degree of care it uses to protect its own confidential information, but in any event no less than reasonable care;\n(b) only disclose Confidential Information to those of its employees, officers, or professional advisers who need to know it for the Purpose;\n(c) not use the other Party's Confidential Information for any purpose other than the Purpose.\n\n**3. Exclusions**\nConfidential Information does not include information that: (a) is or becomes publicly available through no fault of the receiving Party; (b) was already known to the receiving Party at the time of disclosure; (c) is independently developed by the receiving Party without use of the Confidential Information; or (d) is disclosed with the disclosing Party's prior written consent.\n\n**4. Return or Destruction**\nUpon request or the termination of discussions, the receiving Party shall promptly return or destroy all Confidential Information (including copies) held by it, except where retention is required by applicable law.\n\n**5. Term**\nThis Agreement shall remain in effect for two (2) years from the date first above written.\n\n**6. Governing Law**\nThis Agreement shall be governed by English law.\n\n---\n\nWant me to adjust the scope (e.g., narrower carve-outs), the term, or add anything else?"
+      }
+    ]
+  }
+]

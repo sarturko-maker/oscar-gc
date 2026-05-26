@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25082,
+    "message_id": "i46h2vey",
+    "role": "user",
+    "timestamp": "2026-05-26 15:40:47",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25083,
+    "message_id": "0664f20086877fceb6e9c5476ff4401f",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:40:51",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a generic NDA template for prospective bidders. This is a straightforward drafting request - no document attached, they're asking me to draft from scratch.\n\nKey requirements:\n- Short (mutual)\n- 2-year term\n- English law\n- For prospective bidders sharing pricing/volume data\n\nI should draft this in plain text for their review. This doesn't trigger the Turn 1 discovery protocol since it's a drafting task (creating new text), not a review task. No playbook or skill needed for basic drafting.\n\nLet me write a concise mutual NDA template.\n",
+        "signature": "904c08d2f17526266ac053e0f960213d87138a96df0c260d44996fda16f316f5"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short mutual NDA template:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE](the \"Effective Date\") between:\n\n1. **[Your Company]** (Company 1)\n2. **[Bidder Name]** (Company 2)\n\n(the \"Parties\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one Party to the other in connection with [the RFQ / tender process / potential supply agreement], including but not limited to pricing, volume forecasts, technical specifications, and business plans.\n\n**2. Obligations**\nEach Party agrees to:\n(a) hold the other Party's Confidential Information in strict confidence;\n(b) use it solely for evaluating the proposed business relationship;\n(c) not disclose it to any third party without prior written consent; and\n(d) protect it using the same degree of care it uses to protect its own confidential information, but no less than reasonable care.\n\n**3. Exclusions**\nThis Agreement does not apply to information that:\n(a) is or becomes publicly available through no fault of the receiving Party;\n(b) was already known to the receiving Party before disclosure;\n(c) is independently developed by the receiving Party; or\n(d) is disclosed pursuant to a legal requirement or court order (provided the receiving Party gives prompt notice to the disclosing Party).\n\n**4. Term**\nThis Agreement will remain in effect for two (2) years from the Effective Date. Obligations regarding Confidential Information received during this period shall survive termination.\n\n**5. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\nSigned for and on behalf of:\n\n**[Your Company]** | **[Bidder Name]**\n\n_____________________ | _____________________\nName: | Name:\nDate: | Date:\n\n---\n\nWant me to adjust the scope, add an exclusions carve-out for mandatory law, or convert this to a DOCX?"
+      }
+    ]
+  }
+]

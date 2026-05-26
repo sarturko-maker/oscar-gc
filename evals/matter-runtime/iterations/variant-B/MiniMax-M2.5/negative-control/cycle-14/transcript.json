@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25052,
+    "message_id": "yqrtowe0",
+    "role": "user",
+    "timestamp": "2026-05-26 15:29:03",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25053,
+    "message_id": "0664ef409682590b70efbfe1ac2e0d4a",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:29:09",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants a draft confidentiality clause for a Series B term sheet. Let me break down the requirements:\n- UK manufacturing company (disclosing party)\n- US lead investor (receiving party)\n- Mutual (both ways)\n- 3-year survival on termination\n- Standard market terms\n\nThis is a straightforward drafting task — I'm working in plain text, not revising an existing document. I have strong priors on confidentiality clause drafting from my training. I should draft the clause and present it for review.\n\nLet me draft a standard mutual confidentiality clause with:\n- Mutual scope (each party is both disclosing and receiving)\n- Standard exclusions (publicly available, independently developed, disclosed without restriction, etc.)\n- Purpose limitation\n- Permitted disclosures (directors, officers, employees, advisors who need to know)\n- Return/destruction on request\n- 3-year survival post-termination\n- No public announcements without consent\n- Injunctive relief acknowledgment\n\nI'll write it cleanly in Markdown for the lawyer to copy or drop into Word.\n",
+        "signature": "c8d1f5ccd41639e87bc5861228444e0cde8f39f16a43072d4ebe8dbfc45a70ef"
+      },
+      {
+        "type": "text",
+        "text": "\n\nDrafting a mutual confidentiality clause suitable for a Series B term sheet with 3-year post-termination survival.\n\n---\n\n**Confidentialiality**\n\n*14.1* **Mutual Obligation.** Each party (a \"Disclosing Party\") may disclose or make available to the other party (a \"Receiving Party\") confidential or proprietary information in connection with the Proposed Investment (as defined in this Term Sheet) (\"Confidential Information\"). The Receiving Party shall:\n\n(a) hold the Disclosing Party's Confidential Information in strict confidence;\n\n(b) not disclose the Confidential Information to any third party without the prior written consent of the Disclosing Party;\n\n(c) use the Confidential Information solely for the Purpose of evaluating, negotiating, and consummating the Proposed Investment; and\n\n(d) protect the Disclosing Party's Confidential Information using the same degree of care it uses to protect its own confidential information of like nature, but in no event less than reasonable care.\n\n*14.2* **Exclusions.** The obligations in Clause 14.1 shall not apply to information that:\n\n(a) is or becomes publicly available through no fault of the Receiving Party;\n\n(b) was rightfully known to the Receiving Party prior to disclosure, as evidenced by contemporaneous written records;\n\n(c) is independently developed by the Receiving Party without use of the Confidential Information;\n\n(d) is rightfully obtained from a third party without restriction on disclosure; or\n\n(e) is required to be disclosed by applicable law, regulation, or court order, provided that the Receiving Party gives the Disclosing Party prompt written notice (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\n*14.3* **Permitted Recipients.** The Receiving Party may disclose Confidential Information only to its directors, officers, employees, officers, and professional advisors (\"Representatives\") who (i) need to know such information for the Purpose, and (ii) are bound by confidentiality obligations at least as protective as those in this Clause 14. The Receiving Party shall be responsible for any breach of this Clause 14 by its Representatives.\n\n*14.4* **Return or Destruction.** Upon request by the Disclosing Party, or upon termination of this Term Sheet, the Receiving Party shall promptly return or destroy all Confidential Information of that Disclosing Party in its possession or control, and certify such return or destruction in writing; provided that (i) electronic backup copies made in the ordinary course of business and (ii) copies required by applicable law or regulatory obligation may be retained, in each case subject to the continuing confidentiality obligations herein.\n\n*14.5* **Survival.** The obligations of confidentiality under this Clause 14 shall survive termination or expiration of this Term Sheet for a period of three (3) years.\n\n*14.6* **No Public Announcement.** Neither party shall issue any press release or public announcement relating to the Proposed Investment without the prior written consent of the other party, except as required by applicable law or regulation.\n\n*14.7* **Injunctive Relief.** Each party acknowledges that any breach of this Clause 14 may cause irreparable harm to the other party for which monetary damages may be inadequate. Accordingly, the non-breaching party shall be entitled to seek equitable relief, including injunction and specific performance, in addition to all other remedies available at law or in equity.\n\n---\n\nThis follows UK private company Series B market conventions — mutual structure (each party is both Discloser and Receiver in practice, though the definitions assume one-directional flow for drafting clarity), 3-year survival, and standard carve-outs. The \"Purpose\" tie keeps the scope tight to the proposed investment evaluation.\n\nWant me to adjust the scope, add a standstill language, or tweak the survival period?"
+      }
+    ]
+  }
+]

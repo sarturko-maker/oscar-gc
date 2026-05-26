@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25078,
+    "message_id": "unp76609",
+    "role": "user",
+    "timestamp": "2026-05-26 15:39:23",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Quick aside on this matter — can you draft a generic NDA template that we'd use with any prospective bidder before sharing pricing or volume data? Keep it short, mutual, 2-year term, English law."
+      }
+    ]
+  },
+  {
+    "db_id": 25079,
+    "message_id": "0664f1ac9667d5fd7c2141200f4a23a5",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:39:28",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer is asking for a short, mutual NDA template for use with prospective bidders before sharing pricing/volume data. They want:\n- Short (concise)\n- Mutual (both sides confidential)\n- 2-year term\n- English law\n\nThis is a straightforward drafting request with no document attached. I should draft a clean, concise NDA that fits these requirements.\n\nLet me draft this directly in plain text since there's no attachment involved.\n",
+        "signature": "8c99304c7b71e5796caba2d9fa5117e019b27b1609bcb099ed18ead893f8e4a2"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a short, mutual NDA:\n\n---\n\n**CONFIDENTIALITY AGREEMENT**\n\nThis Confidentiality Agreement (\"Agreement\") is entered into on [DATE] between:\n\n(1) **[Your Company]** (\"Company\")\n(2) **[Counterparty]** (\"Recipient\")\n\n**1. Definition of Confidential Information**\n\"Confidential Information\" means any non-public information disclosed by one party (\"Discloser\") to the other (\"Recipient\"), including but not limited to pricing, volumes, technical specifications, and business arrangements, whether orally, in writing, or by inspection.\n\n**2. Obligations**\nRecipient shall:\n(a) hold Confidential Information in strict confidence;\n(b) use it only for the purpose of evaluating or progressing a potential business relationship (\"Purpose\");\n(c) not disclose it to any third party without Discloser's prior written consent; and\n(d) protect it with at least the same degree of care Recipient uses for its own confidential information, and no less than reasonable care.\n\n**3. Exclusions**\nThis Agreement does not apply to information that Recipient can demonstrate: (a) was publicly available at the time of disclosure; (b) became publicly available after disclosure without breach of this Agreement; (c) was lawfully in Recipient's possession prior to disclosure; or (d) was independently developed without use of Confidential Information.\n\n**4. Return or Destruction**\nUpon request or termination of this Agreement, Recipient shall promptly return or destroy all Confidential Information and certify destruction in writing.\n\n**5. Term**\nThis Agreement shall remain in effect for two (2) years from the date first written above.\n\n**6. Governing Law**\nThis Agreement shall be governed by the laws of England and Wales.\n\n---\n\nWant me to adjust anything — narrower scope, specific exclusions, or a carve-out for legal compulsion?"
+      }
+    ]
+  }
+]

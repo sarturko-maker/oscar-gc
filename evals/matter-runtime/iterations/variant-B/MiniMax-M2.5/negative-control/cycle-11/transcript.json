@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 25046,
+    "message_id": "eczm3tq4",
+    "role": "user",
+    "timestamp": "2026-05-26 15:27:20",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 25047,
+    "message_id": "0664eed91eef03227bbe9ec71e012202",
+    "role": "assistant",
+    "timestamp": "2026-05-26 15:27:25",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The lawyer wants me to draft a confidentiality clause for a Series B term sheet. This is a straightforward drafting task without an attached document. Let me work with them in plain text as instructed.\n\nKey parameters from the brief:\n- UK manufacturing company (target)/US lead investor (lead investor)\n- Series B term sheet\n- Mutual (both sides bound)\n- Standard market terms\n- 3-year survival (post-termination)\n\nI have strong priors on commercial drafting for these. Let me draft something directly and mark assumptions.\n",
+        "signature": "25089b1caa28ef1f6a80cd18433499ade8f221c707dbe40776d492da898a1979"
+      },
+      {
+        "type": "text",
+        "text": "\n\nDrafting directly — here's a mutual confidentiality clause suitable for a Series B term sheet:\n\n---\n\n**Confidentiality.** Each party (the \"Receiving Party\") agrees that it shall:\n\n(a) hold in confidence all Confidential Information disclosed by the other party (the \"Disclosing Party\");\n\n(b) not disclose Confidential Information to any third party without the Disclosing Party's prior written consent, except to its officers, employees, professional advisers, and financing sources who need to know such information for purposes related to the contemplated investment;\n\n(c) use the Confidential Information solely for evaluating the contemplated investment; and\n\n(d) protect the.Disclosing Party's Confidential Information with at least the same degree of care as it protects its own confidential information, but in no event less than reasonable care.\n\n**Exceptions.** The obligations in this Section shall not apply to information that: (i) is or becomes publicly available through no fault of the Receiving Party; (ii) was rightfully known to the Receiving Party prior to disclosure; (iii) is independently developed by the Receiving Party without use of Confidential Information; or (iv) is rightfully obtained from a third party without restriction.\n\n**Term.** The confidentiality obligations under this Section shall survive termination or expiration of this Agreement for a period of three (3) years.\n\n**Permitted Disclosure.** Notwithstanding the foregoing, a Receiving Party may disclose Confidential Information as required by law, regulation, or court order, provided that the Receiving Party gives the Disclosing Party prompt written notice (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\n---\n\nAssumptions I'm making:\n\n1. **Mutual** — both parties bound equally (as you specified)\n2. **3-year survival** — runs from termination/expiration\n3. **No carve-out for affiliates** — should I add one? (common in Series B)\n4. **No \"return of information\" provision** — often included but I kept it tight; do you want destruction/return language?\n\nLet me know if you want adjustments, or if this is good to go."
+      }
+    ]
+  }
+]

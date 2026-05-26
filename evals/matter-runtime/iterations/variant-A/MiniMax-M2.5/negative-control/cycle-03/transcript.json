@@ -1,0 +1,33 @@
+[
+  {
+    "db_id": 23320,
+    "message_id": "rntkgpli",
+    "role": "user",
+    "timestamp": "2026-05-26 13:59:10",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23321,
+    "message_id": "0664da2fbade17985f523916adb80b18",
+    "role": "assistant",
+    "timestamp": "2026-05-26 13:59:15",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The user is asking me to draft a confidentiality clause for a Series B term sheet. They've given me the key parameters:\n- UK manufacturing company (discloser)\n- US lead investor (recipient)\n- Standard market terms\n- Mutual\n- 3-year survival\n\nSince there's no document attached, I should work with them in plain text per my instructions. I have a strong prior on commercial drafting. Let me draft something that reflects standard market terms for VC term sheets.\n\nKey elements I'll include:\n- Mutual confidentiality (both sides)\n- Definition of confidential information\n- Standard exclusions (publicly available, already known, independently developed, etc.)\n- Permitted disclosures (legal requirement, potential litigation)\n- Use restriction (purpose-bound)\n- Return/destruction on termination\n- 3-year survival\n- Non-binding, good faith standard\n\nLet me draft this concisely in plain text for their review.\n",
+        "signature": "888ea7beeecdf502e0c40bc8bdafed1ef5022f874959cc304bdcacb6443320e6"
+      },
+      {
+        "type": "text",
+        "text": "\n\nHere's a mutual confidentiality clause suitable for a Series B term sheet:\n\n---\n\n**Confidentiality**\n\nEach party (the \"Receiving Party\") agrees to hold in confidence all Confidential Information of the other party (the \"Disclosing Party\") and not to disclose such Confidential Information to any third party without the Disclosing Party's prior written consent, except as permitted herein.\n\n**\"Confidential Information\"** means any non-public information disclosed by either party to the other in connection with the Series B financing, whether orally, in writing, or by inspection, that is marked as \"Confidential\" or otherwise identified as confidential at the time of disclosure. Confidential Information does not include information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was rightfully known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party without use of Confidential Information; or (d) is rightfully obtained from a third party without restriction.\n\nThe Receiving Party may disclose Confidential Information only to its officers, directors, employees, professional advisers, and prospective co-investors who need to know such information for purposes of evaluating the Series B financing, and who are bound by confidentiality obligations no less protective than those herein. The Receiving Party shall protect Confidential Information using at least the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care.\n\nNotwithstanding the foregoing, a Receiving Party may disclose Confidential Information as required by applicable law, regulation, or legal process, provided that the Receiving Party gives prompt notice to the Disclosing Party (to the extent legally permitted) and reasonably cooperates in seeking protective measures.\n\nThis confidentiality obligation shall survive termination or expiration of this Term Sheet and shall remain in effect for a period of **three (3) years** from the date of disclosure of each item of Confidential Information.\n\n---\n\nWant me to adjust anything — narrower carve-outs, add a \"no-shop\" type use restriction, or tailor to a specific disclosure scope?"
+      }
+    ]
+  }
+]

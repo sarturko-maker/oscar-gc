@@ -1,0 +1,110 @@
+{
+  "variant": "B",
+  "model": "MiniMax-M2.5",
+  "scenario": "30-rfq",
+  "n": 20,
+  "cycles": [
+    {
+      "cycle_n": 1,
+      "session_id": "20260526_123",
+      "matter_slug": "30-rfq-c01-805257"
+    },
+    {
+      "cycle_n": 2,
+      "session_id": "20260526_124",
+      "matter_slug": "30-rfq-c02-805257"
+    },
+    {
+      "cycle_n": 3,
+      "session_id": "20260526_125",
+      "matter_slug": "30-rfq-c03-805257"
+    },
+    {
+      "cycle_n": 4,
+      "session_id": "20260526_126",
+      "matter_slug": "30-rfq-c04-805257"
+    },
+    {
+      "cycle_n": 5,
+      "session_id": "20260526_127",
+      "matter_slug": "30-rfq-c05-805257"
+    },
+    {
+      "cycle_n": 6,
+      "session_id": "20260526_128",
+      "matter_slug": "30-rfq-c06-805257"
+    },
+    {
+      "cycle_n": 7,
+      "session_id": "20260526_129",
+      "matter_slug": "30-rfq-c07-805257"
+    },
+    {
+      "cycle_n": 8,
+      "session_id": "20260526_130",
+      "matter_slug": "30-rfq-c08-805257"
+    },
+    {
+      "cycle_n": 9,
+      "session_id": "20260526_131",
+      "matter_slug": "30-rfq-c09-805257"
+    },
+    {
+      "cycle_n": 10,
+      "session_id": "20260526_132",
+      "matter_slug": "30-rfq-c10-805257"
+    },
+    {
+      "cycle_n": 11,
+      "session_id": "20260526_133",
+      "matter_slug": "30-rfq-c11-805257"
+    },
+    {
+      "cycle_n": 12,
+      "session_id": "20260526_134",
+      "matter_slug": "30-rfq-c12-805257"
+    },
+    {
+      "cycle_n": 13,
+      "session_id": "20260526_135",
+      "matter_slug": "30-rfq-c13-805257"
+    },
+    {
+      "cycle_n": 14,
+      "session_id": "20260526_136",
+      "matter_slug": "30-rfq-c14-805257"
+    },
+    {
+      "cycle_n": 15,
+      "session_id": "20260526_137",
+      "matter_slug": "30-rfq-c15-805257"
+    },
+    {
+      "cycle_n": 16,
+      "session_id": "20260526_138",
+      "matter_slug": "30-rfq-c16-805257"
+    },
+    {
+      "cycle_n": 17,
+      "session_id": "20260526_139",
+      "matter_slug": "30-rfq-c17-805257"
+    },
+    {
+      "cycle_n": 18,
+      "session_id": "20260526_140",
+      "matter_slug": "30-rfq-c18-805257"
+    },
+    {
+      "cycle_n": 19,
+      "session_id": "20260526_141",
+      "matter_slug": "30-rfq-c19-805257"
+    },
+    {
+      "cycle_n": 20,
+      "session_id": "20260526_142",
+      "matter_slug": "30-rfq-c20-805257"
+    }
+  ],
+  "started_at": "2026-05-26T14:20:57.522Z",
+  "completed_at": "2026-05-26T14:53:34.396Z"
+}

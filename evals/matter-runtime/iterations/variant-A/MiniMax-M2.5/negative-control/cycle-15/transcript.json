@@ -1,0 +1,79 @@
+[
+  {
+    "db_id": 23351,
+    "message_id": "6czcetoq",
+    "role": "user",
+    "timestamp": "2026-05-26 14:06:06",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Draft me a confidentiality clause for a Series B term sheet between a UK manufacturing company and a US lead investor. Standard market terms; mutual; 3-year survival."
+      }
+    ]
+  },
+  {
+    "db_id": 23352,
+    "message_id": "0664dbceef51dec919eff71665ecc977",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:06:16",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "thinking",
+        "thinking": "The user wants me to draft a confidentiality clause for a Series B term sheet. Let me break this down:\n\n1. It's a Series B term sheet (financing document)\n2. Parties: UK manufacturing company (issuer) and US lead investor\n3. Needs: mutual confidentiality, 3-year survival\n\nThis is a straightforward drafting task - no document to read, no redline, no playbook needed. I should draft a clause in plain text for the lawyer to review.\n\nLet me create a todo list and then draft the clause.\n",
+        "signature": "22208944e5d27f1715b99e02a5b5edca4d3edb6caee6d3ec4ac054a15d969bd0"
+      }
+    ]
+  },
+  {
+    "db_id": 23353,
+    "message_id": "msg_da1b8059-9bbe-423c-819f-c940024cba53",
+    "role": "assistant",
+    "timestamp": "2026-05-26 14:06:16",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "call_function_vef2ldjeotav_1",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "todo__todo_write",
+            "arguments": {
+              "content": "- [ ] Draft mutual confidentiality clause\n- [ ] Ensure 3-year survival term\n- [ ] Adapt for UK issuer / US investor dynamic\n- [ ] Verify market-standard provisions"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "todo"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 23354,
+    "message_id": "msg_dad268ed-cae5-459b-89d3-fd9ada4fcc61",
+    "role": "user",
+    "timestamp": "2026-05-26 14:06:16",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "call_function_vef2ldjeotav_1",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Updated (163 chars)"
+              }
+            ],
+            "isError": false
+          }
+        }
+      }
+    ]
+  }
+]
