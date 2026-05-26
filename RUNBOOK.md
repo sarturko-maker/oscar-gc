@@ -1337,6 +1337,32 @@ Same pattern (3 entries) for any future non-trio partner. cuad-saas is partner-a
 
 **Total Sprint 26 spend on `/root/.minimax-dev-key`**: $0.87 (9% of $10/PCM cap, well under $3 plan estimate). $0.00 Anthropic — judging in-conversation under Max subscription per ADR-082. The back-port itself reduces tool-hunting wall-clock by 20-90% per instance, so each validation run was faster than Sprint 25's pre-back-port baseline. Cost data persisted at `evals/oscar-llp/iterations/_costs/costs-2026-05-22.json`.
 
+## Sprint 31A — Cross-model dogfood via OpenRouter (2026-05-26, lq-vps)
+
+**OpenRouter dev key**: `/root/.openrouter-dev-key` (chmod 600, 73 bytes). USD 10 hard cap, ~30-day expiry from key issue (2026-05-26). Provided ad-hoc for Sprint 31A's cross-model measurement. Do not commit; do not echo into transcripts. Same posture as `/root/.minimax-dev-key`.
+
+**Provider switch via env (ADR-106)**: matter recipes no longer pin `goose_provider`/`goose_model`. Goosed inherits from env at session spawn. Default behavior preserved by `scripts/dogfood/dogfood.sh` setting `GOOSE_PROVIDER=minimax GOOSE_MODEL=MiniMax-M2.5` when unset.
+
+To run dogfood against a non-default model, override before invoking:
+
+```bash
+# GPT-5.4-mini via OpenRouter
+GOOSE_PROVIDER=openrouter GOOSE_MODEL=openai/gpt-5.4-mini \
+  scripts/dogfood/dogfood.sh boot s31a-gpt5
+
+# Claude Sonnet 4.6 via OpenRouter
+GOOSE_PROVIDER=openrouter GOOSE_MODEL=anthropic/claude-sonnet-4.6 \
+  scripts/dogfood/dogfood.sh boot s31a-claude
+```
+
+`scripts/dogfood/dogfood.sh` automatically sources `OPENROUTER_API_KEY` from `/root/.openrouter-dev-key` when `GOOSE_PROVIDER=openrouter` and the env var isn't already set. Mirrors the existing `MINIMAX_API_KEY` source pattern.
+
+**Binary used**: `ui/desktop/out/Oscar-GC-linux-x64/oscar-gc`. After ADR-106 the binary must be rebuilt — the recipe-builder change is bundled into the renderer. `pnpm bundle:oscar-linux` from `ui/desktop/` produces the new binary.
+
+**Caveats**:
+- Forge / onboarding / Lavern recipes stay pinned to MiniMax-M2.5 (per [[ADR-106]] §Decision). Cross-model measurement applies to **matter recipes only**.
+- Goosed reads `OPENROUTER_API_KEY` via the config secret store. With `GOOSE_DISABLE_KEYRING=1` (dogfood default), it falls back to plain env — which is what dogfood.sh provides. Production launchers using keyring must store the key there.
+
 ## Pending
 
 - **Sprint 12 dogfood (Arturs's Chromebook)** — rebuild .deb, install on Crostini, exercise the four exit-criteria flows (matters, privileged, Forge skill creation, Forge area creation) per the verification list in the SPRINT_LOG Sprint 12 entry.

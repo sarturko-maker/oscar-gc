@@ -217,15 +217,16 @@ export async function buildPracticeAreaRecipe(
   ]
     .filter((s): s is string => Boolean(s))
     .join('\n\n');
+  // Sprint 31A (ADR-106): matter recipes do not pin provider/model — goosed
+  // inherits from env (GOOSE_PROVIDER / GOOSE_MODEL) at session spawn. The
+  // Forge / onboarding / Lavern recipes stay pinned (their consumers depend
+  // on predictable provider choice). Matter recipes follow env so Sprint 32's
+  // multi-model eval substrate works without per-cycle code edits.
   return {
     version: '1.0.0',
     title: `Oscar GC — ${opts.area.name}`,
     description: descriptionOverride ?? opts.area.body,
     instructions,
     extensions,
-    settings: {
-      goose_provider: 'minimax',
-      goose_model: 'MiniMax-M2.5',
-    },
   };
 }

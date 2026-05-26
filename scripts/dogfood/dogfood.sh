@@ -24,6 +24,16 @@ export GOOSE_PROVIDER="${GOOSE_PROVIDER:-minimax}"
 export GOOSE_MODEL="${GOOSE_MODEL:-MiniMax-M2.5}"
 export GOOSE_DISABLE_KEYRING=1
 
+# Sprint 31A (ADR-106): OpenRouter is the cross-model measurement path. When
+# GOOSE_PROVIDER=openrouter, source the dev key from /root/.openrouter-dev-key
+# (mirrors the MINIMAX_API_KEY shape; not committed; 0600 perms).
+if [[ "$GOOSE_PROVIDER" == "openrouter" && -z "${OPENROUTER_API_KEY:-}" ]]; then
+  if [[ -r /root/.openrouter-dev-key ]]; then
+    OPENROUTER_API_KEY="$(cat /root/.openrouter-dev-key)"
+    export OPENROUTER_API_KEY
+  fi
+fi
+
 DISPLAY_NUM="${DISPLAY_NUM:-99}"
 export DISPLAY=":$DISPLAY_NUM"
 if ! pgrep -af "Xvfb $DISPLAY" >/dev/null 2>&1; then
