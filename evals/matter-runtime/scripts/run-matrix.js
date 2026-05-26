@@ -54,7 +54,9 @@ function parseArgs() {
 }
 
 function cellDir(c) {
-  return path.join(ITERATIONS_DIR, `variant-${c.variant}`, c.model, c.scenario);
+  // Sanitize model names containing '/' (e.g. 'anthropic/claude-haiku-4-5') —
+  // run-cell.js sanitizes the same way, so extract-cycle finds the dir.
+  return path.join(ITERATIONS_DIR, `variant-${c.variant}`, c.model.replace(/\//g, '__'), c.scenario);
 }
 
 function isCellComplete(c) {

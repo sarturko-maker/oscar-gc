@@ -165,6 +165,62 @@ function readSessionIdFromMattersJson(areaId, slug) {
   return entry?.session_id ?? null;
 }
 
+// Count messages by role in goosed's sessions.db for a given session_id.
+// Returns { user, assistant } or null if session not found / db missing.
+// Uses python3 (always present on lq-vps) rather than the sqlite3 CLI
+// (libsqlite3-0 installed but sqlite3 CLI not).
+function countSessionMessages(sessionId) {
+  if (!sessionId) return null;
+  const dbPath = path.join(os.homedir(), '.local', 'share', 'goose', 'sessions', 'sessions.db');
+  if (!fs.existsSync(dbPath)) return null;
+  const py = `
+import sqlite3, json, sys
+try:
+  c = sqlite3.connect("${dbPath}")
+  cur = c.cursor()
+  cur.execute("SELECT role, COUNT(*) FROM messages WHERE session_id=? GROUP BY role", ("${sessionId}",))
+  out = {"user": 0, "assistant": 0}
+  for role, n in cur.fetchall(): out[role] = n
+  print(json.dumps(out))
+except Exception as e:
+  print(json.dumps({"_err": str(e)}))
+`;
+  const r = spawnSync('python3', ['-c', py], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  if (r.status !== 0) return null;
+  try {
+    const obj = JSON.parse((r.stdout || '').trim());
+    if (obj._err) return null;
+    return { user: obj.user || 0, assistant: obj.assistant || 0 };
+  } catch {
+    return null;
+  }
+}
+
+// Sprint 32b fix: dogfood-driver's pair-send breaks on DOM stability before
+// Haiku's first token. Wrap pair-send with a sessions.db verification — if no
+// new assistant message followed the user's just-sent turn within HAIKU_WAIT_MS,
+// poll until one arrives (or absolute timeout).
+function pairSendVerified(text, env, sessionId, opts = {}) {
+  const expectedAssistantDeltaMin = opts.expectedAssistantDeltaMin || 1;
+  const totalTimeoutMs = opts.totalTimeoutMs || 600_000; // 10 min hard cap per turn
+  const pollMs = 2000;
+
+  const beforeCounts = countSessionMessages(sessionId) || { user: 0, assistant: 0 };
+
+  dogfood('pair-send', text, env);
+
+  // After pair-send returns, verify an assistant message was added.
+  const deadline = Date.now() + totalTimeoutMs;
+  while (Date.now() < deadline) {
+    const afterCounts = countSessionMessages(sessionId) || { user: 0, assistant: 0 };
+    const assistantDelta = afterCounts.assistant - beforeCounts.assistant;
+    if (assistantDelta >= expectedAssistantDeltaMin) return; // agent responded
+    // No agent message yet — sleep + poll.
+    spawnSync('sleep', [String(pollMs / 1000)], { stdio: 'ignore' });
+  }
+  console.warn(`[pair-send-verified] WARN: no new assistant message in ${totalTimeoutMs}ms after turn`);
+}
+
 function killOrphans() {
   // Hard-kill any orphan oscar-gc/goosed (goosed survives Electron SIGTERM in our setup).
   spawnSync('pkill', ['-9', '-f', 'oscar-gc'], { stdio: 'ignore' });
@@ -246,23 +302,34 @@ function runCell({ variantId, model, scenarioSlug, n, areaId }) {
     dogfood('click', `.oscar__matter-row:has-text("${input.name}")`, env);
     waitForCondition(env, `document.querySelector('[data-testid="chat-input"]') !== null`, 60_000, 'pair chat input visible');
 
-    // 4) Run the prompt schedule
+    // 3b) Capture session_id post-open so per-turn verification can read sessions.db.
+    // bindSession runs synchronously during openMatter; by chat-input visible time
+    // the registry has the session_id.
+    let sessionId = readSessionIdFromMattersJson(areaId, input.slug);
+    if (sessionId) console.log(`[cycle ${cycleId}] session_id=${sessionId}`);
+    else console.warn(`[cycle ${cycleId}] WARN: no session_id bound at click-time for slug=${input.slug}`);
+
+    // 4) Run the prompt schedule with per-turn assistant-message verification
+    // (Sprint 32b fix: dogfood-driver pair-send returns on DOM stability before
+    //  Haiku's first token; the verification poll closes that gap by checking
+    //  sessions.db has a new assistant message after each turn.)
     for (const ev of scenario.events) {
       if (ev.kind === 'prompt') {
         console.log(`[cycle ${cycleId}] turn ${ev.turn}: pair-send`);
-        dogfood('pair-send', ev.text, env);
+        if (sessionId) {
+          pairSendVerified(ev.text, env, sessionId);
+        } else {
+          dogfood('pair-send', ev.text, env);
+          // Re-attempt session capture if it wasn't ready earlier.
+          sessionId = readSessionIdFromMattersJson(areaId, input.slug);
+          if (sessionId) console.log(`[cycle ${cycleId}] session_id=${sessionId} (post-Turn 1)`);
+        }
       } else if (ev.kind === 'fixture_drop') {
         if (!scenario.fixture_dir_abs) throw new Error('fixture_drop requires fixture_dir on scenario');
         copyFixtureFiles(scenario.fixture_dir_abs, created.working_dir, ev.files);
         console.log(`[cycle ${cycleId}] fixture_drop: copied ${ev.files.length} files`);
       }
     }
-
-    // 4b) Capture session_id by reading matters.json directly — by now bindSession
-    // has written the registry. Avoids the IPC-roundtrip parsing fragility.
-    const sessionId = readSessionIdFromMattersJson(areaId, input.slug);
-    if (sessionId) console.log(`[cycle ${cycleId}] session_id=${sessionId}`);
-    else console.warn(`[cycle ${cycleId}] WARN: no session_id bound for slug=${input.slug}`);
 
     // 5) Detach matter then quit Electron — next cycle re-boots fresh.
     try { dogfoodEval(`await window.electron.matters.detachActive(); return true;`, env); } catch {}
