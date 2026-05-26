@@ -14,6 +14,61 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 31B — Apply doctrine refinements + re-run cross-model matrix (closed 2026-05-26)
+
+**Goal**: First act on Sprint 31A's findings ([[ADR-107]]). Apply three doctrine refinements targeting each model's specific gap, then re-run the 3-model × 2-test matrix verbatim to measure which fixes took. Single-pass; informs Sprint 32 substrate scoping before it's built.
+
+**Built (one ADR + doctrine refinement + 6 re-dogfood cycles)**
+
+- **[[ADR-108]] Three doctrine refinements** to `discoveryDoctrine.ts`:
+  1. **Slug exactness** (Step B addendum) — *"load_skill `name` argument is the exact slug as listed in the skills block. Never a path, never a category prefix, never a description."* Targets GPT-5.4-mini's path-as-skill-name failure.
+  2. **Agent-loop semantics** (Step C addendum) — *"N tool calls in a single assistant message is not parallel; the agent loop processes them serially. To actually parallelise, call delegate once per item or per 3-5-item partition."* Targets MiniMax + GPT-5.4-mini's "many tool calls in one message = parallel" conflation.
+  3. **"Act, don't describe"** (new section) — *"After announcing intent, the next assistant message must be the tool call, not a prose plan."* Targets GPT-5.4-mini + Claude's "planned the redline in prose, never issued the batch tool" failure on Sprint 31A Test 1 Turn 5.
+
+  All three are positive shapes (no fresh negative guards added). Sprint 31's existing negative guards held perfectly across all three models in Sprint 31A; over-tuning risk lives elsewhere.
+
+**Fix-by-fix uptake matrix (Sprint 31B vs Sprint 31A)**
+
+| Affordance | MiniMax 31A | MiniMax 31B | GPT 31A | GPT 31B | Claude 31A | Claude 31B |
+|---|---|---|---|---|---|---|
+| `load_skill` slug correctness (T2) | ✅ `nda-review` | ✅ `nda-review` | ❌ `commercial/rfq-review-playbook.md` | ✅ `nda-review` | ❌ never | ✅ `nda-review` |
+| `delegate` on batch (T2) | ❌ 10× serial | ❌ 10× serial | ❌ 0 (+ 105 thrash) | ✅ 6× delegate | ✅ 7× delegate | ✅ 4× delegate (partition) |
+| Redline batch invoked (T1 Turn 5) | ✅ | ✅ | ❌ planned only | ❌ planned only | ❌ planned only | ❌ planned only |
+
+**Fix verdicts**:
+1. ✅ **Slug exactness took** — GPT-5.4-mini went from path argument to canonical slug (`nda-review`) on T2. Bonus: Claude T2 now fires `load_skill` correctly (didn't in 31A). Partial miss on GPT T1: arg `"review"` (no slug, took the 31A "did you mean: review?" error hint literally).
+2. ✅ **Agent-loop semantics took on GPT, ❌ on MiniMax** — GPT-5.4-mini went 0 → 6 `delegate(async=true)` calls. MiniMax unchanged (still 10× serial). MiniMax delegate gap appears to be model-capability-bound, not doctrine-bound — Sprint 33 candidate is tool-side adjustment or accepting as a known limitation.
+3. ❌ **"Act, don't describe" did not take** — GPT-5.4-mini + Claude both still plan redline batches in prose on T1 Turn 5 without invoking the batch tool. Diagnosis: failure mode occurs at end of a 5-turn flow; doctrine in mid-prompt isn't reaching it. Sprint 33 candidate: move the language into the bespoke Commercial redline doctrine (which fires on T5 explicitly) or into the `redline__process_document_batch` tool description.
+
+**Cost win as side-effect**: GPT-5.4-mini Test 2 dropped from $1.36 (Sprint 31A's 105-tool-call thrash) to $0.52 (Sprint 31B's clean 28-tool-call flow with 6 delegate). Claude Test 2 main dropped from $1.33 to $0.57. Clarity reduces thrash. **Net Sprint 31B was $1.14 cheaper than Sprint 31A despite identical fixtures and turn counts.**
+
+**Doctrine-engineering lesson (load-bearing)**: three structurally similar positive-shape fixes; two took strongly, one didn't. The one that didn't (fix 3) shares a property the others lack — its target failure mode happens at the **end of a long multi-turn flow**, not on Turn 1. Slug-exactness and agent-loop semantics fire on early decisions. "Act don't describe" fires when attention has been spent across 4 substantive turns. Sprint 33+ implication: late-flow doctrine needs to live at the trigger surface (the tool description, or the doctrine that already fires on that turn) — not the general discovery doctrine. Where the doctrine lives matters as much as what it says.
+
+**ADRs**: 108 (three doctrine refinements).
+
+**Deferred / Carry-forwards to Sprint 32+** (refined from Sprint 31A):
+- **Sprint 32 N=20 validates 31B's wins at scale** — was GPT's 0→6 delegate stable, or one lucky cycle? Same question for Claude's new load_skill uptake. The substrate is the right place to answer.
+- **Sprint 33 candidate — redline doctrine placement**: move "act don't describe" into the bespoke Commercial redline doctrine or the `process_document_batch` tool description. Doctrine alone in the discovery layer didn't reach this failure mode.
+- **Sprint 33 candidate — MiniMax delegate**: model-capability bound on doctrine; try tool-side adjustment (summon extension tool-list reorganisation) or accept as a known limitation.
+- **Sprint 33 candidate — GPT skill-arg "did you mean" trap**: when `load_skill` returns "did you mean: review?", agent follows that literally. Sharpen error hint to suggest the closest *real* slug (`Did you mean nda-review?`) or suppress when there's no close match.
+- **Cost ceiling discipline**: OpenRouter spent $8.79 / $10 across Sprint 31A + 31B. Sprint 32's N=20 substrate at ~$5-7 per variant requires either OpenRouter key refresh or a cheaper Claude variant (Haiku 4.5).
+
+**Costs**:
+- MiniMax dev key: $0.43 (cumulative 31A+31B: $0.74 — 7% of $10/PCM)
+- OpenRouter dev key: $3.77 (cumulative 31A+31B: $8.79 — 88% of $10 hard cap, ~$1.21 remaining)
+- Anthropic: $0 (judging by CC under Max per [[ADR-082]])
+- **Sprint 31B total**: $4.19 ($1.14 less than Sprint 31A despite same fixtures/turns)
+
+**Test conditions**: identical to Sprint 31A — same fixtures (`docs/sprint-30/test-{1-rfq,2-ndas}/fixtures/`), persona (Helena Marwick, GC), matter slugs (`pemberton-rfq`, `nda-triage-week-21`), prompts (verbatim from Sprint 31 cycle 3), harness (`scripts/dogfood/dogfood.sh`), display (Xvfb :99), timeout (900000ms). Rebuilt binary at `ui/desktop/out/Oscar-GC-linux-x64/oscar-gc` (commit `d88ef8df6`).
+
+**Sibling repos**: none touched. No Rust core touch.
+
+**Commits**: this commit (preceded by `d88ef8df6` for ADR-108 + discoveryDoctrine.ts edits).
+
+**What did NOT change** (continuity from Sprint 31A): negative guards still held across all 3 models on both tests; ADR-020 single-read-per-NDA still holds; `developer` extension exposure still closed.
+
+---
+
 ### Sprint 31A — Cross-model validation of Sprint 31 doctrine (closed 2026-05-26)
 
 **Goal**: Execute Sprint 31's carry-forward — measure whether the residual `load_skill` + `delegate` misses are MiniMax-specific or general LLM behavior — by replaying Sprint 31 Test 1 (Pemberton RFQ + redline) and Test 2 (10-NDA triage) against `openai/gpt-5.4-mini` and `anthropic/claude-sonnet-4.6` via OpenRouter alongside a fresh MiniMax baseline. Same fixtures/persona/binary/prompt; only provider varies. N=1 per model — smoke check, not statistical rigor (that's Sprint 32's N=20). Single-pass; informs Sprint 32 substrate design before it's built.

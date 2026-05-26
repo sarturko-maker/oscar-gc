@@ -1,0 +1,162 @@
+{
+  "sprint": "31B",
+  "date": "2026-05-26",
+  "scope": "Apply ADR-108 doctrine refinements + re-run Sprint 31A matrix",
+  "binary": "ui/desktop/out/Oscar-GC-linux-x64/oscar-gc (post-ADR-108 doctrine refinements, commit d88ef8df6)",
+  "fixtures": "Sprint 30 verbatim",
+  "doctrine_additions": [
+    "Step B addendum: load_skill slug exactness (never path/prefix/filename)",
+    "Step C addendum: agent-loop semantics (N tool calls per message != parallel; use delegate per item)",
+    "New section: 'Act, don't describe' (after announcing intent, next message must be the tool call)"
+  ],
+  "cycles": [
+    {
+      "provider": "minimax",
+      "model": "MiniMax-M2.5",
+      "test": "1-rfq",
+      "session_id": "20260526_22",
+      "tokens": 110930,
+      "cost_usd": 0.3157,
+      "tool_calls": 13,
+      "key_signals": {
+        "playbook_read": true,
+        "load_skill": false,
+        "delegate": null,
+        "redline_invoked": true,
+        "redline_succeeded": false,
+        "comment": "Same as 31A baseline — tool path works, content-match still rejected on Edit 4."
+      }
+    },
+    {
+      "provider": "minimax",
+      "model": "MiniMax-M2.5",
+      "test": "2-ndas",
+      "session_id": "20260526_23",
+      "tokens": 32291,
+      "cost_usd": 0.1131,
+      "tool_calls": 14,
+      "key_signals": {
+        "playbook_read": true,
+        "load_skill": true,
+        "delegate": false,
+        "single_read_per_nda": true,
+        "comment": "Fix 2 (agent-loop semantics) did NOT take on MiniMax — still 10x serial reads."
+      }
+    },
+    {
+      "provider": "openrouter",
+      "model": "openai/gpt-5.4-mini",
+      "test": "1-rfq",
+      "session_id": "20260526_24",
+      "tokens": 107014,
+      "cost_usd": 0.5399,
+      "tool_calls": 13,
+      "key_signals": {
+        "playbook_read": true,
+        "load_skill": true,
+        "load_skill_args_correct": "partial",
+        "load_skill_arg": "review",
+        "delegate": null,
+        "redline_invoked": false,
+        "comment": "Fix 1 partial: 'review' not a path but still wrong slug. Fix 3 did NOT take."
+      }
+    },
+    {
+      "provider": "openrouter",
+      "model": "openai/gpt-5.4-mini",
+      "test": "2-ndas",
+      "session_id": "20260526_25",
+      "tokens": 34013,
+      "cost_usd": 0.5206,
+      "tool_calls": 28,
+      "key_signals": {
+        "playbook_read": true,
+        "load_skill": true,
+        "load_skill_args_correct": true,
+        "load_skill_arg": "nda-review",
+        "delegate": true,
+        "delegate_count": 6,
+        "single_read_per_nda": true,
+        "comment": "BIG WIN: Fix 1 + Fix 2 both took. 0 -> 6 delegate calls, cost dropped $1.36 -> $0.52 (62%)."
+      }
+    },
+    {
+      "provider": "openrouter",
+      "model": "anthropic/claude-sonnet-4.6",
+      "test": "1-rfq",
+      "session_id": "20260526_26",
+      "tokens": 81219,
+      "cost_usd": 1.9666,
+      "tool_calls": 13,
+      "key_signals": {
+        "playbook_read": true,
+        "load_skill": false,
+        "delegate": null,
+        "redline_invoked": false,
+        "comment": "Fix 3 did NOT take on Claude either — still plans batches in prose without invoking the tool."
+      }
+    },
+    {
+      "provider": "openrouter",
+      "model": "anthropic/claude-sonnet-4.6",
+      "test": "2-ndas",
+      "session_id": "20260526_27",
+      "tokens": 33856,
+      "cost_usd": 0.5723,
+      "tool_calls": 8,
+      "key_signals": {
+        "playbook_read": true,
+        "load_skill": true,
+        "load_skill_arg": "nda-review",
+        "delegate": true,
+        "delegate_count": 4,
+        "delegate_strategy": "partition (10 NDAs / 4 subagents)",
+        "subagent_sessions": ["20260526_28", "20260526_29", "20260526_30", "20260526_31"],
+        "comment": "Claude NEW load_skill uptake (was 0 in 31A). Delegate count dropped 7->4 (partition strategy)."
+      },
+      "subagent_cost_usd": 0.1667,
+      "subagent_tokens": 29105
+    }
+  ],
+  "totals": {
+    "tokens": 428428,
+    "cost_usd_main": 4.0282,
+    "cost_usd_subagents": 0.1667,
+    "cost_usd_total": 4.1949
+  },
+  "by_dev_key": {
+    "minimax": {
+      "cost_usd": 0.4288,
+      "cap_usd": 10.0,
+      "cap_period": "per calendar month",
+      "cumulative_31a_31b": 0.7364
+    },
+    "openrouter": {
+      "cost_usd": 3.7661,
+      "cap_usd": 10.0,
+      "expiry": "~30 days from 2026-05-26",
+      "cumulative_31a_31b": 8.794,
+      "remaining_estimate": 1.206
+    },
+    "anthropic": {
+      "cost_usd": 0.0
+    }
+  },
+  "fix_verdict_summary": {
+    "fix_1_slug_exactness": {
+      "verdict": "took",
+      "evidence": "GPT-5.4-mini T2: load_skill(name='nda-review') canonical (was wrong path in 31A). Claude T2: NEW load_skill uptake.",
+      "partial_miss": "GPT-5.4-mini T1: load_skill(name='review') — closer to slug shape, still wrong (no 'review' slug exists)."
+    },
+    "fix_2_agent_loop_semantics": {
+      "verdict": "took_on_gpt_not_minimax",
+      "evidence": "GPT-5.4-mini T2: 0 -> 6 delegate calls. MiniMax T2: still 10x serial reads.",
+      "interpretation": "MiniMax delegate gap appears to be model-capability bound, not doctrine-bound."
+    },
+    "fix_3_act_dont_describe": {
+      "verdict": "did_not_take",
+      "evidence": "GPT-5.4-mini T1 + Claude T1: both still plan redline batches in prose without invoking redline__process_document_batch.",
+      "diagnosis": "Failure mode occurs at end of long multi-turn flow; doctrine in mid-prompt isn't reaching it. Sprint 33 candidate: move 'act, don't describe' into bespoke Commercial redline doctrine or into the tool description."
+    }
+  }
+}
