@@ -64,6 +64,32 @@ rm -rf "${BIN_CACHE}"
 mkdir -p "${BIN_CACHE}"
 cp -r "${SRC_DIR}" "${BIN_CACHE}/"
 
-# 5. Final verification
+# 5. Ensure goosed Rust binary is present — prepare-oscar-bundle.js silently
+# skips this when running from a worktree (no target-debian12/ tree). Copy from
+# the parent checkout's binary or from a peer variant cache.
+GOOSED_DEST="${BIN_CACHE}/Oscar-GC-linux-x64/resources/bin/goosed"
+if [[ ! -f "${GOOSED_DEST}" || ! -s "${GOOSED_DEST}" ]]; then
+  GOOSED_SRC=""
+  for candidate in \
+    "${REPO_ROOT}/ui/desktop/out/Oscar-GC-linux-x64/resources/bin/goosed" \
+    "${REPO_ROOT}/evals/matter-runtime/binaries/variant-B/Oscar-GC-linux-x64/resources/bin/goosed" \
+    "${REPO_ROOT}/evals/matter-runtime/binaries/variant-A/Oscar-GC-linux-x64/resources/bin/goosed" \
+    "${REPO_ROOT}/target-debian12/release/goosed" \
+    "${REPO_ROOT}/target/release/goosed"; do
+    if [[ -f "$candidate" && -s "$candidate" ]]; then
+      GOOSED_SRC="$candidate"
+      break
+    fi
+  done
+  if [[ -z "${GOOSED_SRC}" ]]; then
+    echo "[variant-${VARIANT_ID}] FAIL no goosed source found — checked main checkout, peer caches, target-debian12/release/, target/release/" >&2
+    exit 4
+  fi
+  echo "[variant-${VARIANT_ID}] copying goosed from ${GOOSED_SRC}"
+  cp -v "${GOOSED_SRC}" "${GOOSED_DEST}"
+fi
+
+# 6. Final verification
 test -x "${BIN_CACHE}/Oscar-GC-linux-x64/oscar-gc"
+test -x "${BIN_CACHE}/Oscar-GC-linux-x64/resources/bin/goosed"
 echo "[variant-${VARIANT_ID}] OK: ${BIN_CACHE}/Oscar-GC-linux-x64/oscar-gc"
