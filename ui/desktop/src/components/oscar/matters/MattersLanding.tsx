@@ -12,7 +12,7 @@ import { AppEvents } from '../../../constants/events';
 import { errorMessage } from '../../../utils/conversionUtils';
 import { buildCommercialRecipe } from '../commercial/commercialRecipe';
 import { buildPracticeAreaRecipe } from '../recipe/buildPracticeAreaRecipe';
-import { deriveEnabledPlatformExtensions } from '../recipe/enabledPlatformExtensions';
+import { deriveEnabledPlatformExtensionsForMatter } from '../recipe/enabledPlatformExtensions';
 import { buildExtensionFromIntegration } from '../integrations/buildExtensionFromIntegration';
 import { ensureRecipeSecrets } from '../onboarding/ensureRecipeSecrets';
 import RecipeSecretsModal from '../onboarding/RecipeSecretsModal';
@@ -191,7 +191,7 @@ export default function MattersLanding({ area }: MattersLandingProps) {
       // Extension Manager, Auto Visualiser by default) into the recipe so
       // the agent has them at turn 1. Toggles in Extensions Settings take
       // effect on the next matter open.
-      const enabledPlatformExtensions = deriveEnabledPlatformExtensions(
+      const enabledPlatformExtensions = deriveEnabledPlatformExtensionsForMatter(
         config.extensionsList,
       );
 

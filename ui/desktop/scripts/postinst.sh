@@ -1,17 +1,14 @@
 #!/bin/sh
-# Sprint 10 (ADRs 022, 025, 026):
-#   - ADR-022: create the adeu venv from bundled Python + offline wheels.
-#   - ADR-025/026: install the Crostini-aware launcher wrapper that captures
-#     renderer stderr to ~/.cache/oscar-gc/launch.log.
+# Sprint 10 (ADRs 025, 026): install the Crostini-aware launcher wrapper
+# that captures renderer stderr to ~/.cache/oscar-gc/launch.log.
+# Sprint 31 (ADR-103, supersedes ADR-022): the adeu venv block is gone —
+# adeu is installed directly into bundled CPython at bundle time
+# (prepare-oscar-bundle.js), so the .deb and zip share the same shape.
 # Re-runnable; idempotent across reinstalls.
 
 set -e
 
 APP_ROOT=/usr/lib/oscar-gc
-PY="$APP_ROOT/resources/python/cpython/bin/python3"
-VENV="$APP_ROOT/resources/python/adeu-venv"
-WHEELS="$APP_ROOT/resources/python/wheels"
-ADEU_PATCH="$APP_ROOT/resources/python/adeu-1.6.9-batch-path-word-diff.patch"
 LAUNCHER="$APP_ROOT/oscar-gc-launcher.sh"
 
 install_launcher() {
@@ -47,27 +44,6 @@ WRAPPER
 
 case "$1" in
   configure)
-    if [ ! -x "$PY" ]; then
-      echo "oscar-gc postinst: bundled Python not executable at $PY" >&2
-      exit 1
-    fi
-    if [ ! -d "$WHEELS" ]; then
-      echo "oscar-gc postinst: bundled wheels dir missing at $WHEELS" >&2
-      exit 1
-    fi
-
-    rm -rf "$VENV"
-    "$PY" -m venv "$VENV"
-    "$VENV/bin/pip" install --no-index --find-links="$WHEELS" adeu==1.6.9
-
-    # ADR-045 (Sprint 13): apply the adeu batch-path word-diff patch.
-    # Deletion criterion: upstream adeu releases this fix and we repin.
-    if [ -f "$ADEU_PATCH" ]; then
-      patch -d "$VENV/lib/python3.12/site-packages" -p1 < "$ADEU_PATCH"
-    else
-      echo "oscar-gc postinst: WARNING — ADR-045 patch not found at $ADEU_PATCH; redline will not produce word-shape output" >&2
-    fi
-
     install_launcher
     ;;
   abort-upgrade|abort-remove|abort-deconfigure)

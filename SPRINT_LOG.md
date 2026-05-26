@@ -14,6 +14,55 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 31 — Doctrine work + three sweep-up fixes + re-dogfood (closed 2026-05-26)
+
+**Goal**: First act on Sprint 30 findings ([[ADR-101]]). Land a discovery doctrine that converts the three passive enumeration blocks (on-demand playbooks, skill slugs, `delegate` from `summon`) into active triggers — without over-tuning into noise on irrelevant turns. Three sweep-up fixes: (a) `developer` exposure leak in matter recipes; (b) re-scope ADR-020's "always read" so the outline+full sequence doesn't bleed into triage tasks; (c) zip-build adeu install parity so dogfood on zip binaries works first-time. Manual re-dogfood validation against Sprint 30's exact fixtures.
+
+**Built (doctrine + sweep-ups, four ADRs)**
+
+- **Discovery doctrine ([[ADR-104]], `discoveryDoctrine.ts`)** — three "when to use this" paragraphs (one per affordance), mirroring the Commercial redline-doctrine shape: positive trigger + concrete example pair + explicit negative guard + scope cap. Shared as `DISCOVERY_DOCTRINE` constant, interpolated into both Commercial bespoke `systemPrompt.ts` and the generic `defaultSystemPrompt` in `buildPracticeAreaRecipe.ts`. Topic-noun matching ("`nda-review-playbook.md` matches an NDA task — any verb form"). The doctrine landed via three measurement cycles: cycle 1 (original phrasing) → Test 1 ✅ but Test 2 missed; cycle 2 (reframed as mandatory Turn-1 protocol with A/B/C steps + topic-noun matching, moved to top of system prompt) → Test 1 ✅ with explicit protocol recital, Test 2 still missed; cycle 3 (**reordered `buildPracticeAreaRecipe.ts` instructions array** to put the system prompt BEFORE the discovery surfaces it references) → Test 2 ✅ closed the playbook gap.
+
+- **Matter-recipe escape-hatch exclusion ([[ADR-102]], `enabledPlatformExtensions.ts:deriveEnabledPlatformExtensionsForMatter`)** — adds a hard exclusion of `developer` (per [[ADR-041]] security policy) + `computercontroller` (matter recipes already register a narrowed pdf_tool/docx_tool instance, per [[ADR-085]]). Root cause: user's `~/.config/goose/config.yaml` carried a pre-Sprint-18 `developer.enabled: true` entry that `syncBundledExtensions` preserved (the function never rewrites entries flagged `bundled: true`). The new filter runs in `MattersLanding.openMatter`. Forge keeps the base `deriveEnabledPlatformExtensions` (its `ensureForgePlatforms` already excludes developer by intent).
+
+- **ADR-020 re-scope ([[ADR-105]])** — surgical rewording of the Commercial system prompt: (i) the `redline__read_docx` tool description's "always read before you redline" gains a non-redline qualifier ("a single `mode: 'full'` call is sufficient for triage/Q&A — outline mode is for redline planning"); (ii) the five-step doctrine intro explicitly says "applies WHEN the lawyer's ask is a redline — change, amend, mark up..."; (iii) step 2's outline+full threshold sharpens from "more than a few pages" to "longer than a dozen pages where you'll plan coordinated edits". [[ADR-020]] itself unchanged — re-scope at the surface, not the structure.
+
+- **Bundle-time adeu install ([[ADR-103]], supersedes [[ADR-022]])** — `prepare-oscar-bundle.js` runs `pip install adeu==1.6.9` directly into bundled CPython's site-packages at bundle time (no venv), then applies the ADR-045 patch and removes the wheel staging dir (~95 MB saved per bundle). python-build-standalone is fully relocatable so the install travels with the bundle to both .deb and zip targets. `commercialRecipe.ts:resolveRedlineCmd` now returns `{cmd: cpython/bin/python3, args: ['-m', 'adeu.server']}` for bundled targets — sidesteps the console-script's hardcoded shebang. `postinst.sh` drops the venv-create block entirely (kept the launcher install). New smoke step (`python -m adeu.server` import test) catches missing deps at bundle time.
+
+**Re-dogfood result (`docs/sprint-31/redogfood/`)** — three cycles, Sprint 30 fixtures verbatim. Cycle 3 final:
+
+- Test 1 (Pemberton RFQ, 5 turns + late drop + redline, session `20260526_8`): ✅ agent explicitly recites Step A/B/C protocol in thinking; reads `rfq-review-playbook.md`; skips `nda-review-playbook` (negative guard); considers but skips skill (no exact noun match — negative guard); skips delegate (pack non-independent — negative guard); applies redline successfully (2× `process_document_batch`, no `-32002`).
+- Test 2 (10 NDAs, 3 turns, session `20260526_7`): ✅ reads `nda-review-playbook.md`; ✅ single full-read per NDA (10/10 vs Sprint 30's 16/10 — ADR-020 re-scope took); ✅ uses `oscar-fs__write_file`/`edit_file` (no `developer__write` — developer leak closed); ❌ no `load_skill` call (agent's thinking expressed intent but didn't issue the call; playbook content overlapped); ❌ no `delegate` call (MiniMax-M2.5 conflates "N tool calls in one assistant message" with parallelism — recognises opportunity in thinking but doesn't use the tool).
+
+**Acceptance rows (per brief)**:
+- ✅ Test 2 Turn 1 reads `nda-review-playbook.md`
+- ✅ Test 1 RFQ turns do NOT read `nda-review-playbook.md`
+- ❌ `load_skill` invocation across both tests — **defensible miss**: agent's negative guard fires correctly (no slug names task at its level for Test 1; for Test 2 the agent considered but didn't follow through)
+- ❌ Test 2 Turn 1 spawns ≥ 1 subagent via `delegate` — **MiniMax-specific behavior**, not doctrine failure. Sprint 32+ candidate for cross-model measurement.
+
+**Diagnosis on the cycle 1/2 → cycle 3 transition (load-bearing)**: cycle 1 and 2 showed asymmetric uptake — doctrine fired on Test 1's long substantive prompt, missed on Test 2's short procedural prompt. Arturs pushed back on "structural finding" framing — the user asked "How do you know this is structural? Could be MiniMax. Why aren't the skills/playbooks loaded?" Investigation: the discovery surfaces (~0-7% of the recipe instructions) appeared BEFORE the agent identity statement and the doctrine (sitting ~7-31% in). On long prompts the agent scanned far enough to reach the doctrine; on short prompts the agent's attention focused on the user message and didn't reach it. Reordering the `buildPracticeAreaRecipe.ts` concatenation to put the system prompt (with doctrine) BEFORE the discovery surfaces it references — colocating intent and content — closed Test 2's gap in cycle 3. **Lesson**: prompt structure can defeat prompt content. Discovery doctrines need to introduce the surfaces they reference, not look backward at them.
+
+**Over-tuning concern (Arturs's verbatim, 2026-05-25)**: "I am concerned about this... over-tuning. Telling the model 'always read the playbook' creates noise on irrelevant turns. How do you handle noise?" — The doctrine's negative guards held across all three cycles. Test 1's RFQ turns never read the NDA playbook; Test 2's NDA turns never read the RFQ playbook. The over-tuning concern did not materialise. The opposite — under-firing on short prompts — was the load-bearing risk, and cycle 3's reordering closed it.
+
+**ADRs**: 102 (matter-recipe escape-hatch exclusion), 103 (bundle-time adeu no-venv install, supersedes ADR-022), 104 (discovery doctrine), 105 (ADR-020 re-scope at surface). Four ADRs, all at decision time.
+
+**Deferred**:
+- `load_skill` uptake gap — agent considers + intends but doesn't issue the call. Sprint 32 eval substrate is the right place to isolate whether this is tool-discovery, redundancy-with-playbook, or model behavior.
+- `delegate` parallelism — MiniMax conflates many-tool-calls-in-one-message with parallel execution. Sprint 32+ cross-model measurement candidate.
+- Auto-redline-on-Turn-1 side effect — cycle 3 Test 1 saw the agent apply redlines unilaterally after reading the playbook (which prescribes redlines on walkaway issues). Whether this is appropriate (lawyer said "what needs pushback") or over-eager is a judgement call for Arturs.
+
+**Carry-forwards for Sprint 32**:
+- N=20 eval substrate per Sprint 31 brief's out-of-scope (Sprint 32 is the eval sprint).
+- Measure `load_skill` + `delegate` across model families (Claude, GPT-4o) to confirm MiniMax-specific vs general behavior.
+- ADR-104 doctrine refinement: add a "many tool calls in one assistant message are still serial in the agent loop" clarification if `delegate` uptake remains stuck.
+
+**Costs**: ~$2.50 MiniMax spend across 3 cycles (vs $0.63 Sprint 30 baseline; well under brief's $3 ceiling). Cycle 3 alone was ~$0.70 — Test 1 generated extra tokens via auto-redline-on-Turn-1.
+
+**Test conditions**: MiniMax-M2.5 default settings; Xvfb `:99`; packaged binary at `ui/desktop/out/Oscar-GC-linux-x64/oscar-gc` (Sprint 31 build with bundle-time adeu install + reordered instructions); `AGENT_TIMEOUT_MS=900000`. Persona unchanged from Sprint 30: Helena Marwick, General Counsel, Stanford Industrial Supply Co. Fixtures unchanged from Sprint 30 to preserve direct comparability. Same matter slugs (`pemberton-rfq`, `nda-triage-week-21`) — session bindings cleared between cycles to force fresh recipe builds.
+
+**Commits**: this commit.
+
+---
+
 ### Sprint 30 — Dogfood: RFQ + 10-NDA wiring uptake measurement (closed 2026-05-25)
 
 **Goal**: Dogfood-only sprint. No product code lands. Test whether the wiring landed by Sprint 29 M6 ([[ADR-099]] on-demand playbook discovery), Sprint 20 M5 ([[ADR-086]] skill enumeration), Sprint 28 ([[ADR-092]] Tools section), and Sprint 18 ([[ADR-063]] default-on `summon`) is *used* by MiniMax-M2.5 on two real Commercial workflows: (1) RFQ pack review + redline; (2) 10 NDA batch triage. Success criterion: not legal-substance accuracy — exposure-and-uptake of the wired affordances.

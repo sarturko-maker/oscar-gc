@@ -10,11 +10,23 @@ import type {
 
 const DEV_REDLINE_VENV_BIN = '/srv/projects/oscar-runtime/python/adeu-venv/bin/adeu-server';
 
-function resolveRedlineBin(resourcesRoot: string | null): string {
+// Sprint 31 (ADR-103, supersedes ADR-022): bundled adeu lives in CPython's
+// site-packages, not a venv. Invoke via `python -m adeu.server` so the
+// bundled python interpreter loads the module directly — sidesteps the
+// console-script's hardcoded shebang that would point at the build host.
+// Dev path keeps the in-place venv (shebang correct because venv lives at
+// the path the dev shell created it).
+function resolveRedlineCmd(resourcesRoot: string | null): {
+  cmd: string;
+  args: string[];
+} {
   if (resourcesRoot) {
-    return `${resourcesRoot}/python/adeu-venv/bin/adeu-server`;
+    return {
+      cmd: `${resourcesRoot}/python/cpython/bin/python3`,
+      args: ['-m', 'adeu.server'],
+    };
   }
-  return DEV_REDLINE_VENV_BIN;
+  return { cmd: DEV_REDLINE_VENV_BIN, args: [] };
 }
 
 // Sprint 12 (ADR-041), Sprint 14 (ADR-047): composes the generic practice-area
@@ -58,15 +70,19 @@ export async function buildCommercialRecipe(
     enabledPlatformExtensions,
     areaOverrides,
     extraExtensions: [
-      {
-        type: 'stdio',
-        name: 'redline',
-        description: 'Redline tool for legal documents (.docx). Backed by adeu==1.6.9.',
-        cmd: resolveRedlineBin(resourcesRoot),
-        args: [],
-        timeout: 300,
-        available_tools: ['read_docx', 'process_document_batch', 'diff_docx_files'],
-      },
+      ((): NonNullable<Recipe['extensions']>[number] => {
+        const redline = resolveRedlineCmd(resourcesRoot);
+        return {
+          type: 'stdio',
+          name: 'redline',
+          description:
+            'Redline tool for legal documents (.docx). Backed by adeu==1.6.9.',
+          cmd: redline.cmd,
+          args: redline.args,
+          timeout: 300,
+          available_tools: ['read_docx', 'process_document_batch', 'diff_docx_files'],
+        };
+      })(),
       ...installedConfigs,
     ],
   });

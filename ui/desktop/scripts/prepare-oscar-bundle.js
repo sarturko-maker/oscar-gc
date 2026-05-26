@@ -166,15 +166,15 @@ async function preparePython() {
 
   const tarball = await fetchCached(PYTHON_TARBALL_URL, PYTHON_TARBALL);
 
-  if (!fs.existsSync(path.join(PY_CPYTHON_DIR, 'bin', 'python3'))) {
-    fs.rmSync(PY_CPYTHON_DIR, { recursive: true, force: true });
-    ensureDir(PY_CPYTHON_DIR);
-    console.log(`[python] extracting → ${PY_CPYTHON_DIR}`);
-    // Tarball top-level is 'python/'; strip it so bin/, lib/, include/ land directly.
-    run('tar', ['-xzf', tarball, '-C', PY_CPYTHON_DIR, '--strip-components=1']);
-  } else {
-    console.log(`[python] cpython already present at ${PY_CPYTHON_DIR}`);
-  }
+  // Sprint 31 (ADR-103): always wipe + re-extract bundled CPython on each
+  // run so the adeu install + ADR-045 patch start from a clean tree.
+  // Otherwise a re-run hits "patch already applied" and aborts the build.
+  // Tarball is in CACHE_DIR; extraction is ~10s.
+  fs.rmSync(PY_CPYTHON_DIR, { recursive: true, force: true });
+  ensureDir(PY_CPYTHON_DIR);
+  console.log(`[python] extracting → ${PY_CPYTHON_DIR}`);
+  // Tarball top-level is 'python/'; strip it so bin/, lib/, include/ land directly.
+  run('tar', ['-xzf', tarball, '-C', PY_CPYTHON_DIR, '--strip-components=1']);
 
   // Always refresh wheels (small + cheap; ensures pin matches).
   fs.rmSync(PY_WHEELS_DIR, { recursive: true, force: true });
@@ -191,18 +191,49 @@ async function preparePython() {
     '--only-binary=:all:',
   ]);
 
-  // ADR-045 (Sprint 13): copy the adeu batch-path word-diff vendor patch
-  // alongside the wheels so postinst.sh can apply it after the venv build.
-  // Deletion criterion: upstream adeu releases this fix and we repin —
-  // at which point remove this copy step and the postinst patch invocation.
+  // Sprint 31 (ADR-103, supersedes ADR-022): install adeu directly into
+  // bundled CPython's site-packages at bundle time — no venv. The .deb's
+  // postinst used to create the venv at install-time so shebangs were
+  // correct, but the zip build has no postinst, leaving redline broken
+  // (Sprint 30 dogfood Test 1). python-build-standalone is fully
+  // relocatable, so installing into its site-packages produces a tree
+  // that travels with the bundle to both .deb and zip targets.
+  console.log(`[python] installing adeu==${ADEU_VERSION} into bundled CPython`);
+  run(pyBin, [
+    '-m',
+    'pip',
+    'install',
+    '--no-index',
+    '--find-links',
+    PY_WHEELS_DIR,
+    `adeu==${ADEU_VERSION}`,
+  ]);
+
+  // ADR-045 (Sprint 13): apply the adeu batch-path word-diff vendor patch
+  // directly to the bundled site-packages. Deletion criterion: upstream
+  // adeu releases this fix and we repin — at which point remove this
+  // patch invocation.
   const repoRoot = path.resolve(UI_DESKTOP, '..', '..');
   const patchSrc = path.join(repoRoot, 'docs', 'redline', `adeu-${ADEU_VERSION}-batch-path-word-diff.patch`);
-  const patchDest = path.join(PY_DIR, `adeu-${ADEU_VERSION}-batch-path-word-diff.patch`);
   if (!fs.existsSync(patchSrc)) {
     throw new Error(`[python] ADR-045 patch missing at ${patchSrc}`);
   }
-  fs.copyFileSync(patchSrc, patchDest);
-  console.log(`[python] copied ADR-045 patch → ${patchDest}`);
+  const pyMinor = PYTHON_VERSION.split('.').slice(0, 2).join('.');
+  const sitePackagesDir = path.join(PY_CPYTHON_DIR, 'lib', `python${pyMinor}`, 'site-packages');
+  console.log(`[python] applying ADR-045 patch to ${sitePackagesDir}`);
+  run('patch', ['-d', sitePackagesDir, '-p1', '-i', patchSrc]);
+
+  // Sprint 31 (ADR-103): smoke-import the installed adeu module against
+  // bundled CPython. Catches missing deps + path-resolution issues at
+  // bundle time rather than at first user redline call.
+  console.log(`[python] smoke: import adeu.server via bundled CPython`);
+  run(pyBin, ['-c', 'import adeu.server; print(adeu.__version__)']);
+
+  // Wheels and patch staging are consumed at bundle time; remove to slim
+  // the shipped bundle (~95 MB saved). postinst.sh no longer needs them
+  // (Sprint 31 ADR-103 drops the venv-create block).
+  fs.rmSync(PY_WHEELS_DIR, { recursive: true, force: true });
+  console.log(`[python] removed wheels staging dir (consumed at bundle time)`);
 }
 
 async function prepareNode() {

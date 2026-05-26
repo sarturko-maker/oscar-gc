@@ -18,6 +18,7 @@ import type {
   OscarCompanyContext,
 } from '../hooks/useOscarProfile';
 import { renderCompanyContextBlock } from './companyContextBlock';
+import { DISCOVERY_DOCTRINE } from './discoveryDoctrine';
 import {
   renderPlaybooksBlock,
   renderOnDemandPlaybooksBlock,
@@ -87,6 +88,8 @@ You are Oscar GC's ${area.name} agent.
 
 ${area.body}
 
+${DISCOVERY_DOCTRINE}
+
 # Use the "About this company" block actively
 
 The "About this company" block at the top of these instructions (above this
@@ -114,10 +117,6 @@ The current matter has two folders, both scoped via oscar-fs:
 The "Top of Mind" injection above contains the matter facts (subject,
 counterparty, kind, key facts, privileged status, and any extras). Don't
 ask the user to repeat them.
-
-Skills in ~/.agents/skills/in-house-legal/ are auto-discovered. Invoke
-skills by name when their procedural guidance is helpful; defer to skill
-bodies for scope and steps.
 
 Plain English. In-house perspective. Cite specific facts; flag uncertainty
 rather than guessing. Match output to the audience: legal team in legal
@@ -201,13 +200,20 @@ export async function buildPracticeAreaRecipe(
   // ~/.agents/skills/ and composes a `## Skills available in this area`
   // block followed by an "Ignore any other skills" instruction.
   const skillsBlock = await renderSkillsBlock(opts.area.id);
+  // Sprint 31 cycle 3 (ADR-104 follow-on): system prompt with the
+  // discovery doctrine comes BEFORE the discovery surfaces (playbook +
+  // skill blocks). The doctrine introduces the surfaces; the surfaces
+  // are then read in context. Previously the surfaces came first as
+  // cold lists, then identity, then doctrine 4KB later — measurement
+  // on short procedural prompts showed the doctrine didn't engage.
+  // Colocating intent before content is the cycle 3 experiment.
   const instructions = [
     companyBlock,
     areaDescriptionBlock,
+    baseInstructions,
     playbooksBlock,
     onDemandPlaybooksBlock,
     skillsBlock,
-    baseInstructions,
   ]
     .filter((s): s is string => Boolean(s))
     .join('\n\n');
