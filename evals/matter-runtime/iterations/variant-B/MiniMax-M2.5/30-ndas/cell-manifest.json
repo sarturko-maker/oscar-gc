@@ -2,14 +2,34 @@
   "variant": "B",
   "model": "MiniMax-M2.5",
   "scenario": "30-ndas",
-  "n": 1,
+  "n": 5,
   "cycles": [
     {
       "cycle_n": 1,
-      "session_id": null,
-      "matter_slug": "30-ndas-c01-795898"
+      "session_id": "20260526_37",
+      "matter_slug": "30-ndas-c01-796668"
+    },
+    {
+      "cycle_n": 2,
+      "session_id": "20260526_38",
+      "matter_slug": "30-ndas-c02-796668"
+    },
+    {
+      "cycle_n": 3,
+      "session_id": "20260526_39",
+      "matter_slug": "30-ndas-c03-796668"
+    },
+    {
+      "cycle_n": 4,
+      "session_id": "20260526_40",
+      "matter_slug": "30-ndas-c04-796668"
+    },
+    {
+      "cycle_n": 5,
+      "session_id": "20260526_41",
+      "matter_slug": "30-ndas-c05-796668"
     }
   ],
-  "started_at": "2026-05-26T11:44:58.729Z",
-  "completed_at": "2026-05-26T11:45:57.688Z"
+  "started_at": "2026-05-26T11:57:48.100Z",
+  "completed_at": "2026-05-26T12:05:00.577Z"
 }

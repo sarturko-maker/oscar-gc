@@ -6,12 +6,12 @@
   "cycle_n": 1,
   "area_id": "commercial",
   "matter": {
-    "slug": "30-ndas-c01-795898",
-    "name": "S32-795898 Sprint 30 \u2014 10-NDA triage c01",
-    "working_dir": "/root/Documents/Oscar GC/Commercial/S32-795898 Sprint 30 \u2014 10-NDA triage c01",
-    "state_folder": "/root/.config/oscar/state/commercial/matters/30-ndas-c01-795898"
+    "slug": "30-ndas-c01-796668",
+    "name": "S32-796668 Sprint 30 — 10-NDA triage c01",
+    "working_dir": "/root/Documents/Oscar GC/Commercial/S32-796668 Sprint 30 — 10-NDA triage c01",
+    "state_folder": "/root/.config/oscar/state/commercial/matters/30-ndas-c01-796668"
   },
-  "session_id": "20260526_32",
+  "session_id": "20260526_37",
   "provider": "minimax",
-  "started_at": "2026-05-26T11:45:55.478Z"
+  "started_at": "2026-05-26T11:59:32.104Z"
 }

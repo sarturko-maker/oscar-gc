@@ -1,0 +1,94 @@
+{
+  "cell": "/srv/projects/goose/evals/matter-runtime/iterations/variant-B/MiniMax-M2.5/30-ndas",
+  "n": 5,
+  "per_affordance": {
+    "playbook_read_on_relevant_turn.fired": {
+      "values": [
+        true,
+        false,
+        true,
+        true,
+        true
+      ],
+      "majority": 4,
+      "total": 5,
+      "disagreements": 1
+    },
+    "playbook_read_on_irrelevant_turn.fired": {
+      "values": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "majority": 5,
+      "total": 5,
+      "disagreements": 0
+    },
+    "skill_invoked_when_applicable.fired": {
+      "values": [
+        false,
+        true,
+        true,
+        false,
+        true
+      ],
+      "majority": 3,
+      "total": 5,
+      "disagreements": 2
+    },
+    "skill_invoked_when_not_applicable.fired": {
+      "values": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "majority": 5,
+      "total": 5,
+      "disagreements": 0
+    },
+    "skill_arg_correct.fired": {
+      "values": [
+        false,
+        true,
+        true,
+        false,
+        true
+      ],
+      "majority": 3,
+      "total": 5,
+      "disagreements": 2
+    },
+    "delegate_used_when_applicable.fired": {
+      "values": [
+        false,
+        false,
+        false,
+        false,
+        true
+      ],
+      "majority": 4,
+      "total": 5,
+      "disagreements": 1
+    },
+    "delegate_used_when_not_applicable.fired": {
+      "values": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "majority": 5,
+      "total": 5,
+      "disagreements": 0
+    }
+  },
+  "max_disagreements": 2,
+  "pass": false,
+  "threshold": "≤1 disagreement per affordance",
+  "computed_at": "2026-05-26T12:07:33.836Z"
+}
