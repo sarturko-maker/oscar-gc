@@ -1,9 +1,9 @@
 [
   {
-    "db_id": 25474,
-    "message_id": "9f0p3ye4",
+    "db_id": 25693,
+    "message_id": "ok0x3zx3",
     "role": "user",
-    "timestamp": "2026-05-26 16:16:11",
+    "timestamp": "2026-05-26 18:36:41",
     "tokens": null,
     "blocks": [
       {
@@ -13,10 +13,965 @@
     ]
   },
   {
-    "db_id": 25475,
-    "message_id": "h9c77jn0",
+    "db_id": 25694,
+    "message_id": "gen-1779820601-cQHCNPF1Id0zmKMdBQPq",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "I'll run the Turn 1 discovery protocol for this batch NDA triage task.\n\n**Step A: Playbook scan.** The noun is \"NDA\" and `nda-review-playbook.md` matches. Reading it now.\n\n**Step B: Skills scan.** The slug `nda-review` names this task. Loading it.\n\n**Step C: Batch shape.** The ask names \"10-NDA triage\" — a quantity of independent items. This is a delegate trigger.\n\nLet me load the playbook and skill, then scan the folder for the NDAs."
+      }
+    ]
+  },
+  {
+    "db_id": 25695,
+    "message_id": "msg_a7779c96-7e31-4062-9a53-14a81848002f",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01DjxHN3de193VN2QQYSssTx",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__read_file",
+            "arguments": {
+              "path": "~/.config/oscar/playbooks/commercial/nda-review-playbook.md"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25696,
+    "message_id": "msg_22fcf18b-2c2b-4573-a1b9-26a2d9ad1c21",
     "role": "user",
-    "timestamp": "2026-05-26 16:16:17",
+    "timestamp": "2026-05-26 18:36:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01DjxHN3de193VN2QQYSssTx",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "NDA Review Playbook — In-House Commercial Counsel\n\nThis playbook governs first-pass review of any inbound Non-Disclosure / Confidentiality Agreement (NDA) where our business is being asked to receive Confidential Information, disclose Confidential Information, or both. It applies regardless of counterparty type, deal context, or originating jurisdiction.\n\n# 1. Triage rubric — GREEN / YELLOW / RED\n\nEvery NDA gets a single-letter verdict. Reviewers should be able to triage a typical 2-3 page NDA in 5-10 minutes using this rubric.\n\n- **GREEN** — balanced mutual or bilateral NDA with standard carve-outs (publicly known, prior knowledge, third-party receipt, independent development, compelled disclosure), reasonable term (1-3 years operative + 1-5 years survival), our preferred or a neutral governing law, no unusual restrictions. Can go straight to signature without legal review.\n- **YELLOW** — material but negotiable issue: long survival (more than 7 years), broad CI definition (catches publicly-available information, or any information disclosed in any context), one-sided obligations, non-solicitation clauses, no-publicity clauses, unfavourable governing law but otherwise normal. Needs legal review and one round of redlining; usually closeable.\n- **RED** — at least one of the following: perpetual / indefinite term, no carve-outs at all, extraterritorial jurisdiction we don't operate in (and which would expose us to costly forum-shopping), liquidated-damages or per-incident penalty clauses, non-compete clauses dressed up as NDA terms, IP assignment language smuggled into the confidentiality terms, no-residuals carve-out. Needs proper legal involvement; not signed without partner-level decision.\n\n# 2. The flag list — what to look for\n\nRead every NDA looking for these. Each is a routine triage trigger.\n\n## 2.1 Term and survival\n\n- **Indefinite / perpetual obligations** → RED. No business case justifies giving an unlimited-duration confidentiality undertaking; it surfaces 20 years later when no one remembers why and creates discovery exposure.\n- **Survival of more than 7 years** → YELLOW. Push to 3 years from disclosure unless there's a good reason (e.g., long-running regulatory matter, trade-secret content).\n- **Operative term of more than 5 years** → YELLOW. Most discussions are over within 12-18 months.\n\n## 2.2 Definition of Confidential Information\n\n- **Captures publicly available information** → YELLOW or RED depending on phrasing. \"Information that is publicly available but compiled or contextualised by the disclosing party\" is YELLOW; \"any information disclosed in any context\" is RED.\n- **Excludes residuals carve-out** → YELLOW. Sophisticated NDAs allow residuals retained in unaided memory of personnel; absence is a flag.\n- **Captures derivative works** → YELLOW. Standard wording covers the information itself, not derivative analysis the receiving party generates from public sources informed by the discussions.\n\n## 2.3 Carve-outs\n\n- **Missing standard carve-outs** (publicly known, prior knowledge, third-party receipt, independent development, compelled disclosure) → YELLOW or RED.\n- **Single-carve-out clauses** (\"only information already in our written records prior to disclosure\") → RED.\n- **Compelled-disclosure carve-out without prompt-notice obligation** → YELLOW. Buyer wants notice so they can seek a protective order; absence is a flag.\n\n## 2.4 Governing law and jurisdiction\n\n- **Governing law from a jurisdiction the receiving party doesn't operate in** → YELLOW. Push for our local law or a neutral choice (English law is widely acceptable).\n- **Exclusive jurisdiction in counterparty's home court** → YELLOW. Cost-of-litigation flag.\n- **Extraterritorial reach** (\"subject to the laws of [Texas / California / Singapore] without regard to conflict-of-laws principles\") → YELLOW or RED. Conflict-of-laws principles waiver is sometimes a smuggled forum-shopping play.\n\n## 2.5 Beyond-confidentiality clauses\n\nThese are often the real risk — clauses that aren't about confidentiality at all but get smuggled in under an NDA cover.\n\n- **Non-compete** → RED. Confidentiality and non-compete are different agreements; combining them is usually a sign of buyer trying to lock the seller out of a market via an NDA negotiating window.\n- **Non-solicitation** → YELLOW if narrow (employees actually in contact, 12 months); RED if broad (any employee, any indirect approach, 24+ months).\n- **IP assignment** → RED. NDAs are not the place for IP transfer. If the counterparty wants assignment, that's a separate paid licence or development agreement.\n- **Liquidated damages** → RED. The party drafting an NDA with a $500k-per-incident clause has thought hard about how to extract value from an alleged breach; we shouldn't sign without serious legal involvement.\n- **No-publicity clauses extending beyond announcing the deal** → YELLOW. Standard \"no public statements about the discussions\" is fine; \"no statements about the counterparty for 2 years post-termination\" is YELLOW.\n- **Reverse-engineering restrictions** in a confidentiality clause → YELLOW or RED depending on context. Make sense for software; not for general commercial NDAs.\n\n## 2.6 Mutual vs bilateral\n\n- **Mutual** NDAs apply confidentiality obligations to both parties. Preferred default for any two-way commercial discussion.\n- **Bilateral / one-way** NDAs apply obligations only to the receiving party. Acceptable when we are clearly receiving Confidential Information for a defined evaluation purpose (e.g., evaluating a vendor's pricing methodology). Not acceptable when there is genuine two-way disclosure.\n- **One-way running TO us as discloser** → GREEN typically.\n- **One-way running FROM us as receiver** without a clear scope → YELLOW.\n\n# 3. Output format\n\nFor batch review (multiple NDAs), produce a single table:\n\n| # | Counterparty | Verdict | Top Issues | Action |\n|---|---|---|---|---|\n| 1 | [Counterparty A] | GREEN | none | Sign |\n| 2 | [Counterparty B] | YELLOW | Long survival, no residuals | Push to 3+3, add residuals, then sign |\n| 3 | [Counterparty C] | RED | Perpetual, no carve-outs, $500k LDs | Escalate to GC; not signable as drafted |\n\nFor per-NDA detail, follow with one paragraph each on the RED and YELLOW items, naming the clause and the proposed redline shape.\n\n# 4. Sign-off rules\n\n- **GREEN** — counsel sign or commercial sponsor sign with no legal involvement required.\n- **YELLOW** — counsel reviews and signs after redline; flag survival/CI-definition changes to the relationship lead.\n- **RED** — General Counsel must approve. Senior commercial sponsor must sign.\n\n# 5. Counterparty correspondence\n\nWhen responding to a RED NDA with substantive issues, write to the counterparty's legal team (not their commercial team — they will not have authority to amend their standard NDA). Use this shape:\n\n1. Thanks for the NDA.\n2. Identify the 2-3 issues we cannot accept (do not enumerate every YELLOW item — pick the ones that genuinely block).\n3. For each, name the clause and propose specific alternative wording.\n4. Offer to discuss; do not propose multiple alternatives in the first message (creates the impression of unlimited negotiating room).\n\n# 6. When this playbook does not apply\n\n- Settlement NDAs (different shape; usually negotiated with disputes counsel).\n- M&A confidentiality agreements (typically NDA + standstill + exclusivity; specialist M&A counsel).\n- Government / classified-information NDAs (specialist regulatory counsel).\n- Employment-related confidentiality undertakings (HR counsel).\n\nThis playbook covers commercial-counterparty NDAs. Anything else, escalate.\n"
+              }
+            ],
+            "structuredContent": {
+              "content": "NDA Review Playbook — In-House Commercial Counsel\n\nThis playbook governs first-pass review of any inbound Non-Disclosure / Confidentiality Agreement (NDA) where our business is being asked to receive Confidential Information, disclose Confidential Information, or both. It applies regardless of counterparty type, deal context, or originating jurisdiction.\n\n# 1. Triage rubric — GREEN / YELLOW / RED\n\nEvery NDA gets a single-letter verdict. Reviewers should be able to triage a typical 2-3 page NDA in 5-10 minutes using this rubric.\n\n- **GREEN** — balanced mutual or bilateral NDA with standard carve-outs (publicly known, prior knowledge, third-party receipt, independent development, compelled disclosure), reasonable term (1-3 years operative + 1-5 years survival), our preferred or a neutral governing law, no unusual restrictions. Can go straight to signature without legal review.\n- **YELLOW** — material but negotiable issue: long survival (more than 7 years), broad CI definition (catches publicly-available information, or any information disclosed in any context), one-sided obligations, non-solicitation clauses, no-publicity clauses, unfavourable governing law but otherwise normal. Needs legal review and one round of redlining; usually closeable.\n- **RED** — at least one of the following: perpetual / indefinite term, no carve-outs at all, extraterritorial jurisdiction we don't operate in (and which would expose us to costly forum-shopping), liquidated-damages or per-incident penalty clauses, non-compete clauses dressed up as NDA terms, IP assignment language smuggled into the confidentiality terms, no-residuals carve-out. Needs proper legal involvement; not signed without partner-level decision.\n\n# 2. The flag list — what to look for\n\nRead every NDA looking for these. Each is a routine triage trigger.\n\n## 2.1 Term and survival\n\n- **Indefinite / perpetual obligations** → RED. No business case justifies giving an unlimited-duration confidentiality undertaking; it surfaces 20 years later when no one remembers why and creates discovery exposure.\n- **Survival of more than 7 years** → YELLOW. Push to 3 years from disclosure unless there's a good reason (e.g., long-running regulatory matter, trade-secret content).\n- **Operative term of more than 5 years** → YELLOW. Most discussions are over within 12-18 months.\n\n## 2.2 Definition of Confidential Information\n\n- **Captures publicly available information** → YELLOW or RED depending on phrasing. \"Information that is publicly available but compiled or contextualised by the disclosing party\" is YELLOW; \"any information disclosed in any context\" is RED.\n- **Excludes residuals carve-out** → YELLOW. Sophisticated NDAs allow residuals retained in unaided memory of personnel; absence is a flag.\n- **Captures derivative works** → YELLOW. Standard wording covers the information itself, not derivative analysis the receiving party generates from public sources informed by the discussions.\n\n## 2.3 Carve-outs\n\n- **Missing standard carve-outs** (publicly known, prior knowledge, third-party receipt, independent development, compelled disclosure) → YELLOW or RED.\n- **Single-carve-out clauses** (\"only information already in our written records prior to disclosure\") → RED.\n- **Compelled-disclosure carve-out without prompt-notice obligation** → YELLOW. Buyer wants notice so they can seek a protective order; absence is a flag.\n\n## 2.4 Governing law and jurisdiction\n\n- **Governing law from a jurisdiction the receiving party doesn't operate in** → YELLOW. Push for our local law or a neutral choice (English law is widely acceptable).\n- **Exclusive jurisdiction in counterparty's home court** → YELLOW. Cost-of-litigation flag.\n- **Extraterritorial reach** (\"subject to the laws of [Texas / California / Singapore] without regard to conflict-of-laws principles\") → YELLOW or RED. Conflict-of-laws principles waiver is sometimes a smuggled forum-shopping play.\n\n## 2.5 Beyond-confidentiality clauses\n\nThese are often the real risk — clauses that aren't about confidentiality at all but get smuggled in under an NDA cover.\n\n- **Non-compete** → RED. Confidentiality and non-compete are different agreements; combining them is usually a sign of buyer trying to lock the seller out of a market via an NDA negotiating window.\n- **Non-solicitation** → YELLOW if narrow (employees actually in contact, 12 months); RED if broad (any employee, any indirect approach, 24+ months).\n- **IP assignment** → RED. NDAs are not the place for IP transfer. If the counterparty wants assignment, that's a separate paid licence or development agreement.\n- **Liquidated damages** → RED. The party drafting an NDA with a $500k-per-incident clause has thought hard about how to extract value from an alleged breach; we shouldn't sign without serious legal involvement.\n- **No-publicity clauses extending beyond announcing the deal** → YELLOW. Standard \"no public statements about the discussions\" is fine; \"no statements about the counterparty for 2 years post-termination\" is YELLOW.\n- **Reverse-engineering restrictions** in a confidentiality clause → YELLOW or RED depending on context. Make sense for software; not for general commercial NDAs.\n\n## 2.6 Mutual vs bilateral\n\n- **Mutual** NDAs apply confidentiality obligations to both parties. Preferred default for any two-way commercial discussion.\n- **Bilateral / one-way** NDAs apply obligations only to the receiving party. Acceptable when we are clearly receiving Confidential Information for a defined evaluation purpose (e.g., evaluating a vendor's pricing methodology). Not acceptable when there is genuine two-way disclosure.\n- **One-way running TO us as discloser** → GREEN typically.\n- **One-way running FROM us as receiver** without a clear scope → YELLOW.\n\n# 3. Output format\n\nFor batch review (multiple NDAs), produce a single table:\n\n| # | Counterparty | Verdict | Top Issues | Action |\n|---|---|---|---|---|\n| 1 | [Counterparty A] | GREEN | none | Sign |\n| 2 | [Counterparty B] | YELLOW | Long survival, no residuals | Push to 3+3, add residuals, then sign |\n| 3 | [Counterparty C] | RED | Perpetual, no carve-outs, $500k LDs | Escalate to GC; not signable as drafted |\n\nFor per-NDA detail, follow with one paragraph each on the RED and YELLOW items, naming the clause and the proposed redline shape.\n\n# 4. Sign-off rules\n\n- **GREEN** — counsel sign or commercial sponsor sign with no legal involvement required.\n- **YELLOW** — counsel reviews and signs after redline; flag survival/CI-definition changes to the relationship lead.\n- **RED** — General Counsel must approve. Senior commercial sponsor must sign.\n\n# 5. Counterparty correspondence\n\nWhen responding to a RED NDA with substantive issues, write to the counterparty's legal team (not their commercial team — they will not have authority to amend their standard NDA). Use this shape:\n\n1. Thanks for the NDA.\n2. Identify the 2-3 issues we cannot accept (do not enumerate every YELLOW item — pick the ones that genuinely block).\n3. For each, name the clause and propose specific alternative wording.\n4. Offer to discuss; do not propose multiple alternatives in the first message (creates the impression of unlimited negotiating room).\n\n# 6. When this playbook does not apply\n\n- Settlement NDAs (different shape; usually negotiated with disputes counsel).\n- M&A confidentiality agreements (typically NDA + standstill + exclusivity; specialist M&A counsel).\n- Government / classified-information NDAs (specialist regulatory counsel).\n- Employment-related confidentiality undertakings (HR counsel).\n\nThis playbook covers commercial-counterparty NDAs. Anything else, escalate.\n"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25697,
+    "message_id": "msg_503a1af4-a798-4061-b295-b68d97ed90a1",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01EsZeHpNfCVL9rzqwWWdfN5",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "load_skill",
+            "arguments": {
+              "name": "nda-review"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "skills"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25698,
+    "message_id": "msg_8b3eca01-2ef1-4dc2-acf1-ba6b4802d4aa",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01EsZeHpNfCVL9rzqwWWdfN5",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "# Loaded Skill: nda-review (skill)\n\n## nda-review (skill)\n\nReference: fast triage of inbound NDAs into GREEN / YELLOW / RED so the team only spends lawyer time on the ones that need it. Built for sales and BD to self-serve before pinging legal. Loaded by review when an NDA is detected.\n\n\n### Content\n\n<!-- Sourced from anthropics/claude-for-legal/commercial-legal @ 4d55f539; Apache 2.0 -->\n<!-- Oscar GC modifications (Sprint 12, ADR-037): matter paths rewritten to $OSCAR_MATTER_DIR -->\n\n# NDA Review\n\n## Matter context\n\n**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: \"Which matter is this for? Run `matter-workspace switch <slug>` or say `practice-level`.\" Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `$OSCAR_MATTER_DIR/`. Never read another matter's files unless `Cross-matter context` is `on`.\n\n---\n\n## Destination check\n\nBefore producing output, check where it's going. If the user has named a destination (a channel, a distribution list, a counterparty, \"everyone\"), ask whether it's inside the privilege circle. Public channels, company-wide lists, counterparty/opposing counsel, vendors, and clients (for work product) waive the protection. When the destination looks outside the circle, flag it and offer (a) the privileged version for legal only, (b) a sanitized version for the broader channel, or (c) both — don't silently apply a privileged header and then help paste it somewhere the header won't protect it. See the canonical `## Shared guardrails → Destination check` in this plugin's CLAUDE.md.\n\n## Purpose\n\nMost inbound NDAs are fine. A few have landmines. This skill sorts them in under a minute so legal only reads the ones that matter.\n\n**The goal:** a GREEN NDA should need nothing more than a signature. A YELLOW needs a lawyer's eyes on one or two specific things. A RED stops before anyone wastes time.\n\n## Load the playbook first\n\n**Which side?** Before applying the playbook, determine which side the company is on for this NDA. Usually obvious from the context: if the counterparty is a vendor or partner evaluating your product, you're sales-side; if you're evaluating theirs, you're purchasing-side. Mutual NDAs still have a side — whose paper is it, and which direction is the evaluation running. If it's not obvious, ask. Read the matching playbook section (`### Sales-side playbook` or `### Purchasing-side playbook`) from the config. Note which side in the output so the reviewer knows which playbook was applied. If the matching side is `[Not configured]`, stop and tell the user to run `Oscar GC onboarding --side <side>` before this triage can proceed.\n\n**Before triaging anything, read `~/.config/oscar/profile.json` → `## Playbook` → the matching side → `NDA triage positions`.** That section is the source of truth for what makes an NDA GREEN, YELLOW, or RED for *this* team on *this* side. This skill does not ship with default positions on NDA terms — the law, the market, and each team's risk tolerance vary too much for hardcoded defaults to be safe.\n\nIf `~/.config/oscar/profile.json` doesn't have an `NDA triage positions` section yet, or it's silent on a term that comes up in the NDA you're reviewing, ask the user:\n\n> Your playbook doesn't cover [term — e.g., \"residuals clauses,\" \"survival period,\" \"one-way NDAs where you're the receiver\"]. What's your default position — when should this be GREEN, when YELLOW, when RED? I'll add it to `~/.config/oscar/profile.json` so the next review is consistent.\n\nThen record the answer in `~/.config/oscar/profile.json` and proceed with the triage using the new position.\n\n## Scope check\n\n**Before reviewing NDA-specific provisions, check whether the document is doing more than its name suggests.** Mutual commercial NDAs can hide: standstills, licensing grants, exclusivity, non-solicits, non-competes, IP assignments, right of first refusal, most-favored-nation clauses, and arbitration/jurisdiction clauses that govern far more than confidentiality disputes.\n\nIf the NDA contains obligations beyond confidentiality: **auto-YELLOW regardless of the NDA-term analysis.** Flag the non-NDA provisions:\n\n> This document is labeled an NDA but contains [standstill / license grant / non-solicit / exclusivity / IP assignment / ROFR / MFN / broad arbitration]. It's more than an NDA. Route for attorney review.\n\nDo not silently push a document labeled \"NDA\" through NDA triage when the substantive obligations are a services agreement, a term sheet, or a covenant package in NDA clothing.\n\n## The triage\n\nClassify the NDA into one of three buckets by applying the positions from `~/.config/oscar/profile.json`. The bucket definitions below are stable; the *criteria* that fill each bucket come from the playbook.\n\n### GREEN — route to signature\n\nThe NDA satisfies every position in the team's playbook, and no term triggers a RED flag per the playbook. Examples of checks the playbook typically covers: mutuality, term length, survival period, carveouts, governing law, restrictive covenants, fee-shifting. Confirm each one against `~/.config/oscar/profile.json` before calling GREEN.\n\n**GREEN requires attorney-reviewed playbook positions.** GREEN is the only path to signature without lawyer review. It cannot be issued against default or absent positions. Before issuing GREEN, check: does the practice profile have an attorney-reviewed `## NDA triage positions` section? If not:\n\n> I can't issue GREEN without attorney-reviewed NDA positions in your practice profile. Run `Oscar GC onboarding --full` with your commercial counsel to set them, or route this NDA for attorney review. Issuing GREEN against defaults means a non-lawyer set the positions the next non-lawyer relies on.\n\nDo not route to signature on defaults. YELLOW is the right call when positions are missing — it surfaces the NDA to a human who can decide.\n\n**Output:**\n\nPrepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`).\n\n```markdown\n[WORK-PRODUCT HEADER — per plugin config ## Outputs]\n\n## NDA Triage: [Counterparty]\n\nGREEN — route to signature\n\n### Executive Summary\n\nNo red flags identified under the playbook. Route for signature per standard process.\n\n| Check | Status | Playbook reference |\n|---|---|---|\n| [Each playbook check] | [pass/fail] | [`~/.config/oscar/profile.json` section] |\n\n**Next step:** [Submit to [CLM] standard NDA workflow | Send to [approver from `~/.config/oscar/profile.json`] for signature]\n```\n\n**Before proceeding past GREEN to signature:** Read `## Who's using this` in `~/.config/oscar/profile.json`. If the Role is Non-lawyer:\n\n> This step has legal consequences (countersigning an NDA binds the company). Have you reviewed this with an attorney? If yes, proceed. If no, here's a brief to bring to them:\n>\n> [Generate a 1-page summary: counterparty, NDA direction (mutual / one-way), the playbook checks run, anything the playbook didn't cover, what could go wrong if signed as-is, and the three things to ask the attorney.]\n>\n> If you need to find an attorney, solicitor, barrister, or other authorised legal professional: contact your professional regulator (state bar in the US, SRA/Bar Standards Board in England & Wales, Law Society in Scotland/NI/Ireland/Canada/Australia, or your jurisdiction's equivalent) for a referral service.\n\nDo not proceed past this gate without an explicit yes.\n\n### YELLOW — needs a lawyer's eyes on specific items\n\nOne or more terms deviate from the playbook but aren't categorical deal-breakers, OR a term appears that the playbook doesn't address. Surface each item individually so the approver can make the call.\n\n**Output:**\n\nPrepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`).\n\n```markdown\n[WORK-PRODUCT HEADER — per plugin config ## Outputs]\n\n## NDA Triage: [Counterparty]\n\nYELLOW — flag for [approver name from `~/.config/oscar/profile.json`]\n\n### Executive Summary\n\n- [One-line actionable edit, e.g. \"Strike non-solicit clause (Section 6)\"]\n- [One-line actionable edit]\n\n### Flagged items\n\n**1. [Issue]** — Section [X]\n   What: [one line]\n   Why flagged: [one line — which playbook position this hits, or \"playbook is silent on this\"]\n   **Legal risk:** [🔴/🟠/🟡/🟢] | **Business friction:** [🔴 Blocks deals / 🟠 Slows deals / 🟡 Confuses customers / 🟢 Invisible]\n   Likely resolution: [accept / push back on X / depends on deal context]\n\n[repeat for each flag]\n\n### Everything else\n\n| Check | Status | Playbook reference |\n|---|---|---|\n| [playbook checks that passed] | pass | [`~/.config/oscar/profile.json` section] |\n\n**Next step:** Ask [approver] about the flagged items, then route to signature if they're okay with it.\n```\n\n### RED — stop, talk to legal first\n\nThe NDA hits a position on the playbook's \"never accept\" list, or the structure of the agreement is incompatible with the team's standard posture (e.g., a one-way NDA where the team's playbook requires mutual; a perpetual term where the playbook caps at a finite period; governing law on the \"never\" list).\n\n**Output:**\n\nPrepend the work-product header from `~/.config/oscar/profile.json` `## Outputs` (it differs by user role — see `## Who's using this`).\n\n```markdown\n[WORK-PRODUCT HEADER — per plugin config ## Outputs]\n\n## NDA Triage: [Counterparty]\n\nRED — do not submit, talk to legal first\n\n### Executive Summary\n\n- [One-line actionable edit, e.g. \"Section 4 — route to Legal for review\"]\n- [One-line actionable edit]\n\n### Critical issues\n\n**1. [Issue]** — Section [X]\n   > \"[exact quote]\"\n   Why this is a problem: [specific risk; cite the playbook position it violates]\n   **Legal risk:** [🔴/🟠/🟡/🟢] | **Business friction:** [🔴 Blocks deals / 🟠 Slows deals / 🟡 Confuses customers / 🟢 Invisible]\n   Recommended response: [use our paper instead | push back with specific language | walk]\n\n**Next step:** Send this triage to [GC or named escalation person from `~/.config/oscar/profile.json`]. Do not send to [CLM or approvals workflow]. Do not tell the counterparty we'll sign.\n```\n\n## Redline granularity\n\n**Edit at the smallest possible granularity.** A redline is a negotiation artifact, not a rewrite. Wholesale clause replacement signals \"we threw out your drafting\" — it's aggressive, it forces the counterparty to re-read the whole clause, and it discards the parts of their drafting that were fine. Surgical redlines — strike a word, insert a phrase, restructure a subclause — signal \"we have specific asks\" and are faster to read, understand, and accept.\n\nDefault to the smallest edit that achieves the playbook position:\n- Replace a **word** before a phrase. (\"twelve (12)\" → \"twenty-four (24)\")\n- Replace a **phrase** before a sentence. (\"paid by the Buyer\" → \"paid and payable by the Buyer\")\n- Restructure a **subclause** before replacing the sentence. (Add \"(a)\" and \"(b)\" to split a compound condition.)\n- Replace a **sentence** before replacing the clause.\n- Only replace a **whole clause** when the counterparty's version is so far from your position that surgical edits would be harder to read than a fresh draft — and when you do, say so in the transmittal: \"We've replaced §8.2 rather than marking it up because the changes were extensive. Happy to walk you through the delta.\"\n\nWhen in doubt, smaller. A client who receives a surgical redline trusts that you read carefully. A client who receives a wholesale replacement wonders whether you read at all.\n\n## Jurisdiction assumption\n\nThis triage applies the governing-law and restrictive-covenant positions recorded in `~/.config/oscar/profile.json`. Legal rules (enforceability of non-competes, non-solicits, fee-shifting, choice of law) vary materially by jurisdiction. If the NDA involves a jurisdiction outside the team's configured posture, flag it in the output and note that the triage may not transfer as written.\n\n## Output rules\n\n**Complexity filter:** If addressing an issue would require drafting new\nlanguage, restructuring a clause, or inserting substantive new\nprovisions — do not attempt it. Instead write:\n\"Section [X] — route to Legal for review.\"\nOnly include simple, mechanical actions in the Executive Summary\n(strike, delete, replace a word or phrase).\n\n**Clean NDA rule:** If the NDA passes all checks with no flags, the Executive Summary\nshould say only: \"No red flags identified. Route for signature per\nstandard process.\"\n\nDo not produce a lengthy report for a clean NDA.\n\n## Detailed check reference\n\nFor each check below, the bucket (GREEN/YELLOW/RED) is determined by `~/.config/oscar/profile.json`. This skill lists the *categories* to check; it does not hardcode thresholds.\n\n### Mutuality\n\nIs the NDA mutual or one-way? Apply the team's position from `~/.config/oscar/profile.json`. If the playbook doesn't address one-way NDAs for this context, run the one-way questionnaire below and surface the result for a human.\n\n**One-way NDA questionnaire**\n\nWhen the NDA is unilateral (one party discloses, the other only receives), do not immediately flag RED or exit. Ask:\n\n> A one-way NDA is appropriate in some situations. Before flagging this,\n> let me ask a few quick questions:\n>\n> 1. In this relationship, are you the only party disclosing confidential\n>    information? (i.e., the other side shares nothing back)\n> 2. Is this for a limited, specific disclosure — for example, sharing\n>    your technology with a vendor who will work on it, but not sharing\n>    theirs with you?\n> 3. Is this related to M&A, employment, or investment? (If yes, stop —\n>    this skill is for commercial MNDAs only. Route to Legal.)\n\nUse the answers plus the `~/.config/oscar/profile.json` position to decide GREEN/YELLOW/RED. If `~/.config/oscar/profile.json` doesn't take a position on this fact pattern, flag YELLOW and surface the questionnaire answers for the approver.\n\n### Definition of Confidential Information\n\nCheck scope (marked-only vs. everything-disclosed), marking requirements, and oral-disclosure confirmation windows. Apply the team's position from `~/.config/oscar/profile.json`. If the playbook is silent on any of these, ask.\n\n### Carveouts\n\nThe five carveouts typically present in an NDA:\n\n1. Information that is or becomes public (other than through breach)\n2. Information the receiving party already had\n3. Information independently developed without reference to the CI\n4. Information received from a third party without restriction\n5. Information required to be disclosed by law or court order (with notice to discloser where legally permitted)\n\nWhich carveouts the team requires, and how strictly, is a playbook question. Check `~/.config/oscar/profile.json` for the team's position on required carveouts, acceptable variations in wording, and what happens when one is missing.\n\n### Residuals\n\nA residuals clause lets the receiving party use information retained in unaided memory. Whether this is acceptable — and under what conditions (e.g., narrow \"unaided memory\" wording vs. broader scope covering notes or copies) — is a playbook question. Apply `~/.config/oscar/profile.json`. If the playbook doesn't address residuals, ask.\n\n### Term and survival\n\nCheck the initial term length, the post-term survival period for confidentiality obligations, and whether trade secrets are carved out with longer protection. Apply the team's position from `~/.config/oscar/profile.json`. If the playbook doesn't cover one of these, ask.\n\n### Restrictive covenants\n\nCheck for non-solicits (employee, customer), non-competes, exclusivity, and any restriction on who else the receiving party can engage with. Apply `~/.config/oscar/profile.json`. If the playbook is silent, ask — restrictive covenants are jurisdiction-sensitive and the team's posture matters.\n\n### Attorneys' fees\n\nCheck for fee-shifting provisions and whether they are mutual, one-sided, or prevailing-party. Apply `~/.config/oscar/profile.json`.\n\n### Backup and archival carveout\n\nCheck whether the destruction/return clause includes an exception for standard backup and archival retention systems. Apply the team's position from `~/.config/oscar/profile.json` — some teams require this carveout and will push to add it; others accept an NDA without it. If the playbook doesn't address this, ask.\n\n### Governing law\n\nPer `~/.config/oscar/profile.json` `## Playbook` → `Governing law and venue`.\n\n## Counterparty context\n\n**BigCo NDAs:** Fortune 500 counterparties generally won't negotiate NDAs. Calibrate: is the RED flag truly a deal-breaker, or is it \"different from our form\"? If the business relationship matters, the call is whether to accept their paper — escalate that decision, don't make it.\n\n**Startup NDAs:** Will usually take our paper. If their NDA has issues, the fastest path is often \"let's use ours\" rather than redlining theirs.\n\n## Integration: CLM\n\nIf connected:\n- GREEN → offer to create the CLM record in the standard NDA workflow\n- YELLOW → offer to create it with a note attached listing the flagged items\n- RED → do not create a record; the lawyer decides what happens next\n\n## What this skill does NOT do\n\n- It does not negotiate. It sorts.\n- It does not draft an NDA. If the answer is \"use our paper,\" the user pulls our form from [CLM or document system].\n- It does not make the call on YELLOW items. It surfaces them for a human.\n- It does not state a position on any NDA term. Positions live in `~/.config/oscar/profile.json`.\n\n## Closing action\n\nRead `~/.config/oscar/profile.json` → `## NDA triage preferences` → `closing_action`.\n\nIf configured, append the closing action verbatim at the end of every\noutput. Example configurations:\n\n```\nclosing_action: \"Send the full text of this analysis along with a copy\nof the NDA to Legal at legal@[yourcompany].com for final confirmation before\nsigning.\"\n\nclosing_action: \"Submit to [CLM] using the standard NDA workflow.\nLegal will confirm before routing for signature.\"\n\nclosing_action: \"Forward this output and the NDA to your contracts\nmanager.\"\n```\n\nIf `closing_action` is not configured in `~/.config/oscar/profile.json`, append:\n\"Route final NDA through your standard approval process.\"\n\nThe cold-start interview asks: \"When someone finishes an NDA\ntriage, what do you want them to do with the output? I'll add that as\na standing instruction at the end of every review.\"\n\n## Close with the next-steps decision tree\n\nEnd with the next-steps decision tree per CLAUDE.md `## Outputs`. Customize the options to what this skill just produced — the five default branches (draft the X, escalate, get more facts, watch and wait, something else) are a starting point, not a lock-in. The tree is the output; the lawyer picks.\n\n---\nThis knowledge is now available in your context."
+              }
+            ],
+            "isError": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25699,
+    "message_id": "msg_43b1b780-1d11-4087-9eea-29d008fd85a9",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01FReJxp1tz9yYfzSFsTQACZ",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__list_directory",
+            "arguments": {
+              "path": "/root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25700,
+    "message_id": "msg_60a23ea7-71a4-4514-811b-33b53bba5608",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:45",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01FReJxp1tz9yYfzSFsTQACZ",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Access denied - path outside allowed directories: /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02 not in /root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02, /root/.config/oscar/state/commercial/matters/30-ndas-c02-820438, /root/.config/oscar/playbooks"
+              }
+            ],
+            "isError": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25701,
+    "message_id": "msg_6e23bf55-af5e-456b-8baa-a0d4ddb95e61",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:47",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01W3xgX68DGw9ybmL2H1HsiX",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__list_allowed_directories",
+            "arguments": {}
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25702,
+    "message_id": "msg_9216dfaa-31b4-4bda-a662-9bac63fbf1a9",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:47",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01W3xgX68DGw9ybmL2H1HsiX",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Allowed directories:\n/root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02\n/root/.config/oscar/state/commercial/matters/30-ndas-c02-820438\n/root/.config/oscar/playbooks"
+              }
+            ],
+            "structuredContent": {
+              "content": "Allowed directories:\n/root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02\n/root/.config/oscar/state/commercial/matters/30-ndas-c02-820438\n/root/.config/oscar/playbooks"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25703,
+    "message_id": "msg_42584ba8-e1c6-418e-a797-32033916693d",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:49",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01A4nKGkUKMvUAcsWTprjayo",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__list_directory",
+            "arguments": {
+              "path": "/root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25704,
+    "message_id": "msg_cfa1604a-5ee0-4c54-8a86-aabe8fcebe75",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:49",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01A4nKGkUKMvUAcsWTprjayo",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Access denied - path outside allowed directories: /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02 not in /root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02, /root/.config/oscar/state/commercial/matters/30-ndas-c02-820438, /root/.config/oscar/playbooks"
+              }
+            ],
+            "isError": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25705,
+    "message_id": "msg_e4ffe09a-e506-44fd-b3a3-6871f52ab9b1",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:50",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01U3tyQABXSJVxxjVrM9QQPb",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__list_directory",
+            "arguments": {
+              "path": "/root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02/"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25706,
+    "message_id": "msg_3de8cc91-7e7f-4979-a243-500b31eb69fe",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:50",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01U3tyQABXSJVxxjVrM9QQPb",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Access denied - path outside allowed directories: /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02 not in /root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02, /root/.config/oscar/state/commercial/matters/30-ndas-c02-820438, /root/.config/oscar/playbooks"
+              }
+            ],
+            "isError": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25707,
+    "message_id": "gen-1779820610-28xyP1uTnHsxRy9dUUio",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:52",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Let me try the matter state directory:"
+      }
+    ]
+  },
+  {
+    "db_id": 25708,
+    "message_id": "msg_20a9a9b6-5cb0-4d94-bf9f-d7edb213a457",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:52",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01H7PKXcmATGJfQZ66vphCFc",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__list_directory",
+            "arguments": {
+              "path": "/root/.config/oscar/state/commercial/matters/30-ndas-c02-820438"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25709,
+    "message_id": "msg_a8a70ebb-23c8-4618-8063-05d5c192fa74",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:52",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01H7PKXcmATGJfQZ66vphCFc",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "[FILE] history.md\n[FILE] notes.md"
+              }
+            ],
+            "structuredContent": {
+              "content": "[FILE] history.md\n[FILE] notes.md"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25710,
+    "message_id": "gen-1779820612-BZVfDQKUtFSmQ0pUjLVj",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:54",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Let me check the working directory directly:"
+      }
+    ]
+  },
+  {
+    "db_id": 25711,
+    "message_id": "msg_1d3c4ceb-0ba7-434f-8dda-7f6cfbc8c2b6",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:54",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01DworFnKxDRcHNqJjM8ZCGF",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__list_directory",
+            "arguments": {
+              "path": "/root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25712,
+    "message_id": "msg_d184c31f-e71e-4ea9-a62c-b0ac0be3d747",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:54",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01DworFnKxDRcHNqJjM8ZCGF",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Access denied - path outside allowed directories: /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02 not in /root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02, /root/.config/oscar/state/commercial/matters/30-ndas-c02-820438, /root/.config/oscar/playbooks"
+              }
+            ],
+            "isError": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25713,
+    "message_id": "gen-1779820614-XHIeRFtsyWU5TtcsFeuI",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:56",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "The path escaping is causing issues. Let me search for the NDAs:"
+      }
+    ]
+  },
+  {
+    "db_id": 25714,
+    "message_id": "msg_f8c0e7c6-4e8b-4c15-9fd1-b4fa9a6b3ac5",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:56",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01VJCnNxKXe1XudD3UqmKdVd",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__search_files",
+            "arguments": {
+              "path": "/root/Documents",
+              "pattern": "**/*.docx",
+              "excludePatterns": [
+                "**/~$*"
+              ]
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25715,
+    "message_id": "msg_1274e793-5182-4b66-bf4a-edb224295c47",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:56",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01VJCnNxKXe1XudD3UqmKdVd",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Access denied - path outside allowed directories: /root/Documents not in /root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02, /root/.config/oscar/state/commercial/matters/30-ndas-c02-820438, /root/.config/oscar/playbooks"
+              }
+            ],
+            "isError": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25716,
+    "message_id": "msg_83228ded-06f0-4c81-a572-f1a3a1316003",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:36:58",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01EXjuGDpkuDsjx2q9c4rXfE",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__search_files",
+            "arguments": {
+              "path": "/root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02",
+              "pattern": "*.docx",
+              "excludePatterns": [
+                "~$*"
+              ]
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25717,
+    "message_id": "msg_7c9f75e3-badf-45ba-80d6-6b6c9e5eb9a3",
+    "role": "user",
+    "timestamp": "2026-05-26 18:36:58",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01EXjuGDpkuDsjx2q9c4rXfE",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Access denied - path outside allowed directories: /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02 not in /root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02, /root/.config/oscar/state/commercial/matters/30-ndas-c02-820438, /root/.config/oscar/playbooks"
+              }
+            ],
+            "isError": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25718,
+    "message_id": "gen-1779820618-ELIOCSdTaOKxexSmc38V",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:00",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "I need to work around the path escaping. Let me use the unescaped form:"
+      }
+    ]
+  },
+  {
+    "db_id": 25719,
+    "message_id": "msg_ebfe56e1-96c5-4ee7-97d2-ba2c8740b5c2",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:00",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01VvtYxF4Xz4k6BgEuk4oazj",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__list_directory",
+            "arguments": {
+              "path": "/root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25720,
+    "message_id": "msg_7770c6aa-fd69-4423-9df9-e951a1c52ff5",
+    "role": "user",
+    "timestamp": "2026-05-26 18:37:00",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01VvtYxF4Xz4k6BgEuk4oazj",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "[FILE] matter.md\n[FILE] nda-acme-tooling.docx\n[FILE] nda-betacorp-logistics.docx\n[FILE] nda-cypress-saas.docx\n[FILE] nda-delphi-components.docx\n[FILE] nda-emberlake-cobidder.docx\n[FILE] nda-folium-research.docx\n[DIR] outputs"
+              }
+            ],
+            "structuredContent": {
+              "content": "[FILE] matter.md\n[FILE] nda-acme-tooling.docx\n[FILE] nda-betacorp-logistics.docx\n[FILE] nda-cypress-saas.docx\n[FILE] nda-delphi-components.docx\n[FILE] nda-emberlake-cobidder.docx\n[FILE] nda-folium-research.docx\n[DIR] outputs"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25721,
+    "message_id": "gen-1779820620-E3yawQ9Mz8FfIWd636TC",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:02",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Good. I have six NDAs to triage. Let me check the matter context first, then delegate the batch review to subagents."
+      }
+    ]
+  },
+  {
+    "db_id": 25722,
+    "message_id": "msg_a6dc780a-c31c-43c9-ac81-5fa664364fc3",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:02",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01A3bDTWF9A5TrM6T3jcGvEF",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "oscar-fs__read_text_file",
+            "arguments": {
+              "path": "/root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02/matter.md"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "oscar-fs"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25723,
+    "message_id": "msg_9ef76861-e9a9-49cb-86a5-c570af842745",
+    "role": "user",
+    "timestamp": "2026-05-26 18:37:02",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01A3bDTWF9A5TrM6T3jcGvEF",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "---\nslug: 30-ndas-c02-820438\nname: \"S32-820438 Sprint 30 — 10-NDA triage c02\"\narea_id: commercial\nkind: nda\nsubject_type: contract\nsubject_label: \"NDA triage week 21\"\nopened_at: 2026-05-26T18:36:34.130Z\nstatus: active\nprivileged: false\nschema_version: 2\n---\n\n# Matter: S32-820438 Sprint 30 — 10-NDA triage c02\n\n## Key facts\n\n\n\n## Matter-specific overrides\n\n_None yet._\n"
+              }
+            ],
+            "structuredContent": {
+              "content": "---\nslug: 30-ndas-c02-820438\nname: \"S32-820438 Sprint 30 — 10-NDA triage c02\"\narea_id: commercial\nkind: nda\nsubject_type: contract\nsubject_label: \"NDA triage week 21\"\nopened_at: 2026-05-26T18:36:34.130Z\nstatus: active\nprivileged: false\nschema_version: 2\n---\n\n# Matter: S32-820438 Sprint 30 — 10-NDA triage c02\n\n## Key facts\n\n\n\n## Matter-specific overrides\n\n_None yet._\n"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25724,
+    "message_id": "gen-1779820622-GHkLsvrzY9oLkNiKCmpv",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:11",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Perfect. I have six NDAs to triage. Per the batch shape detection (Step C of the discovery protocol), this is a delegate trigger: multiple independent items suitable for parallel review. Let me spawn subagents to triage each NDA, then synthesize the results into a single per-NDA table.\n\n**Batch composition:** 6 NDAs.\n- nda-acme-tooling.docx\n- nda-betacorp-logistics.docx\n- nda-cypress-saas.docx\n- nda-delphi-components.docx\n- nda-emberlake-cobidder.docx\n- nda-folium-research.docx\n\nI'll delegate three to one subagent and three to another (parallelizing the wall-clock time), then load both results and produce the synthesis table."
+      }
+    ]
+  },
+  {
+    "db_id": 25725,
+    "message_id": "msg_2ff2798b-0d96-4bfc-aa76-aa2d3ab45a68",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:11",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01BfMm1ze1czJWYi4T6kGmWa",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "delegate",
+            "arguments": {
+              "async": true,
+              "instructions": "You are triaging inbound NDAs per the playbook and skill embedded in your context. For each NDA in the batch below, produce a GREEN / YELLOW / RED verdict and a one-paragraph summary of the top issues (if any).\n\n**Batch 1: Three NDAs to triage**\n\n1. /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02/nda-acme-tooling.docx\n2. /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02/nda-betacorp-logistics.docx\n3. /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02/nda-cypress-saas.docx\n\n**Procedure:**\n- Read each NDA with redline__read_docx in full mode.\n- Apply the nda-review playbook from context.\n- Classify each: GREEN (route to signature, no legal review), YELLOW (needs attorney eyes on specific items), or RED (stop, escalate to GC).\n- For each YELLOW or RED, name the clause reference and summarize the issue in one sentence.\n- Output as a markdown table: | # | Counterparty | Verdict | Top Issues |\n- Do not attempt redlines or edits — classify only.\n\n**Scope check first:** Before triaging NDA-specific provisions, confirm whether each document does more than confidentiality (standstill, license, non-solicit, exclusivity, IP assignment, ROFR, etc.). If yes, flag it as auto-YELLOW with the note \"Document is labeled NDA but contains [X]; route for attorney review.\"\n\n**Output format:** Markdown table, three rows (one per NDA), ready to paste into the synthesis table. Include the counterparty name inferred from the filename.",
+              "extensions": [
+                "redline"
+              ],
+              "max_turns": 8
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "summon"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25726,
+    "message_id": "msg_58e998a4-9302-4c19-90e4-34a1fc301213",
+    "role": "user",
+    "timestamp": "2026-05-26 18:37:11",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01BfMm1ze1czJWYi4T6kGmWa",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Task 20260526_254 started in background: \"You are triaging inbound NDAs per the...\"\nContinue with other work. When you need the result, use load(source: \"20260526_254\")."
+              }
+            ],
+            "isError": false,
+            "_meta": {
+              "subagent_session_id": "20260526_254"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25728,
+    "message_id": "msg_8b41b422-fce3-47c0-aa04-7fbd2b9ce05e",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:15",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01LNhMTr2drkT7Y6ErrhgccH",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "delegate",
+            "arguments": {
+              "async": true,
+              "instructions": "You are triaging inbound NDAs per the playbook and skill embedded in your context. For each NDA in the batch below, produce a GREEN / YELLOW / RED verdict and a one-paragraph summary of the top issues (if any).\n\n**Batch 2: Three NDAs to triage**\n\n1. /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02/nda-delphi-components.docx\n2. /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02/nda-emberlake-cobidder.docx\n3. /root/Documents/Oscar\\ GC/Commercial/S32-820438\\ Sprint\\ 30\\ —\\ 10-NDA\\ triage\\ c02/nda-folium-research.docx\n\n**Procedure:**\n- Read each NDA with redline__read_docx in full mode.\n- Apply the nda-review playbook from context.\n- Classify each: GREEN (route to signature, no legal review), YELLOW (needs attorney eyes on specific items), or RED (stop, escalate to GC).\n- For each YELLOW or RED, name the clause reference and summarize the issue in one sentence.\n- Output as a markdown table: | # | Counterparty | Verdict | Top Issues |\n- Do not attempt redlines or edits — classify only.\n\n**Scope check first:** Before triaging NDA-specific provisions, confirm whether each document does more than confidentiality (standstill, license, non-solicit, exclusivity, IP assignment, ROFR, etc.). If yes, flag it as auto-YELLOW with the note \"Document is labeled NDA but contains [X]; route for attorney review.\"\n\n**Output format:** Markdown table, three rows (one per NDA), ready to paste into the synthesis table. Include the counterparty name inferred from the filename.",
+              "extensions": [
+                "redline"
+              ],
+              "max_turns": 8
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "summon"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25729,
+    "message_id": "msg_f93217ef-1d56-4f75-ade8-330285cab608",
+    "role": "user",
+    "timestamp": "2026-05-26 18:37:15",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01LNhMTr2drkT7Y6ErrhgccH",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Task 20260526_255 started in background: \"You are triaging inbound NDAs per the...\"\nContinue with other work. When you need the result, use load(source: \"20260526_255\")."
+              }
+            ],
+            "isError": false,
+            "_meta": {
+              "subagent_session_id": "20260526_255"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25746,
+    "message_id": "gen-1779820635-ZYR25TXAdF9lFCqF1vFd",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:25",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Both subagents are running. Let me wait for their results and then synthesize them into a single consolidated table."
+      }
+    ]
+  },
+  {
+    "db_id": 25747,
+    "message_id": "msg_3938f75a-d3ab-43a5-bc4d-f1778bba6497",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:25",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01Qdmtqb5NgHwBiV5SENAPif",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "load",
+            "arguments": {
+              "source": "20260526_254"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "summon"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25748,
+    "message_id": "msg_384f1a70-d1aa-49cd-8630-436d0b9d36f2",
+    "role": "user",
+    "timestamp": "2026-05-26 18:37:25",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01Qdmtqb5NgHwBiV5SENAPif",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "# Background Task Result: 20260526_254\n\n**Task:** You are triaging inbound NDAs per the...\n**Status:** ✓ Completed\n**Duration:** 10s (210 turns)\n\n## Output\n\n## Triage Results\n\nI have reviewed all three NDAs. Here is my analysis:\n\n| # | Counterparty | Verdict | Top Issues |\n|---|---|---|---|\n| 1 | ACME Tooling Solutions Limited | GREEN | Straightforward mutual NDA; standard carve-outs, reasonable 2+3-year term structure, no scope creep or problematic restrictions. |\n| 2 | BetaCorp Logistics PLC | YELLOW | Unilateral structure (BetaCorp is sole Discloser per preamble); Section 5 prohibits disclosure of \"existence or substance of discussions\" without consent—unusually broad for confidentiality; 5+7-year survival term is long; requires attorney review on whether unilateral posture and discussion secrecy obligation are acceptable. |\n| 3 | Cypress Systems, Inc. | RED | **STOP—Escalate to GC.** Section 3: Perpetual term with no expiry and indefinite survival obligations creates open-ended liability; Section 4: Eliminates residual information carve-out (conflicts with industry standard and restricts employee mobility); Section 5: Non-reverse-engineering clause goes beyond confidentiality into IP restriction; Section 6: Injunctive relief without bond or irreparable harm proof is unusually onerous. Document scope exceeds standard NDA. |\n\n**Summary:** ACME NDA is routine and green-lit. BetaCorp requires attorney review on unilateral posture and discussion-secrecy language. Cypress is a red flag—perpetual survival, no residuals carve-out, reverse-engineering restriction, and aggressive injunctive relief language all require GC review before signature consideration."
+              }
+            ],
+            "isError": false,
+            "_meta": {
+              "subagent_session_id": "20260526_254"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25750,
+    "message_id": "msg_f625920c-5f37-43e7-aabc-a804fdf3ac5e",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:29",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01GKcnWxBqa9zDoaxzxwRc2r",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "load",
+            "arguments": {
+              "source": "20260526_255"
+            }
+          }
+        },
+        "_meta": {
+          "goose_extension": "summon"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25751,
+    "message_id": "msg_d31ba814-6c22-4950-b699-2d04e172f842",
+    "role": "user",
+    "timestamp": "2026-05-26 18:37:29",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01GKcnWxBqa9zDoaxzxwRc2r",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "# Background Task Result: 20260526_255\n\n**Task:** You are triaging inbound NDAs per the...\n**Status:** ✓ Completed\n**Duration:** 10s (183 turns)\n\n## Output\n\n## Triage Results\n\nI have completed scope and provision review of all three NDAs. Here is the triage assessment:\n\n| # | Counterparty | Verdict | Top Issues |\n|---|---|---|---|\n| 1 | Delphi Components GmbH | **GREEN** | Pure confidentiality agreement with narrow purpose and reasonable carve-outs. Standard commercial NDA within acceptable parameters. |\n| 2 | Emberlake Holdings Limited | **YELLOW** | Document labeled NDA but contains non-solicitation clause (Clause 5: 12-month employee non-solicitation with no exception for passive recruitment) and public statement restriction (Clause 6) which extend beyond confidentiality; broad definition of Confidential Information (Clause 1) captures publicly-available compiled information with no materiality threshold; route for attorney review of non-compete risk and scope of restrictions. |\n| 3 | Folium Research Institute | **GREEN** | Pure mutual confidentiality agreement with standard carve-outs and reasonable term structure; publication review provision (Clause 5) is appropriate for research collaboration context and balanced. |\n\n---\n\n**Summary of Triage:**\n- **1 GREEN (Delphi)**: Standard bilateral NDA, ready for signature.\n- **1 YELLOW (Emberlake)**: Non-solicitation and publicity restrictions require legal counsel review; scope of Confidential Information definition is broader than typical.\n- **1 GREEN (Folium)**: Well-balanced mutual confidentiality undertaking appropriate for research partnership."
+              }
+            ],
+            "isError": false,
+            "_meta": {
+              "subagent_session_id": "20260526_255"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25752,
+    "message_id": "gen-1779820649-gAiWINKZaj27Fqzil9ZB",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:41",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Excellent. Both subagent batches are complete. Now I'll synthesize all six results into a single consolidated table with the top-line verdicts and actionable next steps.\n\n## NDA Triage Summary — Week 21\n\nI've completed the batch review of all six inbound NDAs. **Results: 3 GREEN, 2 YELLOW, 1 RED.** Below is the consolidated per-NDA triage, followed by action plan for each tier.\n\n| # | Counterparty | Verdict | Top Issues | Action |\n|---|---|---|---|---|\n| 1 | ACME Tooling Solutions Limited | **GREEN** | None. Straightforward mutual NDA; standard carve-outs, reasonable 2+3-year term. | Route to signature via standard process. |\n| 2 | BetaCorp Logistics PLC | **YELLOW** | Unilateral structure (BetaCorp is sole discloser); Section 5 prohibits disclosure of \"existence or substance of discussions\" without consent—unusually broad; 5+7-year survival term is long. | Attorney review required on unilateral posture and discussion-secrecy obligation; likely one round of redlining on term and scope. |\n| 3 | Cypress Systems, Inc. | **RED** | Perpetual term with no expiry (Section 3); no residual information carve-out (Section 4); non-reverse-engineering clause beyond confidentiality (Section 5); injunctive relief without irreparable-harm standard (Section 6). | **STOP—Escalate to GC before engagement.** Do not signal willingness to sign. Core issues: indefinite liability, reverse-engineering restriction, and employee-mobility restraint conflict with standard commercial posture. |\n| 4 | Delphi Components GmbH | **GREEN** | None. Pure bilateral confidentiality agreement; narrow purpose and standard carve-outs. | Route to signature via standard process. |\n| 5 | Emberlake Holdings Limited | **YELLOW** | Document labeled NDA but contains non-solicitation clause (12-month employee non-solicitation, Clause 5) and public-statement restriction (Clause 6)—scope creep beyond confidentiality; Clause 1 defines Confidential Information too broadly (captures public compiled data without threshold). | Attorney review required. Non-solicitation language and publicity restrictions are RED flags if unilateral or unbounded; need narrowing and mutual application. |\n| 6 | Folium Research Institute | **GREEN** | None. Well-balanced mutual confidentiality with standard carve-outs; publication-review provision (Clause 5) is appropriate for research-collaboration context. | Route to signature via standard process. |\n\n---\n\n## Routing by Tier\n\n**GREEN (ACME, Delphi, Folium):** Route directly to signature per your standard CLM/approval workflow. No legal review required.\n\n**YELLOW (BetaCorp, Emberlake):** Flag for your commercial counsel. Both need specific attorney touch:\n- **BetaCorp:** Push to mutual confidentiality or narrow the scope of \"discussions\" restriction to material disclosures; push survival to 3+2 years.\n- **Emberlake:** Strip or narrow non-solicitation clause (does not belong in an NDA); make publicity restriction symmetric if retained; tighten CI definition to exclude publicly-available information compiled without material added value.\n\n**RED (Cypress):** Do not engage further without GC discussion. Cypress's perpetual term + no-residuals language + reverse-engineering restriction signals they are trying to lock in beyond-market terms. This is a negotiation posture call, not a document issue. GC decides whether to use your standard NDA or walk.\n\n---\n\n**Next step:** Route the GREEN NDAs to signature and escalate the BetaCorp and Emberlake YELLOWs to your attorney for specific redline instructions. Separately, brief the GC on Cypress before your BD team signals any further interest."
+      }
+    ]
+  },
+  {
+    "db_id": 25753,
+    "message_id": "bcthm9lq",
+    "role": "user",
+    "timestamp": "2026-05-26 18:37:41",
     "tokens": null,
     "blocks": [
       {
@@ -26,15 +981,143 @@
     ]
   },
   {
-    "db_id": 25476,
-    "message_id": "9ji4xak7",
+    "db_id": 25754,
+    "message_id": "gen-1779820661-6YPu3z71eSHVZNfNqXsV",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:43",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "I need the paths to the new NDAs. Can you drop them in the matter folder, or provide the file paths? Once I have them, I'll run the same batch triage."
+      }
+    ]
+  },
+  {
+    "db_id": 25755,
+    "message_id": "p34n8w2v",
     "role": "user",
-    "timestamp": "2026-05-26 16:16:22",
+    "timestamp": "2026-05-26 18:37:43",
     "tokens": null,
     "blocks": [
       {
         "type": "text",
         "text": "Draft a counterparty email to Cypress's legal team walking through our top-3 issues on their NDA — keep it tight and professional, ready for the relationship lead to send."
+      }
+    ]
+  },
+  {
+    "db_id": 25756,
+    "message_id": "gen-1779820664-auq1j8fLuIKw3eYM8s2T",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:46",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Before I draft, let me re-read the Cypress NDA to ground the specific language and clauses for the email."
+      }
+    ]
+  },
+  {
+    "db_id": 25757,
+    "message_id": "msg_84c7ee40-e658-41ec-b2ad-5e3739570b41",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:46",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolRequest",
+        "id": "toolu_bdrk_01AsAVkPDQNLGqvmhkiuauyc",
+        "toolCall": {
+          "status": "success",
+          "value": {
+            "name": "redline__read_docx",
+            "arguments": {
+              "file_path": "/root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02/nda-cypress-saas.docx",
+              "mode": "full"
+            }
+          }
+        },
+        "_meta": {
+          "ui": {
+            "resourceUri": "ui://adeu/markdown-ui"
+          },
+          "fastmcp": {
+            "tags": []
+          },
+          "goose_extension": "redline"
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25758,
+    "message_id": "msg_fbbcc9db-6b02-4a54-9141-7bc71fd8ef7b",
+    "role": "user",
+    "timestamp": "2026-05-26 18:37:46",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "toolResponse",
+        "id": "toolu_bdrk_01AsAVkPDQNLGqvmhkiuauyc",
+        "toolResult": {
+          "status": "success",
+          "value": {
+            "content": [
+              {
+                "type": "text",
+                "text": "> **File Path:** `/root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02/nda-cypress-saas.docx`\n\n# MUTUAL NON-DISCLOSURE AGREEMENT\n\n## **DATED: ___ 2026**\n\n## **PARTIES**\n\n(1) Stanford Industrial Supply Co.\n\n(2) Cypress Systems, Inc. (a Delaware corporation)\n\n## **BACKGROUND**\n\nThe parties wish to discuss a potential business arrangement relating to Cypress's potential procurement of inventory management SaaS by Stanford (the \"Purpose\"). In connection with those discussions each party may disclose Confidential Information to the other.\n\n## 1. Confidential Information\n\n\"Confidential Information\" means all non-public information of either party, including without limitation any business, financial, technical, customer, supplier, pricing, strategic, personnel, regulatory, or operational information, in any form, whether disclosed before or after the date of this Agreement.\n\n## 2. Obligations\n\nEach party shall use the other party's Confidential Information solely for the Purpose, shall not disclose it to any third party other than personnel and advisers who need to know for the Purpose, and shall protect it with at least the same degree of care as it uses for its own most sensitive information.\n\n## 3. Term and Survival\n\nThis Agreement is **perpetual** and continues in force indefinitely. There is no fixed expiry. The obligations of confidence survive indefinitely after the cessation of any discussions between the parties.\n\n## 4. Residuals\n\nThere is no carve-out for residual information retained in the unaided memory of personnel. All Confidential Information must be returned or destroyed on request.\n\n## 5. No Reverse Engineering\n\nRecipient shall not reverse engineer, decompile, or attempt to derive the source code or underlying algorithms of any software or process embodied in the Confidential Information.\n\n## 6. Equitable Relief\n\nEach party acknowledges that monetary damages are an inadequate remedy and the disclosing party shall be entitled to injunctive relief without bond or proof of irreparable harm.\n\n## Governing Law and Jurisdiction\n\nThis Agreement is governed by the laws of the State of California, USA and the parties submit to the exclusive jurisdiction of the courts of that jurisdiction.\n\n## Miscellaneous\n\nNo Party may assign without the other's prior written consent. This Agreement may be executed in counterparts including by electronic signature. The Agreement contains the entire understanding between the parties in relation to its subject matter and supersedes any prior arrangement or representation."
+              }
+            ],
+            "structuredContent": {
+              "markdown": "# MUTUAL NON-DISCLOSURE AGREEMENT\n\n## **DATED: ___ 2026**\n\n## **PARTIES**\n\n(1) Stanford Industrial Supply Co.\n\n(2) Cypress Systems, Inc. (a Delaware corporation)\n\n## **BACKGROUND**\n\nThe parties wish to discuss a potential business arrangement relating to Cypress's potential procurement of inventory management SaaS by Stanford (the \"Purpose\"). In connection with those discussions each party may disclose Confidential Information to the other.\n\n## 1. Confidential Information\n\n\"Confidential Information\" means all non-public information of either party, including without limitation any business, financial, technical, customer, supplier, pricing, strategic, personnel, regulatory, or operational information, in any form, whether disclosed before or after the date of this Agreement.\n\n## 2. Obligations\n\nEach party shall use the other party's Confidential Information solely for the Purpose, shall not disclose it to any third party other than personnel and advisers who need to know for the Purpose, and shall protect it with at least the same degree of care as it uses for its own most sensitive information.\n\n## 3. Term and Survival\n\nThis Agreement is **perpetual** and continues in force indefinitely. There is no fixed expiry. The obligations of confidence survive indefinitely after the cessation of any discussions between the parties.\n\n## 4. Residuals\n\nThere is no carve-out for residual information retained in the unaided memory of personnel. All Confidential Information must be returned or destroyed on request.\n\n## 5. No Reverse Engineering\n\nRecipient shall not reverse engineer, decompile, or attempt to derive the source code or underlying algorithms of any software or process embodied in the Confidential Information.\n\n## 6. Equitable Relief\n\nEach party acknowledges that monetary damages are an inadequate remedy and the disclosing party shall be entitled to injunctive relief without bond or proof of irreparable harm.\n\n## Governing Law and Jurisdiction\n\nThis Agreement is governed by the laws of the State of California, USA and the parties submit to the exclusive jurisdiction of the courts of that jurisdiction.\n\n## Miscellaneous\n\nNo Party may assign without the other's prior written consent. This Agreement may be executed in counterparts including by electronic signature. The Agreement contains the entire understanding between the parties in relation to its subject matter and supersedes any prior arrangement or representation.",
+              "title": "nda-cypress-saas.docx",
+              "file_path": "/root/Documents/Oscar GC/Commercial/S32-820438 Sprint 30 — 10-NDA triage c02/nda-cypress-saas.docx"
+            },
+            "isError": false,
+            "_meta": {
+              "__goose_tool_update_meta": {
+                "mcpApp": {
+                  "toolName": "redline__read_docx",
+                  "extensionName": "redline",
+                  "resourceUri": "ui://adeu/markdown-ui",
+                  "toolMeta": {
+                    "ui": {
+                      "resourceUri": "ui://adeu/markdown-ui"
+                    },
+                    "fastmcp": {
+                      "tags": []
+                    },
+                    "goose_extension": "redline"
+                  },
+                  "resourceResult": {
+                    "contents": [
+                      {
+                        "uri": "ui://adeu/markdown-ui",
+                        "mimeType": "text/html;profile=mcp-app",
+                        "text": "<!-- FILE: src/adeu/templates/markdown_ui.html -->\n<!DOCTYPE html>\n<html>\n\n<head>\n    <meta charset=\"utf-8\">\n    <title>Adeu Markdown UI</title>\n    <meta name=\"color-scheme\" content=\"light dark\">\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link\n        href=\"https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Lora:ital,wght@0,600;1,600&display=swap\"\n        rel=\"stylesheet\">\n    <style>\n        :root {\n            --brand-sand: #e8c0a1;\n            --brand-sand-light: #f2d9c7;\n            --brand-sand-dark: #d4a882;\n            --brand-mint: #e6f3f0;\n            --brand-mint-dark: #c9e4de;\n            --brand-navy: #1a2a2c;\n            --brand-navy-light: #2a3a3c;\n            --brand-mauve: #dacad2;\n            --neutral-50: #fafafa;\n            --neutral-100: #f5f5f5;\n            --neutral-200: #e5e5e5;\n            --neutral-300: #d9d9d9;\n            --neutral-600: #555969;\n            --neutral-800: #1e2028;\n            --neutral-900: #171717;\n            --font-lora: 'Lora', Georgia, serif;\n            --font-jost: 'Jost', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;\n            --bg-body: var(--neutral-50);\n            --bg-card: #ffffff;\n            --border-card: var(--neutral-200);\n            --text-main: var(--neutral-600);\n            --text-heading: var(--brand-navy);\n            --bg-blockquote: rgba(232, 192, 161, 0.15);\n        }\n\n        @media (prefers-color-scheme: dark) {\n            :root {\n                --bg-body: var(--neutral-900);\n                --bg-card: var(--brand-navy);\n                --border-card: var(--brand-navy-light);\n                --text-main: rgba(255, 255, 255, 0.85);\n                --text-heading: #ffffff;\n                --bg-blockquote: rgba(232, 192, 161, 0.1);\n                --neutral-100: var(--brand-navy-light);\n            }\n        }\n\n        html,\n        body {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n            background-color: transparent;\n        }\n\n        body {\n            font-family: var(--font-jost);\n            color: var(--text-main);\n            line-height: 1.6;\n            -webkit-font-smoothing: antialiased;\n            padding: 16px;\n        }\n\n        .adeu-card {\n            background-color: var(--bg-card);\n            border: 1px solid var(--border-card);\n            border-radius: 12px;\n            overflow: hidden;\n            display: flex;\n            flex-direction: column;\n        }\n\n        .navbar {\n            flex-shrink: 0;\n            background-color: var(--bg-card);\n            padding: 16px 32px;\n            border-bottom: 1px solid var(--border-card);\n            display: flex;\n            align-items: center;\n            justify-content: space-between;\n            position: relative;\n        }\n\n        .logo-container {\n            display: flex;\n            align-items: center;\n            flex: 1;\n        }\n\n        .nav-title {\n            position: absolute;\n            left: 50%;\n            transform: translateX(-50%);\n            font-family: var(--font-lora);\n            font-weight: 600;\n            color: var(--text-heading);\n            font-size: 1.1rem;\n            white-space: nowrap;\n            overflow: hidden;\n            text-overflow: ellipsis;\n            max-width: 40%;\n            text-align: center;\n        }\n\n        .nav-actions {\n            display: flex;\n            align-items: center;\n            justify-content: flex-end;\n            flex: 1;\n        }\n\n        #copy-btn {\n            display: none;\n            align-items: center;\n            gap: 6px;\n            background: transparent;\n            border: none;\n            color: var(--text-main);\n            font-family: var(--font-jost);\n            font-size: 0.85rem;\n            font-weight: 500;\n            cursor: pointer;\n            padding: 8px;\n            border-radius: 6px;\n            transition: all 0.2s ease;\n        }\n\n        #copy-btn:hover {\n            color: var(--text-heading);\n            background: var(--neutral-100);\n        }\n\n        #open-btn {\n            display: none;\n            align-items: center;\n            gap: 6px;\n            background: transparent;\n            border: none;\n            color: var(--text-main);\n            font-family: var(--font-jost);\n            font-size: 0.85rem;\n            font-weight: 500;\n            cursor: pointer;\n            padding: 8px;\n            border-radius: 6px;\n            transition: all 0.2s ease;\n        }\n\n        #open-btn:hover {\n            color: var(--text-heading);\n            background: var(--neutral-100);\n        }\n\n        @media (prefers-color-scheme: dark) {\n            #copy-btn:hover {\n                background: var(--brand-navy-light);\n            }\n            #open-btn:hover {\n                background: var(--brand-navy-light);\n            }\n        }\n\n        .logo-container svg {\n            max-width: 80px;\n            height: auto;\n        }\n\n        .logo-container svg path,\n        .logo-container svg rect,\n        .logo-container svg polygon,\n        .logo-container svg circle {\n            transition: fill 0.2s ease;\n        }\n\n        @media (prefers-color-scheme: dark) {\n\n            .logo-container svg path,\n            .logo-container svg rect,\n            .logo-container svg polygon,\n            .logo-container svg circle,\n            .logo-container svg {\n                fill: #ffffff !important;\n            }\n        }\n\n        .content-wrapper {\n            position: relative;\n        }\n\n        .content-wrapper::-webkit-scrollbar {\n            width: 6px;\n        }\n\n        .content-wrapper::-webkit-scrollbar-track {\n            background: transparent;\n        }\n\n        .content-wrapper::-webkit-scrollbar-thumb {\n            background-color: var(--border-card);\n            border-radius: 4px;\n        }\n\n        #app {\n            padding: 32px;\n            display: flow-root;\n        }\n\n        .fade-overlay {\n            position: absolute;\n            bottom: 0;\n            left: 0;\n            right: 0;\n            height: 80px;\n            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--bg-card));\n            pointer-events: none;\n            display: none;\n        }\n\n        @media (prefers-color-scheme: dark) {\n            .fade-overlay {\n                background: linear-gradient(to bottom, rgba(26, 42, 44, 0), var(--bg-card));\n            }\n        }\n\n        .toggle-container {\n            flex-shrink: 0;\n            display: none;\n            justify-content: center;\n            align-items: center;\n            padding: 12px;\n            border-top: 1px solid var(--border-card);\n            background-color: var(--bg-card);\n        }\n\n        #toggle-btn {\n            background: transparent;\n            border: none;\n            color: var(--brand-sand-dark);\n            font-family: var(--font-jost);\n            font-weight: 600;\n            font-size: 0.95rem;\n            cursor: pointer;\n            display: flex;\n            align-items: center;\n            gap: 6px;\n            padding: 8px 16px;\n            border-radius: 6px;\n            transition: all 0.2s ease;\n        }\n\n        #toggle-btn:hover {\n            color: var(--text-heading);\n            background: var(--neutral-100);\n        }\n\n        @media (prefers-color-scheme: dark) {\n            #toggle-btn:hover {\n                background: var(--brand-navy-light);\n            }\n        }\n\n        #toggle-icon {\n            transition: transform 0.3s ease;\n        }\n\n        h1,\n        h2,\n        h3,\n        h4 {\n            font-family: var(--font-lora);\n            color: var(--text-heading);\n            font-weight: 600;\n            letter-spacing: -0.02em;\n            margin-top: 1.5em;\n            margin-bottom: 0.5em;\n        }\n\n        h1 {\n            font-size: 2.25rem;\n            border-bottom: 1px solid var(--border-card);\n            padding-bottom: 0.3em;\n            margin-top: 0;\n        }\n\n        h2 {\n            font-size: 1.75rem;\n        }\n\n        h3 {\n            font-size: 1.25rem;\n        }\n\n        a {\n            color: var(--brand-sand-dark);\n            text-decoration: none;\n            border-bottom: 1px solid transparent;\n            transition: border 0.2s ease;\n        }\n\n        a:hover {\n            border-bottom-color: var(--brand-sand-dark);\n        }\n\n        strong {\n            font-weight: 600;\n            color: var(--text-heading);\n        }\n\n        ul,\n        ol {\n            padding-left: 1.5rem;\n            margin-bottom: 1rem;\n        }\n\n        li {\n            margin-bottom: 0.5rem;\n        }\n\n        blockquote {\n            border-left: 4px solid var(--brand-sand);\n            padding: 12px 20px;\n            margin: 24px 0;\n            color: var(--text-main);\n            background: var(--bg-blockquote);\n            border-radius: 0 8px 8px 0;\n            font-style: italic;\n        }\n\n        code {\n            font-family: ui-monospace, SFMono-Regular, Consolas, \"Liberation Mono\", Menlo, monospace;\n            font-size: 0.85em;\n            background: var(--neutral-100);\n            color: var(--brand-sand-dark);\n            padding: 0.2em 0.4em;\n            border-radius: 4px;\n        }\n\n        pre code {\n            display: block;\n            padding: 16px;\n            background: var(--neutral-900);\n            color: #e5e5e5;\n            border-radius: 8px;\n            overflow-x: auto;\n        }\n\n        .skeleton {\n            background: linear-gradient(90deg, var(--neutral-100) 25%, var(--border-card) 50%, var(--neutral-100) 75%);\n            background-size: 200% 100%;\n            animation: skeleton 1.5s ease-in-out infinite;\n            border-radius: 4px;\n        }\n\n        @keyframes skeleton {\n            0% {\n                background-position: 200% 0;\n            }\n\n            100% {\n                background-position: -200% 0;\n            }\n        }\n\n        .alert {\n            padding: 16px;\n            border-radius: 8px;\n            margin-bottom: 20px;\n            display: flex;\n            flex-direction: column;\n            gap: 8px;\n            background-color: #fef2f2;\n            border: 1px solid #fecaca;\n            color: #991b1b;\n        }\n\n        @media (prefers-color-scheme: dark) {\n            .alert {\n                background-color: rgba(127, 29, 29, 0.2);\n                border-color: rgba(248, 113, 113, 0.3);\n                color: #fca5a5;\n            }\n        }\n\n        .alert-title {\n            font-weight: 600;\n            font-size: 1.1em;\n            margin: 0;\n            display: flex;\n            align-items: center;\n            gap: 8px;\n            font-family: var(--font-lora);\n        }\n\n        .alert-body {\n            margin: 0;\n            font-size: 0.95em;\n        }\n\n        .alert-details {\n            background: rgba(0, 0, 0, 0.05);\n            padding: 12px;\n            border-radius: 6px;\n            font-family: ui-monospace, Consolas, monospace;\n            font-size: 0.85em;\n            white-space: pre-wrap;\n            word-break: break-all;\n            margin-top: 8px;\n            border: 1px solid rgba(0, 0, 0, 0.1);\n        }\n    </style>\n    <script id=\"marked-script\">/**\n * marked v15.0.12 - a markdown parser\n * Copyright (c) 2011-2025, Christopher Jeffrey. (MIT Licensed)\n * https://github.com/markedjs/marked\n */\n\n/**\n * DO NOT EDIT THIS FILE\n * The code in this file is generated from files in ./src/\n */\n(function(g,f){if(typeof exports==\"object\"&&typeof module<\"u\"){module.exports=f()}else if(\"function\"==typeof define && define.amd){define(\"marked\",f)}else {g[\"marked\"]=f()}}(typeof globalThis < \"u\" ? globalThis : typeof self < \"u\" ? self : this,function(){var exports={};var __exports=exports;var module={exports};\n\"use strict\";var H=Object.defineProperty;var be=Object.getOwnPropertyDescriptor;var Te=Object.getOwnPropertyNames;var we=Object.prototype.hasOwnProperty;var ye=(l,e)=>{for(var t in e)H(l,t,{get:e[t],enumerable:!0})},Re=(l,e,t,n)=>{if(e&&typeof e==\"object\"||typeof e==\"function\")for(let s of Te(e))!we.call(l,s)&&s!==t&&H(l,s,{get:()=>e[s],enumerable:!(n=be(e,s))||n.enumerable});return l};var Se=l=>Re(H({},\"__esModule\",{value:!0}),l);var kt={};ye(kt,{Hooks:()=>L,Lexer:()=>x,Marked:()=>E,Parser:()=>b,Renderer:()=>$,TextRenderer:()=>_,Tokenizer:()=>S,defaults:()=>w,getDefaults:()=>z,lexer:()=>ht,marked:()=>k,options:()=>it,parse:()=>pt,parseInline:()=>ct,parser:()=>ut,setOptions:()=>ot,use:()=>lt,walkTokens:()=>at});module.exports=Se(kt);function z(){return{async:!1,breaks:!1,extensions:null,gfm:!0,hooks:null,pedantic:!1,renderer:null,silent:!1,tokenizer:null,walkTokens:null}}var w=z();function N(l){w=l}var I={exec:()=>null};function h(l,e=\"\"){let t=typeof l==\"string\"?l:l.source,n={replace:(s,i)=>{let r=typeof i==\"string\"?i:i.source;return r=r.replace(m.caret,\"$1\"),t=t.replace(s,r),n},getRegex:()=>new RegExp(t,e)};return n}var m={codeRemoveIndent:/^(?: {1,4}| {0,3}\\t)/gm,outputLinkReplace:/\\\\([\\[\\]])/g,indentCodeCompensation:/^(\\s+)(?:```)/,beginningSpace:/^\\s+/,endingHash:/#$/,startingSpaceChar:/^ /,endingSpaceChar:/ $/,nonSpaceChar:/[^ ]/,newLineCharGlobal:/\\n/g,tabCharGlobal:/\\t/g,multipleSpaceGlobal:/\\s+/g,blankLine:/^[ \\t]*$/,doubleBlankLine:/\\n[ \\t]*\\n[ \\t]*$/,blockquoteStart:/^ {0,3}>/,blockquoteSetextReplace:/\\n {0,3}((?:=+|-+) *)(?=\\n|$)/g,blockquoteSetextReplace2:/^ {0,3}>[ \\t]?/gm,listReplaceTabs:/^\\t+/,listReplaceNesting:/^ {1,4}(?=( {4})*[^ ])/g,listIsTask:/^\\[[ xX]\\] /,listReplaceTask:/^\\[[ xX]\\] +/,anyLine:/\\n.*\\n/,hrefBrackets:/^<(.*)>$/,tableDelimiter:/[:|]/,tableAlignChars:/^\\||\\| *$/g,tableRowBlankLine:/\\n[ \\t]*$/,tableAlignRight:/^ *-+: *$/,tableAlignCenter:/^ *:-+: *$/,tableAlignLeft:/^ *:-+ *$/,startATag:/^<a /i,endATag:/^<\\/a>/i,startPreScriptTag:/^<(pre|code|kbd|script)(\\s|>)/i,endPreScriptTag:/^<\\/(pre|code|kbd|script)(\\s|>)/i,startAngleBracket:/^</,endAngleBracket:/>$/,pedanticHrefTitle:/^([^'\"]*[^\\s])\\s+(['\"])(.*)\\2/,unicodeAlphaNumeric:/[\\p{L}\\p{N}]/u,escapeTest:/[&<>\"']/,escapeReplace:/[&<>\"']/g,escapeTestNoEncode:/[<>\"']|&(?!(#\\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\\w+);)/,escapeReplaceNoEncode:/[<>\"']|&(?!(#\\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\\w+);)/g,unescapeTest:/&(#(?:\\d+)|(?:#x[0-9A-Fa-f]+)|(?:\\w+));?/ig,caret:/(^|[^\\[])\\^/g,percentDecode:/%25/g,findPipe:/\\|/g,splitPipe:/ \\|/,slashPipe:/\\\\\\|/g,carriageReturn:/\\r\\n|\\r/g,spaceLine:/^ +$/gm,notSpaceStart:/^\\S*/,endingNewline:/\\n$/,listItemRegex:l=>new RegExp(`^( {0,3}${l})((?:[\t ][^\\\\n]*)?(?:\\\\n|$))`),nextBulletRegex:l=>new RegExp(`^ {0,${Math.min(3,l-1)}}(?:[*+-]|\\\\d{1,9}[.)])((?:[ \t][^\\\\n]*)?(?:\\\\n|$))`),hrRegex:l=>new RegExp(`^ {0,${Math.min(3,l-1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\\\* *){3,})(?:\\\\n+|$)`),fencesBeginRegex:l=>new RegExp(`^ {0,${Math.min(3,l-1)}}(?:\\`\\`\\`|~~~)`),headingBeginRegex:l=>new RegExp(`^ {0,${Math.min(3,l-1)}}#`),htmlBeginRegex:l=>new RegExp(`^ {0,${Math.min(3,l-1)}}<(?:[a-z].*>|!--)`,\"i\")},$e=/^(?:[ \\t]*(?:\\n|$))+/,_e=/^((?: {4}| {0,3}\\t)[^\\n]+(?:\\n(?:[ \\t]*(?:\\n|$))*)?)+/,Le=/^ {0,3}(`{3,}(?=[^`\\n]*(?:\\n|$))|~{3,})([^\\n]*)(?:\\n|$)(?:|([\\s\\S]*?)(?:\\n|$))(?: {0,3}\\1[~`]* *(?=\\n|$)|$)/,O=/^ {0,3}((?:-[\\t ]*){3,}|(?:_[ \\t]*){3,}|(?:\\*[ \\t]*){3,})(?:\\n+|$)/,ze=/^ {0,3}(#{1,6})(?=\\s|$)(.*)(?:\\n+|$)/,F=/(?:[*+-]|\\d{1,9}[.)])/,ie=/^(?!bull |blockCode|fences|blockquote|heading|html|table)((?:.|\\n(?!\\s*?\\n|bull |blockCode|fences|blockquote|heading|html|table))+?)\\n {0,3}(=+|-+) *(?:\\n+|$)/,oe=h(ie).replace(/bull/g,F).replace(/blockCode/g,/(?: {4}| {0,3}\\t)/).replace(/fences/g,/ {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g,/ {0,3}>/).replace(/heading/g,/ {0,3}#{1,6}/).replace(/html/g,/ {0,3}<[^\\n>]+>\\n/).replace(/\\|table/g,\"\").getRegex(),Me=h(ie).replace(/bull/g,F).replace(/blockCode/g,/(?: {4}| {0,3}\\t)/).replace(/fences/g,/ {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g,/ {0,3}>/).replace(/heading/g,/ {0,3}#{1,6}/).replace(/html/g,/ {0,3}<[^\\n>]+>\\n/).replace(/table/g,/ {0,3}\\|?(?:[:\\- ]*\\|)+[\\:\\- ]*\\n/).getRegex(),Q=/^([^\\n]+(?:\\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\\n)[^\\n]+)*)/,Pe=/^[^\\n]+/,U=/(?!\\s*\\])(?:\\\\.|[^\\[\\]\\\\])+/,Ae=h(/^ {0,3}\\[(label)\\]: *(?:\\n[ \\t]*)?([^<\\s][^\\s]*|<.*?>)(?:(?: +(?:\\n[ \\t]*)?| *\\n[ \\t]*)(title))? *(?:\\n+|$)/).replace(\"label\",U).replace(\"title\",/(?:\"(?:\\\\\"?|[^\"\\\\])*\"|'[^'\\n]*(?:\\n[^'\\n]+)*\\n?'|\\([^()]*\\))/).getRegex(),Ee=h(/^( {0,3}bull)([ \\t][^\\n]+?)?(?:\\n|$)/).replace(/bull/g,F).getRegex(),v=\"address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul\",K=/<!--(?:-?>|[\\s\\S]*?(?:-->|$))/,Ce=h(\"^ {0,3}(?:<(script|pre|style|textarea)[\\\\s>][\\\\s\\\\S]*?(?:</\\\\1>[^\\\\n]*\\\\n+|$)|comment[^\\\\n]*(\\\\n+|$)|<\\\\?[\\\\s\\\\S]*?(?:\\\\?>\\\\n*|$)|<![A-Z][\\\\s\\\\S]*?(?:>\\\\n*|$)|<!\\\\[CDATA\\\\[[\\\\s\\\\S]*?(?:\\\\]\\\\]>\\\\n*|$)|</?(tag)(?: +|\\\\n|/?>)[\\\\s\\\\S]*?(?:(?:\\\\n[ \t]*)+\\\\n|$)|<(?!script|pre|style|textarea)([a-z][\\\\w-]*)(?:attribute)*? */?>(?=[ \\\\t]*(?:\\\\n|$))[\\\\s\\\\S]*?(?:(?:\\\\n[ \t]*)+\\\\n|$)|</(?!script|pre|style|textarea)[a-z][\\\\w-]*\\\\s*>(?=[ \\\\t]*(?:\\\\n|$))[\\\\s\\\\S]*?(?:(?:\\\\n[ \t]*)+\\\\n|$))\",\"i\").replace(\"comment\",K).replace(\"tag\",v).replace(\"attribute\",/ +[a-zA-Z:_][\\w.:-]*(?: *= *\"[^\"\\n]*\"| *= *'[^'\\n]*'| *= *[^\\s\"'=<>`]+)?/).getRegex(),le=h(Q).replace(\"hr\",O).replace(\"heading\",\" {0,3}#{1,6}(?:\\\\s|$)\").replace(\"|lheading\",\"\").replace(\"|table\",\"\").replace(\"blockquote\",\" {0,3}>\").replace(\"fences\",\" {0,3}(?:`{3,}(?=[^`\\\\n]*\\\\n)|~{3,})[^\\\\n]*\\\\n\").replace(\"list\",\" {0,3}(?:[*+-]|1[.)]) \").replace(\"html\",\"</?(?:tag)(?: +|\\\\n|/?>)|<(?:script|pre|style|textarea|!--)\").replace(\"tag\",v).getRegex(),Ie=h(/^( {0,3}> ?(paragraph|[^\\n]*)(?:\\n|$))+/).replace(\"paragraph\",le).getRegex(),X={blockquote:Ie,code:_e,def:Ae,fences:Le,heading:ze,hr:O,html:Ce,lheading:oe,list:Ee,newline:$e,paragraph:le,table:I,text:Pe},re=h(\"^ *([^\\\\n ].*)\\\\n {0,3}((?:\\\\| *)?:?-+:? *(?:\\\\| *:?-+:? *)*(?:\\\\| *)?)(?:\\\\n((?:(?! *\\\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\\\n|$))*)\\\\n*|$)\").replace(\"hr\",O).replace(\"heading\",\" {0,3}#{1,6}(?:\\\\s|$)\").replace(\"blockquote\",\" {0,3}>\").replace(\"code\",\"(?: {4}| {0,3}\t)[^\\\\n]\").replace(\"fences\",\" {0,3}(?:`{3,}(?=[^`\\\\n]*\\\\n)|~{3,})[^\\\\n]*\\\\n\").replace(\"list\",\" {0,3}(?:[*+-]|1[.)]) \").replace(\"html\",\"</?(?:tag)(?: +|\\\\n|/?>)|<(?:script|pre|style|textarea|!--)\").replace(\"tag\",v).getRegex(),Oe={...X,lheading:Me,table:re,paragraph:h(Q).replace(\"hr\",O).replace(\"heading\",\" {0,3}#{1,6}(?:\\\\s|$)\").replace(\"|lheading\",\"\").replace(\"table\",re).replace(\"blockquote\",\" {0,3}>\").replace(\"fences\",\" {0,3}(?:`{3,}(?=[^`\\\\n]*\\\\n)|~{3,})[^\\\\n]*\\\\n\").replace(\"list\",\" {0,3}(?:[*+-]|1[.)]) \").replace(\"html\",\"</?(?:tag)(?: +|\\\\n|/?>)|<(?:script|pre|style|textarea|!--)\").replace(\"tag\",v).getRegex()},Be={...X,html:h(`^ *(?:comment *(?:\\\\n|\\\\s*$)|<(tag)[\\\\s\\\\S]+?</\\\\1> *(?:\\\\n{2,}|\\\\s*$)|<tag(?:\"[^\"]*\"|'[^']*'|\\\\s[^'\"/>\\\\s]*)*?/?> *(?:\\\\n{2,}|\\\\s*$))`).replace(\"comment\",K).replace(/tag/g,\"(?!(?:a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)\\\\b)\\\\w+(?!:|[^\\\\w\\\\s@]*@)\\\\b\").getRegex(),def:/^ *\\[([^\\]]+)\\]: *<?([^\\s>]+)>?(?: +([\"(][^\\n]+[\")]))? *(?:\\n+|$)/,heading:/^(#{1,6})(.*)(?:\\n+|$)/,fences:I,lheading:/^(.+?)\\n {0,3}(=+|-+) *(?:\\n+|$)/,paragraph:h(Q).replace(\"hr\",O).replace(\"heading\",` *#{1,6} *[^\n]`).replace(\"lheading\",oe).replace(\"|table\",\"\").replace(\"blockquote\",\" {0,3}>\").replace(\"|fences\",\"\").replace(\"|list\",\"\").replace(\"|html\",\"\").replace(\"|tag\",\"\").getRegex()},qe=/^\\\\([!\"#$%&'()*+,\\-./:;<=>?@\\[\\]\\\\^_`{|}~])/,ve=/^(`+)([^`]|[^`][\\s\\S]*?[^`])\\1(?!`)/,ae=/^( {2,}|\\\\)\\n(?!\\s*$)/,De=/^(`+|[^`])(?:(?= {2,}\\n)|[\\s\\S]*?(?:(?=[\\\\<!\\[`*_]|\\b_|$)|[^ ](?= {2,}\\n)))/,D=/[\\p{P}\\p{S}]/u,W=/[\\s\\p{P}\\p{S}]/u,ce=/[^\\s\\p{P}\\p{S}]/u,Ze=h(/^((?![*_])punctSpace)/,\"u\").replace(/punctSpace/g,W).getRegex(),pe=/(?!~)[\\p{P}\\p{S}]/u,Ge=/(?!~)[\\s\\p{P}\\p{S}]/u,He=/(?:[^\\s\\p{P}\\p{S}]|~)/u,Ne=/\\[[^[\\]]*?\\]\\((?:\\\\.|[^\\\\\\(\\)]|\\((?:\\\\.|[^\\\\\\(\\)])*\\))*\\)|`[^`]*?`|<[^<>]*?>/g,ue=/^(?:\\*+(?:((?!\\*)punct)|[^\\s*]))|^_+(?:((?!_)punct)|([^\\s_]))/,je=h(ue,\"u\").replace(/punct/g,D).getRegex(),Fe=h(ue,\"u\").replace(/punct/g,pe).getRegex(),he=\"^[^_*]*?__[^_*]*?\\\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\\\*)punct(\\\\*+)(?=[\\\\s]|$)|notPunctSpace(\\\\*+)(?!\\\\*)(?=punctSpace|$)|(?!\\\\*)punctSpace(\\\\*+)(?=notPunctSpace)|[\\\\s](\\\\*+)(?!\\\\*)(?=punct)|(?!\\\\*)punct(\\\\*+)(?!\\\\*)(?=punct)|notPunctSpace(\\\\*+)(?=notPunctSpace)\",Qe=h(he,\"gu\").replace(/notPunctSpace/g,ce).replace(/punctSpace/g,W).replace(/punct/g,D).getRegex(),Ue=h(he,\"gu\").replace(/notPunctSpace/g,He).replace(/punctSpace/g,Ge).replace(/punct/g,pe).getRegex(),Ke=h(\"^[^_*]*?\\\\*\\\\*[^_*]*?_[^_*]*?(?=\\\\*\\\\*)|[^_]+(?=[^_])|(?!_)punct(_+)(?=[\\\\s]|$)|notPunctSpace(_+)(?!_)(?=punctSpace|$)|(?!_)punctSpace(_+)(?=notPunctSpace)|[\\\\s](_+)(?!_)(?=punct)|(?!_)punct(_+)(?!_)(?=punct)\",\"gu\").replace(/notPunctSpace/g,ce).replace(/punctSpace/g,W).replace(/punct/g,D).getRegex(),Xe=h(/\\\\(punct)/,\"gu\").replace(/punct/g,D).getRegex(),We=h(/^<(scheme:[^\\s\\x00-\\x1f<>]*|email)>/).replace(\"scheme\",/[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace(\"email\",/[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex(),Je=h(K).replace(\"(?:-->|$)\",\"-->\").getRegex(),Ve=h(\"^comment|^</[a-zA-Z][\\\\w:-]*\\\\s*>|^<[a-zA-Z][\\\\w-]*(?:attribute)*?\\\\s*/?>|^<\\\\?[\\\\s\\\\S]*?\\\\?>|^<![a-zA-Z]+\\\\s[\\\\s\\\\S]*?>|^<!\\\\[CDATA\\\\[[\\\\s\\\\S]*?\\\\]\\\\]>\").replace(\"comment\",Je).replace(\"attribute\",/\\s+[a-zA-Z:_][\\w.:-]*(?:\\s*=\\s*\"[^\"]*\"|\\s*=\\s*'[^']*'|\\s*=\\s*[^\\s\"'=<>`]+)?/).getRegex(),q=/(?:\\[(?:\\\\.|[^\\[\\]\\\\])*\\]|\\\\.|`[^`]*`|[^\\[\\]\\\\`])*?/,Ye=h(/^!?\\[(label)\\]\\(\\s*(href)(?:(?:[ \\t]*(?:\\n[ \\t]*)?)(title))?\\s*\\)/).replace(\"label\",q).replace(\"href\",/<(?:\\\\.|[^\\n<>\\\\])+>|[^ \\t\\n\\x00-\\x1f]*/).replace(\"title\",/\"(?:\\\\\"?|[^\"\\\\])*\"|'(?:\\\\'?|[^'\\\\])*'|\\((?:\\\\\\)?|[^)\\\\])*\\)/).getRegex(),ke=h(/^!?\\[(label)\\]\\[(ref)\\]/).replace(\"label\",q).replace(\"ref\",U).getRegex(),ge=h(/^!?\\[(ref)\\](?:\\[\\])?/).replace(\"ref\",U).getRegex(),et=h(\"reflink|nolink(?!\\\\()\",\"g\").replace(\"reflink\",ke).replace(\"nolink\",ge).getRegex(),J={_backpedal:I,anyPunctuation:Xe,autolink:We,blockSkip:Ne,br:ae,code:ve,del:I,emStrongLDelim:je,emStrongRDelimAst:Qe,emStrongRDelimUnd:Ke,escape:qe,link:Ye,nolink:ge,punctuation:Ze,reflink:ke,reflinkSearch:et,tag:Ve,text:De,url:I},tt={...J,link:h(/^!?\\[(label)\\]\\((.*?)\\)/).replace(\"label\",q).getRegex(),reflink:h(/^!?\\[(label)\\]\\s*\\[([^\\]]*)\\]/).replace(\"label\",q).getRegex()},j={...J,emStrongRDelimAst:Ue,emStrongLDelim:Fe,url:h(/^((?:ftp|https?):\\/\\/|www\\.)(?:[a-zA-Z0-9\\-]+\\.?)+[^\\s<]*|^email/,\"i\").replace(\"email\",/[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/).getRegex(),_backpedal:/(?:[^?!.,:;*_'\"~()&]+|\\([^)]*\\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'\"~)]+(?!$))+/,del:/^(~~?)(?=[^\\s~])((?:\\\\.|[^\\\\])*?(?:\\\\.|[^\\s~\\\\]))\\1(?=[^~]|$)/,text:/^([`~]+|[^`~])(?:(?= {2,}\\n)|(?=[a-zA-Z0-9.!#$%&'*+\\/=?_`{\\|}~-]+@)|[\\s\\S]*?(?:(?=[\\\\<!\\[`*~_]|\\b_|https?:\\/\\/|ftp:\\/\\/|www\\.|$)|[^ ](?= {2,}\\n)|[^a-zA-Z0-9.!#$%&'*+\\/=?_`{\\|}~-](?=[a-zA-Z0-9.!#$%&'*+\\/=?_`{\\|}~-]+@)))/},nt={...j,br:h(ae).replace(\"{2,}\",\"*\").getRegex(),text:h(j.text).replace(\"\\\\b_\",\"\\\\b_| {2,}\\\\n\").replace(/\\{2,\\}/g,\"*\").getRegex()},B={normal:X,gfm:Oe,pedantic:Be},P={normal:J,gfm:j,breaks:nt,pedantic:tt};var st={\"&\":\"&amp;\",\"<\":\"&lt;\",\">\":\"&gt;\",'\"':\"&quot;\",\"'\":\"&#39;\"},fe=l=>st[l];function R(l,e){if(e){if(m.escapeTest.test(l))return l.replace(m.escapeReplace,fe)}else if(m.escapeTestNoEncode.test(l))return l.replace(m.escapeReplaceNoEncode,fe);return l}function V(l){try{l=encodeURI(l).replace(m.percentDecode,\"%\")}catch{return null}return l}function Y(l,e){let t=l.replace(m.findPipe,(i,r,o)=>{let a=!1,c=r;for(;--c>=0&&o[c]===\"\\\\\";)a=!a;return a?\"|\":\" |\"}),n=t.split(m.splitPipe),s=0;if(n[0].trim()||n.shift(),n.length>0&&!n.at(-1)?.trim()&&n.pop(),e)if(n.length>e)n.splice(e);else for(;n.length<e;)n.push(\"\");for(;s<n.length;s++)n[s]=n[s].trim().replace(m.slashPipe,\"|\");return n}function A(l,e,t){let n=l.length;if(n===0)return\"\";let s=0;for(;s<n;){let i=l.charAt(n-s-1);if(i===e&&!t)s++;else if(i!==e&&t)s++;else break}return l.slice(0,n-s)}function de(l,e){if(l.indexOf(e[1])===-1)return-1;let t=0;for(let n=0;n<l.length;n++)if(l[n]===\"\\\\\")n++;else if(l[n]===e[0])t++;else if(l[n]===e[1]&&(t--,t<0))return n;return t>0?-2:-1}function me(l,e,t,n,s){let i=e.href,r=e.title||null,o=l[1].replace(s.other.outputLinkReplace,\"$1\");n.state.inLink=!0;let a={type:l[0].charAt(0)===\"!\"?\"image\":\"link\",raw:t,href:i,title:r,text:o,tokens:n.inlineTokens(o)};return n.state.inLink=!1,a}function rt(l,e,t){let n=l.match(t.other.indentCodeCompensation);if(n===null)return e;let s=n[1];return e.split(`\n`).map(i=>{let r=i.match(t.other.beginningSpace);if(r===null)return i;let[o]=r;return o.length>=s.length?i.slice(s.length):i}).join(`\n`)}var S=class{options;rules;lexer;constructor(e){this.options=e||w}space(e){let t=this.rules.block.newline.exec(e);if(t&&t[0].length>0)return{type:\"space\",raw:t[0]}}code(e){let t=this.rules.block.code.exec(e);if(t){let n=t[0].replace(this.rules.other.codeRemoveIndent,\"\");return{type:\"code\",raw:t[0],codeBlockStyle:\"indented\",text:this.options.pedantic?n:A(n,`\n`)}}}fences(e){let t=this.rules.block.fences.exec(e);if(t){let n=t[0],s=rt(n,t[3]||\"\",this.rules);return{type:\"code\",raw:n,lang:t[2]?t[2].trim().replace(this.rules.inline.anyPunctuation,\"$1\"):t[2],text:s}}}heading(e){let t=this.rules.block.heading.exec(e);if(t){let n=t[2].trim();if(this.rules.other.endingHash.test(n)){let s=A(n,\"#\");(this.options.pedantic||!s||this.rules.other.endingSpaceChar.test(s))&&(n=s.trim())}return{type:\"heading\",raw:t[0],depth:t[1].length,text:n,tokens:this.lexer.inline(n)}}}hr(e){let t=this.rules.block.hr.exec(e);if(t)return{type:\"hr\",raw:A(t[0],`\n`)}}blockquote(e){let t=this.rules.block.blockquote.exec(e);if(t){let n=A(t[0],`\n`).split(`\n`),s=\"\",i=\"\",r=[];for(;n.length>0;){let o=!1,a=[],c;for(c=0;c<n.length;c++)if(this.rules.other.blockquoteStart.test(n[c]))a.push(n[c]),o=!0;else if(!o)a.push(n[c]);else break;n=n.slice(c);let p=a.join(`\n`),u=p.replace(this.rules.other.blockquoteSetextReplace,`\n    $1`).replace(this.rules.other.blockquoteSetextReplace2,\"\");s=s?`${s}\n${p}`:p,i=i?`${i}\n${u}`:u;let d=this.lexer.state.top;if(this.lexer.state.top=!0,this.lexer.blockTokens(u,r,!0),this.lexer.state.top=d,n.length===0)break;let g=r.at(-1);if(g?.type===\"code\")break;if(g?.type===\"blockquote\"){let T=g,f=T.raw+`\n`+n.join(`\n`),y=this.blockquote(f);r[r.length-1]=y,s=s.substring(0,s.length-T.raw.length)+y.raw,i=i.substring(0,i.length-T.text.length)+y.text;break}else if(g?.type===\"list\"){let T=g,f=T.raw+`\n`+n.join(`\n`),y=this.list(f);r[r.length-1]=y,s=s.substring(0,s.length-g.raw.length)+y.raw,i=i.substring(0,i.length-T.raw.length)+y.raw,n=f.substring(r.at(-1).raw.length).split(`\n`);continue}}return{type:\"blockquote\",raw:s,tokens:r,text:i}}}list(e){let t=this.rules.block.list.exec(e);if(t){let n=t[1].trim(),s=n.length>1,i={type:\"list\",raw:\"\",ordered:s,start:s?+n.slice(0,-1):\"\",loose:!1,items:[]};n=s?`\\\\d{1,9}\\\\${n.slice(-1)}`:`\\\\${n}`,this.options.pedantic&&(n=s?n:\"[*+-]\");let r=this.rules.other.listItemRegex(n),o=!1;for(;e;){let c=!1,p=\"\",u=\"\";if(!(t=r.exec(e))||this.rules.block.hr.test(e))break;p=t[0],e=e.substring(p.length);let d=t[2].split(`\n`,1)[0].replace(this.rules.other.listReplaceTabs,Z=>\" \".repeat(3*Z.length)),g=e.split(`\n`,1)[0],T=!d.trim(),f=0;if(this.options.pedantic?(f=2,u=d.trimStart()):T?f=t[1].length+1:(f=t[2].search(this.rules.other.nonSpaceChar),f=f>4?1:f,u=d.slice(f),f+=t[1].length),T&&this.rules.other.blankLine.test(g)&&(p+=g+`\n`,e=e.substring(g.length+1),c=!0),!c){let Z=this.rules.other.nextBulletRegex(f),te=this.rules.other.hrRegex(f),ne=this.rules.other.fencesBeginRegex(f),se=this.rules.other.headingBeginRegex(f),xe=this.rules.other.htmlBeginRegex(f);for(;e;){let G=e.split(`\n`,1)[0],C;if(g=G,this.options.pedantic?(g=g.replace(this.rules.other.listReplaceNesting,\"  \"),C=g):C=g.replace(this.rules.other.tabCharGlobal,\"    \"),ne.test(g)||se.test(g)||xe.test(g)||Z.test(g)||te.test(g))break;if(C.search(this.rules.other.nonSpaceChar)>=f||!g.trim())u+=`\n`+C.slice(f);else{if(T||d.replace(this.rules.other.tabCharGlobal,\"    \").search(this.rules.other.nonSpaceChar)>=4||ne.test(d)||se.test(d)||te.test(d))break;u+=`\n`+g}!T&&!g.trim()&&(T=!0),p+=G+`\n`,e=e.substring(G.length+1),d=C.slice(f)}}i.loose||(o?i.loose=!0:this.rules.other.doubleBlankLine.test(p)&&(o=!0));let y=null,ee;this.options.gfm&&(y=this.rules.other.listIsTask.exec(u),y&&(ee=y[0]!==\"[ ] \",u=u.replace(this.rules.other.listReplaceTask,\"\"))),i.items.push({type:\"list_item\",raw:p,task:!!y,checked:ee,loose:!1,text:u,tokens:[]}),i.raw+=p}let a=i.items.at(-1);if(a)a.raw=a.raw.trimEnd(),a.text=a.text.trimEnd();else return;i.raw=i.raw.trimEnd();for(let c=0;c<i.items.length;c++)if(this.lexer.state.top=!1,i.items[c].tokens=this.lexer.blockTokens(i.items[c].text,[]),!i.loose){let p=i.items[c].tokens.filter(d=>d.type===\"space\"),u=p.length>0&&p.some(d=>this.rules.other.anyLine.test(d.raw));i.loose=u}if(i.loose)for(let c=0;c<i.items.length;c++)i.items[c].loose=!0;return i}}html(e){let t=this.rules.block.html.exec(e);if(t)return{type:\"html\",block:!0,raw:t[0],pre:t[1]===\"pre\"||t[1]===\"script\"||t[1]===\"style\",text:t[0]}}def(e){let t=this.rules.block.def.exec(e);if(t){let n=t[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal,\" \"),s=t[2]?t[2].replace(this.rules.other.hrefBrackets,\"$1\").replace(this.rules.inline.anyPunctuation,\"$1\"):\"\",i=t[3]?t[3].substring(1,t[3].length-1).replace(this.rules.inline.anyPunctuation,\"$1\"):t[3];return{type:\"def\",tag:n,raw:t[0],href:s,title:i}}}table(e){let t=this.rules.block.table.exec(e);if(!t||!this.rules.other.tableDelimiter.test(t[2]))return;let n=Y(t[1]),s=t[2].replace(this.rules.other.tableAlignChars,\"\").split(\"|\"),i=t[3]?.trim()?t[3].replace(this.rules.other.tableRowBlankLine,\"\").split(`\n`):[],r={type:\"table\",raw:t[0],header:[],align:[],rows:[]};if(n.length===s.length){for(let o of s)this.rules.other.tableAlignRight.test(o)?r.align.push(\"right\"):this.rules.other.tableAlignCenter.test(o)?r.align.push(\"center\"):this.rules.other.tableAlignLeft.test(o)?r.align.push(\"left\"):r.align.push(null);for(let o=0;o<n.length;o++)r.header.push({text:n[o],tokens:this.lexer.inline(n[o]),header:!0,align:r.align[o]});for(let o of i)r.rows.push(Y(o,r.header.length).map((a,c)=>({text:a,tokens:this.lexer.inline(a),header:!1,align:r.align[c]})));return r}}lheading(e){let t=this.rules.block.lheading.exec(e);if(t)return{type:\"heading\",raw:t[0],depth:t[2].charAt(0)===\"=\"?1:2,text:t[1],tokens:this.lexer.inline(t[1])}}paragraph(e){let t=this.rules.block.paragraph.exec(e);if(t){let n=t[1].charAt(t[1].length-1)===`\n`?t[1].slice(0,-1):t[1];return{type:\"paragraph\",raw:t[0],text:n,tokens:this.lexer.inline(n)}}}text(e){let t=this.rules.block.text.exec(e);if(t)return{type:\"text\",raw:t[0],text:t[0],tokens:this.lexer.inline(t[0])}}escape(e){let t=this.rules.inline.escape.exec(e);if(t)return{type:\"escape\",raw:t[0],text:t[1]}}tag(e){let t=this.rules.inline.tag.exec(e);if(t)return!this.lexer.state.inLink&&this.rules.other.startATag.test(t[0])?this.lexer.state.inLink=!0:this.lexer.state.inLink&&this.rules.other.endATag.test(t[0])&&(this.lexer.state.inLink=!1),!this.lexer.state.inRawBlock&&this.rules.other.startPreScriptTag.test(t[0])?this.lexer.state.inRawBlock=!0:this.lexer.state.inRawBlock&&this.rules.other.endPreScriptTag.test(t[0])&&(this.lexer.state.inRawBlock=!1),{type:\"html\",raw:t[0],inLink:this.lexer.state.inLink,inRawBlock:this.lexer.state.inRawBlock,block:!1,text:t[0]}}link(e){let t=this.rules.inline.link.exec(e);if(t){let n=t[2].trim();if(!this.options.pedantic&&this.rules.other.startAngleBracket.test(n)){if(!this.rules.other.endAngleBracket.test(n))return;let r=A(n.slice(0,-1),\"\\\\\");if((n.length-r.length)%2===0)return}else{let r=de(t[2],\"()\");if(r===-2)return;if(r>-1){let a=(t[0].indexOf(\"!\")===0?5:4)+t[1].length+r;t[2]=t[2].substring(0,r),t[0]=t[0].substring(0,a).trim(),t[3]=\"\"}}let s=t[2],i=\"\";if(this.options.pedantic){let r=this.rules.other.pedanticHrefTitle.exec(s);r&&(s=r[1],i=r[3])}else i=t[3]?t[3].slice(1,-1):\"\";return s=s.trim(),this.rules.other.startAngleBracket.test(s)&&(this.options.pedantic&&!this.rules.other.endAngleBracket.test(n)?s=s.slice(1):s=s.slice(1,-1)),me(t,{href:s&&s.replace(this.rules.inline.anyPunctuation,\"$1\"),title:i&&i.replace(this.rules.inline.anyPunctuation,\"$1\")},t[0],this.lexer,this.rules)}}reflink(e,t){let n;if((n=this.rules.inline.reflink.exec(e))||(n=this.rules.inline.nolink.exec(e))){let s=(n[2]||n[1]).replace(this.rules.other.multipleSpaceGlobal,\" \"),i=t[s.toLowerCase()];if(!i){let r=n[0].charAt(0);return{type:\"text\",raw:r,text:r}}return me(n,i,n[0],this.lexer,this.rules)}}emStrong(e,t,n=\"\"){let s=this.rules.inline.emStrongLDelim.exec(e);if(!s||s[3]&&n.match(this.rules.other.unicodeAlphaNumeric))return;if(!(s[1]||s[2]||\"\")||!n||this.rules.inline.punctuation.exec(n)){let r=[...s[0]].length-1,o,a,c=r,p=0,u=s[0][0]===\"*\"?this.rules.inline.emStrongRDelimAst:this.rules.inline.emStrongRDelimUnd;for(u.lastIndex=0,t=t.slice(-1*e.length+r);(s=u.exec(t))!=null;){if(o=s[1]||s[2]||s[3]||s[4]||s[5]||s[6],!o)continue;if(a=[...o].length,s[3]||s[4]){c+=a;continue}else if((s[5]||s[6])&&r%3&&!((r+a)%3)){p+=a;continue}if(c-=a,c>0)continue;a=Math.min(a,a+c+p);let d=[...s[0]][0].length,g=e.slice(0,r+s.index+d+a);if(Math.min(r,a)%2){let f=g.slice(1,-1);return{type:\"em\",raw:g,text:f,tokens:this.lexer.inlineTokens(f)}}let T=g.slice(2,-2);return{type:\"strong\",raw:g,text:T,tokens:this.lexer.inlineTokens(T)}}}}codespan(e){let t=this.rules.inline.code.exec(e);if(t){let n=t[2].replace(this.rules.other.newLineCharGlobal,\" \"),s=this.rules.other.nonSpaceChar.test(n),i=this.rules.other.startingSpaceChar.test(n)&&this.rules.other.endingSpaceChar.test(n);return s&&i&&(n=n.substring(1,n.length-1)),{type:\"codespan\",raw:t[0],text:n}}}br(e){let t=this.rules.inline.br.exec(e);if(t)return{type:\"br\",raw:t[0]}}del(e){let t=this.rules.inline.del.exec(e);if(t)return{type:\"del\",raw:t[0],text:t[2],tokens:this.lexer.inlineTokens(t[2])}}autolink(e){let t=this.rules.inline.autolink.exec(e);if(t){let n,s;return t[2]===\"@\"?(n=t[1],s=\"mailto:\"+n):(n=t[1],s=n),{type:\"link\",raw:t[0],text:n,href:s,tokens:[{type:\"text\",raw:n,text:n}]}}}url(e){let t;if(t=this.rules.inline.url.exec(e)){let n,s;if(t[2]===\"@\")n=t[0],s=\"mailto:\"+n;else{let i;do i=t[0],t[0]=this.rules.inline._backpedal.exec(t[0])?.[0]??\"\";while(i!==t[0]);n=t[0],t[1]===\"www.\"?s=\"http://\"+t[0]:s=t[0]}return{type:\"link\",raw:t[0],text:n,href:s,tokens:[{type:\"text\",raw:n,text:n}]}}}inlineText(e){let t=this.rules.inline.text.exec(e);if(t){let n=this.lexer.state.inRawBlock;return{type:\"text\",raw:t[0],text:t[0],escaped:n}}}};var x=class l{tokens;options;state;tokenizer;inlineQueue;constructor(e){this.tokens=[],this.tokens.links=Object.create(null),this.options=e||w,this.options.tokenizer=this.options.tokenizer||new S,this.tokenizer=this.options.tokenizer,this.tokenizer.options=this.options,this.tokenizer.lexer=this,this.inlineQueue=[],this.state={inLink:!1,inRawBlock:!1,top:!0};let t={other:m,block:B.normal,inline:P.normal};this.options.pedantic?(t.block=B.pedantic,t.inline=P.pedantic):this.options.gfm&&(t.block=B.gfm,this.options.breaks?t.inline=P.breaks:t.inline=P.gfm),this.tokenizer.rules=t}static get rules(){return{block:B,inline:P}}static lex(e,t){return new l(t).lex(e)}static lexInline(e,t){return new l(t).inlineTokens(e)}lex(e){e=e.replace(m.carriageReturn,`\n`),this.blockTokens(e,this.tokens);for(let t=0;t<this.inlineQueue.length;t++){let n=this.inlineQueue[t];this.inlineTokens(n.src,n.tokens)}return this.inlineQueue=[],this.tokens}blockTokens(e,t=[],n=!1){for(this.options.pedantic&&(e=e.replace(m.tabCharGlobal,\"    \").replace(m.spaceLine,\"\"));e;){let s;if(this.options.extensions?.block?.some(r=>(s=r.call({lexer:this},e,t))?(e=e.substring(s.raw.length),t.push(s),!0):!1))continue;if(s=this.tokenizer.space(e)){e=e.substring(s.raw.length);let r=t.at(-1);s.raw.length===1&&r!==void 0?r.raw+=`\n`:t.push(s);continue}if(s=this.tokenizer.code(e)){e=e.substring(s.raw.length);let r=t.at(-1);r?.type===\"paragraph\"||r?.type===\"text\"?(r.raw+=`\n`+s.raw,r.text+=`\n`+s.text,this.inlineQueue.at(-1).src=r.text):t.push(s);continue}if(s=this.tokenizer.fences(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.heading(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.hr(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.blockquote(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.list(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.html(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.def(e)){e=e.substring(s.raw.length);let r=t.at(-1);r?.type===\"paragraph\"||r?.type===\"text\"?(r.raw+=`\n`+s.raw,r.text+=`\n`+s.raw,this.inlineQueue.at(-1).src=r.text):this.tokens.links[s.tag]||(this.tokens.links[s.tag]={href:s.href,title:s.title});continue}if(s=this.tokenizer.table(e)){e=e.substring(s.raw.length),t.push(s);continue}if(s=this.tokenizer.lheading(e)){e=e.substring(s.raw.length),t.push(s);continue}let i=e;if(this.options.extensions?.startBlock){let r=1/0,o=e.slice(1),a;this.options.extensions.startBlock.forEach(c=>{a=c.call({lexer:this},o),typeof a==\"number\"&&a>=0&&(r=Math.min(r,a))}),r<1/0&&r>=0&&(i=e.substring(0,r+1))}if(this.state.top&&(s=this.tokenizer.paragraph(i))){let r=t.at(-1);n&&r?.type===\"paragraph\"?(r.raw+=`\n`+s.raw,r.text+=`\n`+s.text,this.inlineQueue.pop(),this.inlineQueue.at(-1).src=r.text):t.push(s),n=i.length!==e.length,e=e.substring(s.raw.length);continue}if(s=this.tokenizer.text(e)){e=e.substring(s.raw.length);let r=t.at(-1);r?.type===\"text\"?(r.raw+=`\n`+s.raw,r.text+=`\n`+s.text,this.inlineQueue.pop(),this.inlineQueue.at(-1).src=r.text):t.push(s);continue}if(e){let r=\"Infinite loop on byte: \"+e.charCodeAt(0);if(this.options.silent){console.error(r);break}else throw new Error(r)}}return this.state.top=!0,t}inline(e,t=[]){return this.inlineQueue.push({src:e,tokens:t}),t}inlineTokens(e,t=[]){let n=e,s=null;if(this.tokens.links){let o=Object.keys(this.tokens.links);if(o.length>0)for(;(s=this.tokenizer.rules.inline.reflinkSearch.exec(n))!=null;)o.includes(s[0].slice(s[0].lastIndexOf(\"[\")+1,-1))&&(n=n.slice(0,s.index)+\"[\"+\"a\".repeat(s[0].length-2)+\"]\"+n.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex))}for(;(s=this.tokenizer.rules.inline.anyPunctuation.exec(n))!=null;)n=n.slice(0,s.index)+\"++\"+n.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);for(;(s=this.tokenizer.rules.inline.blockSkip.exec(n))!=null;)n=n.slice(0,s.index)+\"[\"+\"a\".repeat(s[0].length-2)+\"]\"+n.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);let i=!1,r=\"\";for(;e;){i||(r=\"\"),i=!1;let o;if(this.options.extensions?.inline?.some(c=>(o=c.call({lexer:this},e,t))?(e=e.substring(o.raw.length),t.push(o),!0):!1))continue;if(o=this.tokenizer.escape(e)){e=e.substring(o.raw.length),t.push(o);continue}if(o=this.tokenizer.tag(e)){e=e.substring(o.raw.length),t.push(o);continue}if(o=this.tokenizer.link(e)){e=e.substring(o.raw.length),t.push(o);continue}if(o=this.tokenizer.reflink(e,this.tokens.links)){e=e.substring(o.raw.length);let c=t.at(-1);o.type===\"text\"&&c?.type===\"text\"?(c.raw+=o.raw,c.text+=o.text):t.push(o);continue}if(o=this.tokenizer.emStrong(e,n,r)){e=e.substring(o.raw.length),t.push(o);continue}if(o=this.tokenizer.codespan(e)){e=e.substring(o.raw.length),t.push(o);continue}if(o=this.tokenizer.br(e)){e=e.substring(o.raw.length),t.push(o);continue}if(o=this.tokenizer.del(e)){e=e.substring(o.raw.length),t.push(o);continue}if(o=this.tokenizer.autolink(e)){e=e.substring(o.raw.length),t.push(o);continue}if(!this.state.inLink&&(o=this.tokenizer.url(e))){e=e.substring(o.raw.length),t.push(o);continue}let a=e;if(this.options.extensions?.startInline){let c=1/0,p=e.slice(1),u;this.options.extensions.startInline.forEach(d=>{u=d.call({lexer:this},p),typeof u==\"number\"&&u>=0&&(c=Math.min(c,u))}),c<1/0&&c>=0&&(a=e.substring(0,c+1))}if(o=this.tokenizer.inlineText(a)){e=e.substring(o.raw.length),o.raw.slice(-1)!==\"_\"&&(r=o.raw.slice(-1)),i=!0;let c=t.at(-1);c?.type===\"text\"?(c.raw+=o.raw,c.text+=o.text):t.push(o);continue}if(e){let c=\"Infinite loop on byte: \"+e.charCodeAt(0);if(this.options.silent){console.error(c);break}else throw new Error(c)}}return t}};var $=class{options;parser;constructor(e){this.options=e||w}space(e){return\"\"}code({text:e,lang:t,escaped:n}){let s=(t||\"\").match(m.notSpaceStart)?.[0],i=e.replace(m.endingNewline,\"\")+`\n`;return s?'<pre><code class=\"language-'+R(s)+'\">'+(n?i:R(i,!0))+`</code></pre>\n`:\"<pre><code>\"+(n?i:R(i,!0))+`</code></pre>\n`}blockquote({tokens:e}){return`<blockquote>\n${this.parser.parse(e)}</blockquote>\n`}html({text:e}){return e}heading({tokens:e,depth:t}){return`<h${t}>${this.parser.parseInline(e)}</h${t}>\n`}hr(e){return`<hr>\n`}list(e){let t=e.ordered,n=e.start,s=\"\";for(let o=0;o<e.items.length;o++){let a=e.items[o];s+=this.listitem(a)}let i=t?\"ol\":\"ul\",r=t&&n!==1?' start=\"'+n+'\"':\"\";return\"<\"+i+r+`>\n`+s+\"</\"+i+`>\n`}listitem(e){let t=\"\";if(e.task){let n=this.checkbox({checked:!!e.checked});e.loose?e.tokens[0]?.type===\"paragraph\"?(e.tokens[0].text=n+\" \"+e.tokens[0].text,e.tokens[0].tokens&&e.tokens[0].tokens.length>0&&e.tokens[0].tokens[0].type===\"text\"&&(e.tokens[0].tokens[0].text=n+\" \"+R(e.tokens[0].tokens[0].text),e.tokens[0].tokens[0].escaped=!0)):e.tokens.unshift({type:\"text\",raw:n+\" \",text:n+\" \",escaped:!0}):t+=n+\" \"}return t+=this.parser.parse(e.tokens,!!e.loose),`<li>${t}</li>\n`}checkbox({checked:e}){return\"<input \"+(e?'checked=\"\" ':\"\")+'disabled=\"\" type=\"checkbox\">'}paragraph({tokens:e}){return`<p>${this.parser.parseInline(e)}</p>\n`}table(e){let t=\"\",n=\"\";for(let i=0;i<e.header.length;i++)n+=this.tablecell(e.header[i]);t+=this.tablerow({text:n});let s=\"\";for(let i=0;i<e.rows.length;i++){let r=e.rows[i];n=\"\";for(let o=0;o<r.length;o++)n+=this.tablecell(r[o]);s+=this.tablerow({text:n})}return s&&(s=`<tbody>${s}</tbody>`),`<table>\n<thead>\n`+t+`</thead>\n`+s+`</table>\n`}tablerow({text:e}){return`<tr>\n${e}</tr>\n`}tablecell(e){let t=this.parser.parseInline(e.tokens),n=e.header?\"th\":\"td\";return(e.align?`<${n} align=\"${e.align}\">`:`<${n}>`)+t+`</${n}>\n`}strong({tokens:e}){return`<strong>${this.parser.parseInline(e)}</strong>`}em({tokens:e}){return`<em>${this.parser.parseInline(e)}</em>`}codespan({text:e}){return`<code>${R(e,!0)}</code>`}br(e){return\"<br>\"}del({tokens:e}){return`<del>${this.parser.parseInline(e)}</del>`}link({href:e,title:t,tokens:n}){let s=this.parser.parseInline(n),i=V(e);if(i===null)return s;e=i;let r='<a href=\"'+e+'\"';return t&&(r+=' title=\"'+R(t)+'\"'),r+=\">\"+s+\"</a>\",r}image({href:e,title:t,text:n,tokens:s}){s&&(n=this.parser.parseInline(s,this.parser.textRenderer));let i=V(e);if(i===null)return R(n);e=i;let r=`<img src=\"${e}\" alt=\"${n}\"`;return t&&(r+=` title=\"${R(t)}\"`),r+=\">\",r}text(e){return\"tokens\"in e&&e.tokens?this.parser.parseInline(e.tokens):\"escaped\"in e&&e.escaped?e.text:R(e.text)}};var _=class{strong({text:e}){return e}em({text:e}){return e}codespan({text:e}){return e}del({text:e}){return e}html({text:e}){return e}text({text:e}){return e}link({text:e}){return\"\"+e}image({text:e}){return\"\"+e}br(){return\"\"}};var b=class l{options;renderer;textRenderer;constructor(e){this.options=e||w,this.options.renderer=this.options.renderer||new $,this.renderer=this.options.renderer,this.renderer.options=this.options,this.renderer.parser=this,this.textRenderer=new _}static parse(e,t){return new l(t).parse(e)}static parseInline(e,t){return new l(t).parseInline(e)}parse(e,t=!0){let n=\"\";for(let s=0;s<e.length;s++){let i=e[s];if(this.options.extensions?.renderers?.[i.type]){let o=i,a=this.options.extensions.renderers[o.type].call({parser:this},o);if(a!==!1||![\"space\",\"hr\",\"heading\",\"code\",\"table\",\"blockquote\",\"list\",\"html\",\"paragraph\",\"text\"].includes(o.type)){n+=a||\"\";continue}}let r=i;switch(r.type){case\"space\":{n+=this.renderer.space(r);continue}case\"hr\":{n+=this.renderer.hr(r);continue}case\"heading\":{n+=this.renderer.heading(r);continue}case\"code\":{n+=this.renderer.code(r);continue}case\"table\":{n+=this.renderer.table(r);continue}case\"blockquote\":{n+=this.renderer.blockquote(r);continue}case\"list\":{n+=this.renderer.list(r);continue}case\"html\":{n+=this.renderer.html(r);continue}case\"paragraph\":{n+=this.renderer.paragraph(r);continue}case\"text\":{let o=r,a=this.renderer.text(o);for(;s+1<e.length&&e[s+1].type===\"text\";)o=e[++s],a+=`\n`+this.renderer.text(o);t?n+=this.renderer.paragraph({type:\"paragraph\",raw:a,text:a,tokens:[{type:\"text\",raw:a,text:a,escaped:!0}]}):n+=a;continue}default:{let o='Token with \"'+r.type+'\" type was not found.';if(this.options.silent)return console.error(o),\"\";throw new Error(o)}}}return n}parseInline(e,t=this.renderer){let n=\"\";for(let s=0;s<e.length;s++){let i=e[s];if(this.options.extensions?.renderers?.[i.type]){let o=this.options.extensions.renderers[i.type].call({parser:this},i);if(o!==!1||![\"escape\",\"html\",\"link\",\"image\",\"strong\",\"em\",\"codespan\",\"br\",\"del\",\"text\"].includes(i.type)){n+=o||\"\";continue}}let r=i;switch(r.type){case\"escape\":{n+=t.text(r);break}case\"html\":{n+=t.html(r);break}case\"link\":{n+=t.link(r);break}case\"image\":{n+=t.image(r);break}case\"strong\":{n+=t.strong(r);break}case\"em\":{n+=t.em(r);break}case\"codespan\":{n+=t.codespan(r);break}case\"br\":{n+=t.br(r);break}case\"del\":{n+=t.del(r);break}case\"text\":{n+=t.text(r);break}default:{let o='Token with \"'+r.type+'\" type was not found.';if(this.options.silent)return console.error(o),\"\";throw new Error(o)}}}return n}};var L=class{options;block;constructor(e){this.options=e||w}static passThroughHooks=new Set([\"preprocess\",\"postprocess\",\"processAllTokens\"]);preprocess(e){return e}postprocess(e){return e}processAllTokens(e){return e}provideLexer(){return this.block?x.lex:x.lexInline}provideParser(){return this.block?b.parse:b.parseInline}};var E=class{defaults=z();options=this.setOptions;parse=this.parseMarkdown(!0);parseInline=this.parseMarkdown(!1);Parser=b;Renderer=$;TextRenderer=_;Lexer=x;Tokenizer=S;Hooks=L;constructor(...e){this.use(...e)}walkTokens(e,t){let n=[];for(let s of e)switch(n=n.concat(t.call(this,s)),s.type){case\"table\":{let i=s;for(let r of i.header)n=n.concat(this.walkTokens(r.tokens,t));for(let r of i.rows)for(let o of r)n=n.concat(this.walkTokens(o.tokens,t));break}case\"list\":{let i=s;n=n.concat(this.walkTokens(i.items,t));break}default:{let i=s;this.defaults.extensions?.childTokens?.[i.type]?this.defaults.extensions.childTokens[i.type].forEach(r=>{let o=i[r].flat(1/0);n=n.concat(this.walkTokens(o,t))}):i.tokens&&(n=n.concat(this.walkTokens(i.tokens,t)))}}return n}use(...e){let t=this.defaults.extensions||{renderers:{},childTokens:{}};return e.forEach(n=>{let s={...n};if(s.async=this.defaults.async||s.async||!1,n.extensions&&(n.extensions.forEach(i=>{if(!i.name)throw new Error(\"extension name required\");if(\"renderer\"in i){let r=t.renderers[i.name];r?t.renderers[i.name]=function(...o){let a=i.renderer.apply(this,o);return a===!1&&(a=r.apply(this,o)),a}:t.renderers[i.name]=i.renderer}if(\"tokenizer\"in i){if(!i.level||i.level!==\"block\"&&i.level!==\"inline\")throw new Error(\"extension level must be 'block' or 'inline'\");let r=t[i.level];r?r.unshift(i.tokenizer):t[i.level]=[i.tokenizer],i.start&&(i.level===\"block\"?t.startBlock?t.startBlock.push(i.start):t.startBlock=[i.start]:i.level===\"inline\"&&(t.startInline?t.startInline.push(i.start):t.startInline=[i.start]))}\"childTokens\"in i&&i.childTokens&&(t.childTokens[i.name]=i.childTokens)}),s.extensions=t),n.renderer){let i=this.defaults.renderer||new $(this.defaults);for(let r in n.renderer){if(!(r in i))throw new Error(`renderer '${r}' does not exist`);if([\"options\",\"parser\"].includes(r))continue;let o=r,a=n.renderer[o],c=i[o];i[o]=(...p)=>{let u=a.apply(i,p);return u===!1&&(u=c.apply(i,p)),u||\"\"}}s.renderer=i}if(n.tokenizer){let i=this.defaults.tokenizer||new S(this.defaults);for(let r in n.tokenizer){if(!(r in i))throw new Error(`tokenizer '${r}' does not exist`);if([\"options\",\"rules\",\"lexer\"].includes(r))continue;let o=r,a=n.tokenizer[o],c=i[o];i[o]=(...p)=>{let u=a.apply(i,p);return u===!1&&(u=c.apply(i,p)),u}}s.tokenizer=i}if(n.hooks){let i=this.defaults.hooks||new L;for(let r in n.hooks){if(!(r in i))throw new Error(`hook '${r}' does not exist`);if([\"options\",\"block\"].includes(r))continue;let o=r,a=n.hooks[o],c=i[o];L.passThroughHooks.has(r)?i[o]=p=>{if(this.defaults.async)return Promise.resolve(a.call(i,p)).then(d=>c.call(i,d));let u=a.call(i,p);return c.call(i,u)}:i[o]=(...p)=>{let u=a.apply(i,p);return u===!1&&(u=c.apply(i,p)),u}}s.hooks=i}if(n.walkTokens){let i=this.defaults.walkTokens,r=n.walkTokens;s.walkTokens=function(o){let a=[];return a.push(r.call(this,o)),i&&(a=a.concat(i.call(this,o))),a}}this.defaults={...this.defaults,...s}}),this}setOptions(e){return this.defaults={...this.defaults,...e},this}lexer(e,t){return x.lex(e,t??this.defaults)}parser(e,t){return b.parse(e,t??this.defaults)}parseMarkdown(e){return(n,s)=>{let i={...s},r={...this.defaults,...i},o=this.onError(!!r.silent,!!r.async);if(this.defaults.async===!0&&i.async===!1)return o(new Error(\"marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise.\"));if(typeof n>\"u\"||n===null)return o(new Error(\"marked(): input parameter is undefined or null\"));if(typeof n!=\"string\")return o(new Error(\"marked(): input parameter is of type \"+Object.prototype.toString.call(n)+\", string expected\"));r.hooks&&(r.hooks.options=r,r.hooks.block=e);let a=r.hooks?r.hooks.provideLexer():e?x.lex:x.lexInline,c=r.hooks?r.hooks.provideParser():e?b.parse:b.parseInline;if(r.async)return Promise.resolve(r.hooks?r.hooks.preprocess(n):n).then(p=>a(p,r)).then(p=>r.hooks?r.hooks.processAllTokens(p):p).then(p=>r.walkTokens?Promise.all(this.walkTokens(p,r.walkTokens)).then(()=>p):p).then(p=>c(p,r)).then(p=>r.hooks?r.hooks.postprocess(p):p).catch(o);try{r.hooks&&(n=r.hooks.preprocess(n));let p=a(n,r);r.hooks&&(p=r.hooks.processAllTokens(p)),r.walkTokens&&this.walkTokens(p,r.walkTokens);let u=c(p,r);return r.hooks&&(u=r.hooks.postprocess(u)),u}catch(p){return o(p)}}}onError(e,t){return n=>{if(n.message+=`\nPlease report this to https://github.com/markedjs/marked.`,e){let s=\"<p>An error occurred:</p><pre>\"+R(n.message+\"\",!0)+\"</pre>\";return t?Promise.resolve(s):s}if(t)return Promise.reject(n);throw n}}};var M=new E;function k(l,e){return M.parse(l,e)}k.options=k.setOptions=function(l){return M.setOptions(l),k.defaults=M.defaults,N(k.defaults),k};k.getDefaults=z;k.defaults=w;k.use=function(...l){return M.use(...l),k.defaults=M.defaults,N(k.defaults),k};k.walkTokens=function(l,e){return M.walkTokens(l,e)};k.parseInline=M.parseInline;k.Parser=b;k.parser=b.parse;k.Renderer=$;k.TextRenderer=_;k.Lexer=x;k.lexer=x.lex;k.Tokenizer=S;k.Hooks=L;k.parse=k;var it=k.options,ot=k.setOptions,lt=k.use,at=k.walkTokens,ct=k.parseInline,pt=k,ut=b.parse,ht=x.lex;\n\nif(__exports != exports)module.exports = exports;return module.exports}));\n</script>\n</head>\n\n<body>\n    <div class=\"adeu-card\">\n        <nav class=\"navbar\">\n            <div class=\"logo-container\">\n                <svg width=\"318\" height=\"82\" viewBox=\"0 0 318 82\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M77.0408 64.8312C78.4753 64.8281 79.771 64.2324 80.6943 63.2758C81.579 62.3598 82.1225 61.1131 82.1225 59.7391V22.9455C82.1225 21.5392 81.5529 20.2664 80.6317 19.3452C79.7105 18.424 78.4378 17.8534 77.0314 17.8534C75.8599 17.8534 73.3613 17.8534 71.0317 17.8534C69.6243 17.8534 68.3515 17.2827 67.4293 16.3605C66.5081 15.4382 65.9385 14.1644 65.9395 12.7571L65.9448 5.08288C65.9427 3.67865 65.371 2.40796 64.4498 1.48781C63.5286 0.56766 62.2568 -0.000915527 60.8526 -0.000915527H8.86713V17.8503H56.4344C57.8376 17.8503 58.2486 19.7646 56.9696 20.3405L14.8366 38.1541C6.94336 41.4936 0.750587 49.2711 0.750587 59.1945C0.750587 72.2092 11.2635 81.9991 23.5311 81.9991H60.8537C62.3831 81.9991 63.755 81.3251 64.6887 80.2579C65.4711 79.3628 65.9458 78.1902 65.9458 76.908V69.9213C65.9458 68.515 66.5165 67.2422 67.4376 66.321C68.3599 65.3988 69.6337 64.8292 71.0411 64.8292H77.0429L77.0408 64.8312ZM27.0313 64.0624C23.4091 64.0624 21.2057 61.1465 21.2057 58.3391C21.2057 55.6892 22.8624 53.803 24.6203 53.0404L60.4989 37.4854C61.2783 37.1359 62.1108 37.2601 62.7336 37.6899C63.3199 38.0936 63.7226 38.7686 63.7226 39.573L63.7247 58.9702C63.7247 60.3765 63.1551 61.6493 62.2339 62.5716C61.3127 63.4927 60.0389 64.0634 58.6326 64.0634H27.0313V64.0624ZM147.938 19.3452C144.807 17.8649 141.021 17.1241 136.576 17.1241C132.881 17.1241 129.487 17.7741 126.39 19.074C123.293 20.3728 120.804 22.185 118.924 24.5115C117.047 26.8379 115.921 29.6328 115.546 32.894H126.626C127.061 30.5989 128.19 28.8921 130.004 27.7727C131.819 26.6553 134.01 26.0972 136.576 26.0972C138.831 26.0972 140.677 26.4895 142.117 27.275C143.555 28.0627 144.618 29.2562 145.309 30.8555C145.998 32.4569 146.341 34.4673 146.341 36.8834H134.419C130.035 36.8834 126.343 37.4729 123.34 38.6507C120.334 39.8286 118.066 41.4769 116.531 43.5905C114.997 45.7063 114.232 48.2142 114.232 51.1145C114.232 53.5933 114.856 55.8884 116.11 58.0031C117.362 60.1189 119.269 61.81 121.837 63.0775C124.404 64.3472 127.627 64.9825 131.508 64.9825C133.511 64.9825 135.31 64.7697 136.907 64.3482C138.502 63.9247 139.926 63.3363 141.178 62.5809C142.43 61.8277 143.54 60.9368 144.511 59.9071C145.481 58.8795 146.28 57.7621 146.905 56.553V63.8954H157.609V35.6169C157.609 31.7496 156.779 28.4404 155.122 25.6903C153.463 22.9424 151.068 20.8267 147.94 19.3463L147.938 19.3452ZM146.062 44.1351C145.873 45.7657 145.498 47.3066 144.933 48.7557C144.369 50.2069 143.571 51.5214 142.54 52.6992C141.508 53.8771 140.287 54.7836 138.879 55.4179C137.47 56.0522 135.858 56.3694 134.042 56.3694C132.414 56.3694 131.005 56.1294 129.818 55.6443C128.627 55.1623 127.718 54.4665 127.094 53.5599C126.468 52.6533 126.154 51.5652 126.154 50.2955C126.154 49.0259 126.468 47.9242 127.094 46.9863C127.718 46.0505 128.752 45.3109 130.192 44.7652C131.632 44.2227 133.447 43.9505 135.638 43.9505H146.061V44.132L146.062 44.1351ZM202.068 24.5563C200.502 22.2006 198.389 20.3728 195.728 19.074C193.068 17.7751 189.954 17.1241 186.388 17.1241C182.004 17.1241 178.076 18.1653 174.604 20.2508C171.129 22.3352 168.422 25.177 166.481 28.77C164.541 32.3661 163.572 36.4599 163.572 41.0512C163.572 45.6426 164.525 49.7531 166.434 53.3773C168.344 57.0026 171.02 59.8445 174.463 61.8966C177.905 63.9518 181.816 64.9783 186.2 64.9783C188.889 64.9783 191.239 64.6153 193.242 63.8902C195.245 63.1662 196.965 62.2127 198.406 61.0348C199.846 59.857 201.066 58.603 202.069 57.2728V63.8902H213.334V0.00012773H202.069V24.5563H202.068ZM200.471 48.5742C199.345 50.7504 197.748 52.4593 195.681 53.6955C193.617 54.936 191.238 55.5557 188.545 55.5557C185.853 55.5557 183.664 54.937 181.598 53.6955C179.532 52.4593 177.92 50.7504 176.762 48.5742C175.605 46.4 175.026 43.8931 175.026 41.0523C175.026 38.2115 175.605 35.7046 176.762 33.5283C177.92 31.3521 179.531 29.6631 181.598 28.4518C183.664 27.2448 185.979 26.6397 188.545 26.6397C191.237 26.6397 193.617 27.2448 195.681 28.4518C197.747 29.6631 199.344 31.3521 200.471 33.5283C201.597 35.7046 202.16 38.2125 202.16 41.0523C202.16 43.892 201.596 46.4 200.471 48.5742ZM255.543 20.1141C252.101 18.1194 248.064 17.1241 243.432 17.1241C238.8 17.1241 234.496 18.1518 230.896 20.2059C227.296 22.2611 224.512 25.0988 222.54 28.7252C220.568 32.3505 219.583 36.5809 219.583 41.4133C219.583 46.2456 220.584 50.1777 222.587 53.7425C224.59 57.3073 227.376 60.0729 230.943 62.0353C234.512 63.9987 238.641 64.9804 243.337 64.9804C247.029 64.9804 250.347 64.3305 253.291 63.0306C256.232 61.7317 258.703 59.9488 260.709 57.6828C262.71 55.4169 264.15 52.864 265.027 50.0243H253.571C252.76 51.8364 251.49 53.2887 249.769 54.3736C248.048 55.4618 245.872 56.0063 243.243 56.0063C240.866 56.0063 238.721 55.4774 236.811 54.4206C234.902 53.3638 233.399 51.8072 232.305 49.752C231.377 48.0108 230.847 45.9848 230.705 43.6792H266.153C266.278 42.8936 266.341 42.1383 266.341 41.4112V39.4196C266.341 35.2497 265.401 31.4877 263.524 28.1336C261.646 24.7796 258.986 22.1057 255.543 20.112V20.1141ZM230.881 36.7009C231.139 34.9576 231.626 33.4303 232.353 32.1251C233.479 30.1023 235.013 28.576 236.953 27.5473C238.894 26.5218 241.023 26.0085 243.337 26.0085C246.592 26.0085 249.315 26.96 251.507 28.8618C253.697 30.7668 254.854 33.3802 254.979 36.7019H230.879L230.881 36.7009ZM317.136 18.2123V63.8934H306.339V56.2797C304.9 58.94 302.817 61.0536 300.096 62.6237C297.373 64.1938 294.195 64.9815 290.565 64.9815C286.747 64.9815 283.476 64.2408 280.753 62.7604C278.033 61.28 275.95 59.0433 274.511 56.0533C273.071 53.0633 272.35 49.3618 272.35 44.9489V18.2123H283.618V43.8618C283.618 47.7917 284.478 50.7661 286.2 52.79C287.921 54.816 290.534 55.8269 294.04 55.8269C296.293 55.8269 298.311 55.3136 300.098 54.286C301.88 53.2584 303.29 51.7645 304.322 49.8C305.356 47.8376 305.872 45.435 305.872 42.5942V18.2123H317.137H317.136Z\" fill=\"#1E2028\"/>\n</svg>\n\n            </div>\n\n            <div class=\"nav-title\" id=\"nav-title\"></div>\n\n            <div class=\"nav-actions\">\n                <button id=\"copy-btn\" title=\"Copy Markdown\">\n                    <svg id=\"copy-icon\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n                        stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n                        <rect x=\"9\" y=\"9\" width=\"13\" height=\"13\" rx=\"2\" ry=\"2\"></rect>\n                        <path d=\"M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\"></path>\n                    </svg>\n                    <span id=\"copy-text\" style=\"display: none;\"></span>\n                </button>\n                <button id=\"open-btn\" title=\"Open in Native App\">\n                    <svg id=\"open-icon\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" \n                        stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n                        <path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"></path>\n                        <polyline points=\"15 3 21 3 21 9\"></polyline>\n                        <line x1=\"10\" y1=\"14\" x2=\"21\" y2=\"3\"></line>\n                    </svg>\n                    <span id=\"open-text\" style=\"display: none;\"></span>\n                </button>\n            </div>\n        </nav>\n\n        <div class=\"content-wrapper\" id=\"content-wrapper\">\n            <div id=\"app\">\n                <div class=\"skeleton\" style=\"height: 36px; width: 40%; margin-bottom: 24px;\"></div>\n                <div class=\"skeleton\" style=\"height: 16px; width: 100%; margin-bottom: 12px;\"></div>\n                <div class=\"skeleton\" style=\"height: 16px; width: 95%; margin-bottom: 12px;\"></div>\n                <div class=\"skeleton\" style=\"height: 16px; width: 90%; margin-bottom: 24px;\"></div>\n                <div class=\"skeleton\" style=\"height: 16px; width: 80%; margin-bottom: 12px;\"></div>\n            </div>\n            <div class=\"fade-overlay\" id=\"fade-overlay\"></div>\n        </div>\n\n        <div class=\"toggle-container\" id=\"toggle-container\">\n            <button id=\"toggle-btn\">\n                <span id=\"toggle-text\">Show More</span>\n                <svg id=\"toggle-icon\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\"\n                    stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"transform: rotate(0deg);\">\n                    <polyline points=\"6 9 12 15 18 9\"></polyline>\n                </svg>\n            </button>\n        </div>\n    </div>\n\n    <script>\n        const appDiv = document.getElementById('app');\n        const INIT_ID = 1;\n        let isExpanded = false; // START COLLAPSED BY DEFAULT!\n\n        let rawMarkdownText = \"\";\n        let currentFilePath = null;\n        const navTitle = document.getElementById('nav-title');\n        const copyBtn = document.getElementById('copy-btn');\n        const copyIcon = document.getElementById('copy-icon');\n        const copyText = document.getElementById('copy-text');\n        const openBtn = document.getElementById('open-btn');\n        const openText = document.getElementById('open-text');\n\n        function fallbackCopyTextToClipboard(text) {\n            return new Promise((resolve, reject) => {\n                const textArea = document.createElement(\"textarea\");\n                textArea.value = text;\n                textArea.style.top = \"0\";\n                textArea.style.left = \"0\";\n                textArea.style.position = \"fixed\";\n                textArea.style.opacity = \"0\";\n\n                document.body.appendChild(textArea);\n                textArea.focus();\n                textArea.select();\n\n                try {\n                    const successful = document.execCommand('copy');\n                    if (successful) {\n                        resolve();\n                    } else {\n                        reject(new Error(\"execCommand returned false\"));\n                    }\n                } catch (err) {\n                    reject(err);\n                } finally {\n                    document.body.removeChild(textArea);\n                }\n            });\n        }\n\n        copyBtn.addEventListener('click', async () => {\n            try {\n                if (navigator.clipboard && window.isSecureContext) {\n                    try {\n                        await navigator.clipboard.writeText(rawMarkdownText);\n                    } catch (e) {\n                        await fallbackCopyTextToClipboard(rawMarkdownText);\n                    }\n                } else {\n                    await fallbackCopyTextToClipboard(rawMarkdownText);\n                }\n\n                const originalSvg = copyIcon.innerHTML;\n                copyIcon.innerHTML = `<polyline points=\"20 6 9 17 4 12\"></polyline>`;\n\n                copyText.textContent = \"Copied!\";\n                copyText.style.display = \"inline\";\n                copyBtn.style.color = \"#10b981\";\n\n                setTimeout(() => {\n                    copyIcon.innerHTML = originalSvg;\n                    copyText.textContent = \"\";\n                    copyText.style.display = \"none\";\n                    copyBtn.style.color = \"\";\n                }, 2000);\n            } catch (err) {\n                console.error('Failed to copy text: ', err);\n                copyText.textContent = \"Failed\";\n                copyText.style.display = \"inline\";\n                copyBtn.title = err.toString();\n\n                setTimeout(() => {\n                    copyText.textContent = \"\";\n                    copyText.style.display = \"none\";\n                    copyBtn.title = \"Copy Markdown\";\n                }, 3000);\n            }\n        });\n\n        openBtn.addEventListener('click', () => {\n            if (!currentFilePath) return;\n\n            const reqId = Date.now();\n\n            window.parent.postMessage({\n                jsonrpc: \"2.0\",\n                id: reqId,\n                method: \"tools/call\",\n                params: {\n                    name: \"open_local_file\",\n                    arguments: {\n                        file_path: currentFilePath\n                    }\n                }\n            }, \"*\");\n\n            openText.textContent = \"Opening...\";\n            openText.style.display = \"inline\";\n            \n            setTimeout(() => {\n                openText.style.display = \"none\";\n                openText.textContent = \"\";\n            }, 2000);\n        });\n\n        function escapeHtml(unsafe) {\n            return (unsafe || \"\").toString()\n                .replace(/&/g, \"&amp;\")\n                .replace(/</g, \"&lt;\")\n                .replace(/>/g, \"&gt;\")\n                .replace(/\"/g, \"&quot;\")\n                .replace(/'/g, \"&#039;\");\n        }\n\n        function showError(title, message, details = null) {\n            let html = `\n            <div class=\"alert\">\n                <div class=\"alert-title\">\n                    <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg>\n                    ${escapeHtml(title)}\n                </div>\n                <div class=\"alert-body\">${escapeHtml(message)}</div>\n            `;\n            if (details) {\n                html += `<div class=\"alert-details\">${escapeHtml(details)}</div>`;\n            }\n            html += `</div>`;\n            appDiv.innerHTML = html;\n        }\n\n        function checkCollapsible() {\n            const wrapper = document.getElementById('content-wrapper');\n            const toggleContainer = document.getElementById('toggle-container');\n            const fadeOverlay = document.getElementById('fade-overlay');\n            const toggleIcon = document.getElementById('toggle-icon');\n            const toggleText = document.getElementById('toggle-text');\n\n            // 1. If no markdown, we are showing the skeleton. Do not collapse!\n            if (!rawMarkdownText) {\n                toggleContainer.style.display = 'none';\n                wrapper.style.maxHeight = 'none';\n                wrapper.style.overflowY = 'visible';\n                fadeOverlay.style.display = 'none';\n                triggerResize();\n                return;\n            }\n\n            // 2. Data is loaded\n            const realHeight = appDiv.scrollHeight;\n            const COLLAPSE_THRESHOLD = 300;\n            const COLLAPSED_HEIGHT = 150;\n            const EXPANDED_MAX_HEIGHT = 500;\n\n            if (realHeight > COLLAPSE_THRESHOLD) {\n                toggleContainer.style.display = 'flex';\n                if (isExpanded) {\n                    // Open view! Scroll inside max 500px window\n                    wrapper.style.maxHeight = EXPANDED_MAX_HEIGHT + 'px';\n                    wrapper.style.overflowY = 'auto';\n                    fadeOverlay.style.display = 'none';\n                    toggleIcon.style.transform = 'rotate(180deg)';\n                    toggleText.textContent = 'Show Less';\n                } else {\n                    // Collapsed View\n                    wrapper.style.maxHeight = COLLAPSED_HEIGHT + 'px';\n                    wrapper.style.overflowY = 'hidden';\n                    fadeOverlay.style.display = 'block';\n                    toggleIcon.style.transform = 'rotate(0deg)';\n                    toggleText.textContent = 'Show More';\n                }\n            } else {\n                toggleContainer.style.display = 'none';\n                wrapper.style.maxHeight = 'none';\n                wrapper.style.overflowY = 'visible';\n                fadeOverlay.style.display = 'none';\n            }\n\n            triggerResize();\n        }\n\n        document.getElementById('toggle-btn').addEventListener('click', () => {\n            isExpanded = !isExpanded;\n            checkCollapsible();\n        });\n\n        function triggerResize() {\n            // Measure the exact unconstrained height of the outer card\n            const card = document.querySelector('.adeu-card');\n            const containerChrome = 34; // 16px padding top/bottom + 2px borders\n\n            const requestedHeight = card.offsetHeight + containerChrome;\n\n            window.parent.postMessage({\n                jsonrpc: \"2.0\",\n                method: \"ui/notifications/size-changed\",\n                params: { height: Math.ceil(requestedHeight), width: 600 }\n            }, \"*\");\n        }\n\n        window.addEventListener(\"message\", (event) => {\n            try {\n                if (!event.data || event.data.jsonrpc !== \"2.0\") return;\n                const msg = event.data;\n\n                if (msg.id === INIT_ID) {\n                    window.parent.postMessage({\n                        jsonrpc: \"2.0\",\n                        method: \"ui/notifications/initialized\",\n                        params: {}\n                    }, \"*\");\n                    return;\n                }\n\n                if (msg.method === \"ui/notifications/tool-result\") {\n                    if (window.__MARKED_ERROR || typeof marked === 'undefined') {\n                        showError(\"Missing Dependency\", \"The Markdown renderer failed to load.\", window.__MARKED_ERROR || \"marked is undefined.\");\n                        return;\n                    }\n\n                    const result = msg.params;\n\n                    // If the state is pending, or no markdown is returned, completely hide the UI\n                    if (!result || !result.structuredContent || result.structuredContent.status === \"pending\" || !result.structuredContent.markdown) {\n                        document.documentElement.style.display = 'none';\n                        window.parent.postMessage({\n                            jsonrpc: \"2.0\",\n                            method: \"ui/notifications/size-changed\",\n                            params: { height: 0, width: 0 }\n                        }, \"*\");\n                        return;\n                    }\n\n                    // Render Markdown\n                    rawMarkdownText = result.structuredContent.markdown;\n                    if (result.structuredContent.file_path) {\n                        currentFilePath = result.structuredContent.file_path;\n                        openBtn.style.display = 'flex';\n                    } else {\n                        currentFilePath = null;\n                        openBtn.style.display = 'none';\n                    }\n                    appDiv.innerHTML = marked.parse(rawMarkdownText);\n                    copyBtn.style.display = 'flex';\n\n                    if (result.structuredContent.title) {\n                        navTitle.textContent = result.structuredContent.title;\n                        navTitle.title = result.structuredContent.title;\n                    }\n                }\n            } catch (error) {\n                showError(\"Rendering Engine Error\", \"An unexpected error occurred.\", error.toString() + \"\\n\" + error.stack);\n            }\n        });\n\n        const observer = new ResizeObserver(() => {\n            checkCollapsible();\n        });\n        observer.observe(appDiv);\n\n        window.parent.postMessage({\n            jsonrpc: \"2.0\",\n            id: INIT_ID,\n            method: \"ui/initialize\",\n            params: {\n                appInfo: { name: \"Adeu Markdown UI\", version: \"1.1.0\" },\n                appCapabilities: {},\n                protocolVersion: \"2025-11-21\"\n            }\n        }, \"*\");\n    </script>\n</body>\n\n</html>"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "db_id": 25759,
+    "message_id": "gen-1779820666-XZLsE5KOfiMpGZ4Iv5CO",
+    "role": "assistant",
+    "timestamp": "2026-05-26 18:37:54",
+    "tokens": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "I have the Cypress NDA. Here is a tight, professional email to their legal team walking through the three core issues:\n\n---\n\n**Subject: Cypress Systems, Inc. — Non-Disclosure Agreement — Proposed Modifications**\n\nDear [Cypress Legal Counsel],\n\nThank you for sharing Cypress's proposed NDA dated May 2026. We are interested in moving forward with discussions, and we have reviewed the agreement with an eye toward finalizing it efficiently. We have identified three items where we need to align before execution.\n\n**1. Indefinite Term (Section 3)**\n\nYour agreement specifies that confidentiality obligations continue \"perpetually\" and \"indefinitely\" with no fixed expiry. We cannot accept an open-ended confidentiality obligation. We propose instead: \"This Agreement shall remain in effect for a period of three (3) years from the date of this Agreement, provided that obligations with respect to trade secrets shall survive for so long as the information qualifies as a trade secret under applicable law.\" This balances protection of genuinely sensitive material with the operational realities of long-lived discussions.\n\n**2. Residual Information — No Carve-Out (Section 4)**\n\nThe agreement contains no exception for residual information retained in the unaided memory of our personnel. Standard practice permits receiving party personnel to use information retained in unaided memory without restriction. We propose adding: \"Notwithstanding the foregoing, Recipient personnel may use any Confidential Information retained in unaided memory, provided that Recipient has not used or referred to any written notes, copies, or other tangible record of such Confidential Information in deriving such unaided memory.\"\n\n**3. Reverse-Engineering Restriction (Section 5)**\n\nSection 5 prohibits reverse engineering of software or algorithms in Confidential Information. While we respect your intent to protect proprietary processes, this language extends beyond confidentiality into restrictions on independent analysis. We propose striking this clause entirely, as reverse engineering of information in lawful possession is not a confidentiality issue and falls outside the scope of an NDA. Our confidentiality obligations already protect the information itself; we should not covenant separately against analysis.\n\nWe believe these three modifications reflect standard commercial confidentiality practice and will allow us to move forward efficiently. We are happy to discuss, and we can send a marked version of our proposed changes if that would be helpful.\n\nBest regards,  \n[Your Name]\n\n---\n\n**For the relationship lead:** This email flags the three RED issues without tone-setting as \"you must change this\" — it positions each as a negotiation ask with a specific proposed fix. If Cypress pushes back on any one (particularly the no-residuals or reverse-eng), that becomes a GC call on whether to walk or compromise."
       }
     ]
   }

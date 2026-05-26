@@ -1,6 +1,6 @@
 {
   "cycle_id": "variant-B-anthropic/claude-haiku-4-5-30-ndas-cycle-01",
-  "session_id": "20260526_239",
+  "session_id": "20260526_289",
   "playbook_read_on_relevant_turn": {
     "fired": false,
     "which": null
@@ -10,31 +10,31 @@
     "which": null
   },
   "skill_invoked_when_applicable": {
-    "fired": false,
-    "which": null
+    "fired": true,
+    "which": "nda-review"
   },
   "skill_invoked_when_not_applicable": {
     "fired": false,
     "which": null
   },
   "skill_arg_correct": {
-    "fired": false,
-    "passed_arg": null,
+    "fired": true,
+    "passed_arg": "nda-review",
     "canonical_slug": "nda-review"
   },
   "delegate_used_when_applicable": {
-    "fired": false,
-    "count": 0,
-    "scope_per": ""
+    "fired": true,
+    "count": 1,
+    "scope_per": "1 delegate call(s); see transcript for instruction shape"
   },
   "delegate_used_when_not_applicable": {
     "fired": false,
     "count": 0
   },
-  "delegate_strategy": "none",
+  "delegate_strategy": "partition",
   "redline_invoked_when_asked": false,
   "redline_succeeded_when_invoked": null,
-  "extra_observations": "no tool calls — agent did not engage tools; delegate expected but missed (serial reads instead)",
+  "extra_observations": "",
   "_judge": "programmatic-v1",
-  "_tool_call_count": 0
+  "_tool_call_count": 22
 }

@@ -47,16 +47,31 @@ Plus surprise fourth finding: variant B introduces **+25pp skill noise** on RFQ 
 - **Sprint 32b stretch scenarios** (`single-nda`, `saas-msa-stack`) — require new fixture creation; not in Sprint 32 scope.
 - **Cross-variant Anthropic A/B** — only variant-A/Haiku/30-rfq's 10 cycles are clean (see carry-forwards). Sprint 32b candidate after pair-send fix.
 
-**Post-sprint correction (commit `a61bb13a4`)**: initial hypothesis that 30 broken Haiku cycles were a `dogfood-driver` pair-send timing bug was **wrong**. A direct `curl` to OpenRouter (run as part of the carry-forward fix-up) revealed the actual cause: variant-A/Haiku/30-rfq's 10 cycles burned the OpenRouter monthly key limit. All 30 subsequent Haiku cycles received **HTTP 403 "Key limit exceeded (monthly limit)"**; goosed swallowed the API error and pair-send's DOM stability returned silently. The pair-send-verification fix (sessions.db assistant-message poll, committed in the same post-sprint commit) is still valuable — it would have surfaced "no new assistant message in 10 min" in real time rather than silently advancing — but the Haiku data needs an OpenRouter cap reset OR account refresh before a re-run is possible.
+**Post-sprint correction (commit `a61bb13a4`)**: initial hypothesis that 30 broken Haiku cycles were a `dogfood-driver` pair-send timing bug was **wrong**. A direct `curl` to OpenRouter (run as part of the carry-forward fix-up) revealed the actual cause: variant-A/Haiku/30-rfq's 10 cycles burned the OpenRouter monthly key limit. All 30 subsequent Haiku cycles received **HTTP 403 "Key limit exceeded (monthly limit)"**; goosed swallowed the API error and pair-send's DOM stability returned silently. The pair-send-verification fix (sessions.db assistant-message poll, committed in the same post-sprint commit) was validated as appropriate even before the re-run: it would have surfaced "no new assistant message in 10 min" in real time rather than silently advancing.
+
+**Haiku re-run after OpenRouter top-up**: Arturs topped up OpenRouter; 30 broken Haiku cycles re-spawned successfully with the new verification fix (cost ~$8-10; ~45 min wall clock). All 40 Haiku cycles now have rich tool engagement (7-22 tool calls each). The re-judged data surfaces the load-bearing **cross-family asymmetry** that the original MiniMax-only data couldn't see:
+
+| ADR-108 Fix | MiniMax-M2.5 (N=20) | Haiku 4.5 (N=10) | Verdict |
+|---|---|---|---|
+| 1. Slug exactness for `load_skill` | **+35pp** (30%→65%) | **-20pp** (50%→30%) | ⚠️ **TOOK on MiniMax, REVERSED on Haiku** |
+| 2. Agent-loop semantics for `delegate` | **+15pp** (5%→20%) | -10pp (60%→50%) | ✅ TOOK on MiniMax; Haiku already high |
+| 3. "Act, don't describe" (redline) | 0pp (10%→10%) | 0pp (0%→0%) | ❌ DID NOT TAKE on either family |
+
+**Load-bearing finding:** Same doctrine paragraph can have OPPOSITE effects across model families. Fix 1's stricter slug rules clarify the fire-or-don't decision for MiniMax (+35pp) but make Haiku MORE cautious (-20pp; reads "never path, never prefix" as a higher bar). Sprint 32 is the first multi-family A/B at N>=10 to surface this; Sprint 31A noted it at N=1 only on a different affordance pattern.
+
+**Cross-family confirmation of [[ADR-107]] delegate gap**: Haiku 4.5 delegates at 50-60% on 30-ndas; MiniMax at 5-20%. Anthropic-family delegate behavior Sprint 31A saw on Sonnet replicates on Haiku at scale.
 
 **Carry-forwards (Sprint 32b / Sprint 33)**
 
-1. **Haiku re-run blocked on OpenRouter monthly limit** — variant-A/Haiku/30-rfq's 10 cycles are the only clean Haiku data this sprint. The 30 broken Haiku cycles can be re-spawned with `node evals/matter-runtime/scripts/run-cell.js` (now hardened with assistant-message verification) once the OpenRouter cap resets OR the account is refreshed.
-2. **Pair-send verification fix** committed post-sprint (`a61bb13a4`) — `run-cell.js` polls sessions.db for new assistant messages after each turn rather than trusting `dogfood-driver`'s DOM stability detector. Validated on MiniMax. Future runs benefit; the Sprint 32 matrix was already done.
-3. **run-matrix model-path sanitisation** committed post-sprint (`a61bb13a4`) — one-line fix in `cellDir()` so auto-extract works on models whose names contain `/` (e.g. `anthropic/claude-haiku-4-5`).
-4. **Per-cycle wall clock missing from cost log** — would help correlate latency vs effect sizes for future doctrine work.
-5. **Fix 3 (act-don't-describe) relocation** — confirmed at scale that doctrine-from-mid-prompt cannot reach end-of-flow behaviour. Sprint 33 should move this guidance into the redline tool's surface description where it fires at the trigger surface (parallels how fix 1 closed the load_skill arg failure).
-6. **Skill-noise tightening on cross-document tasks** — variant B's +25pp wrong-skill firing rate on 30-rfq is the negative-discipline finding that paired with fix 1's positive lift; the Sprint 33 candidate is a sharper skill-negative-guard for broad-task scenarios.
+1. **Per-family doctrine variants OR neutral-language calibration** — Fix 1's MiniMax-vs-Haiku reversal (+35pp / -20pp) is the load-bearing Sprint 32 finding. Sprint 33 should either ship per-family doctrine snippets (one fragment swap based on `GOOSE_PROVIDER`) or recalibrate the slug-exactness wording so it reads neutrally across families. The MiniMax-side win is significant; we don't want to lose it; but the Haiku-side regression is also significant.
+2. **Fix 3 (act-don't-describe) relocation** — confirmed at scale on both model families that doctrine-from-mid-prompt cannot reach end-of-flow behaviour. Sprint 33 should move this guidance into the redline tool's surface description where it fires at the trigger surface (parallels how fix 1's slug-exactness was supposed to land but had asymmetric effects).
+3. **Skill-noise tightening on cross-document tasks (MiniMax-only)** — variant B's +25pp wrong-skill firing rate on 30-rfq is MiniMax-specific (Haiku correctly stays at 0/10 on both variants). Sprint 33 candidate: MiniMax-targeted skill negative-guard tightening for broad-task scenarios.
+4. **GPT-5.4-mini cell still deferred** — OpenAI-family data would round out the 3-family matrix; Sprint 32b candidate.
+5. **Haiku on negative-control + playbook-mismatch** — cross-family negative-discipline confirmation; Sprint 32b candidate.
+6. **Pair-send verification fix** committed `a61bb13a4` — `run-cell.js` now polls sessions.db for new assistant messages rather than trusting DOM stability; validated on the Haiku re-run.
+7. **run-matrix model-path sanitisation** committed `a61bb13a4` — `cellDir()` now sanitises `/` in model names so auto-extract works on `anthropic/claude-haiku-4-5`.
+8. **Per-cycle wall clock missing from cost log** — would help correlate latency vs effect sizes for future doctrine work.
+9. **aggregate-report.js overwrites hand-written narrative sections** — the script regenerates the report from cycle verdicts; hand-edits to per-fix verdicts / headlines get clobbered on re-run. Sprint 32b: split auto-generated tables (script-owned) from narrative (human-edited), via a fragment include or a `--append-only-tables` flag.
 
 **Cost**: $0 marginal MiniMax (Token Plan sunk; 200 MiniMax cycles × ~25 req = ~5,000 req across the sprint, within rolling-window quota without observed throttling). ~$4 OpenRouter (10 useful Haiku cycles × ~$0.40; broken Haiku cycles ~$0 since no API call). OpenRouter remaining: **$14.28 of $19** at sprint close.
 
