@@ -14,6 +14,59 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 31A — Cross-model validation of Sprint 31 doctrine (closed 2026-05-26)
+
+**Goal**: Execute Sprint 31's carry-forward — measure whether the residual `load_skill` + `delegate` misses are MiniMax-specific or general LLM behavior — by replaying Sprint 31 Test 1 (Pemberton RFQ + redline) and Test 2 (10-NDA triage) against `openai/gpt-5.4-mini` and `anthropic/claude-sonnet-4.6` via OpenRouter alongside a fresh MiniMax baseline. Same fixtures/persona/binary/prompt; only provider varies. N=1 per model — smoke check, not statistical rigor (that's Sprint 32's N=20). Single-pass; informs Sprint 32 substrate design before it's built.
+
+**Built (two ADRs + cross-model dogfood)**
+
+- **[[ADR-106]] Matter recipes inherit goosed env-provider** — dropped hardcoded `settings.goose_provider: 'minimax'` + `settings.goose_model: 'MiniMax-M2.5'` from `ui/desktop/src/components/oscar/recipe/buildPracticeAreaRecipe.ts`. Matter recipes now follow `GOOSE_PROVIDER` / `GOOSE_MODEL` at session spawn. Forge / onboarding / Lavern recipes stay pinned (their consumers depend on predictable provider choice — Sprint 22+ Tier-A baseline, [[ADR-077]] Lavern). `scripts/dogfood/dogfood.sh` extended to source `/root/.openrouter-dev-key` when `GOOSE_PROVIDER=openrouter`. RUNBOOK addendum captures env-var pattern + key location. Binary rebuilt via `pnpm bundle:oscar-linux`.
+
+- **[[ADR-107]] Cross-model uptake patterns** — records the structural finding from the cross-model dogfood: `load_skill` and `delegate` exhibit **inverse uptake patterns across model families**. MiniMax + GPT-5.4-mini invoke `load_skill` but miss `delegate`; Claude Sonnet 4.6 invokes `delegate` cleanly (7 subagents on Test 2) but skips `load_skill`. Sprint 31's "MiniMax-specific" hypothesis is partially right (delegate gap shared across MiniMax + GPT) but **not structural to Goose, doctrine, or agent loop** — Claude reads the same doctrine and acts.
+
+**Cross-model verdict matrix (one cycle per model, fixtures from Sprint 30)**
+
+| Affordance | MiniMax-M2.5 | gpt-5.4-mini | claude-sonnet-4.6 |
+|---|---|---|---|
+| Read matching playbook | ✅ both tests | ✅ both tests | ✅ both tests |
+| Skip irrelevant playbook (negative guard) | ✅ | ✅ | ✅ |
+| `load_skill` invocation | ✅ Test 2 (`nda-review`) | ✅ (wrong args — playbook path) | ❌ never |
+| `delegate` on batch | ❌ serial 10× | ❌ serial + heavy fs thrash | ✅ 7× `delegate(async=true)` |
+| Redline tool path (Test 1 Turn 5) | ✅ invoked 2× (rejected on content-match) | ❌ planned, not invoked | ❌ planned, not invoked |
+| ADR-020 re-scope (single read per NDA) | ✅ | ✅ | ✅ |
+| `developer` regression check | ✅ no leak | ✅ no leak | ✅ no leak |
+
+**Load-bearing findings**:
+
+1. **Sprint 31's `load_skill` miss on MiniMax was non-deterministic** — today's MiniMax baseline invoked `load_skill(name="nda-review")` cleanly. Sprint 31 cycle 3's miss was N=1 variance.
+2. **`delegate` gap is model-family-specific**, not Goose-specific. MiniMax + GPT-5.4-mini conflate "many tool calls per assistant message" with parallelism; Claude has a clear "delegate = N async subagents" prior. Doctrine isn't the bottleneck — model capability/prior is.
+3. **Negative guards held perfectly across all three models on both tests** — neither model read the irrelevant playbook. Arturs's over-tuning concern did not materialise on any model.
+
+**Per-model per-test detail** at `docs/sprint-31a/README.md` with the full verdict matrix, transcripts under `{minimax,gpt-5.4-mini,claude-sonnet-4.6}/test-{1-rfq,2-ndas}/`, and the cost breakdown.
+
+**ADRs**: 106 (env-overridable provider in matter recipes), 107 (cross-model uptake patterns).
+
+**Deferred / Carry-forwards to Sprint 32**:
+- Multi-model matrix from day one — Sprint 32's substrate must include MiniMax + Claude + at least one OpenAI-family model. MiniMax-only would under-report `delegate` and over-report `load_skill` stability.
+- Rubric must distinguish "tool invoked correctly" from "tool invoked at all" — GPT-5.4-mini's mis-named `load_skill` is half-credit.
+- `delegate` doctrine refinement candidate for Sprint 33+ (sharper phrasing or model-specific framing for MiniMax/GPT).
+- `load_skill` arg-validity hint Sprint 33+ (the "did you mean" error suggestion could be one step closer to canonical slug).
+- Redline tool execution gap on GPT + Claude (planned but not executed) — Sprint 33+ doctrine or tool-description sharpening.
+
+**Costs**:
+- MiniMax dev key: $0.31 (Test 1 $0.23 + Test 2 $0.08) — 3% of $10/PCM cap
+- OpenRouter dev key: $5.03 ($1.80 GPT-5.4-mini + $1.55 Claude T1 + $1.33 Claude T2 main + $0.35 Claude T2 subagents ×6) — 50% of $10 hard cap
+- Anthropic: $0 (judging by CC under Max per [[ADR-082]])
+- **Total**: $5.34. Cycle costs: MiniMax (per test) ~$0.08-0.23; GPT-5.4-mini ~$0.44-1.36; Claude ~$1.33-1.68.
+
+**Test conditions**: same persona (Helena Marwick, GC, Stanford Industrial Supply Co.), same fixtures (`docs/sprint-30/test-1-rfq/fixtures/` + `docs/sprint-30/test-2-ndas/fixtures/`), same matter slugs (`pemberton-rfq`, `nda-triage-week-21`), same prompts verbatim from Sprint 31 cycle 3 transcripts. Provider switch via env: `GOOSE_PROVIDER=openrouter GOOSE_MODEL=<slug>` with `OPENROUTER_API_KEY` sourced from `/root/.openrouter-dev-key` by dogfood.sh. Sessions cleared between models to force fresh recipe builds. Rebuilt binary at `ui/desktop/out/Oscar-GC-linux-x64/oscar-gc` (Sprint 31A build post-[[ADR-106]]).
+
+**Sibling repos**: none touched. No Rust core touch.
+
+**Commits**: this commit (preceded by `597a3b5bdd6a` for [[ADR-106]] + recipe change + RUNBOOK addendum + dogfood.sh OpenRouter sourcing).
+
+---
+
 ### Sprint 31 — Doctrine work + three sweep-up fixes + re-dogfood (closed 2026-05-26)
 
 **Goal**: First act on Sprint 30 findings ([[ADR-101]]). Land a discovery doctrine that converts the three passive enumeration blocks (on-demand playbooks, skill slugs, `delegate` from `summon`) into active triggers — without over-tuning into noise on irrelevant turns. Three sweep-up fixes: (a) `developer` exposure leak in matter recipes; (b) re-scope ADR-020's "always read" so the outline+full sequence doesn't bleed into triage tasks; (c) zip-build adeu install parity so dogfood on zip binaries works first-time. Manual re-dogfood validation against Sprint 30's exact fixtures.
