@@ -14,6 +14,72 @@ Append-only. Most recent at the top. Every sprint closes with an entry covering:
 
 ---
 
+### Sprint 33 — Cross-model doctrine recalibration (research-first); Candidate C achieves cross-family balance (closed 2026-05-27)
+
+**Goal**: Three-stage research → recalibration → measurement sprint, per [[ADR-109]]. Stage 1: research memo on cross-model prompt portability. Stage 2: apply Stage 1 patterns to three candidates (C: slug-exactness; D: relocate "act don't describe"; E: cross-document skill discrimination). Stage 3: substrate measurement at N=20 MiniMax + N≤10 Haiku per candidate; pre-flight N=5 cross-family before scaling. Sprint closes on at least one candidate producing cross-family balance OR documents the dead-end. Per the verbatim user framing ("Stage 1 should be research. We are not the only ones working on this." + "All of the LLMs are dependency injection. We cannot calibrate per model."), no per-family doctrine branching; doctrine must work across whatever provider is wired up.
+
+**Built (Stage 1 memo + Candidate C variant + measurement + ADR-110 + baseline report)**
+
+- **`docs/sprint-33/research-memo.md`** — Stage 1 deliverable, ~3 pages, 24 citations across function-calling cross-model benchmarks (BFCL V4 Format Sensitivity, MetaTool, τ-bench), lab prompt-engineering guides (Anthropic, OpenAI o-series + GPT-4.1, Google Gemini, Meta Llama, MiniMax), academic literature (PromptBridge arXiv:2512.01420, Tool Preferences in Agentic LLMs arXiv:2505.18135, Pink Elephant arXiv:2503.22395, PRIN arXiv:2504.01282, Position is Power arXiv:2505.21091, Lost in the Middle arXiv:2406.16008), and industry case studies (Cursor, Replit Decision-Time Guidance, Aider, Continue.dev, Anthropic skill-creator). Memo selected **positive imperative + at most one targeted exclusion** as the cross-family-robust pattern for Candidate C, citing Anthropic's published guidance ("Tell Claude what to do instead of what not to do"; "yellow flag" on ALL-CAPS NEVER) and Pink Elephant's Spearman 0.866 size-vs-negation correlation that predicts the MiniMax/Haiku reversal Sprint 32 observed (MiniMax-M2.5 large MoE vs Haiku 4.5 small/efficient sit at opposite ends of the size-negation curve). Memo conclusions also deferred Candidate D's landing site and Candidate E's framing to post-Stage-1 verification per user direction. Research-only Sprint 33 outcome did NOT trigger — literature gave concrete patterns; substrate validated.
+
+- **Candidate C variant** at commit `9ea8939d8` — `ui/desktop/src/components/oscar/recipe/discoveryDoctrine.ts` Step B addendum: four-item NEVER list replaced by positive imperative + one targeted exclusion + preserved availability discipline. Before: *"the load_skill name argument is the exact slug as listed... Never a file path, never a category prefix, never a description, never the playbook filename."* After: *"pass the slug verbatim as it appears in the skills block. If the inventory lists nda-review, the call is load_skill(name=\"nda-review\") — exactly that string. The slug is the literal token the inventory printed, not a file path or a category prefix."* −1 line net (135 → 134 doctrine).
+
+- **Substrate variant C registration** at commit `a6c537753` — `evals/matter-runtime/scripts/lib-variants.js` + `build-variant.sh` extended with variant C case-arm (SHA `9ea8939d8`, 134 expected doctrine lines).
+
+- **Variant C binary built** via `scripts/build-variant.sh C` (Sprint 32 goosed fallback chain still applies; ~10 min build time on lq-vps). Binary at `evals/matter-runtime/binaries/variant-C/Oscar-GC-linux-x64/oscar-gc` (gitignored).
+
+- **Stage 2 verification finding (load-bearing)**: an Explore agent trace of `crates/goose/src/agents/extension_manager.rs:1057-1069` + `crates/goose/src/recipe/recipe_extension_adapter.rs:107` confirmed that the **extension `description` field in `commercialRecipe.ts` is UI-only and never reaches the LLM**. `get_extensions_info()` reads from the MCP server's `InitializeResult.instructions`, not from the recipe-level config description. This **invalidates** the Sprint 33 research memo's primary recommendation for Candidate D (the memo proposed `commercialRecipe.ts` extension description as the landing site). Sprint 33b's Candidate D landing site is `systemPrompt.ts` Step 4 of the five-step redline doctrine (or, with [[ADR-045]] precedent, an adeu vendor patch to the MCP server's `instructions` or per-tool descriptions). Candidate D variant was NOT built — finding surfaced during wait time while Candidate C was measuring, before D's variant binary was committed.
+
+- **Substrate measurement** — variant C × 3 cells:
+  - MiniMax 30-ndas N=20 (~25 min wall): 13/20 skill_arg_correct (held variant B's 65%); 0/20 skill noise; 8/20 playbook (within N=20 variance).
+  - MiniMax 30-rfq N=20 (~30 min wall): 0/20 skill applicable (correct, no skill applies on RFQ); **6/20 skill noise (−15pp vs variant B's 9/20 = 45%)**; 17/20 playbook; 3/20 redline invoked (+5pp vs B).
+  - Haiku 4.5 30-ndas N=5 (~7 min wall, ~$2 OpenRouter): **3/5 skill_arg_correct = 60% (+30pp vs variant B's 30%)**; 0/5 skill noise; 4/5 playbook; 1/5 delegate.
+
+- **OpenRouter cap exhausted during Haiku 30-rfq cycle 01 turn 4** — $20.04 / $20 monthly limit. Sprint 32's `pair-send-verified` fix from commit `a61bb13a4` surfaced this as a WARN (no new assistant message in 600,000ms). Runner killed cleanly; no partial cycle persisted in `iterations/variant-C/anthropic__claude-haiku-4-5/30-rfq/`. Per [the Sprint 33 budget discipline gate] CC pinged user; user direction was: no top-up, close Sprint 33 on Candidate C; defer Candidates D, E, and the missing Haiku cell to Sprint 33b. Sprint 32's lesson held — the verification fix made the silent failure visible immediately rather than ghosting the data.
+
+- **[[ADR-110]]** — Candidate C decision + verdict + caveats. 50 lines. Cites [[ADR-108]] (recalibrated), [[ADR-109]] (substrate that validated).
+
+- **`evals/matter-runtime/reports/sprint-33-baseline.md`** — auto-generated tables via `aggregate-report.js` then hand-rebuilt with Sprint 33 narrative (script's "Sprint 32" header hardcoded — Sprint 32b carry-forward).
+
+**Headline — Sprint 32 opposite-sign failure mode REVERSED**
+
+| Cell | Variant B | Variant C | Δ_C-B | Cross-family |
+|---|---|---|---|---|
+| MiniMax 30-ndas skill_arg_correct | 13/20 = 65% | 13/20 = **65%** | **+0pp** | HELD precision gain |
+| Haiku 4.5 30-ndas skill_arg_correct | 3/10 = 30% | 3/5 = **60%** | **+30pp** | RECOVERED above variant A's 50% |
+| MiniMax 30-rfq skill_noise | 9/20 = 45% | 6/20 = **30%** | **−15pp** | BONUS — partially addresses Candidate E target |
+
+Per Sprint 33's classification (no opposite-sign Δs): **IDEAL** outcome on the load-bearing cell. The research-first method paid off — the literature predicted the asymmetry mechanism (negative-constraint stacks read as permissive disambiguation on large MoE / higher bar on small efficient), the chosen wording pattern reversed it on the first attempt at the variant level.
+
+**Deferred (Sprint 33b)**
+
+- **Candidate D — relocate "act, don't describe"**: not built. Stage 2 verification surfaced the landing-site correction (extension `description` is UI-only; `systemPrompt.ts` Step 4 is the right place). Sprint 33b can build + measure now that the landing site is known.
+- **Candidate E — cross-document skill discrimination**: not built. Candidate C's −15pp MiniMax 30-rfq noise reduction partially absorbs E's target. Sprint 33b should re-evaluate scope.
+- **Haiku 30-rfq cell N=5 for Candidate C**: OpenRouter cap. Variant B was 0/10 noise; Candidate C wording is less aggressive; regression risk is structurally zero, just unmeasured.
+- **Haiku 30-ndas N=10 confirmation**: tightens CI half-width on the +30pp recovery from ±43pp to ±29pp; also rules out N=5 sampling artifact on the `delegate_applicable` 5/10 B → 1/5 C observation (Step C unchanged by Candidate C; cross-paragraph effect implausible).
+
+**Carry-forwards (Sprint 33b — combined with Sprint 32b list)**
+
+1. **OpenRouter top-up + complete Haiku 30-rfq for variant C** (~$2). Plus Haiku 30-ndas N=10 confirmation (~$2).
+2. **Candidate D variant build + measurement at corrected landing site** (`systemPrompt.ts` Step 4) — Sprint 33's research memo + the Stage 2 Explore-agent trace inform the wording. Hybrid trim of `discoveryDoctrine.ts` cross-cutting "Act, don't describe" section to a one-line reminder for non-redline affordances.
+3. **Candidate E scope re-evaluation** post-Candidate-C: −15pp on MiniMax 30-rfq skill noise may already satisfy the cross-document concern.
+4. **GPT-5.4-mini cell** (carried from Sprint 32b).
+5. **Haiku negative-control + playbook-mismatch** (carried from Sprint 32b) — cross-family negative-discipline confirmation; especially important now that Candidate C ships.
+6. **`aggregate-report.js` hand-edit clobber** (carried from Sprint 32b) — hit Sprint 33 the same way. Sprint 32b carry-forward fix is overdue.
+7. **`pre-flight-n5.js` is hardcoded to variant B + MiniMax + 30-ndas** — should be parameterised for future candidates' pre-flight workflow.
+
+**Cost**
+
+- **MiniMax**: $0 marginal (Token Plan sunk; ~40 N=20 MiniMax cycles across two scenarios within rolling-window quota).
+- **OpenRouter**: ~$2 marginal for Haiku 30-ndas N=5 (5 cycles × ~$0.40); the silent 30-rfq cycle 01 turn 4 attempt consumed negligible additional cost (single failed API call). Monthly limit binding at $20.04 / $20.
+- **Anthropic**: $0 (judging via Claude Code under Max per [[ADR-082]]; CC also handled Stage 1 research synthesis from three parallel research-agent runs).
+
+**ADRs**: 110 (Candidate C — slug-exactness recalibration via positive imperative).
+
+**Per-sprint discipline**: Stage 1 research memo committed BEFORE any wording edit (per the brief's load-bearing constraint). Plan-mode-then-execute followed: Plan reviewed via AskUserQuestion on three open questions (Candidate D site, Candidate 1 phrasing count, Stage 1→Stage 2 gate); user deferred D site + phrasing to memo and chose "memo committed; proceed straight to Stage 2." Stage 2 verification finding (extension description is UI-only) was caught during wait time before D's variant binary was committed — saved a wasted build cycle. No Rust core touch. No sibling MCP touch. Three commits: memo (`17927047c`), variant C wording (`9ea8939d8`), substrate registration (`a6c537753`), plus this sprint-close commit.
+
+---
+
 ### Sprint 32 — Matter-runtime eval substrate + N=20 measurement of ADR-108 fixes (closed 2026-05-26)
 
 **Goal**: Build the substrate every future matter system prompt doctrine change runs through before merging. N=20 measurement of ADR-108's three doctrine refinements at scale, replacing Sprint 31A/31B's N=1 manual cycles. Multi-model from day one (MiniMax primary, OpenRouter secondary). [[ADR-109]] codifies the methodology.

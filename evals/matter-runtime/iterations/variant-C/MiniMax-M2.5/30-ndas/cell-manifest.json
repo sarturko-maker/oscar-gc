@@ -1,0 +1,110 @@
+{
+  "variant": "C",
+  "model": "MiniMax-M2.5",
+  "scenario": "30-ndas",
+  "n": 20,
+  "cycles": [
+    {
+      "cycle_n": 1,
+      "session_id": "20260527_1",
+      "matter_slug": "30-ndas-c01-894440"
+    },
+    {
+      "cycle_n": 2,
+      "session_id": "20260527_2",
+      "matter_slug": "30-ndas-c02-894440"
+    },
+    {
+      "cycle_n": 3,
+      "session_id": "20260527_3",
+      "matter_slug": "30-ndas-c03-894440"
+    },
+    {
+      "cycle_n": 4,
+      "session_id": "20260527_4",
+      "matter_slug": "30-ndas-c04-894440"
+    },
+    {
+      "cycle_n": 5,
+      "session_id": "20260527_5",
+      "matter_slug": "30-ndas-c05-894440"
+    },
+    {
+      "cycle_n": 6,
+      "session_id": "20260527_6",
+      "matter_slug": "30-ndas-c06-894440"
+    },
+    {
+      "cycle_n": 7,
+      "session_id": "20260527_7",
+      "matter_slug": "30-ndas-c07-894440"
+    },
+    {
+      "cycle_n": 8,
+      "session_id": "20260527_8",
+      "matter_slug": "30-ndas-c08-894440"
+    },
+    {
+      "cycle_n": 9,
+      "session_id": "20260527_9",
+      "matter_slug": "30-ndas-c09-894440"
+    },
+    {
+      "cycle_n": 10,
+      "session_id": "20260527_10",
+      "matter_slug": "30-ndas-c10-894440"
+    },
+    {
+      "cycle_n": 11,
+      "session_id": "20260527_11",
+      "matter_slug": "30-ndas-c11-894440"
+    },
+    {
+      "cycle_n": 12,
+      "session_id": "20260527_12",
+      "matter_slug": "30-ndas-c12-894440"
+    },
+    {
+      "cycle_n": 13,
+      "session_id": "20260527_13",
+      "matter_slug": "30-ndas-c13-894440"
+    },
+    {
+      "cycle_n": 14,
+      "session_id": "20260527_14",
+      "matter_slug": "30-ndas-c14-894440"
+    },
+    {
+      "cycle_n": 15,
+      "session_id": "20260527_15",
+      "matter_slug": "30-ndas-c15-894440"
+    },
+    {
+      "cycle_n": 16,
+      "session_id": "20260527_16",
+      "matter_slug": "30-ndas-c16-894440"
+    },
+    {
+      "cycle_n": 17,
+      "session_id": "20260527_17",
+      "matter_slug": "30-ndas-c17-894440"
+    },
+    {
+      "cycle_n": 18,
+      "session_id": "20260527_18",
+      "matter_slug": "30-ndas-c18-894440"
+    },
+    {
+      "cycle_n": 19,
+      "session_id": "20260527_19",
+      "matter_slug": "30-ndas-c19-894440"
+    },
+    {
+      "cycle_n": 20,
+      "session_id": "20260527_20",
+      "matter_slug": "30-ndas-c20-894440"
+    }
+  ],
+  "started_at": "2026-05-27T15:07:20.024Z",
+  "completed_at": "2026-05-27T15:32:10.523Z"
+}

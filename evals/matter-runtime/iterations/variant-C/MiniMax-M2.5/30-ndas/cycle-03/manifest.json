@@ -1,0 +1,17 @@
+{
+  "cycle_id": "variant-C-MiniMax-M2.5-30-ndas-cycle-03",
+  "variant": "C",
+  "model": "MiniMax-M2.5",
+  "scenario": "30-ndas",
+  "cycle_n": 3,
+  "area_id": "commercial",
+  "matter": {
+    "slug": "30-ndas-c03-894440",
+    "name": "S32-894440 Sprint 30 — 10-NDA triage c03",
+    "working_dir": "/root/Documents/Oscar GC/Commercial/S32-894440 Sprint 30 — 10-NDA triage c03",
+    "state_folder": "/root/.config/oscar/state/commercial/matters/30-ndas-c03-894440"
+  },
+  "session_id": "20260527_3",
+  "provider": "minimax",
+  "started_at": "2026-05-27T15:10:56.948Z"
+}

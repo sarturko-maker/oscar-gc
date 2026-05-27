@@ -1,0 +1,35 @@
+{
+  "variant": "C",
+  "model": "anthropic/claude-haiku-4-5",
+  "scenario": "30-ndas",
+  "n": 5,
+  "cycles": [
+    {
+      "cycle_n": 1,
+      "session_id": "20260527_41",
+      "matter_slug": "30-ndas-c01-897727"
+    },
+    {
+      "cycle_n": 2,
+      "session_id": "20260527_42",
+      "matter_slug": "30-ndas-c02-897727"
+    },
+    {
+      "cycle_n": 3,
+      "session_id": "20260527_43",
+      "matter_slug": "30-ndas-c03-897727"
+    },
+    {
+      "cycle_n": 4,
+      "session_id": "20260527_44",
+      "matter_slug": "30-ndas-c04-897727"
+    },
+    {
+      "cycle_n": 5,
+      "session_id": "20260527_45",
+      "matter_slug": "30-ndas-c05-897727"
+    }
+  ],
+  "started_at": "2026-05-27T16:02:07.946Z",
+  "completed_at": "2026-05-27T16:10:00.525Z"
+}
