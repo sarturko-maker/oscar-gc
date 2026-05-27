@@ -72,12 +72,11 @@ slug applies. If no slug names your task at its actual level
 (e.g. a 7-document RFQ pack is broader than \`vendor-agreement-review\`
 on its own), skip skill loading.
 
-**Slug shape (load-bearing)**: the \`load_skill\` \`name\` argument
-is the **exact slug as listed** in the skills block. If the inventory
-lists \`nda-review\`, the call is \`load_skill(name="nda-review")\`.
-Never a file path (\`nda-review.md\`), never a category prefix
-(\`commercial/nda-review\`), never a description, never the
-playbook filename. If the slug isn't in the inventory list above,
+**Slug shape (load-bearing)**: pass the slug verbatim as it appears
+in the skills block. If the inventory lists \`nda-review\`, the call
+is \`load_skill(name="nda-review")\` — exactly that string. The slug
+is the literal token the inventory printed, not a file path or a
+category prefix. If a slug you want isn't in the inventory above,
 the skill isn't available — don't guess.
 
 ## Step C — Detect batch shape for \`delegate\`
