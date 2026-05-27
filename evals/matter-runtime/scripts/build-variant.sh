@@ -9,6 +9,7 @@
 # Variants are defined in scripts/lib-variants.js:
 #   A → 04dd9ae72 (Sprint 31 doctrine, pre-ADR-108; 87-line discoveryDoctrine.ts)
 #   B → d88ef8df6 (Sprint 31B doctrine, ADR-108 refinements; 135-line)
+#   C → 9ea8939d8 (Sprint 33 Candidate C: slug-exactness recalibration; 134-line)
 #
 # Output: binaries/variant-<X>/Oscar-GC-linux-x64/ with the bundled Electron app.
 
@@ -16,9 +17,10 @@ set -euo pipefail
 
 VARIANT_ID="${1:-}"
 case "$VARIANT_ID" in
-  A) SHA="04dd9ae72" ; EXPECTED_LINES=87  ; LABEL="Sprint 31 (pre-ADR-108)" ;;
-  B) SHA="d88ef8df6" ; EXPECTED_LINES=135 ; LABEL="Sprint 31B (ADR-108)"     ;;
-  *) echo "usage: $0 <A|B>"; exit 1 ;;
+  A) SHA="04dd9ae72" ; EXPECTED_LINES=87  ; LABEL="Sprint 31 (pre-ADR-108)"            ;;
+  B) SHA="d88ef8df6" ; EXPECTED_LINES=135 ; LABEL="Sprint 31B (ADR-108)"                ;;
+  C) SHA="9ea8939d8" ; EXPECTED_LINES=134 ; LABEL="Sprint 33 Candidate C (slug-recalibration)" ;;
+  *) echo "usage: $0 <A|B|C>"; exit 1 ;;
 esac
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"

@@ -30,6 +30,15 @@ const VARIANTS = {
     binary_dir: path.join(BINARIES_DIR, 'variant-B', 'Oscar-GC-linux-x64'),
     binary_path: path.join(BINARIES_DIR, 'variant-B', 'Oscar-GC-linux-x64', 'oscar-gc'),
   },
+  C: {
+    id: 'C',
+    commit_sha: '9ea8939d8',
+    label: 'Sprint 33 Candidate C (slug-exactness recalibration)',
+    discovery_doctrine_lines_expected: 134,
+    doctrine_summary: "Variant B doctrine with ADR-108 fix 1's four-item NEVER list (never path / never prefix / never description / never filename) replaced by a positive imperative + single targeted exclusion + preserved availability discipline. Per docs/sprint-33/research-memo.md Section 6 — Anthropic 'tell what to do, not what not to do', Pink Elephant size-vs-negation finding (arXiv:2503.22395) predicting the MiniMax+/Haiku- asymmetry, and Anthropic skill-creator 'positive trigger + targeted exclusion' pattern.",
+    binary_dir: path.join(BINARIES_DIR, 'variant-C', 'Oscar-GC-linux-x64'),
+    binary_path: path.join(BINARIES_DIR, 'variant-C', 'Oscar-GC-linux-x64', 'oscar-gc'),
+  },
 };
 
 function getVariant(id) {
