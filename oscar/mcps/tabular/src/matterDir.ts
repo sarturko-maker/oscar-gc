@@ -53,6 +53,8 @@ export async function readSourceText(
   try {
     return await fs.readFile(abs, "utf8");
   } catch {
+    // intentional: unreadable/missing source → treated as no-source; the
+    // grounding gate (ADR-112) marks the cell unverified rather than failing it.
     return null;
   }
 }

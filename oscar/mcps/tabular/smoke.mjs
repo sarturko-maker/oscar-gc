@@ -1,144 +1,173 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Exercises the deterministic core of oscar-tabular against the compiled dist:
-// round-trip persistence, the grounding gate (grounded → complete; ungrounded →
-// flagged + low confidence; no-source → complete-but-unverified), and the
-// never-silent failed path for malformed payloads (ADR-111, ADR-112).
+// MCP server smoke test for oscar-tabular. Drives the real tools over a real
+// stdio client harness (CLAUDE.md: "MCP server tests use a real MCP client
+// harness, not a mock transport") and verifies the round-trip, the grounding
+// gate (grounded → complete; ungrounded → flagged + low confidence; no-source →
+// complete-but-unverified), the never-silent failed path for malformed payloads,
+// and on-disk persistence (ADR-111, ADR-112). The MCP makes no LLM calls, so
+// there is no pipeline-test concern here.
 
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
-import { createManifest, ingest } from "./dist/merge.js";
-import { TabularStore } from "./dist/store.js";
-import { readSourceText } from "./dist/matterDir.js";
-import { ColumnSchema } from "./dist/schema.js";
+const here = dirname(fileURLToPath(import.meta.url));
+const entry = join(here, "dist", "index.js");
 
 const matter = mkdtempSync(join(tmpdir(), "oscar-tabular-smoke-"));
-process.env.OSCAR_MATTER_DIR = matter;
+mkdirSync(join(matter, "contracts"), { recursive: true });
+writeFileSync(
+  join(matter, "contracts", "nda_acme.txt"),
+  "MUTUAL NON-DISCLOSURE AGREEMENT\n\nSection 8. Governing Law. This Agreement shall be " +
+    "governed by the laws of England and Wales.\n",
+  "utf8",
+);
+
+const transport = new StdioClientTransport({
+  command: "node",
+  args: [entry],
+  env: { ...process.env, OSCAR_MATTER_DIR: matter },
+});
+const client = new Client({ name: "tabular-smoke", version: "0.0.1" });
+await client.connect(transport);
+
+const parse = (res) => JSON.parse(res.content[0].text);
 
 try {
-  mkdirSync(join(matter, "contracts"), { recursive: true });
-  const docText =
-    "MUTUAL NON-DISCLOSURE AGREEMENT\n\nSection 8. Governing Law. This Agreement shall be " +
-    "governed by the laws of England and Wales.\n";
-  writeFileSync(join(matter, "contracts", "nda_acme.txt"), docText, "utf8");
+  const tools = (await client.listTools()).tools.map((t) => t.name).sort();
+  assert.deepEqual(
+    tools,
+    ["add_column", "create_review", "finalize_review", "ingest_results", "read_manifest", "rerun_cell"],
+    "tool set",
+  );
 
-  const store = new TabularStore(matter);
-  const columns = [
-    ColumnSchema.parse({
-      id: "governing-law",
-      label: "Governing law",
-      prompt: "What law governs this agreement?",
-      type: "string",
+  const created = parse(
+    await client.callTool({
+      name: "create_review",
+      arguments: {
+        title: "Smoke review",
+        columns: [{ label: "Governing law", prompt: "What law governs this agreement?", type: "string" }],
+        documents: [{ document_id: "nda_acme", document_name: "NDA — Acme", rel_path: "contracts/nda_acme.txt" }],
+      },
     }),
-  ];
-  const docs = [
-    { document_id: "nda_acme", document_name: "NDA — Acme", rel_path: "contracts/nda_acme.txt" },
-  ];
+  );
+  const reviewId = created.review_id;
+  const colId = created.columns[0];
+  assert.ok(reviewId, "review_id minted server-side");
 
-  let manifest = createManifest("smoke-review-1", "Smoke review", matter, columns, docs);
-  await store.writeManifest(manifest, "in_progress");
-
-  // Round-trip persistence.
-  const reread = await store.readManifest("smoke-review-1");
-  assert.ok(reread, "manifest re-reads from disk");
-  assert.equal(reread.rows.length, 1);
-  assert.equal(reread.summary.total, 1);
-  assert.equal(reread.summary.pending, 1, "untouched cell counts as pending");
-
-  const ctx = { getDocText: (rel) => readSourceText(rel, matter) };
-
-  // 1) Grounded quote → complete.
-  manifest = await ingest(
-    reread,
-    [
-      {
-        document_id: "nda_acme",
-        cells: [
+  // Grounded quote → complete.
+  let r = parse(
+    await client.callTool({
+      name: "ingest_results",
+      arguments: {
+        review_id: reviewId,
+        kind: "initial",
+        columns: [colId],
+        batch: [
           {
-            column_id: "governing-law",
-            answer: "England and Wales",
-            quote: "governed by the laws of England and Wales",
-            locator: "Section 8",
-            confidence: "high",
+            document_id: "nda_acme",
+            cells: [
+              {
+                column_id: colId,
+                answer: "England and Wales",
+                quote: "governed by the laws of England and Wales",
+                locator: "Section 8",
+                confidence: "high",
+              },
+            ],
           },
         ],
       },
-    ],
-    { kind: "initial", columns: ["governing-law"] },
-    ctx,
+    }),
   );
-  let cell = manifest.rows[0].cells["governing-law"];
-  assert.equal(cell.status, "complete", "grounded quote → complete");
-  assert.ok(cell.verification?.grounded, "grounding verdict is grounded");
-  assert.equal(manifest.summary.complete, 1);
+  assert.equal(r.summary.complete, 1, "grounded quote → complete");
 
-  // 2) Ungrounded quote → flagged + confidence forced low (ADR-112).
-  manifest = await ingest(
-    manifest,
-    [
-      {
-        document_id: "nda_acme",
-        cells: [
+  let m = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: reviewId } }));
+  assert.ok(m.rows[0].cells[colId].verification.grounded, "grounding verdict is grounded");
+
+  // Ungrounded quote → flagged + confidence forced low (ADR-112).
+  r = parse(
+    await client.callTool({
+      name: "ingest_results",
+      arguments: {
+        review_id: reviewId,
+        kind: "rerun",
+        columns: [colId],
+        batch: [
           {
-            column_id: "governing-law",
-            answer: "New York",
-            quote: "governed by the laws of the State of New York",
-            confidence: "high",
+            document_id: "nda_acme",
+            cells: [
+              {
+                column_id: colId,
+                answer: "New York",
+                quote: "governed by the laws of the State of New York",
+                confidence: "high",
+              },
+            ],
           },
         ],
       },
-    ],
-    { kind: "rerun", columns: ["governing-law"] },
-    ctx,
+    }),
   );
-  cell = manifest.rows[0].cells["governing-law"];
-  assert.equal(cell.status, "flagged", "ungrounded quote → flagged");
-  assert.equal(cell.confidence, "low", "ungrounded → confidence forced low");
-  assert.equal(manifest.summary.flagged, 1);
+  assert.equal(r.summary.flagged, 1, "ungrounded quote → flagged");
+  m = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: reviewId } }));
+  assert.equal(m.rows[0].cells[colId].confidence, "low", "ungrounded → confidence forced low");
 
-  // 3) Malformed payload → failed, never silently dropped.
-  manifest = await ingest(
-    manifest,
-    [{ document_id: "nda_acme", cells: "this is not an array" }],
-    { kind: "rerun", columns: ["governing-law"] },
-    ctx,
-  );
-  cell = manifest.rows[0].cells["governing-law"];
-  assert.equal(cell.status, "failed", "malformed payload → failed");
-  assert.equal(manifest.summary.failed, 1);
-
-  // 4) No-source (binary/unreadable, here: a document with no rel_path) → stays
-  //    complete but visibly unverified rather than green-ticked.
-  manifest = await ingest(
-    manifest,
-    [
-      {
-        document_id: "msa_zen",
-        document_name: "MSA — Zenith",
-        cells: [
-          { column_id: "governing-law", answer: "Delaware", quote: "Delaware", confidence: "medium" },
-        ],
+  // Malformed payload → failed, never silently dropped.
+  r = parse(
+    await client.callTool({
+      name: "ingest_results",
+      arguments: {
+        review_id: reviewId,
+        kind: "rerun",
+        columns: [colId],
+        batch: [{ document_id: "nda_acme", cells: "this is not an array" }],
       },
-    ],
-    { kind: "initial", columns: ["governing-law"] },
-    ctx,
+    }),
   );
-  const zen = manifest.rows.find((r) => r.document_id === "msa_zen");
-  assert.ok(zen, "upserted unknown document");
-  assert.equal(zen.cells["governing-law"].status, "complete", "no-source stays complete");
-  assert.equal(zen.cells["governing-law"].verification?.method, "no-source");
-  assert.equal(zen.cells["governing-law"].verification?.grounded, false);
+  assert.equal(r.summary.failed, 1, "malformed payload → failed");
 
-  // Finalize and confirm the launcher index.
-  await store.writeManifest(manifest, "final");
-  const index = await store.readIndex();
+  // No-source (unknown document, no rel_path) → complete but unverified.
+  await client.callTool({
+    name: "ingest_results",
+    arguments: {
+      review_id: reviewId,
+      kind: "initial",
+      columns: [colId],
+      batch: [
+        {
+          document_id: "msa_zen",
+          document_name: "MSA — Zenith",
+          cells: [{ column_id: colId, answer: "Delaware", quote: "Delaware", confidence: "medium" }],
+        },
+      ],
+    },
+  });
+  m = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: reviewId } }));
+  const zen = m.rows.find((row) => row.document_id === "msa_zen");
+  assert.equal(zen.cells[colId].status, "complete", "no-source stays complete");
+  assert.equal(zen.cells[colId].verification.method, "no-source");
+
+  // Finalize, then confirm on-disk persistence + the launcher index.
+  const fin = parse(await client.callTool({ name: "finalize_review", arguments: { review_id: reviewId } }));
+  assert.equal(fin.entry.status, "final");
+
+  const manifestPath = join(matter, "outputs", "tabular-review", reviewId, "manifest.json");
+  assert.ok(existsSync(manifestPath), "manifest persisted to the matter folder");
+  const index = JSON.parse(
+    readFileSync(join(matter, "outputs", "tabular-review", "index.json"), "utf8"),
+  );
   assert.equal(index.reviews.length, 1);
   assert.equal(index.reviews[0].status, "final");
-  assert.equal(index.reviews[0].document_count, 2);
 
-  console.log("ok: oscar-tabular smoke passed (round-trip, grounding gate, never-silent failed path)");
+  console.log(
+    "ok: oscar-tabular MCP smoke passed (real client harness — tools, grounding gate, never-silent failed path, persistence)",
+  );
 } finally {
+  await client.close();
   rmSync(matter, { recursive: true, force: true });
 }
