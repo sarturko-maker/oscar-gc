@@ -24,6 +24,7 @@ import { ChatType } from './types/chat';
 import Hub from './components/Hub';
 import PracticeAreaPlaceholder from './components/oscar/PracticeAreaPlaceholder';
 import ForgeView from './components/oscar/forge/ForgeView';
+import TabularReviewView from './components/oscar/tabular/TabularReviewView';
 import IntegrationsView from './components/oscar/integrations/IntegrationsView';
 import OscarLLPRoster from './components/oscar/oscar-llp/OscarLLPRoster';
 import LavernPipelineView from './components/oscar/oscar-llp/LavernPipelineView';
@@ -658,6 +659,9 @@ export function AppInner() {
             <Route path="launcher" element={<LauncherView />} />
             <Route path="configure-providers" element={<ConfigureProvidersRoute />} />
             <Route path="standalone-app" element={<StandaloneAppView />} />
+            {/* Sprint 35 (ADR-113): full-window Tabular Review split — bare route
+                outside AppLayout so grid + citation drill + agent rail own the window. */}
+            <Route path="tabular-review" element={<TabularReviewView />} />
             <Route
               path="/"
               element={

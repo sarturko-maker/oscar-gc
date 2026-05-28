@@ -12,6 +12,7 @@ import HistorySection from './HistorySection';
 import PlaybooksSection from './PlaybooksSection';
 import SkillsSection from './SkillsSection';
 import ToolsSection from './ToolsSection';
+import TabularReviewSection from './TabularReviewSection';
 
 export const PANEL_SECTION_IDS = [
   'MatterFacts',
@@ -19,6 +20,7 @@ export const PANEL_SECTION_IDS = [
   'Tools',
   'Skills',
   'Playbooks',
+  'TabularReview',
   'History',
 ] as const;
 
@@ -38,6 +40,7 @@ export const SECTION_META: Record<PanelSectionId, SectionMeta> = {
   Tools: { title: 'Tools' },
   Skills: { title: 'Skills' },
   Playbooks: { title: 'Playbooks' },
+  TabularReview: { title: 'Tabular Reviews' },
   History: { title: 'History' },
 };
 
@@ -54,5 +57,6 @@ export const sectionRegistry: Record<
   Tools: ToolsSection,
   Skills: SkillsSection,
   Playbooks: PlaybooksSection,
+  TabularReview: TabularReviewSection,
   History: HistorySection,
 };

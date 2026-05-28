@@ -298,6 +298,14 @@ type ElectronAPI = {
       slug: string,
     ) => Promise<MatterFactsPayload | null>;
   };
+  // Sprint 35 (ADR-111/113): Tabular Review readers. The grid + launcher poll
+  // the matter-folder manifest/index; read-source-text feeds the citation drill.
+  // Read-only — the agent (via the oscar-tabular MCP) is the single writer.
+  tabular: {
+    listReviews: (areaId: string, slug: string) => Promise<unknown>;
+    readManifest: (areaId: string, slug: string, reviewId: string) => Promise<unknown>;
+    readSourceText: (areaId: string, slug: string, relPath: string) => Promise<string | null>;
+  };
   // Sprint 20-M4 (ADR-084, ADR-085): playbook subsystem. List/upload/toggle/
   // delete drive the PlaybooksSection; renderBlock is the recipe-builder's
   // Layer 1 injection helper (returns the `## Playbooks in scope` markdown
@@ -724,6 +732,14 @@ const electronAPI: ElectronAPI = {
   rightPane: {
     readMatterFacts: (areaId: string, slug: string) =>
       ipcRenderer.invoke('oscar:right-pane:read-matter-facts', areaId, slug),
+  },
+  tabular: {
+    listReviews: (areaId: string, slug: string) =>
+      ipcRenderer.invoke('oscar:tabular:list-reviews', areaId, slug),
+    readManifest: (areaId: string, slug: string, reviewId: string) =>
+      ipcRenderer.invoke('oscar:tabular:read-manifest', areaId, slug, reviewId),
+    readSourceText: (areaId: string, slug: string, relPath: string) =>
+      ipcRenderer.invoke('oscar:tabular:read-source-text', areaId, slug, relPath),
   },
   playbooks: {
     list: (areaId: string) => ipcRenderer.invoke('oscar:playbooks:list', areaId),

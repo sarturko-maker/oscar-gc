@@ -2675,6 +2675,91 @@ ipcMain.handle(
   },
 );
 
+// Sprint 35 (ADR-111/113): Tabular Review readers. The matter-folder manifest is
+// the single source of truth; the agent (via the oscar-tabular MCP) is the only
+// writer, the renderer only reads — these are thin file-fetch shims for the grid,
+// the launcher, and the citation drill. review_id is server-minted (slug-uuid8).
+const safeReviewId = (raw: unknown): string | null => {
+  if (typeof raw !== 'string' || raw.length === 0 || raw.length > 96) return null;
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(raw) ? raw : null;
+};
+const TABULAR_TEXT_EXT = new Set(['.txt', '.md', '.markdown', '.text']);
+
+const resolveMatterWorkingDir = async (areaId: string, slug: string): Promise<string | null> => {
+  const registry = await readMattersRegistry(areaId);
+  const entry = registry.matters.find((m) => m.slug === slug);
+  return entry?.working_dir ?? null;
+};
+
+ipcMain.handle(
+  'oscar:tabular:list-reviews',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    if (!areaId || !slug) return null;
+    const workingDir = await resolveMatterWorkingDir(areaId, slug);
+    if (!workingDir) return null;
+    try {
+      const raw = await fs.readFile(
+        path.join(workingDir, 'outputs', 'tabular-review', 'index.json'),
+        'utf8',
+      );
+      return JSON.parse(raw);
+    } catch (err) {
+      if ((err as { code?: string }).code !== 'ENOENT') {
+        log.warn('oscar:tabular:list-reviews: read failed', { areaId, slug, err: errorMessage(err, 'Unknown error') });
+      }
+      return null;
+    }
+  },
+);
+
+ipcMain.handle(
+  'oscar:tabular:read-manifest',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown, reviewIdRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    const reviewId = safeReviewId(reviewIdRaw);
+    if (!areaId || !slug || !reviewId) return null;
+    const workingDir = await resolveMatterWorkingDir(areaId, slug);
+    if (!workingDir) return null;
+    try {
+      const raw = await fs.readFile(
+        path.join(workingDir, 'outputs', 'tabular-review', reviewId, 'manifest.json'),
+        'utf8',
+      );
+      return JSON.parse(raw);
+    } catch (err) {
+      if ((err as { code?: string }).code !== 'ENOENT') {
+        log.warn('oscar:tabular:read-manifest: read failed', { areaId, slug, reviewId, err: errorMessage(err, 'Unknown error') });
+      }
+      return null;
+    }
+  },
+);
+
+ipcMain.handle(
+  'oscar:tabular:read-source-text',
+  async (_event, areaIdRaw: unknown, slugRaw: unknown, relPathRaw: unknown) => {
+    const areaId = safeAreaId(areaIdRaw);
+    const slug = safeSlug(slugRaw);
+    if (!areaId || !slug || typeof relPathRaw !== 'string' || relPathRaw.length === 0) return null;
+    const workingDir = await resolveMatterWorkingDir(areaId, slug);
+    if (!workingDir) return null;
+    // Mirror matterDir.ts:readSourceText — traversal-guarded, text-only. Binary
+    // sources (pdf/docx) return null; the cell already reads "Unverified".
+    const base = path.normalize(workingDir);
+    const abs = path.normalize(path.resolve(base, relPathRaw));
+    if (abs !== base && !abs.startsWith(base + path.sep)) return null;
+    if (!TABULAR_TEXT_EXT.has(path.extname(abs).toLowerCase())) return null;
+    try {
+      return await fs.readFile(abs, 'utf8');
+    } catch {
+      return null;
+    }
+  },
+);
+
 // Sprint 20-M4 (ADR-084, ADR-085): playbooks subsystem. Five handlers
 // mirror the M3 right-pane shape — list, upload, toggle-always-on, delete,
 // and render-block (the recipe-build-time Layer 1 injection helper).

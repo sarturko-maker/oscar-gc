@@ -24,6 +24,16 @@ const MATTER_FALLTHROUGH: PanelSectionId[] = [
   'Playbooks',
 ];
 
+// Sprint 35 (ADR-113): Tabular Review is a general batch-review capability, so
+// its launcher is appended to every area's section stack (after the area's own
+// sections, before any History tail) rather than added to all 13 shapes.
+function withTabularReview(sections: PanelSectionId[]): PanelSectionId[] {
+  if (sections.includes('TabularReview')) return sections;
+  const i = sections.indexOf('History');
+  if (i === -1) return [...sections, 'TabularReview'];
+  return [...sections.slice(0, i), 'TabularReview', ...sections.slice(i)];
+}
+
 export function useActiveAreaSections(
   areaId: string | null,
 ): PanelSectionId[] {
@@ -33,12 +43,12 @@ export function useActiveAreaSections(
   const areaEntry = profile?.practice_areas.find((pa) => pa.id === areaId);
   const override = areaEntry?.area_overrides?.panel_sections;
   if (override && override.length > 0) {
-    return override.filter(isPanelSectionId);
+    return withTabularReview(override.filter(isPanelSectionId));
   }
 
   const shape = PRACTICE_AREA_SHAPES[areaId];
-  if (shape) return shape.defaultPanelSections;
+  if (shape) return withTabularReview(shape.defaultPanelSections);
 
   const isProgramme = areaEntry?.entry_noun?.singular === 'Programme';
-  return isProgramme ? PROGRAMME_FALLTHROUGH : MATTER_FALLTHROUGH;
+  return withTabularReview(isProgramme ? PROGRAMME_FALLTHROUGH : MATTER_FALLTHROUGH);
 }
