@@ -1,0 +1,30 @@
+{
+  "name": "oscar-tabular-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tabular Review store for Oscar GC, exposed as a stdio-transport MCP server. Owns the grid schema, deterministic merge-by-(document,column), a zero-LLM grounding gate, and atomic per-review persistence in the matter folder. No LLM calls; no sub-agent spawning (the agent fans out via Goose Summon).",
+  "license": "AGPL-3.0-or-later",
+  "author": "s-arturko",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oscar-tabular-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./dist/index.js",
+    "smoke": "node ./smoke.mjs",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@0.21.2 node ./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "=1.29.0",
+    "zod": "=4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "=25.8.0",
+    "typescript": "=6.0.3"
+  }
+}

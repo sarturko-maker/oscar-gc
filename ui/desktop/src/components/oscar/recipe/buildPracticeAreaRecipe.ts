@@ -19,6 +19,7 @@ import type {
 } from '../hooks/useOscarProfile';
 import { renderCompanyContextBlock } from './companyContextBlock';
 import { DISCOVERY_DOCTRINE } from './discoveryDoctrine';
+import { TABULAR_REVIEW_DOCTRINE } from './tabularReviewDoctrine';
 import {
   renderPlaybooksBlock,
   renderOnDemandPlaybooksBlock,
@@ -27,6 +28,7 @@ import { renderSkillsBlock } from './renderSkillsBlock';
 
 const DEV_NODE_CMD = '/usr/bin/node';
 const DEV_OSCAR_FS_BUNDLE = '/srv/projects/goose/ui/desktop/src/resources/mcps/oscar-fs/index.js';
+const DEV_TABULAR_BUNDLE = '/srv/projects/goose/oscar/mcps/tabular/dist/index.js';
 
 function resolveNodeCmd(resourcesRoot: string | null): string {
   return resourcesRoot ? `${resourcesRoot}/node/bin/node` : DEV_NODE_CMD;
@@ -34,6 +36,10 @@ function resolveNodeCmd(resourcesRoot: string | null): string {
 
 function resolveOscarFsBundle(resourcesRoot: string | null): string {
   return resourcesRoot ? `${resourcesRoot}/mcps/oscar-fs/index.js` : DEV_OSCAR_FS_BUNDLE;
+}
+
+function resolveTabularBundle(resourcesRoot: string | null): string {
+  return resourcesRoot ? `${resourcesRoot}/mcps/tabular/index.js` : DEV_TABULAR_BUNDLE;
 }
 
 
@@ -151,6 +157,23 @@ export async function buildPracticeAreaRecipe(
       },
       timeout: 30,
     },
+    // Sprint 34 (ADR-111): Tabular Review store — owns the grid schema,
+    // deterministic merge + grounding gate (ADR-112), and atomic per-review
+    // persistence under <matter>/outputs/tabular-review/. The agent fans out
+    // one reader per document via Summon; this MCP makes no LLM calls. Matter
+    // dir is B-class, injected via env exactly as oscar-fs does.
+    {
+      type: 'stdio',
+      name: 'oscar-tabular',
+      description:
+        'Tabular Review (batch document review): create reviews, ingest per-document extractor results, read the grid. Scoped to the matter folder.',
+      cmd: resolveNodeCmd(opts.resourcesRoot),
+      args: [resolveTabularBundle(opts.resourcesRoot)],
+      envs: {
+        OSCAR_MATTER_DIR: opts.workingDir,
+      },
+      timeout: 30,
+    },
     // Sprint 20-M4 (ADR-085 Layer 2): bundled computercontroller narrowed
     // via ADR-017 available_tools discipline so the agent gets pdf_tool +
     // docx_tool ONLY — not the broader Computer Controller surface
@@ -211,6 +234,7 @@ export async function buildPracticeAreaRecipe(
     companyBlock,
     areaDescriptionBlock,
     baseInstructions,
+    TABULAR_REVIEW_DOCTRINE,
     playbooksBlock,
     onDemandPlaybooksBlock,
     skillsBlock,

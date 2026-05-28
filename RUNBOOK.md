@@ -2,6 +2,12 @@
 
 Capture every host-state change as it happens. No retroactive writes. Goal: a fresh VPS can be rebuilt by running only these steps and the smoke test passes.
 
+## Captured (2026-05-28) — Sprint 34 Tabular Review MCP
+
+- New sibling MCP `oscar/mcps/tabular/` (Oscar-authored, AGPL-3.0). `pnpm install` run there (creates `node_modules` + `pnpm-lock.yaml`; deps `@modelcontextprotocol/sdk@1.29.0`, `zod@4.4.3`, dev `typescript@6.0.3` + `@types/node@25.8.0` — same pins as oscar-memory). Build + smoke: `pnpm -C oscar/mcps/tabular run build && pnpm -C oscar/mcps/tabular run smoke`.
+- DEV recipe wiring: `buildPracticeAreaRecipe.ts` spawns the MCP from `oscar/mcps/tabular/dist/index.js` with `OSCAR_MATTER_DIR` set to the matter folder. **Not yet wired (carry-forward):** the launch-time copy of the tracked source recipe `oscar/recipes/tabular-cell-extractor.yaml` into `~/.config/goose/recipes/` (Summon's discovery path). To exercise the engine in DEV, copy it there manually first.
+- Packaging (not yet done): `prepare-oscar-bundle.js` must copy `oscar/mcps/tabular/dist` → `src/resources/mcps/tabular/` and `oscar/recipes/tabular-cell-extractor.yaml` → `src/resources/recipes/` (mirror oscar-fs) before the `.deb` will run Tabular Review. (`src/resources/` is gitignored — it is bundle output, so the recipe's tracked home is `oscar/recipes/`.)
+
 ## Captured (2026-05-17)
 
 - VPS: `lq-vps` (Tailscale tailnet `taile62e32.ts.net`). Shared with LQ-AI; baseline in `lq-ai-fork-state` memory.

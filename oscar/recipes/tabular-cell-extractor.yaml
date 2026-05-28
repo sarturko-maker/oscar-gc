@@ -1,0 +1,117 @@
+# Tabular Review per-document extractor (ADR-111).
+# Run via Goose Summon: the parent matter agent calls
+#   delegate(source="tabular-cell-extractor",
+#            parameters={document_id, document_path, columns_json},
+#            extensions=["oscar-fs", "computercontroller"],  # read-only subset
+#            async=true)
+# one delegate per document, in waves of GOOSE_MAX_BACKGROUND_TASKS. The
+# response schema forces validated JSON the parent forwards to
+# oscar-tabular__ingest_results (the parent is the single writer).
+#
+# Source of truth lives here (tracked). Packaging copies it into
+# ui/desktop/src/resources/recipes/ (gitignored bundle output) and the app
+# copies it to ~/.config/goose/recipes/ at launch — Summon's discovery path.
+#
+# Prompt contract ported from LQ-Grid .claude/agents/reviewer.md (verbatim
+# quotes, character offsets, not-found-over-guess, read the whole document).
+# Document-grouping metadata (_party_group / _relationship_group) is dropped
+# from v1 — it is a Phase 5 differentiator, not core extraction.
+
+version: "1.0.0"
+title: "Tabular cell extractor"
+description: "Reads one full document and answers a fixed set of extraction queries, returning strict JSON for a Tabular Review grid."
+
+parameters:
+  - key: document_id
+    input_type: string
+    requirement: required
+    description: "Stable id of the document being reviewed (matches the grid row)."
+  - key: document_path
+    input_type: string
+    requirement: required
+    description: "Path to the document, relative to the matter folder."
+  - key: columns_json
+    input_type: string
+    requirement: required
+    description: "JSON array of column queries: [{id,label,prompt,type,options?}]."
+
+settings:
+  # Provider/model inherit from env (ADR-106). Bounded so a stuck reader can't
+  # stall a wave past Summon's 5-minute load() timeout.
+  max_turns: 16
+
+instructions: |
+  You are a contract reviewer. You read ONE legal document in full and answer a
+  fixed set of extraction queries (the grid columns) about it, returning
+  structured JSON. Accuracy matters — these are real legal documents and a
+  missed or wrong clause is malpractice.
+
+  For each column query:
+  1. Read the FULL document. If it is long, read all of it — do not skip sections.
+  2. Answer the query. If the document does not address it, the answer is null —
+     never guess, never hallucinate.
+  3. Quote the supporting provision VERBATIM — never paraphrase. The UI highlights
+     this quote in the original document; without an exact quote the lawyer cannot
+     verify your extraction, and the answer will be flagged.
+  4. Give the section/clause reference in `locator` (e.g. "Section 12.4").
+  5. Return character offsets `char_start`/`char_end` (0-based, end exclusive) such
+     that document[char_start:char_end] is exactly your `quote`. If you cannot
+     determine exact offsets, omit them — offsets are a hint, the quote is
+     authoritative.
+  6. Set `confidence` to high/medium/low. Use low and explain in `reasoning` when
+     the document is ambiguous.
+
+  Reading the document:
+  - Plain-text/markdown: read it directly via the filesystem tool.
+  - PDF/DOCX: extract its text first via the pdf/docx tools, then read in full.
+
+  Rules:
+  - NEVER hallucinate. Not in the document → answer null.
+  - NEVER paraphrase. Quotes must be verbatim and copy-paste exact.
+  - ALWAYS provide a quote for any non-null answer.
+  - Answer EVERY column in the provided list, once each.
+
+prompt: |
+  Review the document with id "{{ document_id }}" at the path
+  "{{ document_path }}" (relative to the matter folder). Answer every column
+  query in this JSON array:
+
+  {{ columns_json }}
+
+  Return ONLY the JSON object described by your output schema — no commentary,
+  no markdown fences.
+
+response:
+  json_schema:
+    type: object
+    required: ["document_id", "cells"]
+    additionalProperties: false
+    properties:
+      document_id:
+        type: string
+      document_name:
+        type: string
+      cells:
+        type: array
+        items:
+          type: object
+          required: ["column_id", "answer", "confidence"]
+          additionalProperties: false
+          properties:
+            column_id:
+              type: string
+            answer:
+              type: ["string", "null"]
+            reasoning:
+              type: string
+            quote:
+              type: ["string", "null"]
+            locator:
+              type: ["string", "null"]
+            char_start:
+              type: integer
+            char_end:
+              type: integer
+            confidence:
+              type: string
+              enum: ["high", "medium", "low"]
