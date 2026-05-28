@@ -42,6 +42,9 @@ const SIBLING_MCPS = {
   'oscar-baselines': path.join(OSCAR_MCPS_ROOT, 'baselines'),
   'oscar-grounding-verifier': path.join(OSCAR_MCPS_ROOT, 'grounding-verifier'),
   'oscar-document-checks': path.join(OSCAR_MCPS_ROOT, 'document-checks'),
+  // Sprint 35 (ADR-111): Tabular Review MCP. Bundled dir name is "tabular"
+  // (not "oscar-tabular") to match resolveTabularBundle() in buildPracticeAreaRecipe.ts.
+  tabular: path.join(OSCAR_MCPS_ROOT, 'tabular'),
 };
 
 // Sprint 12 (ADR-040): npm-vendored MCPs. Each is bundled with esbuild from
@@ -90,6 +93,11 @@ const MCPS_DIR = path.join(RESOURCES, 'mcps');
 // prepareSubRecipes() copies them to RESOURCES/sub-recipes/ for the bundle.
 const SUB_RECIPES_SOURCE = path.join(UI_DESKTOP, 'sub-recipes');
 const SUB_RECIPES_DIR = path.join(RESOURCES, 'sub-recipes');
+// Sprint 35 (ADR-111): top-level recipes (the tabular-cell-extractor Summon
+// delegates to) live at <repo>/oscar/recipes and are copied to RESOURCES/recipes/;
+// ensureBundledRecipes() in main.ts copies them onward into ~/.config/goose/recipes/.
+const RECIPES_SOURCE = path.join(OSCAR_MCPS_ROOT, '..', 'recipes');
+const RECIPES_DIR = path.join(RESOURCES, 'recipes');
 const SKILLS_DIR = path.join(RESOURCES, 'skills');
 // Sprint 11 (ADR-031, ADR-035): the curated in-house legal skill library
 // vendored from Anthropic's claude-for-legal lives at this repo path.
@@ -437,6 +445,15 @@ async function smokeTestBundledMcps() {
       args: [],
       readyRe: /oscar-document-checks-mcp ready/,
     },
+    {
+      // Sprint 35 (ADR-111): the tabular MCP resolves its matter dir from
+      // OSCAR_MATTER_DIR at boot, so the spawn-smoke must supply one.
+      name: 'tabular',
+      bundle: path.join(MCPS_DIR, 'tabular', 'index.js'),
+      args: [],
+      env: { OSCAR_MATTER_DIR: sandbox },
+      readyRe: /oscar-tabular-mcp ready/,
+    },
   ];
 
   if (process.env.SKIP_SMOKE_TEST === '1') {
@@ -475,7 +492,7 @@ function spawnAndAwaitReady(check, nodeBin, timeoutMs) {
     const started = Date.now();
     const child = spawn(nodeBin, [check.bundle, ...check.args], {
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, NODE_NO_WARNINGS: '1' },
+      env: { ...process.env, NODE_NO_WARNINGS: '1', ...(check.env ?? {}) },
     });
     let stderr = '';
     let resolved = false;
@@ -545,6 +562,30 @@ async function prepareSubRecipes() {
   return { count: files.length, files };
 }
 
+// Sprint 35 (ADR-111): copy the top-level recipe YAMLs from <repo>/oscar/recipes
+// into RESOURCES/recipes/. Mirrors prepareSubRecipes(); the app then copies them
+// to Summon's discovery path at launch via ensureBundledRecipes().
+async function prepareRecipes() {
+  console.log('--- prepareRecipes ---');
+  if (!fs.existsSync(RECIPES_SOURCE)) {
+    throw new Error(`Recipes source missing: ${RECIPES_SOURCE}`);
+  }
+  fs.rmSync(RECIPES_DIR, { recursive: true, force: true });
+  ensureDir(RECIPES_DIR);
+  const files = fs
+    .readdirSync(RECIPES_SOURCE)
+    .filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'));
+  if (files.length === 0) {
+    throw new Error(`No recipe YAMLs found in ${RECIPES_SOURCE}`);
+  }
+  for (const f of files) {
+    const dstPath = path.join(RECIPES_DIR, f);
+    fs.copyFileSync(path.join(RECIPES_SOURCE, f), dstPath);
+    console.log(`[recipes] ${f} (${fs.statSync(dstPath).size} bytes)`);
+  }
+  return { count: files.length, files };
+}
+
 async function prepareSkills() {
   console.log('--- prepareSkills ---');
   if (!fs.existsSync(SKILLS_SOURCE)) {
@@ -581,6 +622,7 @@ async function main() {
   await prepareVendoredMcps();
   const smokeTest = await smokeTestBundledMcps();
   const subRecipes = await prepareSubRecipes();
+  const recipes = await prepareRecipes();
   const skills = await prepareSkills();
   const networkAudit = auditMcpNetworkSurface();
   console.log('Oscar GC bundle prep complete.');
@@ -591,6 +633,7 @@ async function main() {
     adeu: { version: ADEU_VERSION },
     mcps: [...Object.keys(SIBLING_MCPS), ...Object.keys(VENDORED_MCPS)],
     sub_recipes: { count: subRecipes.count, files: subRecipes.files },
+    recipes: { count: recipes.count, files: recipes.files },
     skills: { 'in-house-legal': { skill_md_count: skills.skillCount } },
     network_audit: networkAudit,
     // Sprint 15 (ADR-052): hosted MCP extensions wired by Oscar code,

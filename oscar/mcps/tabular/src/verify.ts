@@ -86,19 +86,25 @@ export function groundCell(
   if (sourceText === null) {
     return { grounded: false, score: 0, method: "no-source" };
   }
-  if (quote && quote.trim().length > 0) {
-    const overlap = charOverlap(quote, sourceText);
+  const hasQuote = !!quote && quote.trim().length > 0;
+  // A quote that is just a boilerplate header ("governing law") substring-matches
+  // any contract at score 1.0 but verifies nothing — it is not a usable citation.
+  // Treat it like an absent quote so the locator can corroborate, or the cell flags.
+  if (hasQuote && !isBoilerplate(quote!)) {
+    const overlap = charOverlap(quote!, sourceText);
     return {
       grounded: overlap >= GROUND_THRESHOLD,
       score: Math.round(overlap * 100) / 100,
       method: "charOverlap",
     };
   }
-  // No quote: a locator can still ground if the cited section exists.
+  // No usable quote: a locator can still ground if the cited section exists.
   if (locator && locator.trim().length > 0) {
     const refs = extractSectionRefs(locator);
     const grounded = refs.length > 0 && refs.every((r) => sectionExists(r, sourceText));
     if (grounded) return { grounded: true, score: 1, method: "sectionExists" };
   }
-  return { grounded: false, score: 0, method: "no-quote" };
+  // A boilerplate-only quote that no locator corroborates flags via charOverlap;
+  // a genuinely absent quote reports no-quote.
+  return { grounded: false, score: 0, method: hasQuote ? "charOverlap" : "no-quote" };
 }

@@ -41,7 +41,15 @@ try {
   const tools = (await client.listTools()).tools.map((t) => t.name).sort();
   assert.deepEqual(
     tools,
-    ["add_column", "create_review", "finalize_review", "ingest_results", "read_manifest", "rerun_cell"],
+    [
+      "add_column",
+      "create_review",
+      "finalize_review",
+      "ingest_results",
+      "read_manifest",
+      "rerun_cell",
+      "set_human_review",
+    ],
     "tool set",
   );
 
@@ -151,6 +159,60 @@ try {
   const zen = m.rows.find((row) => row.document_id === "msa_zen");
   assert.equal(zen.cells[colId].status, "complete", "no-source stays complete");
   assert.equal(zen.cells[colId].verification.method, "no-source");
+
+  // Answer with no quote → cannot ground (ADR-114) → flagged via method 'no-quote'.
+  await client.callTool({
+    name: "ingest_results",
+    arguments: {
+      review_id: reviewId,
+      kind: "rerun",
+      columns: [colId],
+      batch: [{ document_id: "nda_acme", cells: [{ column_id: colId, answer: "England and Wales", quote: null, confidence: "high" }] }],
+    },
+  });
+  m = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: reviewId } }));
+  assert.equal(m.rows[0].cells[colId].status, "flagged", "answer without quote → flagged");
+  assert.equal(m.rows[0].cells[colId].verification.method, "no-quote", "no-quote method recorded");
+
+  // Re-ground it so the human-review verdict lands on a grounded cell.
+  await client.callTool({
+    name: "ingest_results",
+    arguments: {
+      review_id: reviewId,
+      kind: "rerun",
+      columns: [colId],
+      batch: [{ document_id: "nda_acme", cells: [{ column_id: colId, answer: "England and Wales", quote: "governed by the laws of England and Wales", confidence: "high" }] }],
+    },
+  });
+
+  // Human review folds into the cell + recomputes summary.verified (ADR-115).
+  let h = parse(
+    await client.callTool({
+      name: "set_human_review",
+      arguments: { review_id: reviewId, document_id: "nda_acme", column_id: colId, state: "verified", note: "checked against Section 8" },
+    }),
+  );
+  assert.equal(h.ok, true, "set_human_review ok");
+  assert.equal(h.summary.verified, 1, "verified counted in summary");
+  m = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: reviewId } }));
+  assert.equal(m.rows[0].cells[colId].human.state, "verified", "human verdict folded into cell");
+
+  // Override carries the corrected value; a missing cell errors (never silent).
+  h = parse(
+    await client.callTool({
+      name: "set_human_review",
+      arguments: { review_id: reviewId, document_id: "nda_acme", column_id: colId, state: "overridden", override: "England & Wales" },
+    }),
+  );
+  m = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: reviewId } }));
+  assert.equal(m.rows[0].cells[colId].human.override, "England & Wales", "override value stored");
+  const miss = parse(
+    await client.callTool({
+      name: "set_human_review",
+      arguments: { review_id: reviewId, document_id: "nope", column_id: colId, state: "flagged" },
+    }),
+  );
+  assert.equal(miss.ok, false, "human review on a missing document errors, not silently");
 
   // Finalize, then confirm on-disk persistence + the launcher index.
   const fin = parse(await client.callTool({ name: "finalize_review", arguments: { review_id: reviewId } }));

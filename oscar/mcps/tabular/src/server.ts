@@ -8,7 +8,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { ColumnSchema, ColumnType, OutputType, type Column } from "./schema.js";
-import { addColumn, createManifest, ingest, resetCell, toIndexEntry } from "./merge.js";
+import { addColumn, createManifest, ingest, resetCell, setHumanReview, toIndexEntry } from "./merge.js";
 import { readSourceText } from "./matterDir.js";
 import type { TabularStore } from "./store.js";
 
@@ -179,6 +179,38 @@ export function buildServer(store: TabularStore): McpServer {
       const updated = resetCell(manifest, document_id, column_id);
       await store.writeManifest(updated, "in_progress");
       return ok({ ok: true, summary: updated.summary });
+    },
+  );
+
+  server.registerTool(
+    "set_human_review",
+    {
+      description:
+        "Record a lawyer's verdict on one cell: verify it, flag it for follow-up, or override its " +
+        "value. Call this when the user asks to mark, accept, flag, or correct a specific cell — the " +
+        "human verdict is folded into the manifest and overrides the machine grounding state in the UI.",
+      inputSchema: {
+        review_id: z.string().min(1),
+        document_id: z.string().min(1),
+        column_id: z.string().min(1),
+        state: z.enum(["verified", "flagged", "overridden"]),
+        note: z.string().optional().describe("Optional reviewer note explaining the verdict."),
+        override: z
+          .string()
+          .optional()
+          .describe("Corrected value when state is 'overridden'."),
+      },
+    },
+    async ({ review_id, document_id, column_id, state, note, override }) => {
+      const manifest = await store.readManifest(review_id);
+      if (!manifest) return ok({ ok: false, error: `review '${review_id}' not found` });
+      try {
+        const updated = setHumanReview(manifest, document_id, column_id, { state, note, override });
+        await store.writeManifest(updated, "in_progress");
+        return ok({ ok: true, summary: updated.summary });
+      } catch (err) {
+        return ok({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      }
     },
   );
 

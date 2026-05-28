@@ -272,6 +272,29 @@ export function resetCell(manifest: Manifest, documentId: string, columnId: stri
   return ManifestSchema.parse(manifest);
 }
 
+// Fold a human verify/flag/override verdict into the cell (ADR-112 keeps human
+// review inside the manifest; ADR-115 routes the write through this MCP so the
+// agent/server stays the single writer — the UI never writes the manifest).
+export function setHumanReview(
+  manifest: Manifest,
+  documentId: string,
+  columnId: string,
+  review: { state: "verified" | "flagged" | "overridden"; note?: string | null; override?: string | null },
+): Manifest {
+  const row = manifest.rows.find((r) => r.document_id === documentId);
+  if (!row) throw new Error(`document '${documentId}' not in review`);
+  const cell = row.cells[columnId];
+  if (!cell) throw new Error(`cell '${columnId}' not present on document '${documentId}'`);
+  cell.human = {
+    state: review.state,
+    note: review.note ?? null,
+    override: review.override ?? null,
+  };
+  manifest.updated_at = nowIso();
+  manifest.summary = computeSummary(manifest);
+  return ManifestSchema.parse(manifest);
+}
+
 export function toIndexEntry(manifest: Manifest, status: "in_progress" | "final"): IndexEntry {
   return {
     review_id: manifest.review_id,

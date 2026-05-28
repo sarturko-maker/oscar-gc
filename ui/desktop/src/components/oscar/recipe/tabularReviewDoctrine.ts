@@ -21,13 +21,24 @@ Steps:
 2. Turn the user's asks into columns and create the review:
    oscar-tabular__create_review(title, columns, documents) — \`columns\` is one
    entry per field ({label, prompt, type}); \`documents\` is {document_id,
-   document_name, rel_path} per file. Keep the returned \`review_id\`.
-3. Fan out in waves (up to the background-task limit). For each document:
+   document_name, rel_path} per file. \`rel_path\` MUST be the path relative to
+   the matter folder (e.g. "contracts/atlas-msa.md") — the same string you pass
+   as \`document_path\` in step 3. The grounding gate re-reads the source at
+   \`rel_path\`; a wrong or absent rel_path silently leaves every cell unverified.
+   Keep the returned \`review_id\`.
+3. Fan out in waves. Fire at most the background-task limit (5 by default)
+   delegates at once, then load() each before firing the next wave — the
+   background-task slots are limited, so a delegate fired before the running wave
+   is drained will be refused. For each document:
    delegate(source="tabular-cell-extractor",
             parameters={document_id, document_path: <rel_path>, columns_json: <the columns as JSON>},
             extensions=["oscar-fs", "computercontroller"],
             async=true)
-   Fire a wave, then load("<task_id>") each task to collect its JSON result.
+   Fire a wave, then load("<task_id>") each task to collect its JSON result. If a
+   load() times out or errors, retry that one document once in a later wave; if it
+   still fails, leave its row visible (it shows as pending) and tell the user which
+   documents could not be read — never silently drop a document or stall the whole
+   run waiting on a single stuck reader.
 4. Hand each wave's results to oscar-tabular__ingest_results(review_id, batch),
    where \`batch\` is the array of JSON objects the sub-agents returned. Ingest
    per wave so the grid fills progressively. Never edit the manifest yourself —

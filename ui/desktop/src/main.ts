@@ -784,8 +784,49 @@ const ensureBundledSkillsLink = (resourcesRoot: string | null): void => {
   }
 };
 
+// Sprint 35 (ADR-111): copy bundled recipes (the tabular-cell-extractor that
+// Summon delegates to) into the recipes dir Summon scans. Mirrors
+// ensureBundledSkillsLink, but a copy rather than a symlink: the recipes dir is
+// user-writable and may hold the user's own recipes, so we never touch siblings.
+// Target tracks Paths::config_dir() (crates/goose/src/config/paths.rs): with
+// GOOSE_PATH_ROOT it is <root>/config/recipes, else ~/.config/goose/recipes on
+// Linux — the same dir summon.rs scans as config.join("recipes").
+const ensureBundledRecipes = (resourcesRoot: string | null): void => {
+  const source = resourcesRoot
+    ? path.join(resourcesRoot, 'recipes')
+    : '/srv/projects/goose/oscar/recipes';
+  if (!fsSync.existsSync(source)) {
+    log.warn('ensureBundledRecipes: source missing; skipping', { source });
+    return;
+  }
+  const pathRoot = resolveGoosePathRoot();
+  const targetDir = pathRoot
+    ? path.join(pathRoot, 'config', 'recipes')
+    : path.join(os.homedir(), '.config', 'goose', 'recipes');
+  try {
+    fsSync.mkdirSync(targetDir, { recursive: true });
+    for (const name of fsSync.readdirSync(source)) {
+      if (!name.endsWith('.yaml') && !name.endsWith('.yml')) continue;
+      const src = path.join(source, name);
+      const dst = path.join(targetDir, name);
+      const next = fsSync.readFileSync(src);
+      const current = fsSync.existsSync(dst) ? fsSync.readFileSync(dst) : null;
+      if (current && current.equals(next)) continue;
+      fsSync.writeFileSync(dst, next);
+      log.info('ensureBundledRecipes: recipe copied', { src, dst });
+    }
+  } catch (err) {
+    log.warn('ensureBundledRecipes: failed', {
+      err: errorMessage(err, 'Unknown error'),
+      source,
+      targetDir,
+    });
+  }
+};
+
 const oscarResourcesRoot = resolveOscarResourcesRoot();
 ensureBundledSkillsLink(oscarResourcesRoot);
+ensureBundledRecipes(oscarResourcesRoot);
 
 // Sprint 12 (ADR-042): point GOOSE_ALLOWLIST at the bundled local allowlist
 // so the Extensions UI cannot install arbitrary MCPs (only Oscar GC's

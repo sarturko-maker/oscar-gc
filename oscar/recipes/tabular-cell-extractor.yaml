@@ -68,7 +68,10 @@ instructions: |
   Rules:
   - NEVER hallucinate. Not in the document → answer null.
   - NEVER paraphrase. Quotes must be verbatim and copy-paste exact.
-  - ALWAYS provide a quote for any non-null answer.
+  - `quote` is REQUIRED on every cell: the exact operative provision for a
+    non-null answer, or null when (and only when) the answer is null. Do not
+    quote a generic header like "Governing Law" — quote the clause that states
+    the answer, or the grid will flag the cell as unverified.
   - Answer EVERY column in the provided list, once each.
 
 prompt: |
@@ -95,7 +98,7 @@ response:
         type: array
         items:
           type: object
-          required: ["column_id", "answer", "confidence"]
+          required: ["column_id", "answer", "quote", "confidence"]
           additionalProperties: false
           properties:
             column_id:
