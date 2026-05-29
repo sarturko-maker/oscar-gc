@@ -24,8 +24,8 @@ the grid and the agent at once.
 (2026-05-28, the Tabular Review brief)
 
 > I want an agent to generate tabular review when the user asks it to and it be
-> available persistently. It needs to be better than Harvey and Legora thats the
-> goal. Deal?
+> available persistently. It needs to be better than the incumbent legal-AI tools
+> thats the goal. Deal?
 
 (2026-05-28, on the render decision)
 
@@ -43,7 +43,7 @@ React split, not an MCP App** — is recorded in [[ADR-113]] and is settled; Spr
 executes it, it does not re-litigate it. "Reuse Goose to the extent we can" and
 "reuse LQ.AI's functional work" are the standing instructions: reuse LQ-Grid's React
 grid, its `SourceView`/highlight code, its citation model, and the matter chat
-surface — do not rebuild what exists. "Better than Harvey and Legora" is the bar,
+surface — do not rebuild what exists. "Better than the incumbents" is the bar,
 but the *measurement* of that claim is Phase 5's launch gate, not Sprint 35's — do
 not make external comparative claims off an unmeasured surface.
 
@@ -111,7 +111,7 @@ spec):
   Reuse the existing matter **chat surface** as the agent rail so it is the *same*
   agent and session that ran the review — this is what makes "interact with both the
   grid and the agent" real, and it's the win over LQ-Grid's read-only chat and
-  Harvey's separated threads/tables. Reuse the existing full-window route pattern
+  the incumbents' separated threads/tables. Reuse the existing full-window route pattern
   and the right-pane plumbing rather than inventing new shells.
 - **One source of truth.** The grid renders the matter-folder manifest the MCP
   writes; the agent mutates it through the MCP tools; the UI re-reads on a poll/watch.
@@ -155,7 +155,7 @@ CLAUDE.md, only a PNG proves the screen renders the way Arturs expects.
 - **Phase 5 differentiators** — "ask the whole table," accretive add-column /
   single-cell rerun beyond what Stage A needs, column-query playbooks, export, the
   cost-preview, the optional LLM-ensemble verification, and the RAG-baseline fidelity
-  test. The "beats Harvey/Legora" *measurement* is that fidelity test; Sprint 35 does
+  test. The "beats the incumbents" *measurement* is that fidelity test; Sprint 35 does
   not make the comparative claim.
 - **Re-opening polish vs. the minimal launcher** — a minimal right-pane "Tabular
   Review" entry point is likely needed for reopen; decide in plan-mode whether the
@@ -186,7 +186,7 @@ CLAUDE.md, only a PNG proves the screen renders the way Arturs expects.
 - **Is there any LQ-Grid UX worth NOT carrying forward?** The Sprint 34 audit noted
   LQ-Grid gaps (confidence collected-but-never-shown, no highlight next/prev, split
   persistence). Decide which to fix now (they're cheap and on-brand for "better than
-  Harvey/Legora") and which to defer.
+  the incumbents") and which to defer.
 
 ## A note on sequencing
 
