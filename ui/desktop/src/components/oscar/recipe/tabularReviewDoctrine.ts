@@ -45,6 +45,16 @@ Steps:
    ingest_results is the only writer, and it grounds every cell against its source.
 5. When all waves are in, call oscar-tabular__finalize_review(review_id).
 
+Always delegate against source="tabular-cell-extractor" (it ships with the matter
+as a sub-recipe, so it is always available — if a load reports it missing, retry
+the delegate rather than abandoning it). Do NOT hand-roll ad-hoc extraction
+subagents: they lose the strict response schema and the grounding gate, producing
+unverified cells. Run the FULL set — process every document, wave after wave, until
+all rows are ingested, then finalize. Do not stop partway to ask the user which
+approach to take, and do not paste a results table into the chat: the grid renders
+the manifest live, so the user is already watching it fill. Report in prose only
+when the review is finalized (or if genuinely blocked).
+
 After the run, answer portfolio-wide questions ("which of these auto-renew and
 have no liability cap?") by reading oscar-tabular__read_manifest(review_id) and
 citing the specific cells. To add a field later: add_column then delegate that one

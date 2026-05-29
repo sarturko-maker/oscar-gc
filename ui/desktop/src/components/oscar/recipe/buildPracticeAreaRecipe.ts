@@ -29,6 +29,7 @@ import { renderSkillsBlock } from './renderSkillsBlock';
 const DEV_NODE_CMD = '/usr/bin/node';
 const DEV_OSCAR_FS_BUNDLE = '/srv/projects/goose/ui/desktop/src/resources/mcps/oscar-fs/index.js';
 const DEV_TABULAR_BUNDLE = '/srv/projects/goose/oscar/mcps/tabular/dist/index.js';
+const DEV_TABULAR_RECIPE = '/srv/projects/goose/oscar/recipes/tabular-cell-extractor.yaml';
 
 function resolveNodeCmd(resourcesRoot: string | null): string {
   return resourcesRoot ? `${resourcesRoot}/node/bin/node` : DEV_NODE_CMD;
@@ -40,6 +41,15 @@ function resolveOscarFsBundle(resourcesRoot: string | null): string {
 
 function resolveTabularBundle(resourcesRoot: string | null): string {
   return resourcesRoot ? `${resourcesRoot}/mcps/tabular/index.js` : DEV_TABULAR_BUNDLE;
+}
+
+// Absolute path to the bundled extractor recipe. Declared as a sub_recipe on the
+// matter recipe (below) so Summon resolves delegate(source="tabular-cell-extractor")
+// from the session itself — no dependence on a launch-time copy into
+// ~/.config/goose/recipes (Sprint 35 dogfood: that copy could be absent, and the
+// agent then fell back to ad-hoc unstructured delegates).
+function resolveTabularRecipe(resourcesRoot: string | null): string {
+  return resourcesRoot ? `${resourcesRoot}/recipes/tabular-cell-extractor.yaml` : DEV_TABULAR_RECIPE;
 }
 
 
@@ -252,5 +262,10 @@ export async function buildPracticeAreaRecipe(
     description: descriptionOverride ?? opts.area.body,
     instructions,
     extensions,
+    // Tabular Review extractor, resolved by Summon from the session (not the
+    // filesystem) so delegate(source="tabular-cell-extractor") always works.
+    sub_recipes: [
+      { name: 'tabular-cell-extractor', path: resolveTabularRecipe(opts.resourcesRoot) },
+    ],
   };
 }
