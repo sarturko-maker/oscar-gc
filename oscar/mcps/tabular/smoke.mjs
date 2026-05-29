@@ -26,6 +26,15 @@ writeFileSync(
     "governed by the laws of England and Wales.\n",
   "utf8",
 );
+// A document in a subfolder, to prove the basename fallback (Sprint 35 dogfood
+// finding): the agent often passes a BARE filename as rel_path even when the file
+// lives in a subfolder, and grounding must still resolve it.
+writeFileSync(
+  join(matter, "contracts", "msa_sub.txt"),
+  "MASTER SERVICES AGREEMENT\n\nSection 12. Liability. Aggregate liability shall not exceed " +
+    "the fees paid in the preceding twelve months.\n",
+  "utf8",
+);
 
 const transport = new StdioClientTransport({
   command: "node",
@@ -214,6 +223,34 @@ try {
   );
   assert.equal(miss.ok, false, "human review on a missing document errors, not silently");
 
+  // Basename fallback (Sprint 35 dogfood fix): a row carrying a BARE-filename
+  // rel_path whose file actually lives in contracts/ must still ground — the agent
+  // routinely passes bare filenames even when documents sit in a subfolder.
+  const r2 = parse(
+    await client.callTool({
+      name: "create_review",
+      arguments: {
+        title: "Bare-path review",
+        columns: [{ label: "Liability", prompt: "What is the liability cap?", type: "string" }],
+        documents: [{ document_id: "msa_sub", document_name: "MSA — bare path", rel_path: "msa_sub.txt" }],
+      },
+    }),
+  );
+  await client.callTool({
+    name: "ingest_results",
+    arguments: {
+      review_id: r2.review_id,
+      kind: "initial",
+      columns: [r2.columns[0]],
+      batch: [{ document_id: "msa_sub", cells: [{ column_id: r2.columns[0], answer: "12 months’ fees", quote: "shall not exceed the fees paid in the preceding twelve months", confidence: "high" }] }],
+    },
+  });
+  const m2 = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: r2.review_id } }));
+  const bareCell = m2.rows[0].cells[r2.columns[0]];
+  assert.equal(bareCell.verification.method, "charOverlap", "bare-filename rel_path grounds via basename fallback");
+  assert.equal(bareCell.verification.grounded, true, "basename-fallback cell is grounded");
+  assert.equal(bareCell.status, "complete", "basename-fallback cell stays complete");
+
   // Finalize, then confirm on-disk persistence + the launcher index.
   const fin = parse(await client.callTool({ name: "finalize_review", arguments: { review_id: reviewId } }));
   assert.equal(fin.entry.status, "final");
@@ -223,8 +260,9 @@ try {
   const index = JSON.parse(
     readFileSync(join(matter, "outputs", "tabular-review", "index.json"), "utf8"),
   );
-  assert.equal(index.reviews.length, 1);
-  assert.equal(index.reviews[0].status, "final");
+  const finalized = index.reviews.find((r) => r.review_id === reviewId);
+  assert.ok(finalized, "finalized review present in index");
+  assert.equal(finalized.status, "final");
 
   console.log(
     "ok: oscar-tabular MCP smoke passed (real client harness — tools, grounding gate, never-silent failed path, persistence)",

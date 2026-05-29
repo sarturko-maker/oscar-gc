@@ -1,0 +1,669 @@
+{
+  "schema_version": 1,
+  "review_id": "cuad-portfolio-governing-law-liability-c-fa73921f",
+  "title": "CUAD Portfolio — Governing Law / Liability / CoC Review",
+  "created_at": "2026-05-29T07:08:04.208Z",
+  "updated_at": "2026-05-29T07:08:51.374Z",
+  "source_dir": "/root/Documents/Oscar GC/Commercial/CUAD Portfolio",
+  "summary": {
+    "total": 15,
+    "complete": 15,
+    "not_found": 0,
+    "failed": 0,
+    "flagged": 0,
+    "pending": 0,
+    "verified": 0
+  },
+  "columns": [
+    {
+      "id": "governing-law",
+      "label": "Governing law",
+      "prompt": "What governing law (jurisdiction) applies to this contract? Extract the specific jurisdiction (e.g., Delaware, England & Wales, New York, California).",
+      "type": "string",
+      "outputType": "verbatim",
+      "sortable": true,
+      "filterable": true,
+      "group": null
+    },
+    {
+      "id": "limitation-of-liability",
+      "label": "Limitation of liability",
+      "prompt": "What is the limitation of liability clause in this contract? Extract any caps, exclusions, or carved-out liabilities.",
+      "type": "string",
+      "outputType": "verbatim",
+      "sortable": true,
+      "filterable": true,
+      "group": null
+    },
+    {
+      "id": "change-of-control",
+      "label": "Change of control",
+      "prompt": "What change of control provisions exist in this contract? Extract any CoC triggers, consent requirements, or termination rights.",
+      "type": "string",
+      "outputType": "verbatim",
+      "sortable": true,
+      "filterable": true,
+      "group": null
+    }
+  ],
+  "rows": [
+    {
+      "document_id": "01-loha",
+      "document_name": "LOHA Company Ltd - EX-10.16(1) Services Agreement",
+      "rel_path": "01-lohacompanyltd-20191209-f-1-ex-10-16-11917878-ex.txt",
+      "status": "complete",
+      "cells": {
+        "Governing law": {
+          "column_id": "Governing law",
+          "value": "People's Republic of China",
+          "display": "People's Republic of China",
+          "reasoning": null,
+          "source_quote": "It will be governed by the law of the People's Republic of China ,otherwise it is governed by United Nations Convention on Contract for the International Sale of Goods.",
+          "source_location": "Clause 21",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Limitation of liability": {
+          "column_id": "Limitation of liability",
+          "value": "Penalty for late delivery capped at 5% of total value",
+          "display": "Penalty for late delivery capped at 5% of total value",
+          "reasoning": null,
+          "source_quote": "The penalty, however, shall not exceed 5% of the total value of the goods involved in the late delivery.",
+          "source_location": "Clause 18",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Change of control": {
+          "column_id": "Change of control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "low",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "governing-law": {
+          "column_id": "governing-law",
+          "value": "People's Republic of China",
+          "display": "People's Republic of China",
+          "reasoning": null,
+          "source_quote": "It will be governed by the law of the People's Republic of China ,otherwise it is governed by United Nations Convention on Contract for the International Sale of Goods.",
+          "source_location": "Clause 21",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "limitation-of-liability": {
+          "column_id": "limitation-of-liability",
+          "value": "Penalty for late delivery capped at 5% of total value",
+          "display": "Penalty for late delivery capped at 5% of total value",
+          "reasoning": null,
+          "source_quote": "The penalty, however, shall not exceed 5% of the total value of the goods involved in the late delivery.",
+          "source_location": "Clause 18",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "change-of-control": {
+          "column_id": "change-of-control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "low",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        }
+      }
+    },
+    {
+      "document_id": "02-centrack",
+      "document_name": "Centrack International Inc - EX-10.3 Web Agreement",
+      "rel_path": "02-centrackinternationalinc-10-29-1999-ex-10-3-web-.txt",
+      "status": "complete",
+      "cells": {
+        "Governing law": {
+          "column_id": "Governing law",
+          "value": "State of Florida",
+          "display": "State of Florida",
+          "reasoning": null,
+          "source_quote": "This Agreement was entered into in the State of Florida, and its validity, construction, interpretation, and legal effect shall be governed by the laws and judicial decisions of the State of Florida applicable to contracts entered into and performed entirely within the State of Florida.",
+          "source_location": "Miscellaneous",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Limitation of liability": {
+          "column_id": "Limitation of liability",
+          "value": "Liability capped at one (1) month's fees plus remaining prepaid fees; no liability for lost profits or consequential damages",
+          "display": "Liability capped at one (1) month's fees plus remaining prepaid fees; no liability for lost profits or consequential damages",
+          "reasoning": null,
+          "source_quote": "i-on will not be liable under any circumstances for any lost profits or other consequential damages, even if i-on has been advised as to the possibility of such damages. i-on's liability for damages to the Customer for any cause whatsoever, regardless of the form of action, and whether in contract or in tort, including negligence, shall be limited to one (1) month's fees and the remaining portion of any prepaid fees.",
+          "source_location": "LIMITATION OF LIABILITY section",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Change of control": {
+          "column_id": "Change of control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "governing-law": {
+          "column_id": "governing-law",
+          "value": "State of Florida",
+          "display": "State of Florida",
+          "reasoning": null,
+          "source_quote": "This Agreement was entered into in the State of Florida, and its validity, construction, interpretation, and legal effect shall be governed by the laws and judicial decisions of the State of Florida applicable to contracts entered into and performed entirely within the State of Florida.",
+          "source_location": "Miscellaneous",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "limitation-of-liability": {
+          "column_id": "limitation-of-liability",
+          "value": "Liability capped at one (1) month's fees plus remaining prepaid fees; no liability for lost profits or consequential damages",
+          "display": "Liability capped at one (1) month's fees plus remaining prepaid fees; no liability for lost profits or consequential damages",
+          "reasoning": null,
+          "source_quote": "i-on will not be liable under any circumstances for any lost profits or other consequential damages, even if i-on has been advised as to the possibility of such damages. i-on's liability for damages to the Customer for any cause whatsoever, regardless of the form of action, and whether in contract or in tort, including negligence, shall be limited to one (1) month's fees and the remaining portion of any prepaid fees.",
+          "source_location": "LIMITATION OF LIABILITY section",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "change-of-control": {
+          "column_id": "change-of-control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        }
+      }
+    },
+    {
+      "document_id": "03-kiromic",
+      "document_name": "Kiromic Biopharma Inc - EX-10.23 Consulting Agreement",
+      "rel_path": "03-kiromicbiopharma-inc-05-11-2020-ex-10-23-consult.txt",
+      "status": "complete",
+      "cells": {
+        "Governing law": {
+          "column_id": "Governing law",
+          "value": "State of Texas",
+          "display": "State of Texas",
+          "reasoning": null,
+          "source_quote": "This Agreement shall be governed by the laws of the State of Texas, without reference to its conflicts of law principles.",
+          "source_location": "Section 9 (General)",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Limitation of liability": {
+          "column_id": "Limitation of liability",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Change of control": {
+          "column_id": "Change of control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "governing-law": {
+          "column_id": "governing-law",
+          "value": "State of Texas",
+          "display": "State of Texas",
+          "reasoning": null,
+          "source_quote": "This Agreement shall be governed by the laws of the State of Texas, without reference to its conflicts of law principles.",
+          "source_location": "Section 9 (General)",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "limitation-of-liability": {
+          "column_id": "limitation-of-liability",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "change-of-control": {
+          "column_id": "change-of-control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        }
+      }
+    },
+    {
+      "document_id": "04-veoneer",
+      "document_name": "Veoneer Inc - EX-10.11 Joint Venture Agreement",
+      "rel_path": "04-veoneer-inc-02-21-2020-ex-10-11-joint-venture-ag.txt",
+      "status": "complete",
+      "cells": {
+        "Governing law": {
+          "column_id": "Governing law",
+          "value": "Japan",
+          "display": "Japan",
+          "reasoning": null,
+          "source_quote": "This Amendment shall be governed by and construed in accordance with the laws of Japan.",
+          "source_location": "Article 3",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Limitation of liability": {
+          "column_id": "Limitation of liability",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "low",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Change of control": {
+          "column_id": "Change of control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "low",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "governing-law": {
+          "column_id": "governing-law",
+          "value": "Japan",
+          "display": "Japan",
+          "reasoning": null,
+          "source_quote": "This Amendment shall be governed by and construed in accordance with the laws of Japan.",
+          "source_location": "Article 3",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "limitation-of-liability": {
+          "column_id": "limitation-of-liability",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "low",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "change-of-control": {
+          "column_id": "change-of-control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "low",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        }
+      }
+    },
+    {
+      "document_id": "05-dominiatrust",
+      "document_name": "Dominium Advisor Trust - EX-99(H)(2) Sponsorship",
+      "rel_path": "05-dominiadvisortrust-02-18-2005-ex-99-h-2-sponsors.txt",
+      "status": "complete",
+      "cells": {
+        "Governing law": {
+          "column_id": "Governing law",
+          "value": "Commonwealth of Massachusetts",
+          "display": "Commonwealth of Massachusetts",
+          "reasoning": null,
+          "source_quote": "This Agreement shall be construed and enforced and interpreted in accordance with and governed by the laws of the Commonwealth of Massachusetts without reference to principles of conflicts of law.",
+          "source_location": "Section 10",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Limitation of liability": {
+          "column_id": "Limitation of liability",
+          "value": "Sponsor shall not be liable for any error of judgment or mistake of law or for any act or omission in the oversight, administration or management of the Trust or the performance of its duties hereunder, except for willful misfeasance, bad faith or gross negligence in the performance of its duties, or by reason of the reckless disregard of its obligations and duties hereunder",
+          "display": "Sponsor shall not be liable for any error of judgment or mistake of law or for any act or omission in the oversight, administration or management of the Trust or the performance of its duties hereunder, except for willful misfeasance, bad faith or gross negligence in the performance of its duties, or by reason of the reckless disregard of its obligations and duties hereunder",
+          "reasoning": null,
+          "source_quote": "The Sponsor shall not be liable for any error of judgment or mistake of law or for any act or omission in the oversight, administration or management of the Trust or the performance of its duties hereunder, except for willful misfeasance, bad faith or gross negligence in the performance of its duties, or by reason of the reckless disregard of its obligations and duties hereunder.",
+          "source_location": "Section 4",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "Change of control": {
+          "column_id": "Change of control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "governing-law": {
+          "column_id": "governing-law",
+          "value": "Commonwealth of Massachusetts",
+          "display": "Commonwealth of Massachusetts",
+          "reasoning": null,
+          "source_quote": "This Agreement shall be construed and enforced and interpreted in accordance with and governed by the laws of the Commonwealth of Massachusetts without reference to principles of conflicts of law.",
+          "source_location": "Section 10",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "limitation-of-liability": {
+          "column_id": "limitation-of-liability",
+          "value": "Sponsor shall not be liable for any error of judgment or mistake of law or for any act or omission in the oversight, administration or management of the Trust or the performance of its duties hereunder, except for willful misfeasance, bad faith or gross negligence in the performance of its duties, or by reason of the reckless disregard of its obligations and duties hereunder",
+          "display": "Sponsor shall not be liable for any error of judgment or mistake of law or for any act or omission in the oversight, administration or management of the Trust or the performance of its duties hereunder, except for willful misfeasance, bad faith or gross negligence in the performance of its duties, or by reason of the reckless disregard of its obligations and duties hereunder",
+          "reasoning": null,
+          "source_quote": "The Sponsor shall not be liable for any error of judgment or mistake of law or for any act or omission in the oversight, administration or management of the Trust or the performance of its duties hereunder, except for willful misfeasance, bad faith or gross negligence in the performance of its duties, or by reason of the reckless disregard of its obligations and duties hereunder.",
+          "source_location": "Section 4",
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        },
+        "change-of-control": {
+          "column_id": "change-of-control",
+          "value": "None",
+          "display": "None",
+          "reasoning": null,
+          "source_quote": null,
+          "source_location": null,
+          "confidence": "high",
+          "status": "complete",
+          "verification": {
+            "grounded": false,
+            "score": 0,
+            "method": "no-source"
+          },
+          "human": null,
+          "subagent_session_id": null,
+          "notes": null
+        }
+      }
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "fdc5074d-039d-4763-ba66-a6475addec91",
+      "kind": "initial",
+      "at": "2026-05-29T07:08:40.888Z",
+      "columns": [
+        "governing-law",
+        "limitation-of-liability",
+        "change-of-control"
+      ],
+      "documents": [
+        "01-loha",
+        "02-centrack",
+        "03-kiromic",
+        "04-veoneer",
+        "05-dominiatrust"
+      ],
+      "notes": null
+    },
+    {
+      "run_id": "e5191fa3-174e-48cf-bbb3-8a6290fef19a",
+      "kind": "initial",
+      "at": "2026-05-29T07:08:51.374Z",
+      "columns": [
+        "governing-law",
+        "limitation-of-liability",
+        "change-of-control"
+      ],
+      "documents": [
+        "01-loha",
+        "02-centrack",
+        "03-kiromic",
+        "04-veoneer",
+        "05-dominiatrust"
+      ],
+      "notes": null
+    }
+  ]
+}
