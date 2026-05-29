@@ -12,6 +12,7 @@ let cfg = {
     'src/resources/mcps',
     'src/resources/skills',
     'src/resources/sub-recipes',
+    'src/resources/recipes',
     'src/resources/allowlist.yaml',
   ],
   icon: 'src/images/icon',
