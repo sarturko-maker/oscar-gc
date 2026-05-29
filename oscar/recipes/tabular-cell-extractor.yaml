@@ -48,8 +48,11 @@ instructions: |
 
   For each column query:
   1. Read the FULL document. If it is long, read all of it — do not skip sections.
-  2. Answer the query. If the document does not address it, the answer is null —
-     never guess, never hallucinate.
+  2. Answer the query. If the document does not address it, set `answer` to JSON
+     null (the literal null value) — NOT the strings "None", "N/A", "Not
+     applicable", "Not found", or "". A non-null string answer is treated as a
+     real finding that needs a verbatim quote; absence must be null so the grid
+     reads it as "not in document". Never guess, never hallucinate.
   3. Quote the supporting provision VERBATIM — never paraphrase. The UI highlights
      this quote in the original document; without an exact quote the lawyer cannot
      verify your extraction, and the answer will be flagged.
@@ -66,7 +69,7 @@ instructions: |
   - PDF/DOCX: extract its text first via the pdf/docx tools, then read in full.
 
   Rules:
-  - NEVER hallucinate. Not in the document → answer null.
+  - NEVER hallucinate. Not in the document → answer JSON null (never the string "None").
   - NEVER paraphrase. Quotes must be verbatim and copy-paste exact.
   - `quote` is REQUIRED on every cell: the exact operative provision for a
     non-null answer, or null when (and only when) the answer is null. Do not

@@ -223,6 +223,31 @@ try {
   );
   assert.equal(miss.ok, false, "human review on a missing document errors, not silently");
 
+  // Dedupe/guard (Sprint 35 fix): a drifted column id (GOVERNING_LAW) re-keys to
+  // the declared column; an unrecognised id (bogus-col) is skipped — no phantom
+  // cell — and the run note records the skip (never silent).
+  await client.callTool({
+    name: "ingest_results",
+    arguments: {
+      review_id: reviewId,
+      kind: "rerun",
+      columns: [colId],
+      batch: [
+        {
+          document_id: "nda_acme",
+          cells: [
+            { column_id: "bogus-col", answer: "phantom", quote: "x", confidence: "low" },
+            { column_id: colId.toUpperCase().replace(/-/g, "_"), answer: "England and Wales", quote: "governed by the laws of England and Wales", confidence: "high" },
+          ],
+        },
+      ],
+    },
+  });
+  m = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: reviewId } }));
+  assert.ok(!("bogus-col" in m.rows[0].cells), "unrecognised column id is not merged as a phantom cell");
+  assert.equal(Object.keys(m.rows[0].cells).length, 1, "drifted id re-keyed to the declared column; no phantom cells");
+  assert.match(m.runs[m.runs.length - 1].notes || "", /skipped 1 cell/, "skipped cell recorded in run notes");
+
   // Basename fallback (Sprint 35 dogfood fix): a row carrying a BARE-filename
   // rel_path whose file actually lives in contracts/ must still ground — the agent
   // routinely passes bare filenames even when documents sit in a subfolder.

@@ -199,6 +199,22 @@ export function computeSummary(manifest: Manifest): Summary {
   return s;
 }
 
+function normalizeId(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+// Map an extractor-supplied column_id onto a DECLARED column id. Exact id wins;
+// otherwise a normalized form is matched against column ids and labels. Returns
+// null when it matches no declared column. Sprint 35 dogfood finding: the agent
+// sometimes returns drifted ids (label vs slug, underscore vs hyphen) or extra
+// ids; without this guard those land as phantom cells, inflating rows to 6 cells.
+function resolveColumnId(rawId: string, columns: Column[]): string | null {
+  if (columns.some((c) => c.id === rawId)) return rawId;
+  const norm = normalizeId(rawId);
+  const hit = columns.find((c) => normalizeId(c.id) === norm || normalizeId(c.label) === norm);
+  return hit ? hit.id : null;
+}
+
 // Validates each raw payload individually. Valid ones merge by (document,column);
 // malformed ones mark that document's cells `failed` with the reason — never
 // dropped silently (CLAUDE.md "no silent failures", ADR-112).
@@ -209,6 +225,7 @@ export async function ingest(
   ctx: MergeContext,
 ): Promise<Manifest> {
   const touched: string[] = [];
+  const skipped: string[] = [];
   for (const raw of rawBatch) {
     const parsed = ExtractorPayloadSchema.safeParse(raw);
     if (!parsed.success) {
@@ -232,7 +249,14 @@ export async function ingest(
     const row = upsertRow(manifest, payload.document_id, payload.document_name);
     const sessionId = run.sessionIds?.[payload.document_id] ?? null;
     for (const ex of payload.cells) {
-      row.cells[ex.column_id] = await buildCell(ex, row.rel_path, sessionId, ctx);
+      const colId = resolveColumnId(ex.column_id, manifest.columns);
+      if (!colId) {
+        skipped.push(`${payload.document_id}:${ex.column_id}`);
+        continue;
+      }
+      // Re-key onto the canonical column id (deduping drifted/duplicate ids —
+      // last write wins) so a row never carries cells outside its columns.
+      row.cells[colId] = await buildCell({ ...ex, column_id: colId }, row.rel_path, sessionId, ctx);
     }
     row.status = deriveRowStatus(row, manifest.columns);
     touched.push(payload.document_id);
@@ -244,7 +268,10 @@ export async function ingest(
     at: manifest.updated_at,
     columns: run.columns,
     documents: touched,
-    notes: null,
+    notes:
+      skipped.length > 0
+        ? `skipped ${skipped.length} cell(s) with unrecognised column ids: ${skipped.join(", ")}`
+        : null,
   });
   manifest.summary = computeSummary(manifest);
   return ManifestSchema.parse(manifest);
