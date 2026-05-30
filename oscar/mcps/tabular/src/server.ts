@@ -8,7 +8,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { ColumnSchema, ColumnType, OutputType, type Column } from "./schema.js";
-import { addColumn, createManifest, ingest, resetCell, setHumanReview, toIndexEntry } from "./merge.js";
+import { addColumn, addDocuments, createManifest, ingest, resetCell, setHumanReview, toIndexEntry } from "./merge.js";
 import { readSourceText } from "./matterDir.js";
 import type { TabularStore } from "./store.js";
 
@@ -140,6 +140,51 @@ export function buildServer(store: TabularStore): McpServer {
       const manifest = await store.readManifest(review_id);
       if (!manifest) return ok({ ok: false, error: `review '${review_id}' not found` });
       return ok(manifest);
+    },
+  );
+
+  server.registerTool(
+    "list_reviews",
+    {
+      description:
+        "List the tabular reviews that already exist in this matter (review_id, title, status, " +
+        "document/column counts, progress summary). Call this to find and RESUME an existing review " +
+        "— e.g. after an interruption when you no longer remember the review_id. Never create a second " +
+        "review for a task that already has one; resume it instead.",
+      inputSchema: {},
+    },
+    async () => {
+      const index = await store.readIndex();
+      return ok(index);
+    },
+  );
+
+  server.registerTool(
+    "add_documents",
+    {
+      description:
+        "Add documents (rows) to an existing review without touching prior rows. Use when more " +
+        "documents need reviewing than were in create_review; then delegate the extractor across the " +
+        "new documents and ingest_results. Documents already in the review are ignored.",
+      inputSchema: {
+        review_id: z.string().min(1),
+        documents: z
+          .array(
+            z.object({
+              document_id: z.string().min(1),
+              document_name: z.string().optional(),
+              rel_path: z.string().optional().describe("Path relative to the matter folder."),
+            }),
+          )
+          .min(1),
+      },
+    },
+    async ({ review_id, documents }) => {
+      const manifest = await store.readManifest(review_id);
+      if (!manifest) return ok({ ok: false, error: `review '${review_id}' not found` });
+      const { manifest: updated, added } = addDocuments(manifest, documents);
+      await store.writeManifest(updated, "in_progress");
+      return ok({ ok: true, added, summary: updated.summary });
     },
   );
 

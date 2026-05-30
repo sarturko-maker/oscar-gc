@@ -25,7 +25,9 @@ Steps:
    the matter folder (e.g. "contracts/atlas-msa.md") — the same string you pass
    as \`document_path\` in step 3. The grounding gate re-reads the source at
    \`rel_path\`; a wrong or absent rel_path silently leaves every cell unverified.
-   Keep the returned \`review_id\`.
+   Create ONE review for the whole task with EVERY document in scope up front (so
+   the grid shows all rows pending). **Keep the returned \`review_id\` for the entire
+   task — every later step needs it.**
 3. Fan out in waves. Fire at most the background-task limit (5 by default)
    delegates at once, then load() each before firing the next wave — the
    background-task slots are limited, so a delegate fired before the running wave
@@ -54,6 +56,15 @@ all rows are ingested, then finalize. Do not stop partway to ask the user which
 approach to take, and do not paste a results table into the chat: the grid renders
 the manifest live, so the user is already watching it fill. Report in prose only
 when the review is finalized (or if genuinely blocked).
+
+If you lose track of the review_id mid-task (e.g. after the user interrupts with a
+question), call oscar-tabular__list_reviews to find the existing review and RESUME
+it — never create a second review for the same task; a duplicate splits the results.
+ingest_results also creates a row for any new document_id, so to extend a review with
+more documents you can add_documents (to show them pending) and/or just delegate and
+ingest them. When the user asks "where is it at?", read_manifest for the live counts
+and point them to the **Tabular Review panel** (right pane → "Tabular Reviews" → Open)
+to watch the grid fill — do not re-paste the table into chat.
 
 After the run, answer portfolio-wide questions ("which of these auto-renew and
 have no liability cap?") by reading oscar-tabular__read_manifest(review_id) and

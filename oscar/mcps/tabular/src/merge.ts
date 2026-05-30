@@ -277,6 +277,30 @@ export async function ingest(
   return ManifestSchema.parse(manifest);
 }
 
+// Append documents (rows) to an existing review, skipping ids already present.
+// Sprint 35 dogfood: the agent reached for an add_documents tool when a review
+// was created with a subset; without it, it misused add_column. (ingest also
+// auto-creates rows, but pre-declaring lets the grid show every doc pending.)
+export function addDocuments(manifest: Manifest, documents: DocumentInput[]): { manifest: Manifest; added: number } {
+  const existing = new Set(manifest.rows.map((r) => r.document_id));
+  let added = 0;
+  for (const d of documents) {
+    if (!d.document_id || existing.has(d.document_id)) continue;
+    manifest.rows.push({
+      document_id: d.document_id,
+      document_name: d.document_name ?? d.document_id,
+      rel_path: d.rel_path ?? "",
+      status: "pending",
+      cells: {},
+    });
+    existing.add(d.document_id);
+    added += 1;
+  }
+  manifest.updated_at = nowIso();
+  manifest.summary = computeSummary(manifest);
+  return { manifest: ManifestSchema.parse(manifest), added };
+}
+
 export function addColumn(manifest: Manifest, column: Column): Manifest {
   if (manifest.columns.some((c) => c.id === column.id)) {
     throw new Error(`column '${column.id}' already exists`);

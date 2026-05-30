@@ -52,9 +52,11 @@ try {
     tools,
     [
       "add_column",
+      "add_documents",
       "create_review",
       "finalize_review",
       "ingest_results",
+      "list_reviews",
       "read_manifest",
       "rerun_cell",
       "set_human_review",
@@ -275,6 +277,29 @@ try {
   assert.equal(bareCell.verification.method, "charOverlap", "bare-filename rel_path grounds via basename fallback");
   assert.equal(bareCell.verification.grounded, true, "basename-fallback cell is grounded");
   assert.equal(bareCell.status, "complete", "basename-fallback cell stays complete");
+
+  // list_reviews surfaces existing reviews so the agent can resume by id (Sprint 35
+  // dogfood: the agent lost the review_id on interruption and duplicated the review).
+  const idx = parse(await client.callTool({ name: "list_reviews", arguments: {} }));
+  assert.ok(Array.isArray(idx.reviews) && idx.reviews.some((r) => r.review_id === reviewId), "list_reviews surfaces the review for resume");
+
+  // add_documents appends new rows and ignores ids already present.
+  const addDoc = parse(
+    await client.callTool({
+      name: "add_documents",
+      arguments: {
+        review_id: reviewId,
+        documents: [
+          { document_id: "nda_acme", document_name: "dup — ignored" },
+          { document_id: "new_doc", document_name: "New Doc" },
+        ],
+      },
+    }),
+  );
+  assert.equal(addDoc.ok, true, "add_documents ok");
+  assert.equal(addDoc.added, 1, "add_documents added only the genuinely new row");
+  m = parse(await client.callTool({ name: "read_manifest", arguments: { review_id: reviewId } }));
+  assert.ok(m.rows.some((row) => row.document_id === "new_doc"), "new document row present");
 
   // Finalize, then confirm on-disk persistence + the launcher index.
   const fin = parse(await client.callTool({ name: "finalize_review", arguments: { review_id: reviewId } }));
